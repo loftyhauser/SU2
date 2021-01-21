@@ -2194,7 +2194,7 @@ void CNEMOEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solution_containe
 
         /*--- Compute Gamma ---*/
         //TODO move to fluidmodel
-        vector<su2double> Ms = FluidModel->GetMolarMass();
+        auto& Ms = FluidModel->GetSpeciesMolarMass();
         su2double Ru = 1000.0* UNIVERSAL_GAS_CONSTANT;
         su2double rhoR = 0.0;
         for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
@@ -2403,7 +2403,6 @@ void CNEMOEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solution_containe
   delete [] V_domain;
   delete [] V_inlet;
   delete [] Normal;
-  delete [] Spec_Density;
 }
 
 void CNEMOEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solution_container,
