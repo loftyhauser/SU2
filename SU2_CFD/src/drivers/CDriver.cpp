@@ -1450,7 +1450,7 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
 
     case NEMO_NAVIER_STOKES:
     case DISC_ADJ_NEMO_NAVIER_STOKES:
-      NEMO_ns = compressible = true; break;  
+      NEMO_ns = compressible = true; break;
 
     case RANS:
     case DISC_ADJ_RANS:
@@ -3146,6 +3146,13 @@ void CFluidDriver::Transfer_Data(unsigned short donorZone, unsigned short target
     config_container[donorZone], config_container[targetZone]);
 
   if (config_container[targetZone]->GetKind_Solver() == RANS) {
+    interface_container[donorZone][targetZone]->BroadcastData(*interpolator_container[donorZone][targetZone].get(),
+      solver_container[donorZone][INST_0][MESH_0][TURB_SOL], solver_container[targetZone][INST_0][MESH_0][TURB_SOL],
+      geometry_container[donorZone][INST_0][MESH_0], geometry_container[targetZone][INST_0][MESH_0],
+      config_container[donorZone], config_container[targetZone]);
+  }
+
+  if (config_container[targetZone]->GetKind_Solver() == NEMO_RANS) {
     interface_container[donorZone][targetZone]->BroadcastData(*interpolator_container[donorZone][targetZone].get(),
       solver_container[donorZone][INST_0][MESH_0][TURB_SOL], solver_container[targetZone][INST_0][MESH_0][TURB_SOL],
       geometry_container[donorZone][INST_0][MESH_0], geometry_container[targetZone][INST_0][MESH_0],

@@ -140,6 +140,7 @@ CNEMOEulerVariable::CNEMOEulerVariable(su2double val_pressure,
   Non_Physical_Counter.resize(nPoint) = 0;
 
   /* Under-relaxation parameter. */
+  UnderRelaxation.resize(nPoint) = su2double(1.0);
   LocalCFL.resize(nPoint) = su2double(0.0);
 
   /*--- Loop over all points --*/
@@ -303,8 +304,6 @@ bool CNEMOEulerVariable::Cons2PrimVar(su2double *U, su2double *V,
       nonPhys      = true;
       V[TVE_INDEX] = Tvemax;
       U[nSpecies+nDim+1] = rhoEve_max;
-    } else {
-      V[TVE_INDEX]   = T[1];
     }
   } else {
     //TODO: can e-modes/vibe modes be active?

@@ -113,8 +113,8 @@ void CNEMONSSolver::Preprocessing(CGeometry *geometry, CSolver **solver_containe
   /*--- Evaluate the vorticity and strain rate magnitude ---*/
   StrainMag_Max = 0.0;
   Omega_Max = 0.0;
-  nodes->SetVorticity_StrainMag();
 
+  nodes->SetVorticity_StrainMag();
   su2double strainMax = 0.0, omegaMax = 0.0;
 
   for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++) {
@@ -145,7 +145,7 @@ void CNEMONSSolver::SetPrimitive_Gradient_GG(CGeometry *geometry, const CConfig 
 
   unsigned long iPoint, iVar;
   unsigned short iSpecies, RHO_INDEX, RHOS_INDEX;
-  
+
   auto& gradient = reconstruction ? nodes->GetGradient_Reconstruction() : nodes->GetGradient_Primitive();
 
   /*--- Get indices of species & mixture density ---*/

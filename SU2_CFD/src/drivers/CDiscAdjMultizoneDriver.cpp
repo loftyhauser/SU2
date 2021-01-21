@@ -706,8 +706,10 @@ void CDiscAdjMultizoneDriver::SetObjFunction(unsigned short kind_recording) {
 
     switch (config->GetKind_Solver()) {
 
-      case DISC_ADJ_EULER:     case DISC_ADJ_NAVIER_STOKES:     case DISC_ADJ_RANS:
-      case DISC_ADJ_INC_EULER: case DISC_ADJ_INC_NAVIER_STOKES: case DISC_ADJ_INC_RANS:
+      case DISC_ADJ_EULER:      case DISC_ADJ_NAVIER_STOKES:      case DISC_ADJ_RANS:
+      case DISC_ADJ_INC_EULER:  case DISC_ADJ_INC_NAVIER_STOKES:  case DISC_ADJ_INC_RANS:
+      case DISC_ADJ_NEMO_EULER: case DISC_ADJ_NEMO_NAVIER_STOKES: case DISC_ADJ_NEMO_RANS:
+
       {
         auto val = solvers[FLOW_SOL]->GetTotal_ComboObj();
 

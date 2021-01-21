@@ -304,6 +304,11 @@ void CNEMOCompOutput::SetVolumeOutputFields(CConfig *config){
     AddVolumeOutput("MOMENTUM-Z", "Momentum_z", "SOLUTION", "z-component of the momentum vector");
   AddVolumeOutput("ENERGY",       "Energy",     "SOLUTION", "Energy");
   AddVolumeOutput("ENERGY_VE",    "Energy_ve",  "SOLUTION", "Energy_ve");
+
+  //Auxiliary variables for post-processment
+  for(iSpecies = 0; iSpecies < nSpecies; iSpecies++)
+    AddVolumeOutput("MASSFRAC_" + std::to_string(iSpecies),  "MassFrac_" + std::to_string(iSpecies),  "AUXILIARY", "MassFrac_" + std::to_string(iSpecies));
+
   // Turbulent Residuals
   switch(config->GetKind_Turb_Model()){
   case SST: case SST_SUST:
@@ -317,10 +322,6 @@ void CNEMOCompOutput::SetVolumeOutputFields(CConfig *config){
   case NONE:
     break;
   }
-
-  //Auxiliary variables for post-processment
-  for(iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-    AddVolumeOutput("MASSFRAC_" + std::to_string(iSpecies),  "MassFrac_" + std::to_string(iSpecies),  "AUXILIARY", "MassFrac_" + std::to_string(iSpecies));
 
   // Grid velocity
   if (config->GetGrid_Movement()){
@@ -563,6 +564,7 @@ void CNEMOCompOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolv
 void CNEMOCompOutput::LoadSurfaceData(CConfig *config, CGeometry *geometry, CSolver **solver, unsigned long iPoint, unsigned short iMarker, unsigned long iVertex){
 
   if ((config->GetKind_Solver() == NEMO_RANS) || (config->GetKind_Solver() == NEMO_NAVIER_STOKES)) {
+
     SetVolumeOutputValue("SKIN_FRICTION-X", iPoint, solver[FLOW_SOL]->GetCSkinFriction(iMarker, iVertex, 0));
     SetVolumeOutputValue("SKIN_FRICTION-Y", iPoint, solver[FLOW_SOL]->GetCSkinFriction(iMarker, iVertex, 1));
     if (nDim == 3)
