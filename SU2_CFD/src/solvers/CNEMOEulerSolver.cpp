@@ -2398,11 +2398,10 @@ void CNEMOEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solution_containe
   }
 
   /*--- Free locally allocated memory ---*/
-  delete [] U_domain;
   delete [] U_inlet;
-  delete [] V_domain;
   delete [] V_inlet;
   delete [] Normal;
+  delete [] Ys;
 }
 
 void CNEMOEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solution_container,
