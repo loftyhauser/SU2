@@ -2302,8 +2302,9 @@ void CNEMOEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solution_containe
         V_inlet[RHOCVTR_INDEX] = V_domain[RHOCVTR_INDEX];
         V_inlet[RHOCVVE_INDEX] = V_domain[RHOCVVE_INDEX];
 
-        break;
-
+	//Eve = U_domain[nVar-1]/V_domain[RHO_INDEX]; 
+        
+	break;
       /*--- Mass flow has been specified at the inlet. ---*/
 //      case MASS_FLOW:
 
@@ -2361,6 +2362,7 @@ void CNEMOEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solution_containe
       }
 
       /*--- Set various quantities in the solver class ---*/
+      conv_numerics->SetEve(nodes->GetEve(iPoint),nodes->GetEve(iPoint));
       conv_numerics->SetConservative(U_domain, U_inlet);
       conv_numerics->SetPrimitive(V_domain, V_inlet);
 
