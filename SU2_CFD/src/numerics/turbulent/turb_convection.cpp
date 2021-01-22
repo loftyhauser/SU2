@@ -70,7 +70,6 @@ CNumerics::ResidualType<> CUpwScalar::ComputeResidual(const CConfig* config) {
   }
 
   ExtraADPreaccIn();
-
   Density_i = V_i[nDim+2];
   Density_j = V_j[nDim+2];
 
@@ -113,7 +112,6 @@ void CUpwSca_TurbSA::ExtraADPreaccIn() {
 void CUpwSca_TurbSA::FinishResidualCalc(const CConfig* config) {
 
   Flux[0] = a0*TurbVar_i[0]+a1*TurbVar_j[0];
-
   if (implicit) {
     Jacobian_i[0][0] = a0;
     Jacobian_j[0][0] = a1;

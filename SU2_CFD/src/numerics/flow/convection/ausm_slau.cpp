@@ -319,7 +319,6 @@ CNumerics::ResidualType<> CUpwAUSMPLUS_SLAU_Base_Flow::ComputeResidual(const CCo
   unsigned short iDim, iVar;
 
   /*--- Space to start preaccumulation ---*/
-
   AD::StartPreacc();
   AD::SetPreaccIn(Normal, nDim);
   AD::SetPreaccIn(V_i, nDim+4);
@@ -837,7 +836,6 @@ CUpwAUSM_Flow::~CUpwAUSM_Flow(void) {
 CNumerics::ResidualType<> CUpwAUSM_Flow::ComputeResidual(const CConfig* config) {
 
   implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-
   AD::StartPreacc();
   AD::SetPreaccIn(Normal, nDim);
   AD::SetPreaccIn(V_i, nDim+4);

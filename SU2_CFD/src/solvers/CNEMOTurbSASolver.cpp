@@ -635,10 +635,9 @@ void CNEMOTurbSASolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container
                                   geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
-
       auto residual = conv_numerics->ComputeResidual(config);
       LinSysRes.AddBlock(iPoint, residual);
-
+      
       /*--- Jacobian contribution for implicit integration ---*/
 
       Jacobian.AddBlock2Diag(iPoint, residual.jacobian_i);

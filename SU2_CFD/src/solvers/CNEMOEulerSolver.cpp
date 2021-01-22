@@ -2212,7 +2212,7 @@ void CNEMOEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solution_containe
           Velocity2 += Velocity[iDim]*Velocity[iDim];
         }
         Energy      = U_domain[nVar-2]/Density;
-        Pressure    = Gamma_Minus_One*Density*(Energy-0.5*Velocity2);
+        Pressure    = V_domain[P_INDEX];
         H_Total     = (Gamma*Gas_Constant/Gamma_Minus_One)*T_Total;
         SoundSpeed2 = Gamma*Pressure/Density;
 
@@ -2302,8 +2302,6 @@ void CNEMOEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solution_containe
         V_inlet[RHOCVTR_INDEX] = V_domain[RHOCVTR_INDEX];
         V_inlet[RHOCVVE_INDEX] = V_domain[RHOCVVE_INDEX];
 
-	//Eve = U_domain[nVar-1]/V_domain[RHO_INDEX]; 
-        
 	break;
       /*--- Mass flow has been specified at the inlet. ---*/
 //      case MASS_FLOW:
