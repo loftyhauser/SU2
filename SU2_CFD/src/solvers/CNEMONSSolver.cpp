@@ -146,6 +146,7 @@ void CNEMONSSolver::SetPrimitive_Gradient_GG(CGeometry *geometry, const CConfig 
 
   unsigned long iPoint, iVar;
   unsigned short iSpecies, RHO_INDEX, RHOS_INDEX;
+
   auto& gradient = reconstruction ? nodes->GetGradient_Reconstruction() : nodes->GetGradient_Primitive();
 
   /*--- Get indices of species & mixture density ---*/
@@ -397,6 +398,7 @@ void CNEMONSSolver::BC_HeatFluxNonCatalytic_Wall(CGeometry *geometry,
                                       Wall_HeatFlux*Area;
       Res_Visc[nSpecies+nDim+1] += pcontrol*(kve*dTvedn) +
                                       Wall_HeatFlux*Area;
+
       /*--- Apply viscous residual to the linear system ---*/
       LinSysRes.SubtractBlock(iPoint, Res_Visc);
 
