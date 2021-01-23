@@ -183,7 +183,7 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA::ComputeResidual(const CConfig
     CrossProduction = cb2_sigma*norm2_Grad*Volume;
 
     Residual = Production - Destruction + CrossProduction;
-    
+
     /*--- Implicit part, production term ---*/
 
     dfv1 = 3.0*Ji_2*cv1_3/(nu*pow(Ji_3+cv1_3,2.));
