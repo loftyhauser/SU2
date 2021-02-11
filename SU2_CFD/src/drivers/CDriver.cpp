@@ -2067,7 +2067,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
       else if (e_comp_spalart_allmaras) numerics[iMGlevel][TURB_SOL][source_first_term] = new CSourcePieceWise_TurbSA_E_COMP(nDim, nVar_Turb, config);
       else if (neg_spalart_allmaras) numerics[iMGlevel][TURB_SOL][source_first_term] = new CSourcePieceWise_TurbSA_Neg(nDim, nVar_Turb, config);
       else if (menter_sst) numerics[iMGlevel][TURB_SOL][source_first_term] = new CSourcePieceWise_TurbSST(nDim, nVar_Turb, constants, kine_Inf, omega_Inf, config);
-              //TODO TurbAxiSource: numerics[iMGlevel][TURB_SOL][source_second_term] = new CSourceAxisymmetric_TurbSST(nDim, nVar_Turb, config);
       numerics[iMGlevel][TURB_SOL][source_second_term] = new CSourceNothing(nDim, nVar_Turb, config);
     }
 
