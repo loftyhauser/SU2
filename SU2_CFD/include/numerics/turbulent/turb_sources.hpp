@@ -3,7 +3,7 @@
  * \brief Delarations of numerics classes for integration of source
  *        terms in turbulence problems.
  * \author F. Palacios, T. Economon
- * \version 7.0.8 "Blackbird"
+ * \version 7.1.0 "Blackbird"
  *
  * SU2 Project Website: https://su2code.github.io
  *
@@ -158,7 +158,7 @@ public:
  * \brief Class for integrating the source terms of the Spalart-Allmaras CC modification turbulence model equation.
  * \ingroup SourceDiscr
  * \author E.Molina, A. Bueno.
- * \version 7.0.8 "Blackbird"
+ * \version 7.1.0 "Blackbird"
  */
 class CSourcePieceWise_TurbSA_COMP final : public CSourceBase_TurbSA {
 private:
@@ -193,7 +193,7 @@ public:
  * \brief Class for integrating the source terms of the Spalart-Allmaras Edwards modification turbulence model equation.
  * \ingroup SourceDiscr
  * \author E.Molina, A. Bueno.
- * \version 7.0.8 "Blackbird"
+ * \version 7.1.0 "Blackbird"
  */
 class CSourcePieceWise_TurbSA_E final : public CSourceBase_TurbSA {
 private:
@@ -226,7 +226,7 @@ public:
  * \brief Class for integrating the source terms of the Spalart-Allmaras Edwards modification with CC turbulence model equation.
  * \ingroup SourceDiscr
  * \author E.Molina, A. Bueno.
- * \version 7.0.8 "Blackbird"
+ * \version 7.1.0 "Blackbird"
  */
 class CSourcePieceWise_TurbSA_E_COMP : public CSourceBase_TurbSA {
 private:
@@ -305,6 +305,8 @@ private:
   alfa_2,
   beta_1,
   beta_2,
+  sigma_k_1,
+  sigma_k_2,
   sigma_omega_1,
   sigma_omega_2,
   beta_star,
@@ -320,24 +322,61 @@ private:
 
   bool incompressible;
   bool sustaining_terms;
+  bool axisymmetric;
 
   /*!
-   * \brief Initialize the Reynolds Stress Matrix
-   * \param[in] turb_ke turbulent kinetic energy of node
+   * \brief A virtual member. Get strain magnitude based on perturbed reynolds stress matrix
+   * \param[in] turb_ke: turbulent kinetic energy of the node
    */
-  void SetReynoldsStressMatrix(su2double turb_ke);
-
-  /*!
-   * \brief Perturb the Reynolds stress tensor based on parameters
-   * \param[in] turb_ke: turbulent kinetic energy of the noce
-   * \param[in] config: config file
-   */
-  void SetPerturbedRSM(su2double turb_ke, const CConfig* config);
-  /*!
-     * \brief A virtual member. Get strain magnitude based on perturbed reynolds stress matrix
-     * \param[in] turb_ke: turbulent kinetic energy of the node
-     */
   void SetPerturbedStrainMag(su2double turb_ke);
+  
+  /*!
+   * \brief Add contribution due to axisymmetric formulation to 2D residual
+   */
+  inline void ResidualAxisymmetric(su2double alfa_blended, su2double zeta){
+
+    if (Coord_i[1] < EPS) {
+      return;
+    }
+    
+    else{
+      
+      su2double yinv, rhov;
+      su2double sigma_k_i, sigma_omega_i;
+      su2double pk_axi, pw_axi, ck_axi, cw_axi, dk_axi, dw_axi;
+      
+      yinv = 1.0/Coord_i[1];
+      rhov = Density_i*V_i[2];
+      
+      /*--- Compute blended constants ---*/
+      sigma_k_i = F1_i*sigma_k_1 + (1.0 - F1_i)*sigma_k_2;
+      sigma_omega_i = F1_i*sigma_omega_1 + (1.0 - F1_i)*sigma_omega_2;
+  
+      /*--- Production ---*/
+      pk_axi = max(0.0,2.0/3.0*rhov*TurbVar_i[0]*(2.0/zeta*(yinv*V_i[2]-PrimVar_Grad_i[2][1]
+                                                                  -PrimVar_Grad_i[1][0]) -1.0));
+      pw_axi = alfa_blended*zeta/TurbVar_i[0]*pk_axi;
+      
+      /*--- Convection ---*/
+      ck_axi = rhov*TurbVar_i[0];
+      cw_axi = rhov*TurbVar_i[1];
+      
+      /*--- Diffusion ---*/
+      dk_axi = (Laminar_Viscosity_i+sigma_k_i*Eddy_Viscosity_i)*TurbVar_Grad_i[0][1];
+      dw_axi = (Laminar_Viscosity_i+sigma_omega_i*Eddy_Viscosity_i)*TurbVar_Grad_i[1][1];
+      
+      /*--- Add all terms to the residuals ---*/
+      Residual[0] += yinv*Volume*(pk_axi-ck_axi+dk_axi);
+      Residual[1] += yinv*Volume*(pw_axi-cw_axi+dw_axi);
+    
+      /*--- Add contribution to the jacobian for implicit time integration---*/
+      Jacobian_i[0][0] += yinv*Volume*(sigma_k_i/zeta*TurbVar_Grad_i[0][1]-V_i[2]);
+      Jacobian_i[0][1] -= yinv*Volume*sigma_k_i*TurbVar_i[0]*TurbVar_Grad_i[0][1]/(zeta*zeta);
+      Jacobian_i[1][0] += yinv*Volume*sigma_k_i/zeta*TurbVar_Grad_i[1][1];
+      Jacobian_i[1][1] -= yinv*Volume*(sigma_k_i*TurbVar_i[0]*TurbVar_Grad_i[1][1]/(zeta*zeta)+V_i[2]);
+      
+    }
+  }
 
 public:
   /*!

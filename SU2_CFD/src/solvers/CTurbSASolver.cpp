@@ -2,7 +2,7 @@
  * \file CTurbSASolver.cpp
  * \brief Main subrotuines of CTurbSASolver class
  * \author F. Palacios, A. Bueno
- * \version 7.0.8 "Blackbird"
+ * \version 7.1.0 "Blackbird"
  *
  * SU2 Project Website: https://su2code.github.io
  *
@@ -243,12 +243,10 @@ CTurbSASolver::~CTurbSASolver(void) {
 void CTurbSASolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, CConfig *config,
         unsigned short iMesh, unsigned short iRKStep, unsigned short RunTime_EqSystem, bool Output) {
 
-  bool limiter_turb = (config->GetKind_SlopeLimit_Turb() != NO_LIMITER) &&
-                      (config->GetInnerIter() <= config->GetLimiterIter());
-  unsigned short kind_hybridRANSLES = config->GetKind_HybridRANSLES();
-  const su2double* const* PrimGrad_Flow = nullptr;
-  const su2double* Vorticity = nullptr;
-  su2double Laminar_Viscosity = 0.0;
+  const bool muscl = config->GetMUSCL_Turb();
+  const bool limiter = (config->GetKind_SlopeLimit_Turb() != NO_LIMITER) &&
+                       (config->GetInnerIter() <= config->GetLimiterIter());
+  const auto kind_hybridRANSLES = config->GetKind_HybridRANSLES();
 
   /*--- Clear residual and system matrix, not needed for
    * reducer strategy as we write over the entire matrix. ---*/
@@ -259,7 +257,7 @@ void CTurbSASolver::Preprocessing(CGeometry *geometry, CSolver **solver_containe
 
   /*--- Upwind second order reconstruction and gradients ---*/
 
-  if (config->GetReconstructionGradientRequired()) {
+  if (config->GetReconstructionGradientRequired() && muscl) {
     if (config->GetKind_Gradient_Method_Recon() == GREEN_GAUSS)
       SetSolution_Gradient_GG(geometry, config, true);
     if (config->GetKind_Gradient_Method_Recon() == LEAST_SQUARES)
@@ -274,7 +272,7 @@ void CTurbSASolver::Preprocessing(CGeometry *geometry, CSolver **solver_containe
   if (config->GetKind_Gradient_Method() == WEIGHTED_LEAST_SQUARES)
     SetSolution_Gradient_LS(geometry, config);
 
-  if (limiter_turb) SetSolution_Limiter(geometry, config);
+  if (limiter && muscl) SetSolution_Limiter(geometry, config);
 
   if (kind_hybridRANSLES != NO_HYBRIDRANSLES) {
 
@@ -283,9 +281,9 @@ void CTurbSASolver::Preprocessing(CGeometry *geometry, CSolver **solver_containe
     if (kind_hybridRANSLES == SA_EDDES){
       SU2_OMP_FOR_STAT(omp_chunk_size)
       for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
-        Vorticity = solver_container[FLOW_SOL]->GetNodes()->GetVorticity(iPoint);
-        PrimGrad_Flow = solver_container[FLOW_SOL]->GetNodes()->GetGradient_Primitive(iPoint);
-        Laminar_Viscosity  = solver_container[FLOW_SOL]->GetNodes()->GetLaminarViscosity(iPoint);
+        auto Vorticity = solver_container[FLOW_SOL]->GetNodes()->GetVorticity(iPoint);
+        auto PrimGrad_Flow = solver_container[FLOW_SOL]->GetNodes()->GetGradient_Primitive(iPoint);
+        auto Laminar_Viscosity  = solver_container[FLOW_SOL]->GetNodes()->GetLaminarViscosity(iPoint);
         nodes->SetVortex_Tilting(iPoint, PrimGrad_Flow, Vorticity, Laminar_Viscosity);
       }
     }
@@ -643,7 +641,10 @@ void CTurbSASolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container, CN
 
 //      /*--- Viscous contribution, commented out because serious convergence problems ---*/
 //
-//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->nodes->GetCoord(Point_Normal));
+//      su2double Coord_Reflected[MAXNDIM];
+//      GeometryToolbox::PointPointReflect(nDim, geometry->nodes->GetCoord(Point_Normal),
+//                                               geometry->nodes->GetCoord(iPoint), Coord_Reflected);
+//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), Coord_Reflected);
 //      visc_numerics->SetNormal(Normal);
 //
 //      /*--- Conservative variables w/o reconstruction ---*/
@@ -723,7 +724,10 @@ void CTurbSASolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container, C
 
 //      /*--- Viscous contribution, commented out because serious convergence problems ---*/
 //
-//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->nodes->GetCoord(Point_Normal));
+//      su2double Coord_Reflected[MAXNDIM];
+//      GeometryToolbox::PointPointReflect(nDim, geometry->nodes->GetCoord(Point_Normal),
+//                                               geometry->nodes->GetCoord(iPoint), Coord_Reflected);
+//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), Coord_Reflected);
 //      visc_numerics->SetNormal(Normal);
 //
 //      /*--- Conservative variables w/o reconstruction ---*/
@@ -805,7 +809,10 @@ void CTurbSASolver::BC_Engine_Inflow(CGeometry *geometry, CSolver **solver_conta
 
 //      /*--- Viscous contribution, commented out because serious convergence problems ---*/
 //
-//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->nodes->GetCoord(iPoint));
+//      su2double Coord_Reflected[MAXNDIM];
+//      GeometryToolbox::PointPointReflect(nDim, geometry->nodes->GetCoord(Point_Normal),
+//                                               geometry->nodes->GetCoord(iPoint), Coord_Reflected);
+//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), Coord_Reflected);
 //      visc_numerics->SetNormal(Normal);
 //
 //      /*--- Conservative variables w/o reconstruction ---*/
@@ -889,7 +896,10 @@ void CTurbSASolver::BC_Engine_Exhaust(CGeometry *geometry, CSolver **solver_cont
 
 //      /*--- Viscous contribution, commented out because serious convergence problems ---*/
 //
-//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->nodes->GetCoord(iPoint));
+//      su2double Coord_Reflected[MAXNDIM];
+//      GeometryToolbox::PointPointReflect(nDim, geometry->nodes->GetCoord(Point_Normal),
+//                                               geometry->nodes->GetCoord(iPoint), Coord_Reflected);
+//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), Coord_Reflected);
 //      visc_numerics->SetNormal(Normal);
 //
 //      /*--- Conservative variables w/o reconstruction ---*/
@@ -1033,7 +1043,10 @@ void CTurbSASolver::BC_ActDisk(CGeometry *geometry, CSolver **solver_container,
 //        /*--- Viscous contribution, commented out because serious convergence problems ---*/
 //
 //        visc_numerics->SetNormal(Normal);
-//        visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->node[iPoint_Normal]->GetCoord());
+//        su2double Coord_Reflected[MAXNDIM];
+//        GeometryToolbox::PointPointReflect(nDim, geometry->nodes->GetCoord(Point_Normal),
+//                                                 geometry->nodes->GetCoord(iPoint), Coord_Reflected);
+//        visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), Coord_Reflected);
 //
 //        /*--- Conservative variables w/o reconstruction ---*/
 //
@@ -1121,9 +1134,10 @@ void CTurbSASolver::BC_Inlet_MixingPlane(CGeometry *geometry, CSolver **solver_c
       Jacobian.AddBlock2Diag(iPoint, conv_residual.jacobian_i);
 
       /*--- Viscous contribution ---*/
-
-      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint),
-                              geometry->nodes->GetCoord(Point_Normal));
+      su2double Coord_Reflected[MAXNDIM];
+      GeometryToolbox::PointPointReflect(nDim, geometry->nodes->GetCoord(Point_Normal),
+                                               geometry->nodes->GetCoord(iPoint), Coord_Reflected);
+      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), Coord_Reflected);
       visc_numerics->SetNormal(Normal);
 
       /*--- Conservative variables w/o reconstruction ---*/
@@ -1222,8 +1236,10 @@ void CTurbSASolver::BC_Inlet_Turbo(CGeometry *geometry, CSolver **solver_contain
 
       /*--- Viscous contribution ---*/
 
-      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint),
-                              geometry->nodes->GetCoord(Point_Normal));
+      su2double Coord_Reflected[MAXNDIM];
+      GeometryToolbox::PointPointReflect(nDim, geometry->nodes->GetCoord(Point_Normal),
+                                               geometry->nodes->GetCoord(iPoint), Coord_Reflected);
+      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), Coord_Reflected);
 
       visc_numerics->SetNormal(Normal);
 
@@ -1579,7 +1595,7 @@ void CTurbSASolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_
 }
 
 void CTurbSASolver::SetNuTilde_WF(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics,
-                                  CNumerics *visc_numerics, CConfig *config, unsigned short val_marker) {
+                                  CNumerics *visc_numerics, const CConfig *config, unsigned short val_marker) {
 
   const su2double Gas_Constant = config->GetGas_ConstantND();
   const su2double Cp = (Gamma / Gamma_Minus_One) * Gas_Constant;
