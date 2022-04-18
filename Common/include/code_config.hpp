@@ -121,7 +121,4 @@ using su2mixedfloat = passivedouble;
 #warning Hybrid parallel reverse mode AD cannot be used with Intel compilers.
 #endif
 
-#if (_OPENMP >= 201811 && !defined(FORCE_OPDI_MACRO_BACKEND)) || defined(FORCE_OPDI_OMPT_BACKEND)
-#define HAVE_OMPT
-#endif
 #endif

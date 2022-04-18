@@ -30,10 +30,8 @@
 
 void omp_initialize() {
 #ifdef HAVE_OPDI
-#if !defined(HAVE_OMPT)
   opdi::backend = new opdi::MacroBackend;
   opdi::backend->init();
-#endif
   opdi::logic = new opdi::OmpLogic;
   opdi::logic->init();
   su2double::getGlobalTape().initialize();
@@ -50,9 +48,7 @@ void omp_finalize() {
   opdi::backend->finalize();
   delete opdi::tool;
   delete opdi::logic;
-#if !defined(HAVE_OMPT)
   delete opdi::backend;
-#endif
 #endif
 }
 
