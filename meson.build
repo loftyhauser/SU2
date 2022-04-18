@@ -58,16 +58,6 @@ if get_option('enable-autodiff') or get_option('enable-directdiff')
   codi_for_args = ['-DCODI_FORWARD_TYPE']
 endif
 
-if get_option('enable-autodiff')
-  if get_option('codi-tape') == 'JacobianIndex'
-    codi_rev_args += '-DCODI_INDEX_TAPE'
-  #elif get_option('codi-tape') == 'PrimalLinear'
-  #  codi_rev_args += '-DCODI_PRIMAL_TAPE'
-  #elif get_option('codi-tape') == 'PrimalIndex'
-  #  codi_rev_args += '-DCODI_PRIMAL_INDEX_TAPE'
-  endif
-endif
-
 # add cgns library
 if get_option('enable-cgns')
   subdir('externals/cgns')

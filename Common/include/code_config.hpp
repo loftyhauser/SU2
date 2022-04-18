@@ -92,15 +92,7 @@ FORCEINLINE Out su2staticcast_p(In ptr) {
 #if defined(HAVE_OMP)
 using su2double = codi::RealReverseIndexParallel;
 #else
-#if defined(CODI_INDEX_TAPE)
-using su2double = codi::RealReverseIndex;
-//#elif defined(CODI_PRIMAL_TAPE)
-//using su2double = codi::RealReversePrimal;
-//#elif defined(CODI_PRIMAL_INDEX_TAPE)
-//using su2double = codi::RealReversePrimalIndex;
-#else
 using su2double = codi::RealReverse;
-#endif
 #endif
 #elif defined(CODI_FORWARD_TYPE) // forward mode AD
 #include "codi.hpp"
