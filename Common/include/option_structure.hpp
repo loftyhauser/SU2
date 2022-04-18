@@ -2259,18 +2259,6 @@ struct StreamwisePeriodicValues {
 };
 
 /*!
- * \brief Type of POD basis generation (for use with libROM)
- */
-enum class POD_KIND {
-  STATIC,            /*!< \brief Use static SVD for POD basis generation. */
-  INCREMENTAL,       /*!< \brief Use incremental SVD for POD basis generation. */
-};
-static const MapType<std::string, POD_KIND> POD_Map = {
-  MakePair("STATIC_POD",      POD_KIND::STATIC)
-  MakePair("INCREMENTAL_POD", POD_KIND::INCREMENTAL)
-};
-
-/*!
  * \brief Type of operation for the linear system solver, changes the source of solver options.
  */
 enum class LINEAR_SOLVER_MODE {
