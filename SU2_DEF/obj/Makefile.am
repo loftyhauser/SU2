@@ -46,8 +46,3 @@ ___bin_SU2_DEF_LDADD = \
 ___bin_SU2_DEF_CXXFLAGS += @su2_externals_INCLUDES@
 ___bin_SU2_DEF_LDADD += @su2_externals_LIBS@
 ___bin_SU2_DEF_LDADD += @su2_externals_LIBPTHREAD@
-
-# if BUILD_MUTATIONPP
-___bin_SU2_DEF_CXXFLAGS += @MUTATIONPP_CXX@
-___bin_SU2_DEF_LDADD += @MUTATIONPP_LD@
-# endif

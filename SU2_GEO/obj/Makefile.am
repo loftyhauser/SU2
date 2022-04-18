@@ -42,8 +42,3 @@ ___bin_SU2_GEO_LDADD = ../../Common/lib/libSU2.a
 # always link to built dependencies from ./externals
 ___bin_SU2_GEO_CXXFLAGS += @su2_externals_INCLUDES@
 ___bin_SU2_GEO_LDADD += @su2_externals_LIBS@
-
-# if BUILD_MUTATIONPP
-___bin_SU2_GEO_CXXFLAGS += @MUTATIONPP_CXX@
-___bin_SU2_GEO_LDADD += @MUTATIONPP_LD@
-# endif

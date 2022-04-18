@@ -63,11 +63,6 @@ su2_dot_cxx_flags += @su2_externals_INCLUDES@
 su2_dot_ldadd += @su2_externals_LIBS@
 su2_dot_ldadd += @su2_externals_LIBPTHREAD@
 
-# if BUILD_MUTATIONPP
-su2_dot_cxx_flags += @MUTATIONPP_CXX@
-su2_dot_ldadd += @MUTATIONPP_LD@
-# endif
-
 if BUILD_NORMAL
 ___bin_SU2_DOT_SOURCES = ${su2_dot_sources}
 ___bin_SU2_DOT_CXXFLAGS = ${su2_dot_cxx_flags}

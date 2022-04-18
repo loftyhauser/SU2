@@ -29,7 +29,6 @@
 #include "../../include/variables/CNEMONSVariable.hpp"
 #include "../../../Common/include/toolboxes/geometry_toolbox.hpp"
 #include "../../../Common/include/toolboxes/printing_toolbox.hpp"
-#include "../../include/fluid/CMutationTCLib.hpp"
 #include "../../include/fluid/CSU2TCLib.hpp"
 #include "../../include/limiters/CLimiterDetails.hpp"
 
@@ -1033,14 +1032,6 @@ void CNEMOEulerSolver::SetNondimensionalization(CConfig *config, unsigned short 
 
   /*--- Instatiate the fluid model ---*/
   switch (config->GetKind_FluidModel()) {
-  case MUTATIONPP:
-   #if defined(HAVE_MPP) && !defined(CODI_REVERSE_TYPE) && !defined(CODI_FORWARD_TYPE)
-     FluidModel = new CMutationTCLib(config, nDim);
-   #else
-     SU2_MPI::Error(string("Either 1) Mutation++ has not been configured/compiled (add '-Denable-mpp=true' to your meson string) or 2) CODI must be deactivated since it is not compatible with Mutation++."),
-     CURRENT_FUNCTION);
-   #endif
-   break;
   case SU2_NONEQ:
    FluidModel = new CSU2TCLib(config, nDim, viscous);
    break;
@@ -1303,9 +1294,6 @@ void CNEMOEulerSolver::SetNondimensionalization(CConfig *config, unsigned short 
     switch(config->GetKind_FluidModel()){
     case SU2_NONEQ:
       ModelTable << "SU2 NonEq";
-      break;
-    case MUTATIONPP:
-      ModelTable << "Mutation++ NonEq";
       break;
     }
 

@@ -55,7 +55,6 @@ libSU2Core_sources = ../src/definition_structure.cpp \
   ../src/fluid/CVanDerWaalsGas.cpp \
   ../src/fluid/CNEMOGas.cpp \
   ../src/fluid/CSU2TCLib.cpp \
-  ../src/fluid/CMutationTCLib.cpp \
   ../src/integration/CIntegration.cpp \
   ../src/integration/CSingleGridIntegration.cpp \
   ../src/integration/CMultiGridIntegration.cpp \
@@ -236,11 +235,6 @@ su2_cfd_cxx_flags += @su2_externals_INCLUDES@
 su2_cfd_ldadd += @su2_externals_LIBS@
 su2_cfd_ldadd += @su2_externals_LIBPTHREAD@
 libSU2Core_cxx_flags += @su2_externals_INCLUDES@
-
-# if BUILD_MUTATIONPP
-su2_cfd_cxx_flags += @MUTATIONPP_CXX@
-su2_cfd_ldadd += @MUTATIONPP_LD@
-# endif
 
 if BUILD_NORMAL
 libSU2Core_a_SOURCES = $(libSU2Core_sources)

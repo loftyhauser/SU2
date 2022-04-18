@@ -141,11 +141,6 @@ lib_ldadd =
 lib_cxxflags += @su2_externals_INCLUDES@
 lib_ldadd += @su2_externals_LIBS@
 
-# if BUILD_MUTATIONPP
-lib_cxxflags += @MUTATIONPP_CXX@
-lib_ldadd += @MUTATIONPP_LD@
-# endif
-
 if BUILD_NORMAL
 libSU2_a_SOURCES = $(lib_sources)
 libSU2_a_CXXFLAGS = ${lib_cxxflags}

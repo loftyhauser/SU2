@@ -85,15 +85,6 @@ AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(void *)
 
-# optional bindings for external packages
-
-AC_ARG_WITH(Mutationpp-lib,
-    AS_HELP_STRING([--with-Mutationpp-lib[=ARG]], [Mutation++ library directory, ARG = path to libmutation++.a]),
-  [with_Mutationpp_lib=$withval], [with_Mutationpp_lib="no"])
-AC_ARG_WITH(Mutationpp-include,
-    AS_HELP_STRING([--with-Mutationpp-include[=ARG]], [Mutation++ include directory, ARG = path to mutation++.h]),
-  [with_Mutationpp_include=$withval], [with_Mutationpp_include="no"])
-
 # Check for disabling of SU2 modules
 
 AC_ARG_ENABLE(CFD,
@@ -205,50 +196,6 @@ AC_SUBST([su2_externals_LIBS])
 AC_SUBST([su2_externals_LIBPTHREAD])
 
 su2_externals_INCLUDES="-I\$(top_srcdir)/externals/CLI11 $su2_externals_INCLUDES"
-
-##########################
-
-# check for lib
-Mutationpplib=libmutation++.a
-Mutationppheader=mutation++.h
-have_MPP="no"
-
-if test "$with_Mutationpp_lib" != "no"
-then
-  	AC_CHECK_FILE([$with_Mutationpp_lib/$Mutationpplib],[have_MPP="yes"],[have_MPP="no"])
-	if test "$have_MPP" == "no"
-	then
-		AC_MSG_ERROR([Mutation++ requested but library file not found.])
-	fi
-fi
-
-# check for header
-if test "$have_MPP" != "no"
-then
-	if test "$with_Mutationpp_include" != "no"
-	then
-		AC_CHECK_FILE([$with_Mutationpp_include/$Mutationppheader],[have_MPP='yes'],[have_MPP='no'])
-		if test "$have_MPP" == "no"
-		then
-			AC_MSG_ERROR([Mutation++ requested but header file not found.])
-		fi
-	else
-		have_MPP="no"
-	fi
-fi
-
-if test "$have_MPP" != "no"
-then
-  	AM_CONDITIONAL(BUILD_MUTATIONPP,true,test x$enablempp = xyes -a x$have_MPP = xyes)
-	MUTATIONPP_CXX="-DHAVE_MPP -I"$with_Mutationpp_include""
-	MUTATIONPP_LD="$with_Mutationpp_lib"/$Mutationpplib
-else
-	AM_CONDITIONAL(BUILD_MUTATIONPP,false)
-	MUTATIONPP_CXX=
-	MUTATION_LD=
-fi
-AC_SUBST([MUTATIONPP_CXX])
-AC_SUBST([MUTATIONPP_LD])
 
 ##########################
 

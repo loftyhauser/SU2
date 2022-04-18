@@ -2,7 +2,7 @@ project('SU2', 'c', 'cpp',
         version: '7.3.1 "Blackbird"',
         license: 'LGPL2',
         default_options: ['buildtype=release',
-                          'warning_level=0',
+                          'warning_level=3',
                           'c_std=c99',
                           'cpp_std=c++11'])
 
@@ -177,14 +177,6 @@ endforeach
 
 catch2_dep = declare_dependency(include_directories: 'externals/catch2/')
 
-if get_option('enable-mpp')
-  cmake = import('cmake')
-  mpp_subproj = cmake.subproject('Mutationpp')
-  mpp_dep = mpp_subproj.dependency('mutation++')
-  su2_deps     += mpp_dep
-  su2_cpp_args += '-DHAVE_MPP'
-endif
-
 if omp and get_option('enable-autodiff')
   py = find_program('python3','python')
   p = run_command(py, 'externals/opdi/syntax/check.py', 'su2omp.syntax.json', 'Common', 'SU2_CFD', '-p', '*.hpp', '*.cpp', '*.inl', '-r', '-q')
@@ -248,12 +240,3 @@ message('''---------------------------------------------------------------------
 '''.format(get_option('prefix')+'/bin', meson.source_root(), get_option('enable-tecio'), get_option('enable-cgns'),
            get_option('enable-autodiff'), get_option('enable-directdiff'), get_option('enable-pywrapper'), get_option('enable-mkl'),
            get_option('enable-openblas'), get_option('enable-pastix'), get_option('enable-mixedprec'),  meson.build_root().split('/')[-1]))
-
-if get_option('enable-mpp')
-  message(''' To run SU2 with Mutation++ library, add these lines to your .bashrc file:
-
-          export MPP_DATA_DIRECTORY=$SU2_HOME/subprojects/Mutationpp/data
-          export LD_LIBRARY_PATH=$SU2_HOME/<build_dir>/subprojects/Mutationpp
-
-          ''')
-endif
