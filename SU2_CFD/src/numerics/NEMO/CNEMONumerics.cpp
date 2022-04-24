@@ -61,8 +61,6 @@ CNEMONumerics::CNEMONumerics(unsigned short val_nDim, unsigned short val_nVar,
 
     /*--- Instatiate the correct fluid model ---*/
     switch (config->GetKind_FluidModel()) {
-      case SU2_NONEQ:
-        fluidmodel = new CSU2TCLib(config, nDim, false);
       break;
     }
 }

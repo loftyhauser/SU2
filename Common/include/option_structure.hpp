@@ -566,7 +566,6 @@ enum ENUM_FLUIDMODEL {
   CONSTANT_DENSITY = 4,   /*!< \brief Constant density gas model. */
   INC_IDEAL_GAS = 5,      /*!< \brief Incompressible ideal gas model. */
   INC_IDEAL_GAS_POLY = 6, /*!< \brief Inc. ideal gas, polynomial gas model. */
-  SU2_NONEQ = 8           /*!< \brief User defined gas model for nonequilibrium flow. */
 };
 static const MapType<std::string, ENUM_FLUIDMODEL> FluidModel_Map = {
   MakePair("STANDARD_AIR", STANDARD_AIR)
@@ -576,7 +575,6 @@ static const MapType<std::string, ENUM_FLUIDMODEL> FluidModel_Map = {
   MakePair("CONSTANT_DENSITY", CONSTANT_DENSITY)
   MakePair("INC_IDEAL_GAS", INC_IDEAL_GAS)
   MakePair("INC_IDEAL_GAS_POLY", INC_IDEAL_GAS_POLY)
-  MakePair("SU2_NONEQ", SU2_NONEQ)
 };
 
 /*!

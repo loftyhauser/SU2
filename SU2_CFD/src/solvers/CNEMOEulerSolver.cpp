@@ -1032,8 +1032,6 @@ void CNEMOEulerSolver::SetNondimensionalization(CConfig *config, unsigned short 
 
   /*--- Instatiate the fluid model ---*/
   switch (config->GetKind_FluidModel()) {
-  case SU2_NONEQ:
-   FluidModel = new CSU2TCLib(config, nDim, viscous);
    break;
   }
 
@@ -1292,8 +1290,6 @@ void CNEMOEulerSolver::SetNondimensionalization(CConfig *config, unsigned short 
     ModelTable << config->GetGasModel();
 
     switch(config->GetKind_FluidModel()){
-    case SU2_NONEQ:
-      ModelTable << "SU2 NonEq";
       break;
     }
 
