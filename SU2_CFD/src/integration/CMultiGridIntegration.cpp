@@ -43,7 +43,6 @@ void CMultiGridIntegration::MultiGrid_Iteration(CGeometry ****geometry,
   switch (config[iZone]->GetKind_Solver()) {
     case MAIN_SOLVER::EULER:
     case MAIN_SOLVER::NAVIER_STOKES:
-    case MAIN_SOLVER::NEMO_EULER:
     case MAIN_SOLVER::RANS:
     case MAIN_SOLVER::FEM_EULER:
     case MAIN_SOLVER::FEM_NAVIER_STOKES:

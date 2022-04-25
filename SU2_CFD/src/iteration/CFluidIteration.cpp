@@ -78,7 +78,6 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
     case MAIN_SOLVER::DISC_ADJ_EULER:
     case MAIN_SOLVER::INC_EULER:
     case MAIN_SOLVER::DISC_ADJ_INC_EULER:
-    case MAIN_SOLVER::NEMO_EULER:
       main_solver = MAIN_SOLVER::EULER;
       break;
 

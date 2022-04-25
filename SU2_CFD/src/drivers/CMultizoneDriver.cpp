@@ -76,9 +76,6 @@ CMultizoneDriver::CMultizoneDriver(char* confFile, unsigned short val_nZone, SU2
     case MAIN_SOLVER::INC_EULER: case MAIN_SOLVER::INC_NAVIER_STOKES: case MAIN_SOLVER::INC_RANS:
       fluid_zone = true;
       break;
-    case MAIN_SOLVER::NEMO_EULER:
-      fluid_zone = true;
-      break;
     case MAIN_SOLVER::FEM_ELASTICITY:
       structural_zone = true;
       break;
