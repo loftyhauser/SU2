@@ -48,7 +48,6 @@ enum class SUB_SOLVER_TYPE {
   EULER,                   /*!< \brief Compressible Euler solver */
   NAVIER_STOKES,           /*!< \brief Compressible Navier-Stokes solver */
   NEMO_EULER,              /*!< \brief NEMO Euler solver */
-  NEMO_NAVIER_STOKES,      /*!< \brief NEMO Navier-Stokes solver */
   INC_EULER,               /*!< \brief Incompressible Euler solver */
   INC_NAVIER_STOKES,       /*!< \brief Incompressible Navier-stokes solver */
   FEA,                     /*!< \brief Structural Finite-Element solver */

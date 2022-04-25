@@ -256,7 +256,6 @@ enum class MAIN_SOLVER {
   FEM_LES,                     /*!< \brief Definition of the finite element Large Eddy Simulation Navier-Stokes' (LES) solver. */
   MULTIPHYSICS,
   NEMO_EULER,                  /*!< \brief Definition of the NEMO Euler solver. */
-  NEMO_NAVIER_STOKES,          /*!< \brief Definition of the NEMO NS solver. */
 };
 static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
   MakePair("NONE", MAIN_SOLVER::NONE)
@@ -271,7 +270,6 @@ static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
   MakePair("FEM_RANS", MAIN_SOLVER::FEM_RANS)
   MakePair("FEM_LES", MAIN_SOLVER::FEM_LES)
   MakePair("NEMO_EULER",MAIN_SOLVER::NEMO_EULER)
-  MakePair("NEMO_NAVIER_STOKES",MAIN_SOLVER::NEMO_NAVIER_STOKES)
   MakePair("ADJ_EULER", MAIN_SOLVER::ADJ_EULER)
   MakePair("ADJ_NAVIER_STOKES", MAIN_SOLVER::ADJ_NAVIER_STOKES)
   MakePair("ADJ_RANS", MAIN_SOLVER::ADJ_RANS )

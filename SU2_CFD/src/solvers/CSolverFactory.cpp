@@ -85,10 +85,6 @@ CSolver** CSolverFactory::CreateSolverContainer(MAIN_SOLVER kindMainSolver, CCon
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
       solver[SPECIES_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::SPECIES, solver, geometry, config, iMGLevel);
       break;
-    case MAIN_SOLVER::NEMO_NAVIER_STOKES:
-      solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::NEMO_NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[SPECIES_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::SPECIES, solver, geometry, config, iMGLevel);
-      break;
     case MAIN_SOLVER::RANS:
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
       solver[TURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
@@ -258,7 +254,6 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
     case SUB_SOLVER_TYPE::NEMO_EULER:
     case SUB_SOLVER_TYPE::NAVIER_STOKES:
     case SUB_SOLVER_TYPE::INC_NAVIER_STOKES:
-    case SUB_SOLVER_TYPE::NEMO_NAVIER_STOKES:
       genericSolver = CreateFlowSolver(kindSolver, solver, geometry, config, iMGLevel);
       if (!config->GetNewtonKrylov() || config->GetDiscrete_Adjoint() || config->GetContinuous_Adjoint())
         metaData.integrationType = INTEGRATION_TYPE::MULTIGRID;
@@ -465,9 +460,6 @@ CSolver* CSolverFactory::CreateFlowSolver(SUB_SOLVER_TYPE kindFlowSolver, CSolve
       break;
     case SUB_SOLVER_TYPE::NEMO_EULER:
       flowSolver = new CNEMOEulerSolver(geometry, config, iMGLevel);
-      break;
-    case SUB_SOLVER_TYPE::NEMO_NAVIER_STOKES:
-      flowSolver = new CNEMONSSolver(geometry, config, iMGLevel);
       break;
     default:
       SU2_MPI::Error("Flow solver not found", CURRENT_FUNCTION);

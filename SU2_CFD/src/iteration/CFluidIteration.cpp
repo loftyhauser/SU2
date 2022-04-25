@@ -86,7 +86,6 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
     case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:
     case MAIN_SOLVER::INC_NAVIER_STOKES:
     case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES:
-    case MAIN_SOLVER::NEMO_NAVIER_STOKES:
       main_solver = MAIN_SOLVER::NAVIER_STOKES;
       break;
 
