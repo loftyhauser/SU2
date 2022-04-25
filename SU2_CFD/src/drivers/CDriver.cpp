@@ -73,7 +73,6 @@
 #include "../../include/numerics/NEMO/convection/ausmplusup2.hpp"
 #include "../../include/numerics/NEMO/convection/ausmpwplus.hpp"
 #include "../../include/numerics/NEMO/convection/msw.hpp"
-#include "../../include/numerics/NEMO/NEMO_diffusion.hpp"
 #include "../../include/numerics/continuous_adjoint/adj_convection.hpp"
 #include "../../include/numerics/continuous_adjoint/adj_diffusion.hpp"
 #include "../../include/numerics/continuous_adjoint/adj_sources.hpp"
