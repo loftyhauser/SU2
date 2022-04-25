@@ -77,7 +77,6 @@ su2_cfd_src += files(['variables/CIncNSVariable.cpp',
                       'variables/CFlowVariable.cpp',
                       'variables/CIncEulerVariable.cpp',
                       'variables/CEulerVariable.cpp',
-                      'variables/CNEMOEulerVariable.cpp',
                       'variables/CSobolevSmoothingVariable.cpp'])
 
 su2_cfd_src += files(['solvers/CSolverFactory.cpp',

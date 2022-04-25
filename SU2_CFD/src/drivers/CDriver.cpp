@@ -53,7 +53,6 @@
 
 #include "../../include/variables/CEulerVariable.hpp"
 #include "../../include/variables/CIncEulerVariable.hpp"
-#include "../../include/variables/CNEMOEulerVariable.hpp"
 
 #include "../../include/numerics/template.hpp"
 #include "../../include/numerics/transition.hpp"
@@ -1333,9 +1332,6 @@ template void CDriver::InstantiateTurbulentNumerics<CEulerVariable::CIndices<uns
 template void CDriver::InstantiateTurbulentNumerics<CIncEulerVariable::CIndices<unsigned short>>(
     unsigned short, int, const CConfig*, const CSolver*, CNumerics****&) const;
 
-template void CDriver::InstantiateTurbulentNumerics<CNEMOEulerVariable::CIndices<unsigned short>>(
-    unsigned short, int, const CConfig*, const CSolver*, CNumerics****&) const;
-
 template <class Indices>
 void CDriver::InstantiateSpeciesNumerics(unsigned short nVar_Species, int offset, const CConfig *config,
                                          const CSolver* species_solver, CNumerics ****&numerics) const {
@@ -1388,9 +1384,6 @@ template void CDriver::InstantiateSpeciesNumerics<CEulerVariable::CIndices<unsig
     unsigned short, int, const CConfig*, const CSolver*, CNumerics****&) const;
 
 template void CDriver::InstantiateSpeciesNumerics<CIncEulerVariable::CIndices<unsigned short>>(
-    unsigned short, int, const CConfig*, const CSolver*, CNumerics****&) const;
-
-template void CDriver::InstantiateSpeciesNumerics<CNEMOEulerVariable::CIndices<unsigned short>>(
     unsigned short, int, const CConfig*, const CSolver*, CNumerics****&) const;
 
 void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSolver ***solver, CNumerics ****&numerics) const {
@@ -2006,9 +1999,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
     if (incompressible)
       InstantiateTurbulentNumerics<CIncEulerVariable::CIndices<unsigned short> >(nVar_Turb, offset, config,
                                                                                  solver[MESH_0][TURB_SOL], numerics);
-    else if (NEMO_ns)
-      InstantiateTurbulentNumerics<CNEMOEulerVariable::CIndices<unsigned short> >(nVar_Turb, offset, config,
-                                                                                  solver[MESH_0][TURB_SOL], numerics);
     else
       InstantiateTurbulentNumerics<CEulerVariable::CIndices<unsigned short> >(nVar_Turb, offset, config,
                                                                               solver[MESH_0][TURB_SOL], numerics);
