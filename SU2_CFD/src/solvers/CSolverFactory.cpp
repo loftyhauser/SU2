@@ -32,7 +32,6 @@
 #include "../../include/solvers/CNSSolver.hpp"
 #include "../../include/solvers/CIncNSSolver.hpp"
 #include "../../include/solvers/CNEMOEulerSolver.hpp"
-#include "../../include/solvers/CNEMONSSolver.hpp"
 #include "../../include/solvers/CTurbSASolver.hpp"
 #include "../../include/solvers/CTurbSSTSolver.hpp"
 #include "../../include/solvers/CTransLMSolver.hpp"
