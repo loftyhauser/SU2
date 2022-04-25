@@ -32,7 +32,6 @@
 #include "../../include/output/CElasticityOutput.hpp"
 #include "../../include/output/CAdjElasticityOutput.hpp"
 #include "../../include/output/CFlowCompOutput.hpp"
-#include "../../include/output/CNEMOCompOutput.hpp"
 #include "../../include/output/CAdjFlowCompOutput.hpp"
 #include "../../include/output/CFlowCompFEMOutput.hpp"
 #include "../../include/output/CFlowIncOutput.hpp"
