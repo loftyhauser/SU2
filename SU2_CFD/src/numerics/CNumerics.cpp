@@ -39,8 +39,6 @@ CNumerics::CNumerics(void) {
 
   using_uq = false;
 
-  nemo = false;
-
 }
 
 CNumerics::CNumerics(unsigned short val_nDim, unsigned short val_nVar,

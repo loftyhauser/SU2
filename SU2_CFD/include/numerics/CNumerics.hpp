@@ -187,8 +187,6 @@ protected:
   su2double uq_urlx;              /*!< \brief Under-relaxation factor for numerical stability */
   bool uq_permute;                /*!< \brief Flag for eigenvector permutation */
 
-  bool nemo;                      /*!< \brief Flag for NEMO problems  */
-
 public:
   /*!
    * \brief Return type used in some "ComputeResidual" overloads to give a
