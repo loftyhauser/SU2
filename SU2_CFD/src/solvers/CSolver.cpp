@@ -342,10 +342,6 @@ void CSolver::InitiatePeriodicComms(CGeometry *geometry,
 
   if (commType == PERIODIC_NONE) return;
 
-  if (rotate_periodic && config->GetNEMOProblem()) {
-    SU2_MPI::Error("The NEMO solvers do not support rotational periodicity yet.", CURRENT_FUNCTION);
-  }
-
   /*--- Local variables ---*/
 
   bool boundary_i, boundary_j;

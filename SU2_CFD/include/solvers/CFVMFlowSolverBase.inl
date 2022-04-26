@@ -2463,7 +2463,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::Friction_Forces(const CGeometry* geometr
   const bool QCR = config->GetQCR();
   const bool axisymmetric = config->GetAxisymmetric();
   const bool roughwall = (config->GetnRoughWall() > 0);
-  const bool nemo = config->GetNEMOProblem();
 
   const su2double factor = 1.0 / AeroCoeffForceRef;
   const su2double factorFric = config->GetRefArea() * factor;
@@ -2597,9 +2596,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::Friction_Forces(const CGeometry* geometr
 
       /*--- Compute total and maximum heat flux on the wall ---*/
 
-      /// TODO: Move these ifs to specialized functions.
-      if (!nemo){
-
         if (FlowRegime == ENUM_REGIME::COMPRESSIBLE) {
           GradTemperature = -GeometryToolbox::DotProduct(nDim, Grad_Temp, UnitNormal);
 
@@ -2613,20 +2609,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::Friction_Forces(const CGeometry* geometr
           thermal_conductivity = nodes->GetThermalConductivity(iPoint);
         }
         HeatFlux[iMarker][iVertex] = -thermal_conductivity * GradTemperature * RefHeatFlux;
-
-      } else {
-
-        const auto& thermal_conductivity_tr = nodes->GetThermalConductivity(iPoint);
-        const auto& thermal_conductivity_ve = nodes->GetThermalConductivity_ve(iPoint);
-        const auto& Grad_PrimVar            = nodes->GetGradient_Primitive(iPoint);
-
-        su2double dTn   = GeometryToolbox::DotProduct(nDim, Grad_PrimVar[prim_idx.Temperature()], UnitNormal);
-        su2double dTven = GeometryToolbox::DotProduct(nDim, Grad_PrimVar[prim_idx.Temperature_ve()], UnitNormal);
-
-        /*--- Surface energy balance: trans-rot heat flux, vib-el heat flux,
-        enthalpy transport due to mass diffusion ---*/
-        HeatFlux[iMarker][iVertex] = thermal_conductivity_tr*dTn + thermal_conductivity_ve*dTven;
-      }
 
       /*--- Note that y+, and heat are computed at the
        halo cells (for visualization purposes), but not the forces ---*/

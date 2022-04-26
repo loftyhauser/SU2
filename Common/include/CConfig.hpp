@@ -3669,16 +3669,6 @@ public:
     }
   }
 
-  /*!
-   * \brief Return true if a NEMO solver is in use.
-   */
-  bool GetNEMOProblem(void) const {
-    switch (Kind_Solver) {
-      default:
-        return false;
-    }
-  }
-
    /*!
    * \brief Return true if an AUSM method is in use.
    */

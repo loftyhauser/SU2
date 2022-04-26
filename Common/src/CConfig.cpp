@@ -3277,7 +3277,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
                     (Kind_FluidModel == INC_IDEAL_GAS_POLY) ||
                     (Kind_FluidModel == CONSTANT_DENSITY));
   bool standard_air = ((Kind_FluidModel == STANDARD_AIR));
-  bool nemo = GetNEMOProblem();
 
   if (nZone > 1){
     Multizone_Problem = YES;
@@ -3707,15 +3706,10 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     SU2_MPI::Error("Only STANDARD_AIR fluid model can be used with US Measurement System", CURRENT_FUNCTION);
   }
 
-  if (!ideal_gas && !nemo) {
+  if (!ideal_gas) {
     if (Kind_Upwind_Flow != ROE && Kind_Upwind_Flow != HLLC && Kind_Centered_Flow != JST) {
       SU2_MPI::Error("Only ROE Upwind, HLLC Upwind scheme, and JST scheme can be used for Non-Ideal Compressible Fluids", CURRENT_FUNCTION);
     }
-  }
-
-  if (nemo){
-    if (Kind_Upwind_Flow == AUSMPWPLUS)
-      SU2_MPI::Error("AUSMPW+ is extremely unstable. Feel free to fix me!", CURRENT_FUNCTION);
   }
 
   if(GetBoolTurbomachinery()){
