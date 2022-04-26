@@ -37,58 +37,6 @@ def main():
     test_list = []
 
     #########################
-    ## NEMO solver ###
-    #########################
-
-    # Adiabatic thermal bath
-    thermalbath           = TestCase('thermalbath')
-    thermalbath.cfg_dir   = "nonequilibrium/thermalbath/finitechemistry"
-    thermalbath.cfg_file  = "thermalbath.cfg"
-    thermalbath.test_iter = 10
-    thermalbath.test_vals = [0.945997, 0.945997, -12.018025, -12.217291, -32.000000, 10.013239]
-    thermalbath.su2_exec  = "SU2_CFD"
-    thermalbath.timeout   = 1600
-    thermalbath.new_output = True
-    thermalbath.tol       = 0.00001
-    test_list.append(thermalbath)
-
-    # Adiabatic frozen thermal bath
-    thermalbath_frozen           = TestCase('thermalbath_frozen')
-    thermalbath_frozen.cfg_dir   = "nonequilibrium/thermalbath/frozen"
-    thermalbath_frozen.cfg_file  = "thermalbath_frozen.cfg"
-    thermalbath_frozen.test_iter = 10
-    thermalbath_frozen.test_vals = [-32.000000, -32.000000, -12.018022, -12.217291, -32.000000, 10.013545]
-    thermalbath_frozen.su2_exec  = "SU2_CFD"
-    thermalbath_frozen.timeout   = 1600
-    thermalbath_frozen.new_output = True
-    thermalbath_frozen.tol       = 0.00001
-    test_list.append(thermalbath_frozen)
-
-    # Inviscid single wedge, implicit
-    invwedge           = TestCase('invwedge')
-    invwedge.cfg_dir   = "nonequilibrium/invwedge"
-    invwedge.cfg_file  = "invwedge.cfg"
-    invwedge.test_iter = 10
-    invwedge.test_vals = [-1.046323, -1.571086, -18.300667, -18.628064, -18.574092, 2.271777, 1.875687, 5.315769, 0.870008]
-    invwedge.su2_exec  = "SU2_CFD"
-    invwedge.timeout   = 1600
-    invwedge.new_output = True
-    invwedge.tol       = 0.00001
-    test_list.append(invwedge)
-
-    # Viscous single cone - axisymmetric
-    visc_cone           = TestCase('visc_cone')
-    visc_cone.cfg_dir   = "nonequilibrium/axi_visccone"
-    visc_cone.cfg_file  = "axi_visccone.cfg"
-    visc_cone.test_iter = 10
-    visc_cone.test_vals = [-5.215288, -5.739428, -20.545050, -20.618702, -20.502532, -1.917680, -2.239596, 1.262771, -3.205521]                                                                                                                             
-    visc_cone.su2_exec  = "SU2_CFD"
-    visc_cone.timeout   = 1600
-    visc_cone.new_output = True
-    visc_cone.tol       = 0.00001
-    test_list.append(visc_cone)
-
-    #########################
     ## Compressible Euler ###
     #########################
 
