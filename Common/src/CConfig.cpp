@@ -1057,8 +1057,6 @@ void CConfig::SetPointersNull(void) {
 
   Kind_TimeNumScheme = EULER_IMPLICIT;
 
-  Gas_Composition = nullptr;
-
 }
 
 void CConfig::SetConfig_Options() {
@@ -1164,24 +1162,6 @@ void CConfig::SetConfig_Options() {
   addDoubleOption("THERMAL_EXPANSION_COEFF", Thermal_Expansion_Coeff, 0.00347);
   /*!\brief MOLECULAR_WEIGHT \n DESCRIPTION: Molecular weight for an incompressible ideal gas (28.96 g/mol (air) default) \ingroup Config*/
   addDoubleOption("MOLECULAR_WEIGHT", Molecular_Weight, 28.96);
-
-  ///* DESCRIPTION: Specify if Mutation++ library is used */
-  /*--- Reading gas model as string or integer depending on TC library used. ---*/
-  /* DESCRIPTION: Specify chemical model for multi-species simulations - read by Mutation++ library*/
-  addStringOption("GAS_MODEL", GasModel, string("N2"));
-  /* DESCRIPTION: Specify transport coefficient model for multi-species simulations */
-  addEnumOption("TRANSPORT_COEFF_MODEL", Kind_TransCoeffModel, TransCoeffModel_Map, TRANSCOEFFMODEL::WILKE);
-  /* DESCRIPTION: Specify mass fraction of each species */
-  addDoubleListOption("GAS_COMPOSITION", nSpecies, Gas_Composition);
-  /* DESCRIPTION: Specify if mixture is frozen */
-  addBoolOption("FROZEN_MIXTURE", frozen, false);
-  /* DESCRIPTION: Specify if there is ionization */
-  addBoolOption("IONIZATION", ionization, false);
-  /* DESCRIPTION: Specify if there is VT transfer residual limiting */
-  addBoolOption("VT_RESIDUAL_LIMITING", vt_transfer_res_limit, false);
-  /* DESCRIPTION: List of catalytic walls */
-  addStringListOption("CATALYTIC_WALL", nWall_Catalytic, Wall_Catalytic);
-
 
   /*--- Options related to VAN der WAALS MODEL and PENG ROBINSON ---*/
 
@@ -5146,9 +5126,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   /*--- Specifying a deforming surface requires a mesh deformation solver. ---*/
   if (GetSurface_Movement(DEFORMING)) Deform_Mesh = true;
 
-  if (GetGasModel() == "ARGON") {monoatomic = true;}
-  else {monoatomic = false;}
-
   /*--- Set number of Turbulence Variables. ---*/
   switch (TurbModelFamily(Kind_Turb_Model)) {
     case TURB_FAMILY::NONE:
@@ -5776,7 +5753,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
   iMarker_SymWall, iMarker_PerBound, iMarker_NearFieldBound,
   iMarker_Fluid_InterfaceBound, iMarker_Inlet, iMarker_Riemann,
   iMarker_Deform_Mesh, iMarker_Deform_Mesh_Sym_Plane, iMarker_Fluid_Load,
-  iMarker_Smoluchowski_Maxwell, iWall_Catalytic,
+  iMarker_Smoluchowski_Maxwell, 
   iMarker_Giles, iMarker_Outlet, iMarker_Isothermal, iMarker_HeatFlux, iMarker_HeatTransfer,
   iMarker_EngineInflow, iMarker_EngineExhaust, iMarker_Displacement, iMarker_Damper,
   iMarker_Load, iMarker_FlowLoad, iMarker_Internal, iMarker_Monitoring,
@@ -7118,15 +7095,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
     for (iMarker_HeatTransfer = 0; iMarker_HeatTransfer < nMarker_HeatTransfer; iMarker_HeatTransfer++) {
       BoundaryTable << Marker_HeatTransfer[iMarker_HeatTransfer];
       if (iMarker_HeatTransfer < nMarker_HeatTransfer-1)  BoundaryTable << " ";
-    }
-    BoundaryTable.PrintFooter();
-  }
-
-  if (nWall_Catalytic != 0) {
-    BoundaryTable << "Catalytic wall";
-    for (iWall_Catalytic = 0; iWall_Catalytic < nWall_Catalytic; iWall_Catalytic++) {
-      BoundaryTable << Wall_Catalytic[iWall_Catalytic];
-      if (iWall_Catalytic < nWall_Catalytic-1)  BoundaryTable << " ";
     }
     BoundaryTable.PrintFooter();
   }

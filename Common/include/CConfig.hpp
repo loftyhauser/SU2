@@ -280,7 +280,6 @@ private:
   su2double *Inlet_Temperature;              /*!< \brief Specified temperatures for a supersonic inlet boundaries. */
   su2double *Inlet_Pressure;                 /*!< \brief Specified static pressures for supersonic inlet boundaries. */
   su2double **Inlet_Velocity;                /*!< \brief Specified flow velocity vectors for supersonic inlet boundaries. */
-  su2double **Inlet_MassFrac;                /*!< \brief Specified Mass fraction vectors for supersonic inlet boundaries (NEMO solver). */
   su2double **Inlet_SpeciesVal;              /*!< \brief Specified species vector for inlet boundaries. */
   su2double *EngineInflow_Target;            /*!< \brief Specified fan face targets for nacelle boundaries. */
   su2double *Inflow_Mach;                    /*!< \brief Specified fan face mach for nacelle boundaries. */
@@ -1154,21 +1153,8 @@ private:
   INLET_INTERP_TYPE Kind_Inlet_InterpolationType;    /*!brief type of spanwise interpolation data to use for the inlet face. */
   bool PrintInlet_InterpolatedData;               /*!brief option for printing the interpolated data file. */
 
-  /* other NEMO configure options*/
-  unsigned short nSpecies,                  /*!< \brief No of species present in flow */
-  iWall_Catalytic,
-  nWall_Catalytic;                          /*!< \brief No of catalytic walls */
-  su2double *Gas_Composition,               /*!< \brief Initial mass fractions of flow [dimensionless] */
-  pnorm_heat;                               /*!< \brief pnorm for heat-flux. */
-  bool frozen,                              /*!< \brief Flag for determining if mixture is frozen. */
-  ionization,                               /*!< \brief Flag for determining if free electron gas is in the mixture. */
-  vt_transfer_res_limit,                    /*!< \brief Flag for determining if residual limiting for source term VT-transfer is used. */
-  monoatomic;                               /*!< \brief Flag for monoatomic mixture. */
-  string GasModel,                          /*!< \brief Gas Model. */
-  *Wall_Catalytic;                          /*!< \brief Pointer to catalytic walls. */
-  TRANSCOEFFMODEL   Kind_TransCoeffModel;   /*!< \brief Transport coefficient Model for NEMO solver. */
-
   /*--- Additional species solver options ---*/
+  unsigned short nSpecies;                  /*!< \brief No of species present in flow */
   bool Species_Clipping;           /*!< \brief Boolean that activates solution clipping for scalar transport. */
   su2double* Species_Clipping_Max; /*!< \brief Maximum value of clipping for scalar transport. */
   su2double* Species_Clipping_Min; /*!< \brief Minimum value of clipping for scalar transport. */
@@ -1629,12 +1615,6 @@ public:
    * \return Value of the constant: Temperature
    */
   su2double GetWallTemperature(void) const { return Wall_Temperature; }
-
-    /*!
-   * \brief Get the p-norm for heat-flux objective functions (adjoint problem).
-   * \return Value of the heat flux p-norm
-   */
-  su2double GetPnormHeat(void) const { return pnorm_heat; }
 
   /*!
    * \brief Get the reference value for the specific gas constant.
@@ -3702,32 +3682,6 @@ public:
   unsigned short GetSystemMeasurements(void) const { return SystemMeasurements; }
 
   /*!
-   * \brief Gas model that we are using.
-   * \return Gas model that we are using.
-   */
-  string GetGasModel(void) const {return GasModel;}
-
-  /*!
-   * \brief Get the transport coefficient model.
-   * \return Index of transport coefficient model.
-   */
-  TRANSCOEFFMODEL GetKind_TransCoeffModel(void) const { return Kind_TransCoeffModel; }
-
-  /*!
-   * \brief Get the total number of heat flux markers.
-   * \return Total number of heat flux markers.
-   */
-  unsigned short GetnWall_Catalytic(void) const { return nWall_Catalytic; }
-
-  /*!
-   * \brief Get the name of the surface defined in the geometry file.
-   * \param[in] val_marker - Value of the marker in which we are interested.
-   * \return Name that is in the geometry file for the surface that
-   *         has the marker <i>val_marker</i>.
-   */
-  string GetWall_Catalytic_TagBound(unsigned short val_marker) const { return Wall_Catalytic[val_marker]; }
-
-  /*!
    * \brief Fluid model that we are using.
    * \return Fluid model that we are using.
    */
@@ -5222,12 +5176,6 @@ public:
   const su2double *GetWall_Catalycity(void) const { return Wall_Catalycity; }
 
   /*!
-   * \brief Provides the gas mass fractions of the flow
-   * \return: Gas Mass fractions
-   */
-  const su2double *GetGas_Composition(void) const { return Gas_Composition; }
-
-  /*!
    * \brief Provides the restart information.
    * \return Restart information, if <code>TRUE</code> then the code will use the solution as restart.
    */
@@ -5282,26 +5230,6 @@ public:
    */
 
   bool GetRestart_Flow(void) const { return Restart_Flow; }
-
-  /*!
-   * \brief Indicates whether the flow is frozen (chemistry deactivated).
-   */
-  bool GetFrozen(void) const { return frozen; }
-
-  /*!
-   * \brief Indicates whether electron gas is present in the gas mixture.
-   */
-  bool GetIonization(void) const { return ionization; }
-
-  /*!
-   * \brief Indicates whether the VT source residual is limited.
-   */
-  bool GetVTTransferResidualLimiting(void) const { return vt_transfer_res_limit; }
-
-  /*!
-   * \brief Indicates if mixture is monoatomic.
-   */
-  bool GetMonoatomic(void) const { return monoatomic; }
 
   /*!
    * \brief Information about computing and plotting the equivalent area distribution.

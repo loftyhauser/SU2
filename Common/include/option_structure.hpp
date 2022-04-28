@@ -574,46 +574,6 @@ static const MapType<std::string, ENUM_FLUIDMODEL> FluidModel_Map = {
 };
 
 /*!
- * \brief types of gas models
- */
-enum ENUM_GASMODEL {
-   NO_MODEL   = 0,
-   ARGON      = 1,
-   AIR7       = 2,
-   AIR21      = 3,
-   O2         = 4,
-   N2         = 5,
-   AIR5       = 6,
-   ARGON_SID  = 7,
-   ONESPECIES = 8
-};
-static const MapType<std::string, ENUM_GASMODEL> GasModel_Map = {
-MakePair("NONE", NO_MODEL)
-MakePair("ARGON", ARGON)
-MakePair("AIR-7", AIR7)
-MakePair("AIR-21", AIR21)
-MakePair("O2", O2)
-MakePair("N2", N2)
-MakePair("AIR-5", AIR5)
-MakePair("ARGON-SID",ARGON_SID)
-MakePair("ONESPECIES", ONESPECIES)
-};
-
-/*!
- * \brief types of coefficient transport model
- */
-enum class TRANSCOEFFMODEL {
-  WILKE,
-  GUPTAYOS,
-  CHAPMANN_ENSKOG
-};
-static const MapType<std::string, TRANSCOEFFMODEL> TransCoeffModel_Map = {
-MakePair("WILKE", TRANSCOEFFMODEL::WILKE)
-MakePair("GUPTA-YOS", TRANSCOEFFMODEL::GUPTAYOS)
-MakePair("CHAPMANN-ENSKOG", TRANSCOEFFMODEL::CHAPMANN_ENSKOG)
-};
-
-/*!
  * \brief Types of density models
  */
 enum class INC_DENSITYMODEL {
