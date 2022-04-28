@@ -956,27 +956,6 @@ public:
   /*!
    * \brief A virtual member.
    * \param[in] iPoint - Point index.
-   * \return Value of the flow density.
-   */
-  inline virtual su2double GetDensity(unsigned long iPoint, unsigned long val_iSpecies) const { return 0.0; }
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] iPoint - Point index.
-   * \param[in] val_Species - Index of species s.
-   * \return Value of the mass fraction of species s.
-   */
-  inline virtual su2double GetMassFraction(unsigned long iPoint, unsigned long val_Species) const { return 0.0; }
-
-  /*!
-   * \brief Get the species enthalpy.
-   * \return Value of the species enthalpy.
-   */
-  inline virtual su2double* GetEnthalpys(unsigned long iPoint) { return nullptr; }
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] iPoint - Point index.
    * \return Value of the flow energy.
    */
   inline virtual su2double GetEnergy(unsigned long iPoint) const { return 0.0; }
@@ -1047,27 +1026,6 @@ public:
   /*!
    * \brief A virtual member.
    * \param[in] iPoint - Point index.
-   * \return Value of the vibrational-electronic temperature.
-   */
-  inline virtual su2double GetTemperature_ve(unsigned long iPoint) const { return 0.0; }
-
-  /*!
-   * \brief A virtual member -- Get the mixture specific heat at constant volume (trans.-rot.).
-   * \param[in] iPoint - Point index.
-   * \return \f$\rho C^{t-r}_{v} \f$
-   */
-  inline virtual su2double GetRhoCv_tr(unsigned long iPoint) const { return 0.0; }
-
-  /*!
-   * \brief A virtual member -- Get the mixture specific heat at constant volume (vib.-el.).
-   * \param[in] iPoint - Point index.
-   * \return \f$\rho C^{v-e}_{v} \f$
-   */
-  inline virtual su2double GetRhoCv_ve(unsigned long iPoint) const { return 0.0; }
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] iPoint - Point index.
    * \param[in] iDim - Index of the dimension.
    * \return Value of the velocity for the dimension <i>iDim</i>.
    */
@@ -1095,13 +1053,6 @@ public:
    * \return The laminar viscosity of the flow.
    */
   inline virtual su2double GetLaminarViscosity(unsigned long iPoint) const { return 0.0; }
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] iPoint - Point index.
-   * \return Value of the species diffusion coefficient.
-   */
-  inline virtual su2double* GetDiffusionCoeff(unsigned long iPoint) {return nullptr; }
 
   /*!
    * \brief A virtual member.

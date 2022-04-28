@@ -429,7 +429,7 @@ void CFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolve
       SetVolumeOutputValue("LIMITER_TEMPERATURE", iPoint, Node_Flow->GetLimiter_Primitive(iPoint, nDim+1));
   }
 
-  // All turbulence and species outputs.
+  // All turbulence outputs.
   LoadVolumeData_Scalar(config, solver, geometry, iPoint);
 
   // Streamwise Periodicity

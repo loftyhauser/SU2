@@ -82,7 +82,7 @@ class CAvgGrad_Scalar : public CNumerics {
   CAvgGrad_Scalar(unsigned short val_nDim, unsigned short val_nVar, bool correct_grad,
                   const CConfig* config)
     : CNumerics(val_nDim, val_nVar, config),
-      idx(val_nDim, config->GetnSpecies()),
+      idx(val_nDim, 1),
       correct_gradient(correct_grad),
       implicit(config->GetKind_TimeIntScheme_Turb() == EULER_IMPLICIT),
       incompressible(config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE) {

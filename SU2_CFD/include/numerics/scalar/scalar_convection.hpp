@@ -81,7 +81,7 @@ class CUpwScalar : public CNumerics {
    */
   CUpwScalar(unsigned short ndim, unsigned short nvar, const CConfig* config)
     : CNumerics(ndim, nvar, config),
-      idx(ndim, config->GetnSpecies()),
+      idx(ndim, 1),
       implicit(config->GetKind_TimeIntScheme_Turb() == EULER_IMPLICIT),
       incompressible(config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE),
       dynamic_grid(config->GetDynamic_Grid()) {

@@ -59,9 +59,6 @@ protected:
   *Proj_Flux_Tensor;  /*!< \brief Flux tensor projected in a direction. */
   su2double **tau;    /*!< \brief Viscous stress tensor. */
   const su2double delta [3][3] = {{1.0, 0.0, 0.0},{0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}; /*!< \brief Identity matrix. */
-  const su2double
-  *Diffusion_Coeff_i, /*!< \brief Species diffusion coefficients at point i. */
-  *Diffusion_Coeff_j; /*!< \brief Species diffusion coefficients at point j. */
   su2double
   Laminar_Viscosity_i,   /*!< \brief Laminar viscosity at point i. */
   Laminar_Viscosity_j;   /*!< \brief Laminar viscosity at point j. */
@@ -708,17 +705,6 @@ public:
   }
 
   /*!
-   * \brief Set the diffusion coefficient
-   * \param[in] val_diffusioncoeff_i - Value of the diffusion coefficients at i.
-   * \param[in] val_diffusioncoeff_j - Value of the diffusion coefficients at j
-   */
-  inline void SetDiffusionCoeff(const su2double* val_diffusioncoeff_i,
-                                const su2double* val_diffusioncoeff_j) {
-    Diffusion_Coeff_i = val_diffusioncoeff_i;
-    Diffusion_Coeff_j = val_diffusioncoeff_j;
-  }
-
-  /*!
    * \brief Set the laminar viscosity.
    * \param[in] val_laminar_viscosity_i - Value of the laminar viscosity at point i.
    * \param[in] val_laminar_viscosity_j - Value of the laminar viscosity at point j.
@@ -733,7 +719,6 @@ public:
    * \brief Set the thermal conductivity (translational/rotational)
    * \param[in] val_thermal_conductivity_i - Value of the thermal conductivity at point i.
    * \param[in] val_thermal_conductivity_j - Value of the thermal conductivity at point j.
-   * \param[in] iSpecies - Value of the species.
    */
   inline void SetThermalConductivity(su2double val_thermal_conductivity_i,
                                      su2double val_thermal_conductivity_j) {
@@ -745,7 +730,6 @@ public:
    * \brief Set the thermal conductivity (translational/rotational)
    * \param[in] val_thermal_conductivity_i - Value of the thermal conductivity at point i.
    * \param[in] val_thermal_conductivity_j - Value of the thermal conductivity at point j.
-   * \param[in] iSpecies - Value of the species.
    */
   inline void SetThermalConductivity_ve(su2double val_thermal_conductivity_ve_i,
                                      su2double val_thermal_conductivity_ve_j) {
@@ -757,7 +741,6 @@ public:
    * \brief Set the thermal diffusivity (translational/rotational)
    * \param[in] val_thermal_diffusivity_i - Value of the thermal diffusivity at point i.
    * \param[in] val_thermal_diffusivity_j - Value of the thermal diffusivity at point j.
-   * \param[in] iSpecies - Value of the species.
    */
   inline void SetThermalDiffusivity(su2double val_thermal_diffusivity_i,
                                     su2double val_thermal_diffusivity_j) {

@@ -82,7 +82,7 @@ class CSourceBase_TurbSA : public CNumerics {
    */
   CSourceBase_TurbSA(unsigned short nDim, unsigned short, const CConfig* config)
       : CNumerics(nDim, 1, config),
-        idx(nDim, config->GetnSpecies()),
+        idx(nDim, 1),
         rotating_frame(config->GetRotating_Frame()),
         transition(config->GetKind_Trans_Model() == TURB_TRANS_MODEL::BC) {
     /*--- Setup the Jacobian pointer, we need to return su2double** but we know
@@ -636,7 +636,7 @@ class CSourcePieceWise_TurbSST final : public CNumerics {
   CSourcePieceWise_TurbSST(unsigned short val_nDim, unsigned short, const su2double* constants, su2double val_kine_Inf,
                            su2double val_omega_Inf, const CConfig* config)
       : CNumerics(val_nDim, 2, config),
-        idx(val_nDim, config->GetnSpecies()),
+        idx(val_nDim, 1),
         sustaining_terms(config->GetKind_Turb_Model() == TURB_MODEL::SST_SUST),
         axisymmetric(config->GetAxisymmetric()),
         sigma_k_1(constants[0]),

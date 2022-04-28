@@ -229,7 +229,7 @@ class CFVMFlowSolverBase : public CSolver {
    * \brief Protected constructor, this class is not directly instantiable.
    */
   CFVMFlowSolverBase(const CGeometry& geometry, const CConfig& config)
-    : CSolver(), prim_idx(geometry.GetnDim(), config.GetnSpecies()) {}
+    : CSolver(), prim_idx(geometry.GetnDim(), 1) {}
 
   /*!
    * \brief Set reference values for pressure, forces, etc., e.g. "AeroCoeffForceRef".

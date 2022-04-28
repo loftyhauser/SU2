@@ -47,46 +47,46 @@ class CAdjFlowOutput : public COutput {
   CAdjFlowOutput(CConfig* config, unsigned short nDim);
 
   /*!
-   * \brief Add scalar (turbulence/species) history fields for the Residual RMS (FVMComp, FVMInc, FVMNEMO).
+   * \brief Add scalar (turbulence) history fields for the Residual RMS (FVMComp, FVMInc, FVMNEMO).
    */
   void AddHistoryOutputFields_AdjScalarRMS_RES(const CConfig* config);
 
   /*!
-   * \brief Add scalar (turbulence/species) history fields for the max Residual (FVMComp, FVMInc, FVMNEMO).
+   * \brief Add scalar (turbulence) history fields for the max Residual (FVMComp, FVMInc, FVMNEMO).
    */
   void AddHistoryOutputFields_AdjScalarMAX_RES(const CConfig* config);
 
   /*!
-   * \brief Add scalar (turbulence/species) history fields for the BGS Residual (FVMComp, FVMInc, FVMNEMO).
+   * \brief Add scalar (turbulence) history fields for the BGS Residual (FVMComp, FVMInc, FVMNEMO).
    */
   void AddHistoryOutputFields_AdjScalarBGS_RES(const CConfig* config);
 
   /*!
-   * \brief Add scalar (turbulence/species) history fields for the linear solver (FVMComp, FVMInc, FVMNEMO).
+   * \brief Add scalar (turbulence) history fields for the linear solver (FVMComp, FVMInc, FVMNEMO).
    */
   void AddHistoryOutputFields_AdjScalarLinsol(const CConfig* config);
 
   /*!
-   * \brief Set all scalar (turbulence/species) history field values.
+   * \brief Set all scalar (turbulence) history field values.
    */
   void LoadHistoryData_AdjScalar(const CConfig* config, const CSolver* const* solver);
 
   /*!
-   * \brief Add scalar (turbulence/species) volume solution fields for a point (FVMComp, FVMInc, FVMNEMO).
+   * \brief Add scalar (turbulence) volume solution fields for a point (FVMComp, FVMInc, FVMNEMO).
    * \note The order of fields in restart files is fixed. Therefore the split-up.
    * \param[in] config - Definition of the particular problem.
    */
   void SetVolumeOutputFields_AdjScalarSolution(const CConfig* config);
 
   /*!
-   * \brief Add scalar (turbulence/species) volume solution fields for a point (FVMComp, FVMInc, FVMNEMO).
+   * \brief Add scalar (turbulence) volume solution fields for a point (FVMComp, FVMInc, FVMNEMO).
    * \note The order of fields in restart files is fixed. Therefore the split-up.
    * \param[in] config - Definition of the particular problem.
    */
   void SetVolumeOutputFields_AdjScalarResidual(const CConfig* config);
 
   /*!
-   * \brief Set all scalar (turbulence/species) volume field values for a point.
+   * \brief Set all scalar (turbulence) volume field values for a point.
    * \param[in] config - Definition of the particular problem.
    * \param[in] solver - The container holding all solution data.
    * \param[in] iPoint - Index of the point.

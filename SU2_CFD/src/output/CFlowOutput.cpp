@@ -72,14 +72,6 @@ void CFlowOutput::AddAnalyzeSurfaceOutput(const CConfig *config){
   } else if (rank == MASTER_NODE) {
     cout << "\nWARNING: SURFACE_PRESSURE_DROP can only be computed for at least 2 surfaces (outlet, inlet, ...)\n" << endl;
   }
-  if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    /// DESCRIPTION: Average Species
-    for (unsigned short iVar = 0; iVar < config->GetnSpecies(); iVar++) {
-      AddHistoryOutput("SURFACE_SPECIES_" + std::to_string(iVar), "Avg_Species_" + std::to_string(iVar), ScreenOutputFormat::FIXED, "SPECIES_COEFF", "Total average species " + std::to_string(iVar) + " on all markers set in MARKER_ANALYZE", HistoryFieldType::COEFFICIENT);
-    }
-    /// DESCRIPTION: Species Variance
-    AddHistoryOutput("SURFACE_SPECIES_VARIANCE", "Species_Variance", ScreenOutputFormat::SCIENTIFIC, "SPECIES_COEFF", "Total species variance, measure for mixing quality. On all markers set in MARKER_ANALYZE", HistoryFieldType::COEFFICIENT);
-  }
   /// END_GROUP
 
   /// BEGIN_GROUP: AERO_COEFF_SURF, DESCRIPTION: Surface values on non-solid markers.
@@ -114,14 +106,6 @@ void CFlowOutput::AddAnalyzeSurfaceOutput(const CConfig *config){
   AddHistoryOutputPerSurface("SURFACE_TOTAL_TEMPERATURE","Avg_TotalTemp",             ScreenOutputFormat::SCIENTIFIC, "FLOW_COEFF_SURF", Marker_Analyze, HistoryFieldType::COEFFICIENT);
   /// DESCRIPTION: Average total pressure
   AddHistoryOutputPerSurface("SURFACE_TOTAL_PRESSURE",   "Avg_TotalPress",            ScreenOutputFormat::SCIENTIFIC, "FLOW_COEFF_SURF", Marker_Analyze, HistoryFieldType::COEFFICIENT);
-  if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    /// DESCRIPTION: Average Species
-    for (unsigned short iVar = 0; iVar < config->GetnSpecies(); iVar++) {
-      AddHistoryOutputPerSurface("SURFACE_SPECIES_" + std::to_string(iVar), "Avg_Species_" + std::to_string(iVar), ScreenOutputFormat::FIXED, "SPECIES_COEFF_SURF", Marker_Analyze, HistoryFieldType::COEFFICIENT);
-    }
-    /// DESCRIPTION: Species Variance
-    AddHistoryOutputPerSurface("SURFACE_SPECIES_VARIANCE", "Species_Variance", ScreenOutputFormat::SCIENTIFIC, "SPECIES_COEFF_SURF", Marker_Analyze, HistoryFieldType::COEFFICIENT);
-  }
   /// END_GROUP
 }
 // clang-format on
@@ -144,14 +128,11 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
   const bool incompressible = config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE;
   const bool energy         = config->GetEnergy_Equation();
   const bool streamwisePeriodic = (config->GetKind_Streamwise_Periodic() != ENUM_STREAMWISE_PERIODIC::NONE);
-  const bool species        = config->GetKind_Species_Model() != SPECIES_MODEL::NONE;
-  const auto nSpecies       = config->GetnSpecies();
 
   const bool axisymmetric               = config->GetAxisymmetric();
   const unsigned short nMarker_Analyze  = config->GetnMarker_Analyze();
 
   const auto flow_nodes = solver[FLOW_SOL]->GetNodes();
-  const CVariable* species_nodes = species ? solver[SPECIES_SOL]->GetNodes() : nullptr;
 
   vector<su2double> Surface_MassFlow          (nMarker,0.0);
   vector<su2double> Surface_Mach              (nMarker,0.0);
@@ -167,8 +148,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
   vector<su2double> Surface_VelocityIdeal     (nMarker,0.0);
   vector<su2double> Surface_Area              (nMarker,0.0);
   vector<su2double> Surface_MassFlow_Abs      (nMarker,0.0);
-  su2activematrix Surface_Species(nMarker, nSpecies);
-  Surface_Species = su2double(0.0);
 
   su2double  Tot_Surface_MassFlow          = 0.0;
   su2double  Tot_Surface_Mach              = 0.0;
@@ -183,7 +162,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
   su2double  Tot_Surface_TotalPressure     = 0.0;
   su2double  Tot_Momentum_Distortion       = 0.0;
   su2double  Tot_SecondOverUniformity      = 0.0;
-  vector<su2double> Tot_Surface_Species(nSpecies,0.0);
 
   /*--- Compute the numerical fan face Mach number, and the total area of the inflow ---*/
 
@@ -280,9 +258,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
           Surface_Pressure[iMarker]         += Pressure*Weight;
           Surface_TotalTemperature[iMarker] += TotalTemperature*Weight;
           Surface_TotalPressure[iMarker]    += TotalPressure*Weight;
-          if (species)
-            for (unsigned short iVar = 0; iVar < nSpecies; iVar++)
-              Surface_Species(iMarker, iVar) += species_nodes->GetSolution(iPoint, iVar)*Weight;
 
           /*--- For now, always used the area to weight the uniformities. ---*/
 
@@ -311,8 +286,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
   vector<su2double> Surface_TotalPressure_Local     (nMarker_Analyze,0.0);
   vector<su2double> Surface_Area_Local              (nMarker_Analyze,0.0);
   vector<su2double> Surface_MassFlow_Abs_Local      (nMarker_Analyze,0.0);
-  su2activematrix Surface_Species_Local(nMarker_Analyze,nSpecies);
-  Surface_Species_Local = su2double(0.0);
 
   vector<su2double> Surface_MassFlow_Total          (nMarker_Analyze,0.0);
   vector<su2double> Surface_Mach_Total              (nMarker_Analyze,0.0);
@@ -327,8 +300,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
   vector<su2double> Surface_TotalPressure_Total     (nMarker_Analyze,0.0);
   vector<su2double> Surface_Area_Total              (nMarker_Analyze,0.0);
   vector<su2double> Surface_MassFlow_Abs_Total      (nMarker_Analyze,0.0);
-  su2activematrix Surface_Species_Total(nMarker_Analyze,nSpecies);
-  Surface_Species_Total = su2double(0.0);
 
   vector<su2double> Surface_MomentumDistortion_Total (nMarker_Analyze,0.0);
 
@@ -356,8 +327,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
           Surface_TotalPressure_Local[iMarker_Analyze]     += Surface_TotalPressure[iMarker];
           Surface_Area_Local[iMarker_Analyze]              += Surface_Area[iMarker];
           Surface_MassFlow_Abs_Local[iMarker_Analyze]      += Surface_MassFlow_Abs[iMarker];
-          for (unsigned short iVar = 0; iVar < nSpecies; iVar++)
-            Surface_Species_Local(iMarker_Analyze, iVar) += Surface_Species(iMarker, iVar);
         }
 
       }
@@ -387,7 +356,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
   Allreduce(Surface_TotalPressure_Local, Surface_TotalPressure_Total);
   Allreduce(Surface_Area_Local, Surface_Area_Total);
   Allreduce(Surface_MassFlow_Abs_Local, Surface_MassFlow_Abs_Total);
-  Allreduce_su2activematrix(Surface_Species_Local, Surface_Species_Total);
 
 
   /*--- Compute the value of Surface_Area_Total, and Surface_Pressure_Total, and
@@ -408,8 +376,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
       Surface_Pressure_Total[iMarker_Analyze]         /= Weight;
       Surface_TotalTemperature_Total[iMarker_Analyze] /= Weight;
       Surface_TotalPressure_Total[iMarker_Analyze]    /= Weight;
-      for (unsigned short iVar = 0; iVar < nSpecies; iVar++)
-        Surface_Species_Total(iMarker_Analyze, iVar) /= Weight;
     }
     else {
       Surface_Mach_Total[iMarker_Analyze]             = 0.0;
@@ -420,8 +386,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
       Surface_Pressure_Total[iMarker_Analyze]         = 0.0;
       Surface_TotalTemperature_Total[iMarker_Analyze] = 0.0;
       Surface_TotalPressure_Total[iMarker_Analyze]    = 0.0;
-      for (unsigned short iVar = 0; iVar < nSpecies; iVar++)
-        Surface_Species_Total(iMarker_Analyze, iVar) = 0.0;
     }
 
     /*--- Compute flow uniformity parameters separately (always area for now). ---*/
@@ -512,15 +476,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
     Tot_Surface_TotalPressure += TotalPressure;
     config->SetSurface_TotalPressure(iMarker_Analyze, TotalPressure);
 
-    if (species) {
-      for (unsigned short iVar = 0; iVar < nSpecies; iVar++) {
-        su2double Species = Surface_Species_Total(iMarker_Analyze, iVar);
-        SetHistoryOutputPerSurfaceValue("SURFACE_SPECIES_" + std::to_string(iVar), Species, iMarker_Analyze);
-        Tot_Surface_Species[iVar] += Species;
-        if (iVar == 0)
-          config->SetSurface_Species_0(iMarker_Analyze, Species);
-      }
-    }
   }
 
   /*--- Compute the average static pressure drop between two surfaces. Note
@@ -550,13 +505,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
   SetHistoryOutputValue("SURFACE_SECOND_OVER_UNIFORM", Tot_SecondOverUniformity);
   SetHistoryOutputValue("SURFACE_TOTAL_TEMPERATURE", Tot_Surface_TotalTemperature);
   SetHistoryOutputValue("SURFACE_TOTAL_PRESSURE", Tot_Surface_TotalPressure);
-  if (species) {
-    for (unsigned short iVar = 0; iVar < nSpecies; iVar++)
-      SetHistoryOutputValue("SURFACE_SPECIES_" + std::to_string(iVar), Tot_Surface_Species[iVar]);
-
-    SetAnalyzeSurface_SpeciesVariance(solver, geometry, config, Surface_Species_Total, Surface_MassFlow_Abs_Total,
-                                      Surface_Area_Total);
-  }
 
   if ((rank == MASTER_NODE) && !config->GetDiscrete_Adjoint() && output) {
 
@@ -642,138 +590,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
   std::cout << std::resetiosflags(std::cout.flags());
 }
 
-void CFlowOutput::SetAnalyzeSurface_SpeciesVariance(const CSolver* const*solver, const CGeometry *geometry,
-                                                    CConfig *config, const su2activematrix& Surface_Species_Total,
-                                                    const vector<su2double>& Surface_MassFlow_Abs_Total,
-                                                    const vector<su2double>& Surface_Area_Total) {
-
-  const unsigned short nMarker      = config->GetnMarker_All();
-  const unsigned short Kind_Average = config->GetKind_Average();
-
-  const bool species        = config->GetKind_Species_Model() != SPECIES_MODEL::NONE;
-  const auto nSpecies       = config->GetnSpecies();
-
-  const bool axisymmetric               = config->GetAxisymmetric();
-  const unsigned short nMarker_Analyze  = config->GetnMarker_Analyze();
-
-  const auto flow_nodes = solver[FLOW_SOL]->GetNodes();
-  const CVariable* species_nodes = species ? solver[SPECIES_SOL]->GetNodes() : nullptr;
-
-  /*--- Compute Variance of species on the analyze markers. This is done after the rest as the average species value is
-   * necessary. The variance is computed for all species together and not for each species alone. ---*/
-  vector<su2double> Surface_SpeciesVariance(nMarker,0.0);
-  su2double Tot_Surface_SpeciesVariance = 0.0;
-
-  /*--- sum += (Yj_i - mu_Yj)^2 * weight_i with i representing the node and j the species. ---*/
-  for (unsigned short iMarker = 0; iMarker < nMarker; iMarker++) {
-
-    if (config->GetMarker_All_Analyze(iMarker) == YES) {
-
-      /*--- Find iMarkerAnalyze to iMarker. As SpeciesAvg is accessed via iMarkerAnalyze. ---*/
-      unsigned short iMarker_Analyze_Stored = std::numeric_limits<unsigned short>::max();
-      for (unsigned short iMarker_Analyze = 0; iMarker_Analyze < nMarker_Analyze; iMarker_Analyze++)
-        if (config->GetMarker_All_TagBound(iMarker) == config->GetMarker_Analyze_TagBound(iMarker_Analyze))
-          iMarker_Analyze_Stored = iMarker_Analyze;
-
-      for (unsigned long iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++) {
-        const auto iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-
-        if (geometry->nodes->GetDomain(iPoint)) {
-
-          su2double AxiFactor = 0.0;
-          if (axisymmetric) {
-            if (geometry->nodes->GetCoord(iPoint, 1) != 0.0)
-              AxiFactor = 2.0*PI_NUMBER*geometry->nodes->GetCoord(iPoint, 1);
-            else {
-              /*--- Find the point "above" by finding the neighbor of iPoint that is also a vertex of iMarker. ---*/
-              AxiFactor = 0.0;
-              for (unsigned short iNeigh = 0; iNeigh < geometry->nodes->GetnPoint(iPoint); ++iNeigh) {
-                auto jPoint = geometry->nodes->GetPoint(iPoint, iNeigh);
-                if (geometry->nodes->GetVertex(jPoint, iMarker) >= 0) {
-                  /*--- Not multiplied by two since we need to half the y coordinate. ---*/
-                  AxiFactor = PI_NUMBER * geometry->nodes->GetCoord(jPoint, 1);
-                  break;
-                }
-              }
-            }
-          } else {
-            AxiFactor = 1.0;
-          }
-
-          su2double Vector[3];
-          geometry->vertex[iMarker][iVertex]->GetNormal(Vector);
-          const su2double Density = flow_nodes->GetDensity(iPoint);
-          su2double Area = 0.0;
-          su2double MassFlow = 0.0;
-
-          for (unsigned short iDim = 0; iDim < nDim; iDim++) {
-            Area += (Vector[iDim] * AxiFactor) * (Vector[iDim] * AxiFactor);
-            MassFlow += Vector[iDim] * AxiFactor * Density * flow_nodes->GetVelocity(iPoint,iDim);
-          }
-          Area= sqrt(Area);
-
-          su2double Weight;
-          if (Kind_Average == AVERAGE_MASSFLUX) Weight = abs(MassFlow);
-          else if (Kind_Average == AVERAGE_AREA) Weight = abs(Area);
-          else Weight = 1.0;
-
-          for (unsigned short iVar = 0; iVar < nSpecies; iVar++)
-            Surface_SpeciesVariance[iMarker] += pow(species_nodes->GetSolution(iPoint, iVar) - Surface_Species_Total(iMarker_Analyze_Stored, iVar), 2) * Weight;
-        }
-      }
-    }
-  }
-
-  /*--- MPI Communication ---*/
-  vector<su2double> Surface_SpeciesVariance_Local(nMarker_Analyze,0.0);
-  vector<su2double> Surface_SpeciesVariance_Total(nMarker_Analyze,0.0);
-
-  for (unsigned short iMarker = 0; iMarker < nMarker; iMarker++) {
-
-    if (config->GetMarker_All_Analyze(iMarker) == YES)  {
-
-      for (unsigned short iMarker_Analyze= 0; iMarker_Analyze < nMarker_Analyze; iMarker_Analyze++) {
-
-        /*--- Add the Surface_MassFlow, and Surface_Area to the particular boundary ---*/
-
-        if (config->GetMarker_All_TagBound(iMarker) == config->GetMarker_Analyze_TagBound(iMarker_Analyze)) {
-          Surface_SpeciesVariance_Local[iMarker_Analyze] += Surface_SpeciesVariance[iMarker];
-        }
-      }
-    }
-  }
-
-  auto Allreduce = [](const vector<su2double>& src, vector<su2double>& dst) {
-    SU2_MPI::Allreduce(src.data(), dst.data(), src.size(), MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-  };
-  Allreduce(Surface_SpeciesVariance_Local, Surface_SpeciesVariance_Total);
-
-  /*--- Divide quantity by weight. ---*/
-  for (unsigned short iMarker_Analyze = 0; iMarker_Analyze < nMarker_Analyze; iMarker_Analyze++) {
-
-    su2double Weight;
-    if (Kind_Average == AVERAGE_MASSFLUX) Weight = Surface_MassFlow_Abs_Total[iMarker_Analyze];
-    else if (Kind_Average == AVERAGE_AREA) Weight = abs(Surface_Area_Total[iMarker_Analyze]);
-    else Weight = 1.0;
-
-    if (Weight != 0.0) {
-      Surface_SpeciesVariance_Total[iMarker_Analyze] /= Weight;
-    }
-    else {
-      Surface_SpeciesVariance[iMarker_Analyze] = 0.0;
-    }
-  }
-
-  /*--- Set values on markers ---*/
-  for (unsigned short iMarker_Analyze = 0; iMarker_Analyze < nMarker_Analyze; iMarker_Analyze++) {
-    su2double SpeciesVariance = Surface_SpeciesVariance_Total[iMarker_Analyze];
-    SetHistoryOutputPerSurfaceValue("SURFACE_SPECIES_VARIANCE", SpeciesVariance, iMarker_Analyze);
-    Tot_Surface_SpeciesVariance += SpeciesVariance;
-    config->SetSurface_Species_Variance(iMarker_Analyze, Tot_Surface_SpeciesVariance);
-  }
-  SetHistoryOutputValue("SURFACE_SPECIES_VARIANCE", Tot_Surface_SpeciesVariance);
-}
-
 // The "AddHistoryOutput(" must not be split over multiple lines to ensure proper python parsing
 // clang-format off
 void CFlowOutput::AddHistoryOutputFields_ScalarRMS_RES(const CConfig* config) {
@@ -793,11 +609,6 @@ void CFlowOutput::AddHistoryOutputFields_ScalarRMS_RES(const CConfig* config) {
     case TURB_FAMILY::NONE: break;
   }
 
-   if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    for (unsigned short iVar = 0; iVar < config->GetnSpecies(); iVar++) {
-      AddHistoryOutput("RMS_SPECIES_" + std::to_string(iVar), "rms[rho*Y_" + std::to_string(iVar)+"]", ScreenOutputFormat::FIXED, "RMS_RES", "Root-mean square residual of transported species.", HistoryFieldType::RESIDUAL);
-    }
-  }
 }
 
 void CFlowOutput::AddHistoryOutputFields_ScalarMAX_RES(const CConfig* config) {
@@ -818,11 +629,6 @@ void CFlowOutput::AddHistoryOutputFields_ScalarMAX_RES(const CConfig* config) {
       break;
   }
 
-  if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    for (unsigned short iVar = 0; iVar < config->GetnSpecies(); iVar++) {
-      AddHistoryOutput("MAX_SPECIES_" + std::to_string(iVar), "max[rho*Y_" + std::to_string(iVar)+"]", ScreenOutputFormat::FIXED, "MAX_RES", "Maximum residual of transported species.", HistoryFieldType::RESIDUAL);
-    }
-  }
 }
 
 void CFlowOutput::AddHistoryOutputFields_ScalarBGS_RES(const CConfig* config) {
@@ -844,11 +650,6 @@ void CFlowOutput::AddHistoryOutputFields_ScalarBGS_RES(const CConfig* config) {
     case TURB_FAMILY::NONE: break;
   }
 
-  if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    for (unsigned short iVar = 0; iVar < config->GetnSpecies(); iVar++) {
-      AddHistoryOutput("BGS_SPECIES_" + std::to_string(iVar), "bgs[rho*Y_" + std::to_string(iVar)+"]", ScreenOutputFormat::FIXED, "BGS_RES", "BGS residual of transported species.", HistoryFieldType::RESIDUAL);
-    }
-  }
 }
 
 void CFlowOutput::AddHistoryOutputFields_ScalarLinsol(const CConfig* config) {
@@ -857,10 +658,6 @@ void CFlowOutput::AddHistoryOutputFields_ScalarLinsol(const CConfig* config) {
     AddHistoryOutput("LINSOL_RESIDUAL_TURB", "LinSolResTurb", ScreenOutputFormat::FIXED, "LINSOL", "Residual of the linear solver for turbulence solver.");
   }
 
-  if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    AddHistoryOutput("LINSOL_ITER_SPECIES", "LinSolIterSpecies", ScreenOutputFormat::INTEGER, "LINSOL", "Number of iterations of the linear solver for species solver.");
-    AddHistoryOutput("LINSOL_RESIDUAL_SPECIES", "LinSolResSpecies", ScreenOutputFormat::FIXED, "LINSOL", "Residual of the linear solver for species solver.");
-  }
 }
 // clang-format on
 
@@ -893,18 +690,6 @@ void CFlowOutput::LoadHistoryData_Scalar(const CConfig* config, const CSolver* c
     SetHistoryOutputValue("LINSOL_RESIDUAL_TURB", log10(solver[TURB_SOL]->GetResLinSolver()));
   }
 
-  if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    for (unsigned short iVar = 0; iVar < config->GetnSpecies(); iVar++) {
-      SetHistoryOutputValue("RMS_SPECIES_" + std::to_string(iVar), log10(solver[SPECIES_SOL]->GetRes_RMS(iVar)));
-      SetHistoryOutputValue("MAX_SPECIES_" + std::to_string(iVar), log10(solver[SPECIES_SOL]->GetRes_Max(iVar)));
-      if (multiZone) {
-        SetHistoryOutputValue("BGS_SPECIES_" + std::to_string(iVar), log10(solver[SPECIES_SOL]->GetRes_BGS(iVar)));
-      }
-    }
-
-    SetHistoryOutputValue("LINSOL_ITER_SPECIES", solver[SPECIES_SOL]->GetIterLinSolver());
-    SetHistoryOutputValue("LINSOL_RESIDUAL_SPECIES", log10(solver[SPECIES_SOL]->GetResLinSolver()));
-  }
 }
 
 void CFlowOutput::SetVolumeOutputFields_ScalarSolution(const CConfig* config){
@@ -922,10 +707,6 @@ void CFlowOutput::SetVolumeOutputFields_ScalarSolution(const CConfig* config){
       break;
   }
 
-  if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    for (unsigned short iVar = 0; iVar < config->GetnSpecies(); iVar++)
-      AddVolumeOutput("SPECIES_" + std::to_string(iVar), "Species_" + std::to_string(iVar), "SOLUTION", "Species_" + std::to_string(iVar) + " mass fraction");
-  }
 }
 
 void CFlowOutput::SetVolumeOutputFields_ScalarResidual(const CConfig* config) {
@@ -943,10 +724,6 @@ void CFlowOutput::SetVolumeOutputFields_ScalarResidual(const CConfig* config) {
       break;
   }
 
-  if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    for (unsigned short iVar = 0; iVar < config->GetnSpecies(); iVar++)
-      AddVolumeOutput("RES_SPECIES_" + std::to_string(iVar), "Residual_Species_" + std::to_string(iVar), "RESIDUAL", "Residual of the transported species " + std::to_string(iVar));
-  }
 }
 
 void CFlowOutput::SetVolumeOutputFields_ScalarLimiter(const CConfig* config) {
@@ -963,13 +740,6 @@ void CFlowOutput::SetVolumeOutputFields_ScalarLimiter(const CConfig* config) {
 
       case TURB_FAMILY::NONE:
         break;
-    }
-  }
-
-  if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    if (config->GetKind_SlopeLimit_Species() != LIMITER::NONE) {
-      for (unsigned short iVar = 0; iVar < config->GetnSpecies(); iVar++)
-        AddVolumeOutput("LIMITER_SPECIES_" + std::to_string(iVar), "Limiter_Species_" + std::to_string(iVar), "LIMITER", "Limiter value of the transported species " + std::to_string(iVar));
     }
   }
 
@@ -1056,16 +826,6 @@ void CFlowOutput::LoadVolumeData_Scalar(const CConfig* config, const CSolver* co
     SetVolumeOutputValue("WALL_DISTANCE", iPoint, Node_Geo->GetWall_Distance(iPoint));
   }
 
-  if (config->GetKind_Species_Model() != SPECIES_MODEL::NONE) {
-    const auto Node_Species = solver[SPECIES_SOL]->GetNodes();
-
-    for (unsigned short iVar = 0; iVar < config->GetnSpecies(); iVar++) {
-      SetVolumeOutputValue("SPECIES_" + std::to_string(iVar), iPoint, Node_Species->GetSolution(iPoint, iVar));
-      SetVolumeOutputValue("RES_SPECIES_" + std::to_string(iVar), iPoint, solver[SPECIES_SOL]->LinSysRes(iPoint, iVar));
-      if (config->GetKind_SlopeLimit_Species() != LIMITER::NONE)
-        SetVolumeOutputValue("LIMITER_SPECIES_" + std::to_string(iVar), iPoint, Node_Species->GetLimiter(iPoint, iVar));
-    }
-  }
 }
 
 void CFlowOutput::LoadSurfaceData(CConfig *config, CGeometry *geometry, CSolver **solver, unsigned long iPoint, unsigned short iMarker, unsigned long iVertex){
