@@ -339,10 +339,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
     SU2_MPI::Allreduce(src.data(), dst.data(), src.size(), MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
   };
 
-  auto Allreduce_su2activematrix = [](const su2activematrix& src, su2activematrix& dst) {
-    SU2_MPI::Allreduce(src.data(), dst.data(), src.size(), MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-  };
-
   Allreduce(Surface_MassFlow_Local, Surface_MassFlow_Total);
   Allreduce(Surface_Mach_Local, Surface_Mach_Total);
   Allreduce(Surface_Temperature_Local, Surface_Temperature_Total);
