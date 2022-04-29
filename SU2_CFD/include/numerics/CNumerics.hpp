@@ -65,8 +65,6 @@ protected:
   su2double
   Thermal_Conductivity_i,    /*!< \brief Thermal conductivity at point i. */
   Thermal_Conductivity_j,    /*!< \brief Thermal conductivity at point j. */
-  Thermal_Conductivity_ve_i, /*!< \brief vibrational-electronic Thermal conductivity at point i. */
-  Thermal_Conductivity_ve_j, /*!< \brief vibrational-electronic Thermal conductivity at point j. */
   Thermal_Diffusivity_i,     /*!< \brief Thermal diffusivity at point i. */
   Thermal_Diffusivity_j;     /*!< \brief Thermal diffusivity at point j. */
   su2double
@@ -151,7 +149,6 @@ protected:
   TurbPsi_Grad_j,  /*!< \brief Gradient of adjoint turbulent variables at point j. */
   AuxVar_Grad_i,   /*!< \brief Gradient of an auxiliary variable at point i. */
   AuxVar_Grad_j;   /*!< \brief Gradient of an auxiliary variable at point i. */
-  const su2double *RadVar_Source;  /*!< \brief Source term from the radiative heat transfer equation. */
   const su2double
   *Coord_i,      /*!< \brief Cartesians coordinates of point i. */
   *Coord_j;      /*!< \brief Cartesians coordinates of point j. */
@@ -724,17 +721,6 @@ public:
                                      su2double val_thermal_conductivity_j) {
     Thermal_Conductivity_i = val_thermal_conductivity_i;
     Thermal_Conductivity_j = val_thermal_conductivity_j;
-  }
-
-    /*!
-   * \brief Set the thermal conductivity (translational/rotational)
-   * \param[in] val_thermal_conductivity_i - Value of the thermal conductivity at point i.
-   * \param[in] val_thermal_conductivity_j - Value of the thermal conductivity at point j.
-   */
-  inline void SetThermalConductivity_ve(su2double val_thermal_conductivity_ve_i,
-                                     su2double val_thermal_conductivity_ve_j) {
-    Thermal_Conductivity_ve_i = val_thermal_conductivity_ve_i;
-    Thermal_Conductivity_ve_j = val_thermal_conductivity_ve_j;
   }
 
   /*!
@@ -1512,27 +1498,6 @@ public:
                                const su2double Sensor_i, const su2double Sensor_j, const CConfig* config) const;
 
   /*!
-   * \brief Set the value of the radiation variable.
-   * \param[in] val_radvar_i - Value of the turbulent variable at point i.
-   * \param[in] val_radvar_j - Value of the turbulent variable at point j.
-   */
-  inline virtual void SetRadVar(const su2double *val_radvar_i, const su2double *val_radvar_j) { }
-
-  /*!
-   * \brief Set the gradient of the radiation variables.
-   * \param[in] val_radvar_grad_i - Gradient of the turbulent variable at point i.
-   * \param[in] val_radvar_grad_j - Gradient of the turbulent variable at point j.
-   */
-  inline virtual void SetRadVarGradient(CMatrixView<const su2double> val_radvar_grad_i,
-                                        CMatrixView<const su2double> val_radvar_grad_j) { }
-
-  /*!
-   * \brief Set the gradient of the radiation variables.
-   * \param[in] val_radvar_source - Source term (and jacobian term) of the radiative heat transfer.
-   */
-  inline void SetRadVarSource(const su2double *val_radvar_source) { RadVar_Source = val_radvar_source; }
-
-  /*!
    * \brief Set the pressure derivatives.
    * \param[in] val_dPdU_i - pressure derivatives at i.
    * \param[in] val_dPdU_j - pressure derivatives at j.
@@ -1545,27 +1510,6 @@ public:
    * \param[in] val_dTdU_j - temperature derivatives at j.
    */
   virtual inline void SetdTdU(su2double *val_dTdU_i, su2double *val_dTdU_j)       { }
-
-  /*!
-   * \brief Set the vib-el temperture derivatives.
-   * \param[in] val_dTvedU_i - t_ve derivatives at i.
-   * \param[in] val_dTvedU_j - t_ve derivatives at j.
-   */
-  virtual inline void SetdTvedU(su2double *val_dTvedU_i, su2double *val_dTvedU_j) { }
-
-  /*!
-   * \brief Set the vib-elec energy.
-   * \param[in] val_Eve_i - vib-el energy at i.
-   * \param[in] val_Eve_j - vib-el energy at j.
-   */
-  virtual inline void SetEve(su2double *val_Eve_i, su2double *val_Eve_j)          { }
-
-  /*!
-   * \brief Set the vib-elec specific heat.
-   * \param[in] val_Cvve_i - Cvve at i.
-   * \param[in] val_Cvve_j - Cvve at j.
-   */
-  virtual inline void SetCvve(su2double *val_Cvve_i, su2double *val_Cvve_j)       { }
 
   /*!
    * \brief Set the ratio of specific heats.

@@ -545,17 +545,6 @@ map<string, string> CDriver::GetAllBoundaryMarkersType() const {
   return allBoundariesTypeMap;
 }
 
-void CDriver::SetHeatSource_Position(passivedouble alpha, passivedouble pos_x, passivedouble pos_y, passivedouble pos_z){
-
-  CSolver *solver = solver_container[ZONE_0][INST_0][MESH_0][RAD_SOL];
-
-  config_container[ZONE_0]->SetHeatSource_Rot_Z(alpha);
-  config_container[ZONE_0]->SetHeatSource_Center(pos_x, pos_y, pos_z);
-
-  solver->SetVolumetricHeatSource(geometry_container[ZONE_0][INST_0][MESH_0], config_container[ZONE_0]);
-
-}
-
 void CDriver::SetInlet_Angle(unsigned short iMarker, passivedouble alpha){
 
   su2double alpha_rad = alpha * PI_NUMBER/180.0;

@@ -475,8 +475,6 @@ enum RUNTIME_TYPE {
   RUNTIME_HEAT_SYS = 21,      /*!< \brief One-physics case, the code is solving the heat equation. */
   RUNTIME_ADJHEAT_SYS = 31,   /*!< \brief One-physics case, the code is solving the adjoint heat equation. */
   RUNTIME_TRANS_SYS = 22,     /*!< \brief One-physics case, the code is solving the turbulence model. */
-  RUNTIME_RADIATION_SYS = 23, /*!< \brief One-physics case, the code is solving the radiation model. */
-  RUNTIME_ADJRAD_SYS = 24,    /*!< \brief One-physics case, the code is solving the adjoint radiation model. */
 };
 
 const int FLOW_SOL = 0;     /*!< \brief Position of the mean flow solution in the solver container array. */
@@ -488,8 +486,6 @@ const int ADJTURB_SOL = 3;  /*!< \brief Position of the continuous adjoint turbu
 const int TRANS_SOL = 4;    /*!< \brief Position of the transition model solution in the solver container array. */
 const int HEAT_SOL = 5;     /*!< \brief Position of the heat equation in the solution solver array. */
 const int ADJHEAT_SOL = 6;  /*!< \brief Position of the adjoint heat equation in the solution solver array. */
-const int RAD_SOL = 7;      /*!< \brief Position of the radiation equation in the solution solver array. */
-const int ADJRAD_SOL = 8;   /*!< \brief Position of the continuous adjoint turbulence solution in the solver container array. */
 
 const int MESH_SOL = 9;      /*!< \brief Position of the mesh solver. */
 const int ADJMESH_SOL = 10;   /*!< \brief Position of the adjoint of the mesh solver. */
@@ -1207,18 +1203,6 @@ static const MapType<std::string, ENUM_DVFEA> DVFEA_Map = {
   MakePair("DENSITY", DENSITY_VAL)
   MakePair("DEAD_WEIGHT", DEAD_WEIGHT)
   MakePair("ELECTRIC_FIELD", ELECTRIC_FIELD)
-};
-
-/*!
- * \brief Kinds of radiation models
- */
-enum class RADIATION_MODEL {
-  NONE,   /*!< \brief No radiation model */
-  P1,     /*!< \brief P1 Radiation model. */
-};
-static const MapType<std::string, RADIATION_MODEL> Radiation_Map = {
-  MakePair("NONE", RADIATION_MODEL::NONE)
-  MakePair("P1", RADIATION_MODEL::P1)
 };
 
 /*!

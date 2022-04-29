@@ -129,13 +129,6 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
                                                                       RUNTIME_HEAT_SYS, val_iZone, val_iInst);
   }
 
-  /*--- Incorporate a weakly-coupled radiation model to the analysis ---*/
-  if (config[val_iZone]->AddRadiation()) {
-    config[val_iZone]->SetGlobalParam(main_solver, RUNTIME_RADIATION_SYS);
-    integration[val_iZone][val_iInst][RAD_SOL]->SingleGrid_Iteration(geometry, solver, numerics, config,
-                                                                     RUNTIME_RADIATION_SYS, val_iZone, val_iInst);
-  }
-
   /*--- Adapt the CFL number using an exponential progression with under-relaxation approach. ---*/
 
   if ((config[val_iZone]->GetCFL_Adapt() == YES) && (!disc_adj)) {

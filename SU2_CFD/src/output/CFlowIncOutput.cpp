@@ -112,8 +112,6 @@ void CFlowIncOutput::SetHistoryOutputFields(CConfig *config){
 
   AddHistoryOutputFields_ScalarRMS_RES(config);
 
-  /// DESCRIPTION: Root-mean square residual of the radiative energy (P1 model).
-  if (config->AddRadiation()) AddHistoryOutput("RMS_RAD_ENERGY", "rms[E_Rad]",  ScreenOutputFormat::FIXED, "RMS_RES", "Root-mean square residual of the radiative energy.", HistoryFieldType::RESIDUAL);
   /// END_GROUP
 
   /// BEGIN_GROUP: MAX_RES, DESCRIPTION: The maximum residuals of the SOLUTION variables.
@@ -149,8 +147,6 @@ void CFlowIncOutput::SetHistoryOutputFields(CConfig *config){
 
   AddHistoryOutputFields_ScalarBGS_RES(config);
 
-  /// DESCRIPTION: Multizone residual of the radiative energy (P1 model).
-  if (config->AddRadiation()) AddHistoryOutput("BGS_RAD_ENERGY", "bgs[E_Rad]",  ScreenOutputFormat::FIXED, "BGS_RES", "BGS residual of the radiative energy.", HistoryFieldType::RESIDUAL);
   /// END_GROUP
 
   /// DESCRIPTION: Angle of attack
@@ -197,16 +193,12 @@ void CFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CSolv
 
   CSolver* flow_solver = solver[FLOW_SOL];
   CSolver* heat_solver = solver[HEAT_SOL];
-  CSolver* rad_solver  = solver[RAD_SOL];
   CSolver* mesh_solver = solver[MESH_SOL];
 
   SetHistoryOutputValue("RMS_PRESSURE", log10(flow_solver->GetRes_RMS(0)));
   SetHistoryOutputValue("RMS_VELOCITY-X", log10(flow_solver->GetRes_RMS(1)));
   SetHistoryOutputValue("RMS_VELOCITY-Y", log10(flow_solver->GetRes_RMS(2)));
   if (nDim == 3) SetHistoryOutputValue("RMS_VELOCITY-Z", log10(flow_solver->GetRes_RMS(3)));
-
-  if (config->AddRadiation())
-    SetHistoryOutputValue("RMS_RAD_ENERGY", log10(rad_solver->GetRes_RMS(0)));
 
   SetHistoryOutputValue("MAX_PRESSURE", log10(flow_solver->GetRes_Max(0)));
   SetHistoryOutputValue("MAX_VELOCITY-X", log10(flow_solver->GetRes_Max(1)));
@@ -218,8 +210,6 @@ void CFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CSolv
     SetHistoryOutputValue("BGS_VELOCITY-X", log10(flow_solver->GetRes_BGS(1)));
     SetHistoryOutputValue("BGS_VELOCITY-Y", log10(flow_solver->GetRes_BGS(2)));
     if (nDim == 3) SetHistoryOutputValue("BGS_VELOCITY-Z", log10(flow_solver->GetRes_BGS(3)));
-    if (config->AddRadiation())
-      SetHistoryOutputValue("BGS_RAD_ENERGY", log10(rad_solver->GetRes_BGS(0)));
   }
 
   if (weakly_coupled_heat){
@@ -298,10 +288,6 @@ void CFlowIncOutput::SetVolumeOutputFields(CConfig *config){
 
   SetVolumeOutputFields_ScalarSolution(config);
 
-  // Radiation variables
-  if (config->AddRadiation())
-    AddVolumeOutput("P1-RAD", "Radiative_Energy(P1)", "SOLUTION", "Radiative Energy");
-
   // Grid velocity
   if (gridMovement){
     AddVolumeOutput("GRID_VELOCITY-X", "Grid_Velocity_x", "GRID_VELOCITY", "x-component of the grid velocity vector");
@@ -368,7 +354,6 @@ void CFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolve
 
   const auto* Node_Flow = solver[FLOW_SOL]->GetNodes();
   const CVariable* Node_Heat = nullptr;
-  const CVariable* Node_Rad = nullptr;
   auto* Node_Geo = geometry->nodes;
 
   if (weakly_coupled_heat){
@@ -385,12 +370,6 @@ void CFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolve
 
   if (heat) SetVolumeOutputValue("TEMPERATURE", iPoint, Node_Flow->GetSolution(iPoint, nDim+1));
   if (weakly_coupled_heat) SetVolumeOutputValue("TEMPERATURE", iPoint, Node_Heat->GetSolution(iPoint, 0));
-
-  // Radiation solver
-  if (config->AddRadiation()){
-    Node_Rad = solver[RAD_SOL]->GetNodes();
-    SetVolumeOutputValue("P1-RAD", iPoint, Node_Rad->GetSolution(iPoint,0));
-  }
 
   if (gridMovement){
     SetVolumeOutputValue("GRID_VELOCITY-X", iPoint, Node_Geo->GetGridVel(iPoint)[0]);

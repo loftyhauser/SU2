@@ -96,11 +96,6 @@ history_header_map = {'ADJOINT_DISP_X': {'DESCRIPTION': 'Root-mean square residu
                       'GROUP': 'BGS_RES',
                       'HEADER': 'bgs[A_Rho]',
                       'TYPE': 'RESIDUAL'},
- 'BGS_ADJ_RAD_ENERGY': {'DESCRIPTION': 'BGS residual  of the P1 radiative '
-                                       'energy.',
-                        'GROUP': 'BGS_RES',
-                        'HEADER': 'bgs[A_P1]',
-                        'TYPE': 'RESIDUAL'},
  'BGS_ADJ_TEMPERATURE': {'DESCRIPTION': 'BGS residual of the adjoint '
                                         'temperature.',
                          'GROUP': 'BGS_RES',
@@ -722,11 +717,6 @@ history_header_map = {'ADJOINT_DISP_X': {'DESCRIPTION': 'Root-mean square residu
                       'GROUP': 'RMS_RES',
                       'HEADER': 'rms[A_P]',
                       'TYPE': 'RESIDUAL'},
- 'RMS_ADJ_RAD_ENERGY': {'DESCRIPTION': 'Root-mean square residual of the P1 '
-                                       'radiative energy.',
-                        'GROUP': 'RMS_RES',
-                        'HEADER': 'rms[A_P1]',
-                        'TYPE': 'RESIDUAL'},
  'RMS_ADJ_TEMPERATURE': {'DESCRIPTION': 'Root-mean square residual of the '
                                         'adjoint temperature.',
                          'GROUP': 'RMS_RES',

@@ -56,7 +56,6 @@
 
 #include "../../include/numerics/template.hpp"
 #include "../../include/numerics/transition.hpp"
-#include "../../include/numerics/radiation.hpp"
 #include "../../include/numerics/heat.hpp"
 #include "../../include/numerics/flow/convection/roe.hpp"
 #include "../../include/numerics/flow/convection/fds.hpp"
@@ -1331,7 +1330,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   nVar_Adj_Flow         = 0,
   nVar_Adj_Turb         = 0,
   nVar_FEM              = 0,
-  nVar_Rad              = 0,
   nVar_Heat             = 0;
 
   numerics = new CNumerics***[config->GetnMGLevels()+1] ();
@@ -1436,8 +1434,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
 
   if (fem)          nVar_FEM = solver[MESH_0][FEA_SOL]->GetnVar();
   if (heat)         nVar_Heat = solver[MESH_0][HEAT_SOL]->GetnVar();
-
-  if (config->AddRadiation()) nVar_Rad = solver[MESH_0][RAD_SOL]->GetnVar();
 
   /*--- Number of variables for adjoint problem ---*/
 
@@ -1744,9 +1740,7 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
       }
 
       /*--- At the moment it is necessary to have the RHT equation in order to have a volumetric heat source. ---*/
-      if (config->AddRadiation())
-        numerics[iMGlevel][FLOW_SOL][source_second_term] = new CSourceRadiation(nDim, nVar_Flow, config);
-      else if ((incompressible && (config->GetKind_Streamwise_Periodic() != ENUM_STREAMWISE_PERIODIC::NONE)) &&
+      if ((incompressible && (config->GetKind_Streamwise_Periodic() != ENUM_STREAMWISE_PERIODIC::NONE)) &&
                (config->GetEnergy_Equation() && !config->GetStreamwise_Periodic_Temperature()))
         numerics[iMGlevel][FLOW_SOL][source_second_term] = new CSourceIncStreamwisePeriodic_Outlet(nDim, nVar_Flow, config);
       else
@@ -1879,19 +1873,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
           break;
       }
     }
-  }
-
-  /*--- Solver definition for the radiation model problem ---*/
-
-  if (config->AddRadiation()) {
-    /*--- Definition of the viscous scheme for each equation and mesh level ---*/
-    numerics[MESH_0][RAD_SOL][VISC_TERM] = new CAvgGradCorrected_P1(nDim, nVar_Rad, config);
-
-    /*--- Definition of the source term integration scheme for each equation and mesh level ---*/
-    numerics[MESH_0][RAD_SOL][SOURCE_FIRST_TERM] = new CSourceP1(nDim, nVar_Rad, config);
-
-    /*--- Definition of the boundary condition method ---*/
-    numerics[MESH_0][RAD_SOL][VISC_BOUND_TERM] = new CAvgGradCorrected_P1(nDim, nVar_Rad, config);
   }
 
   /*--- Solver definition for the flow adjoint problem ---*/
@@ -2634,11 +2615,6 @@ void CDriver::Print_DirectResidual(RECORDING kind_recording) {
         if (!multizone && configs->GetWeakly_Coupled_Heat()){
           if (!addVals) RMSTable.AddColumn("rms_Heat" + iVar_iZone2string(0, iZone), fieldWidth);
           else RMSTable << log10(solvers[HEAT_SOL]->GetRes_RMS(0));
-        }
-
-        if (configs->AddRadiation()) {
-          if (!addVals) RMSTable.AddColumn("rms_Rad" + iVar_iZone2string(0, iZone), fieldWidth);
-          else RMSTable << log10(solvers[RAD_SOL]->GetRes_RMS(0));
         }
 
       }

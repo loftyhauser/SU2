@@ -842,13 +842,13 @@ void CConfig::SetPointersNull(void) {
   Marker_CfgFile_KindBC       = nullptr;    Marker_All_SendRecv         = nullptr;    Marker_All_PerBound        = nullptr;
   Marker_ZoneInterface        = nullptr;    Marker_All_ZoneInterface    = nullptr;    Marker_Riemann             = nullptr;
   Marker_Fluid_InterfaceBound = nullptr;    Marker_CHTInterface         = nullptr;    Marker_Damper              = nullptr;
-  Marker_Emissivity           = nullptr;    Marker_HeatTransfer         = nullptr;
+  Marker_HeatTransfer         = nullptr;
 
     /*--- Boundary Condition settings ---*/
 
   Isothermal_Temperature = nullptr;    HeatTransfer_Coeff     = nullptr;    HeatTransfer_WallTemp  = nullptr;
   Heat_Flux              = nullptr;    Displ_Value            = nullptr;    Load_Value             = nullptr;
-  FlowLoad_Value         = nullptr;    Damper_Constant        = nullptr;    Wall_Emissivity        = nullptr;
+  FlowLoad_Value         = nullptr;    Damper_Constant        = nullptr;
   Roughness_Height       = nullptr;
 
   /*--- Inlet Outlet Boundary Condition settings ---*/
@@ -1651,8 +1651,6 @@ void CConfig::SetConfig_Options() {
   /* DESCRIPTION: Time discretization */
   addEnumOption("TIME_DISCRE_FEA", Kind_TimeIntScheme_FEA, Time_Int_Map_FEA, STRUCT_TIME_INT::NEWMARK_IMPLICIT);
   /* DESCRIPTION: Time discretization for radiation problems*/
-  addEnumOption("TIME_DISCRE_RADIATION", Kind_TimeIntScheme_Radiation, Time_Int_Map, EULER_IMPLICIT);
-  /* DESCRIPTION: Time discretization */
   addEnumOption("TIME_DISCRE_HEAT", Kind_TimeIntScheme_Heat, Time_Int_Map, EULER_IMPLICIT);
   /* DESCRIPTION: Time discretization */
   addEnumOption("TIMESTEP_HEAT", Kind_TimeStep_Heat, Heat_TimeStep_Map, MINIMUM);
@@ -2461,40 +2459,6 @@ void CConfig::SetConfig_Options() {
   addEnumOption("BGS_RELAXATION", Kind_BGS_RelaxMethod, AitkenForm_Map, BGS_RELAXATION::NONE);
   /* DESCRIPTION: Relaxation required */
   addBoolOption("RELAXATION", Relaxation, false);
-
-  /*!\par CONFIG_CATEGORY: Radiation solver \ingroup Config*/
-  /*--- Options related to the radiation solver ---*/
-
-  /* DESCRIPTION: Type of radiation model */
-  addEnumOption("RADIATION_MODEL", Kind_Radiation, Radiation_Map, RADIATION_MODEL::NONE);
-
-  /* DESCRIPTION: Kind of initialization of the P1 model  */
-  addEnumOption("P1_INITIALIZATION", Kind_P1_Init, P1_Init_Map, P1_INIT::TEMPERATURE);
-
-  /* DESCRIPTION: Absorption coefficient */
-  addDoubleOption("ABSORPTION_COEFF", Absorption_Coeff, 1.0);
-  /* DESCRIPTION: Scattering coefficient */
-  addDoubleOption("SCATTERING_COEFF", Scattering_Coeff, 0.0);
-
-  /* DESCRIPTION: Apply a volumetric heat source as a source term (NO, YES) in the form of an ellipsoid*/
-  addBoolOption("HEAT_SOURCE", HeatSource, false);
-  /* DESCRIPTION: Value of the volumetric heat source */
-  addDoubleOption("HEAT_SOURCE_VAL", ValHeatSource, 0.0);
-  /* DESCRIPTION: Rotation of the volumetric heat source respect to Z axis */
-  addDoubleOption("HEAT_SOURCE_ROTATION_Z", Heat_Source_Rot_Z, 0.0);
-  /* DESCRIPTION: Position of heat source center (Heat_Source_Center_X, Heat_Source_Center_Y, Heat_Source_Center_Z) */
-  hs_center[0] = 0.0; hs_center[1] = 0.0; hs_center[2] = 0.0;
-  addDoubleArrayOption("HEAT_SOURCE_CENTER", 3, hs_center);
-  /* DESCRIPTION: Vector of heat source radii (Heat_Source_Axes_A, Heat_Source_Axes_B, Heat_Source_Axes_C) */
-  hs_axes[0] = 1.0; hs_axes[1] = 1.0; hs_axes[2] = 1.0;
-  addDoubleArrayOption("HEAT_SOURCE_AXES", 3, hs_axes);
-
-  /*!\brief MARKER_EMISSIVITY DESCRIPTION: Wall emissivity of the marker for radiation purposes \n
-   * Format: ( marker, emissivity of the marker, ... ) \ingroup Config  */
-  addStringDoubleListOption("MARKER_EMISSIVITY", nMarker_Emissivity, Marker_Emissivity, Wall_Emissivity);
-
-  /* DESCRIPTION:  Courant-Friedrichs-Lewy condition of the finest grid in radiation solvers */
-  addDoubleOption("CFL_NUMBER_RAD", CFL_Rad, 1.0);
 
   /*!\par CONFIG_CATEGORY: Heat solver \ingroup Config*/
   /*--- options related to the heat solver ---*/
@@ -3584,8 +3548,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
       MinLogResidual = log10(Linear_Solver_Error);
     }
   }
-
-  Radiation = (Kind_Radiation != RADIATION_MODEL::NONE);
 
   /*--- Check for unsupported features. ---*/
 
@@ -5614,7 +5576,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
   iMarker_Designing, iMarker_GeoEval, iMarker_Plotting, iMarker_Analyze, iMarker_DV, iDV_Value,
   iMarker_ZoneInterface, iMarker_PyCustom, iMarker_Load_Dir, iMarker_Disp_Dir, iMarker_Load_Sine, iMarker_Clamped,
   iMarker_Moving, iMarker_Supersonic_Inlet, iMarker_Supersonic_Outlet, iMarker_ActDiskInlet,
-  iMarker_Emissivity,
   iMarker_ActDiskOutlet, iMarker_MixingPlaneInterface,
   iMarker_SobolevBC;
 
@@ -7007,15 +6968,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
     BoundaryTable.PrintFooter();
   }
 
-  if (nMarker_Emissivity != 0) {
-    BoundaryTable << "Radiative boundary";
-    for (iMarker_Emissivity = 0; iMarker_Emissivity < nMarker_Emissivity; iMarker_Emissivity++) {
-      BoundaryTable << Marker_Emissivity[iMarker_Emissivity]; // << "(" << Wall_Emissivity[iMarker_Emissivity] << ")";
-      if (iMarker_Emissivity < nMarker_Emissivity-1)  BoundaryTable << " ";
-    }
-    BoundaryTable.PrintFooter();
-  }
-
   if (nMarker_Custom != 0) {
     BoundaryTable << "Custom boundary";
     for (iMarker_Custom = 0; iMarker_Custom < nMarker_Custom; iMarker_Custom++) {
@@ -7829,7 +7781,6 @@ unsigned short CConfig::GetContainerPosition(unsigned short val_eqsystem) {
     case RUNTIME_ADJFLOW_SYS:   return ADJFLOW_SOL;
     case RUNTIME_ADJTURB_SYS:   return ADJTURB_SOL;
     case RUNTIME_ADJFEA_SYS:    return ADJFEA_SOL;
-    case RUNTIME_RADIATION_SYS: return RAD_SOL;
     case RUNTIME_MULTIGRID_SYS: return 0;
   }
   return 0;
@@ -9029,18 +8980,6 @@ const su2double* CConfig::GetLoad_Sine_Dir(string val_marker) const {
   for (iMarker_Load_Sine = 0; iMarker_Load_Sine < nMarker_Load_Sine; iMarker_Load_Sine++)
     if (Marker_Load_Sine[iMarker_Load_Sine] == val_marker) break;
   return Load_Sine_Dir[iMarker_Load_Sine];
-}
-
-su2double CConfig::GetWall_Emissivity(string val_marker) const {
-
-  unsigned short iMarker_Emissivity = 0;
-
-  if (nMarker_Emissivity > 0) {
-    for (iMarker_Emissivity = 0; iMarker_Emissivity < nMarker_Emissivity; iMarker_Emissivity++)
-      if (Marker_Emissivity[iMarker_Emissivity] == val_marker) break;
-  }
-
-  return Wall_Emissivity[iMarker_Emissivity];
 }
 
 su2double CConfig::GetFlowLoad_Value(string val_marker) const {

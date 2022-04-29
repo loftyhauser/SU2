@@ -396,26 +396,3 @@ public:
 
 };
 
-
-/*!
- * \class CSourceRadiation
- * \brief Class for a source term due to radiation.
- * \ingroup SourceDiscr
- * \author Ruben Sanchez
- */
-class CSourceRadiation : public CSourceBase_Flow {
-private:
-  bool implicit;
-
-public:
-
-  CSourceRadiation(unsigned short val_nDim, unsigned short val_nVar, const CConfig *config);
-
-  /*!
-   * \brief Source term integration for a radiation source.
-   * \param[in] config - Definition of the particular problem.
-   * \return Lightweight const-view of residual and Jacobian.
-   */
-  ResidualType<> ComputeResidual(const CConfig* config) override;
-
-};

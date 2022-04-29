@@ -282,27 +282,11 @@ def main():
     ######################################
 
     pass_list = [ test.run_test() for test in test_list ]
-    
-    ###################################
-    ### Coupled RHT-CFD Adjoint     ###
-    ###################################
-
-    # Coupled discrete adjoint for radiative heat transfer in heated cylinder
-    discadj_rht                = TestCase('discadj_rht')
-    discadj_rht.cfg_dir        = "radiation/p1adjoint"
-    discadj_rht.cfg_file       = "configp1adjoint.cfg"
-    discadj_rht.test_iter      = 10
-    discadj_rht.su2_exec       = "discrete_adjoint.py -f"
-    discadj_rht.timeout        = 1600
-    discadj_rht.reference_file = "of_grad_cd.csv.ref"
-    discadj_rht.test_file      = "of_grad_cd.csv"
-    pass_list.append(discadj_rht.run_filediff())
-    test_list.append(discadj_rht)
 
     ######################################
     ### RUN PYTHON TESTS               ###
     ######################################
-    
+
     # test discrete_adjoint.py
     discadj_euler_py = TestCase('discadj_euler_py')
     discadj_euler_py.cfg_dir = "cont_adj_euler/naca0012"
@@ -314,7 +298,7 @@ def main():
     discadj_euler_py.test_file = "of_grad_cd.dat"
     pass_list.append(discadj_euler_py.run_filediff())
     test_list.append(discadj_euler_py)
-    
+
     # test discrete_adjoint with multiple ffd boxes
     discadj_multiple_ffd_py = TestCase('discadj_multiple_ffd_py')
     discadj_multiple_ffd_py.cfg_dir = "multiple_ffd/naca0012"
@@ -415,7 +399,7 @@ def main():
             print('  passed - %s'%test.tag)
         else:
             print('* FAILED - %s'%test.tag)
-    
+
     if all(pass_list):
         sys.exit(0)
     else:

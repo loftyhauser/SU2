@@ -37,8 +37,6 @@ CAdjFlowIncOutput::CAdjFlowIncOutput(CConfig *config, unsigned short nDim) : CAd
 
   weakly_coupled_heat = config->GetWeakly_Coupled_Heat();
 
-  rad_model = config->GetKind_RadiationModel();
-
   /*--- Set the default history fields if nothing is set in the config file ---*/
 
   if (nRequestedHistoryFields == 0){
@@ -119,10 +117,6 @@ void CAdjFlowIncOutput::SetHistoryOutputFields(CConfig *config){
 
   AddHistoryOutputFields_AdjScalarRMS_RES(config);
 
-  if (config->AddRadiation()){
-    /// DESCRIPTION: Root-mean square residual of the adjoint radiative energy tilde.
-    AddHistoryOutput("RMS_ADJ_RAD_ENERGY", "rms[A_P1]", ScreenOutputFormat::FIXED, "RMS_RES", "Root-mean square residual of the P1 radiative energy.",HistoryFieldType::RESIDUAL);
-  }
   /// END_GROUP
 
   /// BEGIN_GROUP: MAX_RES, DESCRIPTION: The maximum residuals of the SOLUTION variables.
@@ -154,10 +148,6 @@ void CAdjFlowIncOutput::SetHistoryOutputFields(CConfig *config){
 
   AddHistoryOutputFields_AdjScalarBGS_RES(config);
 
-  if (config->AddRadiation()){
-    /// DESCRIPTION: Root-mean square residual of the adjoint radiative energy tilde.
-    AddHistoryOutput("BGS_ADJ_RAD_ENERGY", "bgs[A_P1]", ScreenOutputFormat::FIXED, "BGS_RES", "BGS residual  of the P1 radiative energy.",HistoryFieldType::RESIDUAL);
-  }
   /// END_GROUP
 
   /// BEGIN_GROUP: SENSITIVITY, DESCRIPTION: Sensitivities of different geometrical or boundary values.
@@ -189,7 +179,6 @@ void CAdjFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CS
 
   CSolver* adjflow_solver = solver[ADJFLOW_SOL];
   CSolver* adjheat_solver = solver[ADJHEAT_SOL];
-  CSolver* adjrad_solver = solver[ADJRAD_SOL];
   CSolver* mesh_solver = solver[MESH_SOL];
 
   SetHistoryOutputValue("RMS_ADJ_PRESSURE", log10(adjflow_solver->GetRes_RMS(0)));
@@ -204,10 +193,6 @@ void CAdjFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CS
   if (heat){
     if (nDim == 3) SetHistoryOutputValue("RMS_ADJ_TEMPERATURE",         log10(adjflow_solver->GetRes_RMS(4)));
     else           SetHistoryOutputValue("RMS_ADJ_TEMPERATURE",         log10(adjflow_solver->GetRes_RMS(3)));
-  }
-
-  if (config->AddRadiation()){
-    SetHistoryOutputValue("RMS_ADJ_RAD_ENERGY", log10(adjrad_solver->GetRes_RMS(0)));
   }
 
   if (config->GetKind_Streamwise_Periodic() == ENUM_STREAMWISE_PERIODIC::MASSFLOW) {
@@ -243,9 +228,6 @@ void CAdjFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CS
       else           SetHistoryOutputValue("BGS_ADJ_TEMPERATURE",         log10(adjflow_solver->GetRes_BGS(3)));
     }
 
-    if (config->AddRadiation()){
-      SetHistoryOutputValue("BGS_ADJ_RAD_ENERGY", log10(adjrad_solver->GetRes_BGS(0)));
-    }
   }
 
   SetHistoryOutputValue("SENS_GEO", adjflow_solver->GetTotal_Sens_Geo());
@@ -289,9 +271,6 @@ void CAdjFlowIncOutput::SetVolumeOutputFields(CConfig *config){
 
   SetVolumeOutputFields_AdjScalarSolution(config);
 
-  if (config->AddRadiation()){
-    AddVolumeOutput("ADJ_P1_ENERGY",  "Adjoint_Energy(P1)", "SOLUTION", "Adjoint radiative energy");
-  }
   /// END_GROUP
 
   // Grid velocity
@@ -317,9 +296,6 @@ void CAdjFlowIncOutput::SetVolumeOutputFields(CConfig *config){
 
   SetVolumeOutputFields_AdjScalarResidual(config);
 
-  if (config->AddRadiation()){
-    AddVolumeOutput("RES_P1_ENERGY",  "Residual_Adjoint_Energy_P1", "RESIDUAL", "Residual of adjoint radiative energy");
-  }
   /// END_GROUP
 
   /// BEGIN_GROUP: SENSITIVITY, DESCRIPTION: Geometrical sensitivities of the current objective function.
@@ -340,14 +316,10 @@ void CAdjFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSo
 
   CVariable* Node_AdjFlow = solver[ADJFLOW_SOL]->GetNodes();
   CVariable* Node_AdjHeat = nullptr;
-  CVariable* Node_AdjRad  = nullptr;
   CPoint*    Node_Geo     = geometry->nodes;
 
   if (weakly_coupled_heat){
     Node_AdjHeat = solver[ADJHEAT_SOL]->GetNodes();
-  }
-  if (config->GetKind_RadiationModel() != RADIATION_MODEL::NONE){
-    Node_AdjRad = solver[ADJRAD_SOL]->GetNodes();
   }
 
   SetVolumeOutputValue("COORD-X", iPoint,  Node_Geo->GetCoord(iPoint, 0));
@@ -370,11 +342,6 @@ void CAdjFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSo
     else           SetVolumeOutputValue("ADJ_TEMPERATURE", iPoint, Node_AdjFlow->GetSolution(iPoint, 3));
   }
 
-  // Radiation
-  if (config->AddRadiation()){
-    SetVolumeOutputValue("ADJ_P1_ENERGY", iPoint, Node_AdjRad->GetSolution(iPoint, 0));
-  }
-
   // Residuals
   SetVolumeOutputValue("RES_ADJ_PRESSURE",   iPoint, Node_AdjFlow->GetSolution(iPoint, 0) - Node_AdjFlow->GetSolution_Old(iPoint, 0));
   SetVolumeOutputValue("RES_ADJ_VELOCITY-X", iPoint, Node_AdjFlow->GetSolution(iPoint, 1) - Node_AdjFlow->GetSolution_Old(iPoint, 1));
@@ -384,10 +351,6 @@ void CAdjFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSo
     SetVolumeOutputValue("RES_ADJ_TEMPERATURE",     iPoint, Node_AdjFlow->GetSolution(iPoint, 4) - Node_AdjFlow->GetSolution_Old(iPoint, 4));
   } else {
     SetVolumeOutputValue("RES_ADJ_TEMPERATURE",     iPoint, Node_AdjFlow->GetSolution(iPoint, 3) - Node_AdjFlow->GetSolution_Old(iPoint, 3));
-  }
-
-  if (config->AddRadiation()){
-    SetVolumeOutputValue("RES_P1_ENERGY", iPoint, Node_AdjRad->GetSolution(iPoint, 0) - Node_AdjRad->GetSolution_Old(iPoint, 0));
   }
 
   SetVolumeOutputValue("SENSITIVITY-X", iPoint, Node_AdjFlow->GetSensitivity(iPoint, 0));

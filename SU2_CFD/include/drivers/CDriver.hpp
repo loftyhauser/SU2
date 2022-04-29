@@ -695,15 +695,6 @@ public:
                                  passivedouble val_AdjointY, passivedouble val_AdjointZ);
 
   /*!
-   * \brief Set the position of the heat source.
-   * \param[in] alpha - Angle of rotation respect to Z axis.
-   * \param[in] pos_x - Position X.
-   * \param[in] pos_y - Position Y.
-   * \param[in] pos_z - Position Z.
-   */
-  void SetHeatSource_Position(passivedouble alpha, passivedouble pos_x, passivedouble pos_y, passivedouble pos_z);
-
-  /*!
    * \brief Set the direction of the inlet.
    * \param[in] iMarker - Marker index.
    * \param[in] alpha - Angle (Zpos).

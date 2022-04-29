@@ -1275,23 +1275,6 @@ def main():
     stat_fsi_restart.tol       = 0.00001
     test_list.append(stat_fsi_restart)
 
-    # ###############################
-    # ### Radiative Heat Transfer ###
-    # ###############################
-
-    # Radiative heat transfer
-    p1rad           = TestCase('p1rad')
-    p1rad.cfg_dir   = "radiation/p1model"
-    p1rad.cfg_file  = "configp1.cfg"
-    p1rad.new_output= True
-    p1rad.test_iter = 100
-    p1rad.test_vals = [-7.743666, -7.921411, -2.111848, 0.098302] #last 4 columns
-    p1rad.su2_exec  = "mpirun -n 2 SU2_CFD"
-    p1rad.timeout   = 1600
-    p1rad.tol       = 0.00001
-    test_list.append(p1rad)
-
-
     # #############################
     # ### Solid Heat Conduction ###
     # #############################

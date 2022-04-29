@@ -100,9 +100,6 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
   case RUNTIME_TURB_SYS:
     SolverName = "ADJ.TURB";
     break;
-  case RUNTIME_RADIATION_SYS:
-    SolverName = "ADJ.RAD";
-    break;
   default:
     SolverName = "ADJ.SOL";
     break;
@@ -265,28 +262,6 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
 
   }
 
-  /*--- Register incompressible radiation values as input ---*/
-
-  if ((config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE) &&
-      ((KindDirect_Solver == RUNTIME_RADIATION_SYS &&
-        (!config->GetBoolTurbomachinery())))) {
-
-    /*--- Access the nondimensional freestream temperature. ---*/
-
-    TemperatureRad = config->GetTemperature_FreeStreamND();
-
-    /*--- Register the variables for AD. ---*/
-
-    if (!reset) {
-      AD::RegisterInput(TemperatureRad);
-    }
-
-    /*--- Set the temperature at infinity in the direct solver class. ---*/
-
-    direct_solver->SetTemperature_Inf(TemperatureRad);
-
-  }
-
   /*--- Here it is possible to register other variables as input that influence the flow solution
    * and thereby also the objective function. The adjoint values (i.e. the derivatives) can be
    * extracted in the ExtractAdjointVariables routine. ---*/
@@ -423,20 +398,6 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
     SU2_MPI::Allreduce(&Local_Sens_ModVel, &Total_Sens_ModVel, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
     SU2_MPI::Allreduce(&Local_Sens_BPress, &Total_Sens_BPress, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
     SU2_MPI::Allreduce(&Local_Sens_Temp,   &Total_Sens_Temp,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-  }
-
-  if ((config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE) &&
-      (KindDirect_Solver == RUNTIME_RADIATION_SYS &&
-       (!config->GetBoolTurbomachinery()))) {
-
-    su2double Local_Sens_Temp_Rad;
-    Local_Sens_Temp_Rad   = SU2_TYPE::GetDerivative(TemperatureRad);
-
-    SU2_MPI::Allreduce(&Local_Sens_Temp_Rad, &Total_Sens_Temp_Rad, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-
-    /*--- Store it in the Total_Sens_Temp container so it's accessible without the need of a new method ---*/
-    Total_Sens_Temp = Total_Sens_Temp_Rad;
-
   }
 
   /*--- Extract here the adjoint values of everything else that is registered as input in RegisterInput. ---*/
@@ -609,20 +570,12 @@ void CDiscAdjSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfi
   auto restart_filename = config->GetObjFunc_Extension(filename);
   restart_filename = config->GetFilename(restart_filename, "", val_iter);
 
-  const bool rans = (config->GetKind_Turb_Model() != TURB_MODEL::NONE);
-
   /*--- Skip coordinates ---*/
   unsigned short skipVars = geometry[MESH_0]->GetnDim();
 
   /*--- Skip flow adjoint variables ---*/
   if (KindDirect_Solver == RUNTIME_TURB_SYS) {
     skipVars += nDim + 2;
-  }
-
-  /*--- Skip flow adjoint and turbulent variables ---*/
-  if (KindDirect_Solver == RUNTIME_RADIATION_SYS) {
-    skipVars += nDim + 2;
-    if (rans) skipVars += solver[MESH_0][TURB_SOL]->GetnVar();
   }
 
   BasicLoadRestart(geometry[MESH_0], config, restart_filename, skipVars);

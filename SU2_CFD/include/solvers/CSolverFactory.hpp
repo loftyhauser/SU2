@@ -57,8 +57,6 @@ enum class SUB_SOLVER_TYPE {
   TURB_SST,                /*!< \brief SST turbulence model solver */
   TURB,                    /*!< \brief Turbulence model solver */
   MESH,                    /*!< \brief Mesh solver */
-  RADIATION,               /*!< \brief Radiation solver */
-  DISC_ADJ_RADIATION,      /*!< \brief Discrete adjoint radiation solver */
   NONE
 };
 
