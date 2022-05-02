@@ -136,17 +136,6 @@ public:
                     unsigned long iter, unsigned short iZone);
 
   /*!
-   * \brief Unsteady aeroelastic grid movement by deforming the mesh.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] ExtIter - Physical iteration number.
-   * \param[in] iMarker - Marker to deform.
-   * \param[in] iMarker_Monitoring - Marker we are monitoring.
-   * \param[in] displacements - solution of typical section wing model.
-   */
-  void AeroelasticDeform(CGeometry *geometry, CConfig *config, unsigned long TimeIter, unsigned short iMarker, unsigned short iMarker_Monitoring, vector<su2double>& displacements);
-
-  /*!
    * \brief Deforms a 3-D flutter/pitching surface during an unsteady simulation.
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.

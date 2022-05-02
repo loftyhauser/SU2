@@ -440,15 +440,6 @@ def main():
     square_cylinder.unsteady  = True
     test_list.append(square_cylinder)
 
-    # Aeroelastic
-    aeroelastic           = TestCase('aeroelastic')
-    aeroelastic.cfg_dir   = "aeroelastic"
-    aeroelastic.cfg_file  = "aeroelastic_NACA64A010.cfg"
-    aeroelastic.test_iter = 2
-    aeroelastic.test_vals = [0.074433, 0.033108, -0.001650, -0.000127]
-    aeroelastic.unsteady  = True
-    test_list.append(aeroelastic)
-
     # Delayed Detached Eddy Simulation
     ddes_flatplate        = TestCase('ddes_flatplate')
     ddes_flatplate.cfg_dir   = "ddes/flatplate"

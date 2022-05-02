@@ -342,10 +342,9 @@ COutputLegacy::~COutputLegacy(void) {
 void COutputLegacy::SetConvHistory_Header(ofstream *ConvHist_file, CConfig *config, unsigned short val_iZone, unsigned short val_iInst) {
   char cstr[200], turb_resid[1000], adj_turb_resid[1000];
   unsigned short iMarker_Monitoring;
-  string Monitoring_Tag, monitoring_coeff, aeroelastic_coeff, turbo_coeff;
+  string Monitoring_Tag, monitoring_coeff, turbo_coeff;
 
   bool rotating_frame = config->GetRotating_Frame();
-  bool aeroelastic = config->GetAeroelastic_Simulation();
   bool equiv_area = config->GetEquivArea();
   bool buffet = (config->GetViscous() || config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE);
   bool engine        = ((config->GetnMarker_EngineInflow() != 0) || (config->GetnMarker_EngineExhaust() != 0));
@@ -438,8 +437,6 @@ void COutputLegacy::SetConvHistory_Header(ofstream *ConvHist_file, CConfig *conf
     monitoring_coeff += ",\"CMy_"    + Monitoring_Tag + "\"";
     monitoring_coeff += ",\"CMz_"    + Monitoring_Tag + "\"";
     if(buffet) monitoring_coeff += ",\"Buffet_Metric_"    + Monitoring_Tag + "\"";
-    aeroelastic_coeff += ",\"plunge_" + Monitoring_Tag + "\"";
-    aeroelastic_coeff += ",\"pitch_"  + Monitoring_Tag + "\"";
   }
 
   if (turbo){
@@ -528,7 +525,6 @@ void COutputLegacy::SetConvHistory_Header(ofstream *ConvHist_file, CConfig *conf
       ConvHist_file[0] << flow_resid;
       if (turbulent) ConvHist_file[0] << turb_resid;
       if (weakly_coupled_heat) ConvHist_file[0] << heat_resid;
-      if (aeroelastic) ConvHist_file[0] << aeroelastic_coeff;
       if (output_per_surface) ConvHist_file[0] << monitoring_coeff;
       if (output_surface) ConvHist_file[0] << surface_outputs;
       if (direct_diff != NO_DERIVATIVE) {
@@ -716,7 +712,7 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
     /*--- WARNING: These buffers have hard-coded lengths. Note that you
      may have to adjust them to be larger if adding more entries. ---*/
 
-    char begin[1000], direct_coeff[1000], heat_coeff[1000], equivalent_area_coeff[1000], engine_coeff[1000], rotating_frame_coeff[1000], Cp_inverse_design[1000], Heat_inverse_design[1000], surface_coeff[1000], aeroelastic_coeff[1000], monitoring_coeff[10000], buffet_coeff[1000],
+    char begin[1000], direct_coeff[1000], heat_coeff[1000], equivalent_area_coeff[1000], engine_coeff[1000], rotating_frame_coeff[1000], Cp_inverse_design[1000], Heat_inverse_design[1000], surface_coeff[1000], monitoring_coeff[10000], buffet_coeff[1000],
     adjoint_coeff[1000], flow_resid[1000], adj_flow_resid[1000], turb_resid[1000], trans_resid[1000],
     adj_turb_resid[1000],
     begin_fem[1000], fem_coeff[1000], heat_resid[1000], combo_obj[1000],
@@ -734,7 +730,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
 
 
     bool rotating_frame = config[val_iZone]->GetRotating_Frame();
-    bool aeroelastic = config[val_iZone]->GetAeroelastic_Simulation();
     bool equiv_area = config[val_iZone]->GetEquivArea();
     bool engine        = ((config[val_iZone]->GetnMarker_EngineInflow() != 0) || (config[val_iZone]->GetnMarker_EngineExhaust() != 0));
     bool actuator_disk = ((config[val_iZone]->GetnMarker_ActDiskInlet() != 0) || (config[val_iZone]->GetnMarker_ActDiskOutlet() != 0));
@@ -833,8 +828,7 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
     su2double *residual_rad          = nullptr;
 
     /*--- Coefficients Monitored arrays ---*/
-    su2double *aeroelastic_plunge = nullptr,
-    *aeroelastic_pitch     = nullptr,
+    su2double
     *Surface_CL            = nullptr,
     *Surface_CD            = nullptr,
     *Surface_CSF           = nullptr,
@@ -895,8 +889,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
     residual_adjheat      = new su2double[nVar_AdjHeat];
 
     /*--- Allocate memory for the coefficients being monitored ---*/
-    aeroelastic_plunge = new su2double[config[ZONE_0]->GetnMarker_Monitoring()];
-    aeroelastic_pitch  = new su2double[config[ZONE_0]->GetnMarker_Monitoring()];
     Surface_CL      = new su2double[config[ZONE_0]->GetnMarker_Monitoring()];
     Surface_CD      = new su2double[config[ZONE_0]->GetnMarker_Monitoring()];
     Surface_CSF = new su2double[config[ZONE_0]->GetnMarker_Monitoring()];
@@ -1002,14 +994,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
           Total_CT      = solver_container[val_iZone][val_iInst][FinestMesh][FLOW_SOL]->GetTotal_CT();
           Total_CQ      = solver_container[val_iZone][val_iInst][FinestMesh][FLOW_SOL]->GetTotal_CQ();
           Total_CMerit  = solver_container[val_iZone][val_iInst][FinestMesh][FLOW_SOL]->GetTotal_CMerit();
-        }
-
-        if (aeroelastic) {
-          /*--- Look over the markers being monitored and get the desired values ---*/
-          for (iMarker_Monitoring = 0; iMarker_Monitoring < config[ZONE_0]->GetnMarker_Monitoring(); iMarker_Monitoring++) {
-            aeroelastic_plunge[iMarker_Monitoring] = config[val_iZone]->GetAeroelastic_plunge(iMarker_Monitoring);
-            aeroelastic_pitch[iMarker_Monitoring]  = config[val_iZone]->GetAeroelastic_pitch(iMarker_Monitoring);
-          }
         }
 
         if (output_per_surface) {
@@ -1311,21 +1295,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
                 SPRINTF (d_direct_coeff, ", %14.8e, %14.8e, %14.8e, %14.8e, %14.8e, %14.8e, %14.8e, %14.8e, %14.8e, %14.8e, %14.8e, %14.8e, %14.8e",
                          D_Total_CL, D_Total_CD, D_Total_CSF, D_Total_CMx, D_Total_CMy, D_Total_CMz, D_Total_CFx, D_Total_CFy,
                          D_Total_CFz, D_Total_CEff, D_Total_Custom_ObjFunc, D_Total_Heat, D_Total_MaxHeat);
-            }
-
-            if (aeroelastic) {
-              for (iMarker_Monitoring = 0; iMarker_Monitoring < config[ZONE_0]->GetnMarker_Monitoring(); iMarker_Monitoring++) {
-                //Append one by one the surface coeff to aeroelastic coeff. (Think better way do this, maybe use string)
-                if (iMarker_Monitoring == 0) {
-                  SPRINTF(aeroelastic_coeff, ", %12.10f", aeroelastic_plunge[iMarker_Monitoring]);
-                }
-                else {
-                  SPRINTF(surface_coeff, ", %12.10f", aeroelastic_plunge[iMarker_Monitoring]);
-                  strcat(aeroelastic_coeff, surface_coeff);
-                }
-                SPRINTF(surface_coeff, ", %12.10f", aeroelastic_pitch[iMarker_Monitoring]);
-                strcat(aeroelastic_coeff, surface_coeff);
-              }
             }
 
             if (output_per_surface) {
@@ -1687,7 +1656,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
               }
               else if (incompressible && weakly_coupled_heat) cout << "   Res[Press]" << "     Res[Heat]" << "   HFlux(Total)";
             else if (rotating_frame && nDim == 3 && !turbo) cout << "     Res[Rho]" << "     Res[RhoE]" << " CThrust(Total)" << " CTorque(Total)" << endl;
-            else if (aeroelastic) cout << "     Res[Rho]" << "     Res[RhoE]" << "   CLift(Total)" << "   CDrag(Total)" << "         plunge" << "          pitch" << endl;
             else if (equiv_area) cout << "     Res[Rho]" << "   CLift(Total)" << "   CDrag(Total)" << "    CPress(N-F)" << endl;
 
             else if (turbo){
@@ -1760,7 +1728,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
 
             if (transition) { cout << "      Res[Int]" << "       Res[Re]"; }
             else if (rotating_frame && nDim == 3 && !turbo ) cout << "   CThrust(Total)" << "   CTorque(Total)";
-            else if (aeroelastic) cout << "   CLift(Total)" << "   CDrag(Total)" << "         plunge" << "          pitch";
             else if (equiv_area) cout << "   CLift(Total)" << "   CDrag(Total)" << "    CPress(N-F)";
             else if (turbo){
               if (nZone < 2){
@@ -1983,7 +1950,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
               ConvHist_file[0] << begin << turbo_coeff << flow_resid;
             }
 
-            if (aeroelastic) ConvHist_file[0] << aeroelastic_coeff;
             if (output_per_surface) ConvHist_file[0] << monitoring_coeff;
             if (output_surface) ConvHist_file[0] << surface_outputs;
             if (direct_diff != NO_DERIVATIVE) {
@@ -2041,12 +2007,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
               }
               else if (weakly_coupled_heat) { cout.width(14); cout << log10(Total_Heat); }
               else { cout.width(15); cout << min(10000.0, max(-10000.0, Total_CL)); cout.width(15); cout << min(10000.0, max(-10000.0, Total_CD)); }
-              if (aeroelastic) {
-                cout.setf(ios::scientific, ios::floatfield);
-                cout.width(15); cout << aeroelastic_plunge[0]; //Only output the first marker being monitored to the console.
-                cout.width(15); cout << aeroelastic_pitch[0];
-                cout.unsetf(ios_base::floatfield);
-              }
 
               if (extra_heat_output) { cout.width(15); cout << Extra_Heat_Residual; cout.width(15); cout << Extra_Total_Heat; }
             }
@@ -2078,7 +2038,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
               ConvHist_file[0] << begin << turbo_coeff << flow_resid << turb_resid;
             }
 
-            if (aeroelastic) ConvHist_file[0] << aeroelastic_coeff;
             if (output_per_surface) ConvHist_file[0] << monitoring_coeff;
             if (output_surface) ConvHist_file[0] << surface_outputs;
             if (direct_diff != NO_DERIVATIVE) {
@@ -2141,13 +2100,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
               }
               else if (weakly_coupled_heat) { cout.width(15); cout << Total_Heat; }
               else { cout.width(15); cout << min(10000.0, max(-10000.0, Total_CL)); cout.width(15); cout << min(10000.0, max(-10000.0, Total_CD)); }
-
-              if (aeroelastic) {
-                cout.setf(ios::scientific, ios::floatfield);
-                cout.width(15); cout << aeroelastic_plunge[0]; //Only output the first marker being monitored to the console.
-                cout.width(15); cout << aeroelastic_pitch[0];
-                cout.unsetf(ios_base::floatfield);
-              }
 
               if (extra_heat_output) { cout.width(15); cout << Extra_Heat_Residual; cout.width(15); cout << Extra_Total_Heat; }
               cout << endl;
@@ -2367,8 +2319,6 @@ void COutputLegacy::SetConvHistory_Body(ofstream *ConvHist_file,
     delete [] Surface_CMx;
     delete [] Surface_CMy;
     delete [] Surface_CMz;
-    delete [] aeroelastic_pitch;
-    delete [] aeroelastic_plunge;
 
   }
 }

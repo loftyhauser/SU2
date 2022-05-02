@@ -52,17 +52,12 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
                               CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
                               CFreeFormDefBox*** FFDBox, unsigned short val_iZone, unsigned short val_iInst) {
 
-  const bool unsteady = (config[val_iZone]->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST) ||
-                        (config[val_iZone]->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND);
   const bool frozen_visc = (config[val_iZone]->GetContinuous_Adjoint() && config[val_iZone]->GetFrozen_Visc_Cont()) ||
                            (config[val_iZone]->GetDiscrete_Adjoint() && config[val_iZone]->GetFrozen_Visc_Disc());
   const bool disc_adj = (config[val_iZone]->GetDiscrete_Adjoint());
 
   /* --- Setting up iteration values depending on if this is a
    steady or an unsteady simulation */
-
-  const auto InnerIter = config[val_iZone]->GetInnerIter();
-  const auto TimeIter = config[val_iZone]->GetTimeIter();
 
   /*--- Update global parameters ---*/
 
@@ -133,13 +128,6 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
     END_SU2_OMP_PARALLEL
   }
 
-  /*--- Call Dynamic mesh update if AEROELASTIC motion was specified ---*/
-
-  if ((config[val_iZone]->GetGrid_Movement()) && (config[val_iZone]->GetAeroelastic_Simulation()) && unsteady) {
-    SetGrid_Movement(geometry[val_iZone][val_iInst], surface_movement[val_iZone], grid_movement[val_iZone][val_iInst],
-                     solver[val_iZone][val_iInst], config[val_iZone], InnerIter, TimeIter);
-
-  }
 }
 
 void CFluidIteration::Update(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
@@ -165,8 +153,6 @@ void CFluidIteration::Update(COutput* output, CIntegration**** integration, CGeo
 
       integration[val_iZone][val_iInst][FLOW_SOL]->SetConvergence(false);
     }
-
-    SetDualTime_Aeroelastic(config[val_iZone]);
 
     /*--- Update dual time solver for the turbulence model ---*/
 
@@ -357,73 +343,3 @@ bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSol
   return fixed_cl_convergence;
 }
 
-void CFluidIteration::SetDualTime_Aeroelastic(CConfig* config) const {
-
-  /*--- Store old aeroelastic solutions ---*/
-
-  if (config->GetGrid_Movement() && config->GetAeroelastic_Simulation()) {
-
-    config->SetAeroelastic_n1();
-    config->SetAeroelastic_n();
-
-    /*--- Also communicate plunge and pitch to the master node. Needed for output in case of parallel run ---*/
-
-#ifdef HAVE_MPI
-    su2double plunge, pitch, *plunge_all = nullptr, *pitch_all = nullptr;
-    unsigned short iMarker, iMarker_Monitoring;
-    unsigned long iProcessor, owner, *owner_all = nullptr;
-
-    string Marker_Tag, Monitoring_Tag;
-    int nProcessor = size;
-
-    /*--- Only if master node allocate memory ---*/
-
-    if (rank == MASTER_NODE) {
-      plunge_all = new su2double[nProcessor];
-      pitch_all  = new su2double[nProcessor];
-      owner_all  = new unsigned long[nProcessor];
-    }
-
-    /*--- Find marker and give it's plunge and pitch coordinate to the master node ---*/
-
-    for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++) {
-
-      for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-
-        Monitoring_Tag = config->GetMarker_Monitoring_TagBound(iMarker_Monitoring);
-        Marker_Tag = config->GetMarker_All_TagBound(iMarker);
-        if (Marker_Tag == Monitoring_Tag) { owner = 1; break;
-        } else {
-          owner = 0;
-        }
-
-      }
-      plunge = config->GetAeroelastic_plunge(iMarker_Monitoring);
-      pitch  = config->GetAeroelastic_pitch(iMarker_Monitoring);
-
-      /*--- Gather the data on the master node. ---*/
-
-      SU2_MPI::Gather(&plunge, 1, MPI_DOUBLE, plunge_all, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::GetComm());
-      SU2_MPI::Gather(&pitch, 1, MPI_DOUBLE, pitch_all, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::GetComm());
-      SU2_MPI::Gather(&owner, 1, MPI_UNSIGNED_LONG, owner_all, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::GetComm());
-
-      /*--- Set plunge and pitch on the master node ---*/
-
-      if (rank == MASTER_NODE) {
-        for (iProcessor = 0; iProcessor < (unsigned long)nProcessor; iProcessor++) {
-          if (owner_all[iProcessor] == 1) {
-            config->SetAeroelastic_plunge(iMarker_Monitoring, plunge_all[iProcessor]);
-            config->SetAeroelastic_pitch(iMarker_Monitoring, pitch_all[iProcessor]);
-            break;
-          }
-        }
-      }
-    }
-
-    delete [] plunge_all;
-    delete [] pitch_all;
-    delete [] owner_all;
-#endif
-  }
-
-}

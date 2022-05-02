@@ -920,9 +920,6 @@ void CConfig::SetPointersNull(void) {
 
   /*--- Miscellaneous/unsorted ---*/
 
-  Aeroelastic_plunge  = nullptr;
-  Aeroelastic_pitch   = nullptr;
-
   CFL_AdaptParam      = nullptr;
   CFL                 = nullptr;
   PlaneTag            = nullptr;
@@ -1022,8 +1019,6 @@ void CConfig::SetPointersNull(void) {
   AoS_Offset = 0;
 
   nMarker_PerBound = 0;
-
-  Aeroelastic_Simulation = false;
 
   nSpanMaxAllZones = 1;
 
@@ -2059,23 +2054,6 @@ void CConfig::SetConfig_Options() {
 
   /* DESCRIPTION: Before each computation, implicitly smooth the nodal coordinates */
   addUnsignedShortOption("SMOOTH_GEOMETRY", SmoothNumGrid, 0);
-
-  /*!\par CONFIG_CATEGORY: Aeroelastic Simulation (Typical Section Model) \ingroup Config*/
-  /*--- Options related to aeroelastic simulations using the Typical Section Model) ---*/
-  /* DESCRIPTION: The flutter speed index (modifies the freestream condition) */
-  addDoubleOption("FLUTTER_SPEED_INDEX", FlutterSpeedIndex, 0.6);
-  /* DESCRIPTION: Natural frequency of the spring in the plunging direction (rad/s). */
-  addDoubleOption("PLUNGE_NATURAL_FREQUENCY", PlungeNaturalFrequency, 100);
-  /* DESCRIPTION: Natural frequency of the spring in the pitching direction (rad/s). */
-  addDoubleOption("PITCH_NATURAL_FREQUENCY", PitchNaturalFrequency, 100);
-  /* DESCRIPTION: The airfoil mass ratio. */
-  addDoubleOption("AIRFOIL_MASS_RATIO", AirfoilMassRatio, 60);
-  /* DESCRIPTION: Distance in semichords by which the center of gravity lies behind the elastic axis. */
-  addDoubleOption("CG_LOCATION", CG_Location, 1.8);
-  /* DESCRIPTION: The radius of gyration squared (expressed in semichords) of the typical section about the elastic axis. */
-  addDoubleOption("RADIUS_GYRATION_SQUARED", RadiusGyrationSquared, 3.48);
-  /* DESCRIPTION: Solve the aeroelastic equations every given number of internal iterations. */
-  addUnsignedShortOption("AEROELASTIC_ITER", AeroelasticIter, 3);
 
   /*!\par CONFIG_CATEGORY: Optimization Problem*/
 
@@ -3952,46 +3930,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     }
     else if (nRefOriginMoment_Z != nMarker_Monitoring) {
       SU2_MPI::Error("ERROR: Length of REF_ORIGIN_MOMENT_Z must match number of Monitoring Markers!!", CURRENT_FUNCTION);
-    }
-  }
-
-  /*--- Set the boolean flag if we are carrying out an aeroelastic simulation. ---*/
-
-  if (GetGrid_Movement() && (GetSurface_Movement(AEROELASTIC) || GetSurface_Movement(AEROELASTIC_RIGID_MOTION))) Aeroelastic_Simulation = true;
-  else Aeroelastic_Simulation = false;
-
-  /*--- Initializing the size for the solutions of the Aeroelastic problem. ---*/
-
-
-  if (GetGrid_Movement() && Aeroelastic_Simulation) {
-    Aeroelastic_np1.resize(nMarker_Monitoring);
-    Aeroelastic_n.resize(nMarker_Monitoring);
-    Aeroelastic_n1.resize(nMarker_Monitoring);
-    for (iMarker = 0; iMarker < nMarker_Monitoring; iMarker++) {
-      Aeroelastic_np1[iMarker].resize(2);
-      Aeroelastic_n[iMarker].resize(2);
-      Aeroelastic_n1[iMarker].resize(2);
-      for (int i =0; i<2; i++) {
-        Aeroelastic_np1[iMarker][i].resize(2);
-        Aeroelastic_n[iMarker][i].resize(2);
-        Aeroelastic_n1[iMarker][i].resize(2);
-        for (int j=0; j<2; j++) {
-          Aeroelastic_np1[iMarker][i][j] = 0.0;
-          Aeroelastic_n[iMarker][i][j] = 0.0;
-          Aeroelastic_n1[iMarker][i][j] = 0.0;
-        }
-      }
-    }
-  }
-
-  /*--- Allocate memory for the plunge and pitch and initialized them to zero ---*/
-
-  if (GetGrid_Movement() && Aeroelastic_Simulation) {
-    Aeroelastic_pitch = new su2double[nMarker_Monitoring];
-    Aeroelastic_plunge = new su2double[nMarker_Monitoring];
-    for (iMarker = 0; iMarker < nMarker_Monitoring; iMarker++ ) {
-      Aeroelastic_pitch[iMarker] = 0.0;
-      Aeroelastic_plunge[iMarker] = 0.0;
     }
   }
 
@@ -7357,11 +7295,6 @@ CConfig::~CConfig() {
   delete [] TimeIntegrationADER_DG;
   delete [] WeightsIntegrationADER_DG;
 
-  /*--- Free memory for Aeroelastic problems. ---*/
-
-  delete[] Aeroelastic_pitch;
-  delete[] Aeroelastic_plunge;
-
   /*--- Marker pointers ---*/
 
   delete[] Marker_CfgFile_GeoEval;
@@ -8099,9 +8032,7 @@ unsigned short CConfig::GetMarker_CfgFile_EngineExhaust(string val_marker) const
 bool CConfig::GetVolumetric_Movement() const {
   bool volumetric_movement = false;
 
-  if (GetSurface_Movement(AEROELASTIC) ||
-      GetSurface_Movement(AEROELASTIC_RIGID_MOTION)||
-      GetSurface_Movement(EXTERNAL) ||
+  if (GetSurface_Movement(EXTERNAL) ||
       GetSurface_Movement(EXTERNAL_ROTATION)){
     volumetric_movement = true;
   }

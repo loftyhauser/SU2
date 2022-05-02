@@ -774,7 +774,7 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
   Temperature_FreeStreamND = 0.0, Gas_ConstantND = 0.0,
   Velocity_FreeStreamND[3] = {0.0, 0.0, 0.0}, Viscosity_FreeStreamND = 0.0,
   Tke_FreeStreamND = 0.0, Energy_FreeStreamND = 0.0,
-  Total_UnstTimeND = 0.0, Delta_UnstTimeND = 0.0, TgammaR = 0.0, Heat_Flux_Ref = 0.0;
+  Total_UnstTimeND = 0.0, Delta_UnstTimeND = 0.0, Heat_Flux_Ref = 0.0;
 
   unsigned short iDim;
 
@@ -791,17 +791,6 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
   bool tkeNeeded          = (turbulent && (config->GetKind_Turb_Model() == TURB_MODEL::SST || config->GetKind_Turb_Model() == TURB_MODEL::SST_SUST));
   bool free_stream_temp   = (config->GetKind_FreeStreamOption() == FREESTREAM_OPTION::TEMPERATURE_FS);
   bool reynolds_init      = (config->GetKind_InitOption() == REYNOLDS);
-  bool aeroelastic        = config->GetAeroelastic_Simulation();
-
-  /*--- Set temperature via the flutter speed index ---*/
-  if (aeroelastic) {
-    su2double vf             = config->GetAeroelastic_Flutter_Speed_Index();
-    su2double w_alpha        = config->GetAeroelastic_Frequency_Pitch();
-    su2double b              = config->GetLength_Reynolds()/2.0; // airfoil semichord, Reynolds length is by defaul 1.0
-    su2double mu             = config->GetAeroelastic_Airfoil_Mass_Ratio();
-    // The temperature times gamma times the gas constant. Depending on the FluidModel temp is calculated below.
-    TgammaR = ((vf*vf)*(b*b)*(w_alpha*w_alpha)*mu) / (Mach*Mach);
-  }
 
   /*--- Compressible non dimensionalization ---*/
 
@@ -824,10 +813,6 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
 
       auxFluidModel = new CIdealGas(1.4, config->GetGas_Constant());
 
-      if (free_stream_temp && aeroelastic) {
-        Temperature_FreeStream = TgammaR / (config->GetGas_Constant()*1.4);
-        config->SetTemperature_FreeStream(Temperature_FreeStream);
-      }
       break;
 
     case IDEAL_GAS:

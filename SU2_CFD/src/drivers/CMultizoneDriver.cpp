@@ -105,9 +105,7 @@ CMultizoneDriver::CMultizoneDriver(char* confFile, unsigned short val_nZone, SU2
       default:
         prefixed_motion[iZone] = false; break;
     }
-    if (config_container[iZone]->GetSurface_Movement(AEROELASTIC) ||
-        config_container[iZone]->GetSurface_Movement(AEROELASTIC_RIGID_MOTION) ||
-        config_container[iZone]->GetSurface_Movement(DEFORMING) ||
+    if (config_container[iZone]->GetSurface_Movement(DEFORMING) ||
         config_container[iZone]->GetSurface_Movement(EXTERNAL) ||
         config_container[iZone]->GetSurface_Movement(EXTERNAL_ROTATION)){
       prefixed_motion[iZone] = true;

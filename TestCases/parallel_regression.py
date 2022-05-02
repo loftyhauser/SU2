@@ -930,18 +930,6 @@ def main():
     square_cylinder.unsteady  = True
     test_list.append(square_cylinder)
 
-    # Aeroelastic
-    aeroelastic           = TestCase('aeroelastic')
-    aeroelastic.cfg_dir   = "aeroelastic"
-    aeroelastic.cfg_file  = "aeroelastic_NACA64A010.cfg"
-    aeroelastic.test_iter = 2
-    aeroelastic.test_vals = [0.076550, 0.033042, -0.001650, -0.000127]
-    aeroelastic.su2_exec  = "parallel_computation.py -f"
-    aeroelastic.timeout   = 1600
-    aeroelastic.tol       = 0.00001
-    aeroelastic.unsteady  = True
-    test_list.append(aeroelastic)
-
     # Delayed Detached Eddy Simulation
     ddes_flatplate        = TestCase('ddes_flatplate')
     ddes_flatplate.cfg_dir   = "ddes/flatplate"
@@ -1367,18 +1355,6 @@ def main():
     pywrapper_square_cylinder.tol       = 0.00001
     pywrapper_square_cylinder.unsteady  = True
     test_list.append(pywrapper_square_cylinder)
-
-    # Aeroelastic
-    pywrapper_aeroelastic         = TestCase('pywrapper_aeroelastic')
-    pywrapper_aeroelastic.cfg_dir   = "aeroelastic"
-    pywrapper_aeroelastic.cfg_file  = "aeroelastic_NACA64A010.cfg"
-    pywrapper_aeroelastic.test_iter = 2
-    pywrapper_aeroelastic.test_vals = [0.076550, 0.033042, -0.001650, -0.000127]
-    pywrapper_aeroelastic.su2_exec  = "mpirun -np 2 SU2_CFD.py --parallel -f"
-    pywrapper_aeroelastic.timeout   = 1600
-    pywrapper_aeroelastic.tol       = 0.00001
-    pywrapper_aeroelastic.unsteady  = True
-    test_list.append(pywrapper_aeroelastic)
 
     # FSI, 2d
     pywrapper_fsi2d           = TestCase('pywrapper_fsi2d')

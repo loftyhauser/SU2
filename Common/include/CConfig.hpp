@@ -116,7 +116,6 @@ private:
   InvDesign_Cp,             /*!< \brief Flag to know if the code is going to compute and plot the inverse design. */
   InvDesign_HeatFlux,       /*!< \brief Flag to know if the code is going to compute and plot the inverse design. */
   Turb_Fixed_Values,        /*!< \brief Flag to know if there are fixed values for turbulence quantities in one half-plane. */
-  Aeroelastic_Simulation,   /*!< \brief Flag to know if there is an aeroelastic simulation. */
   Weakly_Coupled_Heat,      /*!< \brief Flag to know if a heat equation should be weakly coupled to the incompressible solver. */
   Rotating_Frame,           /*!< \brief Flag to know if there is a rotating frame. */
   PoissonSolver,            /*!< \brief Flag to know if we are solving  poisson forces  in plasma solver. */
@@ -912,18 +911,6 @@ private:
   nOmega_HB,                      /*!< \brief Number of frequencies in Harmonic Balance Operator. */
   nMoveMotion_Origin,             /*!< \brief Number of motion origins. */
   *MoveMotion_Origin;             /*!< \brief Keeps track if we should move moment origin. */
-  vector<vector<vector<su2double> > > Aeroelastic_np1, /*!< \brief Aeroelastic solution at time level n+1. */
-  Aeroelastic_n,                  /*!< \brief Aeroelastic solution at time level n. */
-  Aeroelastic_n1;                 /*!< \brief Aeroelastic solution at time level n-1. */
-  su2double FlutterSpeedIndex,    /*!< \brief The flutter speed index. */
-  PlungeNaturalFrequency,         /*!< \brief Plunging natural frequency for Aeroelastic. */
-  PitchNaturalFrequency,          /*!< \brief Pitch natural frequency for Aeroelastic. */
-  AirfoilMassRatio,               /*!< \brief The airfoil mass ratio for Aeroelastic. */
-  CG_Location,                    /*!< \brief Center of gravity location for Aeroelastic. */
-  RadiusGyrationSquared;          /*!< \brief The radius of gyration squared for Aeroelastic. */
-  su2double *Aeroelastic_plunge,  /*!< \brief Value of plunging coordinate at the end of an external iteration. */
-  *Aeroelastic_pitch;             /*!< \brief Value of pitching coordinate at the end of an external iteration. */
-  unsigned short AeroelasticIter; /*!< \brief Solve the aeroelastic equations every given number of internal iterations. */
   /*! \brief Maximal scalar product of the normed far-field velocity vector and a space coordinate where fixed turbulence quantities are set. */
   su2double Turb_Fixed_Values_MaxScalarProd;
   long Visualize_CV;          /*!< \brief Node number for the CV to be visualized */
@@ -7792,105 +7779,6 @@ public:
    * \brief Config file output.
    */
   void SetOutput(SU2_COMPONENT val_software, unsigned short val_izone);
-
-  /*!
-   * \brief Value of Aeroelastic solution coordinate at time n+1.
-   */
-  vector<vector<su2double> > GetAeroelastic_np1(unsigned short iMarker) const { return Aeroelastic_np1[iMarker]; }
-
-  /*!
-   * \brief Value of Aeroelastic solution coordinate at time n.
-   */
-  vector<vector<su2double> > GetAeroelastic_n(unsigned short iMarker) const { return Aeroelastic_n[iMarker]; }
-
-  /*!
-   * \brief Value of Aeroelastic solution coordinate at time n-1.
-   */
-  vector<vector<su2double> > GetAeroelastic_n1(unsigned short iMarker) const { return Aeroelastic_n1[iMarker]; }
-
-  /*!
-   * \brief Value of Aeroelastic solution coordinate at time n+1.
-   */
-  void SetAeroelastic_np1(unsigned short iMarker, vector<vector<su2double> > solution) { Aeroelastic_np1[iMarker] = solution;}
-
-  /*!
-   * \brief Value of Aeroelastic solution coordinate at time n from time n+1.
-   */
-  void SetAeroelastic_n(void) { Aeroelastic_n = Aeroelastic_np1; }
-
-  /*!
-   * \brief Value of Aeroelastic solution coordinate at time n-1 from time n.
-   */
-  void SetAeroelastic_n1(void) { Aeroelastic_n1 = Aeroelastic_n; }
-
-  /*!
-   * \brief Aeroelastic Flutter Speed Index.
-   */
-  su2double GetAeroelastic_Flutter_Speed_Index(void) const { return FlutterSpeedIndex; }
-
-  /*!
-   * \brief Uncoupled Aeroelastic Frequency Plunge.
-   */
-  su2double GetAeroelastic_Frequency_Plunge(void) const { return PlungeNaturalFrequency; }
-
-  /*!
-   * \brief Uncoupled Aeroelastic Frequency Pitch.
-   */
-  su2double GetAeroelastic_Frequency_Pitch(void) const { return PitchNaturalFrequency; }
-
-  /*!
-   * \brief Aeroelastic Airfoil Mass Ratio.
-   */
-  su2double GetAeroelastic_Airfoil_Mass_Ratio(void) const { return AirfoilMassRatio; }
-
-  /*!
-   * \brief Aeroelastic center of gravity location.
-   */
-  su2double GetAeroelastic_CG_Location(void) const { return CG_Location; }
-
-  /*!
-   * \brief Aeroelastic radius of gyration squared.
-   */
-  su2double GetAeroelastic_Radius_Gyration_Squared(void) const { return RadiusGyrationSquared; }
-
-  /*!
-   * \brief Aeroelastic solve every x inner iteration.
-   */
-  unsigned short GetAeroelasticIter(void) const { return AeroelasticIter; }
-
-  /*!
-   * \brief Value of plunging coordinate.
-   * \param[in] val_marker - the marker we are monitoring.
-   * \return Value of plunging coordinate.
-   */
-  su2double GetAeroelastic_plunge(unsigned short val_marker) const { return Aeroelastic_plunge[val_marker]; }
-
-  /*!
-   * \brief Value of pitching coordinate.
-   * \param[in] val_marker - the marker we are monitoring.
-   * \return Value of pitching coordinate.
-   */
-  su2double GetAeroelastic_pitch(unsigned short val_marker) const { return Aeroelastic_pitch[val_marker]; }
-
-  /*!
-   * \brief Value of plunging coordinate.
-   * \param[in] val_marker - the marker we are monitoring.
-   * \param[in] val - value of plunging coordinate.
-   */
-  void SetAeroelastic_plunge(unsigned short val_marker, su2double val) { Aeroelastic_plunge[val_marker] = val; }
-
-  /*!
-   * \brief Value of pitching coordinate.
-   * \param[in] val_marker - the marker we are monitoring.
-   * \param[in] val - value of pitching coordinate.
-   */
-  void SetAeroelastic_pitch(unsigned short val_marker, su2double val) { Aeroelastic_pitch[val_marker] = val; }
-
-  /*!
-   * \brief Get information about the aeroelastic simulation.
-   * \return <code>TRUE</code> if it is an aeroelastic case; otherwise <code>FALSE</code>.
-   */
-  bool GetAeroelastic_Simulation(void) const { return Aeroelastic_Simulation; }
 
   /*!
    * \brief Get whether fixed values for turbulence quantities are applied.

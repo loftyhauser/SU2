@@ -142,10 +142,4 @@ class CFluidIteration : public CIteration {
    */
   bool MonitorFixed_CL(COutput* output, CGeometry* geometry, CSolver** solver, CConfig* config);
 
-  /*!
-   * \brief Store old aeroelastic solutions
-   * \param[in,out] config - Definition of the particular problem.
-   */
-  void SetDualTime_Aeroelastic(CConfig* config) const;
-
 };

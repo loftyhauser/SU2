@@ -3469,43 +3469,6 @@ public:
                          unsigned short nVar);
 
   /*!
-   * \brief Prepares and solves the aeroelastic equations.
-   * \param[in] surface_movement - Surface movement classes of the problem.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] TimeIter - Physical iteration number.
-   */
-  void Aeroelastic(CSurfaceMovement *surface_movement,
-                   CGeometry *geometry,
-                   CConfig *config,
-                   unsigned long TimeIter);
-
-  /*!
-   * \brief Sets up the generalized eigenvectors and eigenvalues needed to solve the aeroelastic equations.
-   * \param[in] PHI - Matrix of the generalized eigenvectors.
-   * \param[in] w - The eigenvalues of the generalized eigensystem.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void SetUpTypicalSectionWingModel(vector<vector<su2double> >& PHI,
-                                    vector<su2double>& w,
-                                    CConfig *config);
-
-  /*!
-   * \brief Solve the typical section wing model.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] Cl - Coefficient of lift at particular iteration.
-   * \param[in] Cm - Moment coefficient about z-axis at particular iteration.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_Marker - Surface that is being monitored.
-   * \param[in] displacements - solution of typical section wing model.
-   */
-  void SolveTypicalSectionWingModel(CGeometry *geometry,
-                                    su2double Cl, su2double Cm,
-                                    CConfig *config,
-                                    unsigned short val_Marker,
-                                    vector<su2double>& displacements);
-
-  /*!
    * \brief A virtual member.
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config_container - The particular config.
