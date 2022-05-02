@@ -34,7 +34,6 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
                                   CVolumetricMovement* grid_movement, CSolver*** solver, CConfig* config,
                                   unsigned long IntIter, unsigned long TimeIter) {
   unsigned short Kind_Grid_Movement = config->GetKind_GridMovement();
-  bool adjoint = config->GetContinuous_Adjoint();
 
   unsigned short val_iZone = config->GetiZone();
 
@@ -66,37 +65,6 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
       break;
   }
 
-  if (config->GetSurface_Movement(EXTERNAL) || config->GetSurface_Movement(EXTERNAL_ROTATION)) {
-    /*--- Apply rigid rotation to entire grid first, if necessary ---*/
-
-    if (Kind_Grid_Movement == EXTERNAL_ROTATION) {
-      if (rank == MASTER_NODE) cout << " Updating node locations by rigid rotation." << endl;
-      grid_movement->Rigid_Rotation(geometry[MESH_0], config, val_iZone, TimeIter);
-    }
-
-    /*--- Load new surface node locations from external files ---*/
-
-    if (rank == MASTER_NODE) cout << " Updating surface locations from file." << endl;
-    surface_movement->SetExternal_Deformation(geometry[MESH_0], config, val_iZone, TimeIter);
-
-    /*--- Deform the volume grid around the new boundary locations ---*/
-
-    if (rank == MASTER_NODE) cout << " Deforming the volume grid." << endl;
-    grid_movement->SetVolume_Deformation(geometry[MESH_0], config, true);
-
-    /*--- Update the grid velocities on the fine mesh using finite
-       differencing based on node coordinates at previous times. ---*/
-
-    if (!adjoint) {
-      if (rank == MASTER_NODE) cout << " Computing grid velocities by finite differencing." << endl;
-      geometry[MESH_0]->SetGridVelocity(config);
-    }
-
-    /*--- Update the multigrid structure after moving the finest grid,
-       including computing the grid velocities on the coarser levels. ---*/
-
-    grid_movement->UpdateMultiGrid(geometry, config);
-  }
 }
 
 void CIteration::SetMesh_Deformation(CGeometry** geometry, CSolver** solver, CNumerics*** numerics, CConfig* config,

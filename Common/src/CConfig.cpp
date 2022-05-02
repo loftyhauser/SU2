@@ -5622,7 +5622,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
         case NO_MOVEMENT:     cout << "no direct movement." << endl; break;
         case RIGID_MOTION:    cout << "rigid mesh motion." << endl; break;
         case ROTATING_FRAME:  cout << "rotating reference frame." << endl; break;
-        case EXTERNAL:        cout << "externally prescribed motion." << endl; break;
       }
     }
 
@@ -8031,11 +8030,6 @@ unsigned short CConfig::GetMarker_CfgFile_EngineExhaust(string val_marker) const
 
 bool CConfig::GetVolumetric_Movement() const {
   bool volumetric_movement = false;
-
-  if (GetSurface_Movement(EXTERNAL) ||
-      GetSurface_Movement(EXTERNAL_ROTATION)){
-    volumetric_movement = true;
-  }
 
   if (Kind_SU2 == SU2_COMPONENT::SU2_DEF ||
       Kind_SU2 == SU2_COMPONENT::SU2_DOT ||

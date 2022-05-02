@@ -661,14 +661,10 @@ static const MapType<std::string, ENUM_GRIDMOVEMENT> GridMovement_Map = {
 enum ENUM_SURFACEMOVEMENT {
   DEFORMING = 1,                 /*!< \brief Simulation with deformation. */
   MOVING_WALL = 2,               /*!< \brief Simulation with moving wall. */
-  EXTERNAL = 6,                  /*!< \brief Simulation with external motion. */
-  EXTERNAL_ROTATION = 7,         /*!< \brief Simulation with external rotation motion. */
 };
 static const MapType<std::string, ENUM_SURFACEMOVEMENT> SurfaceMovement_Map = {
   MakePair("DEFORMING", DEFORMING)
   MakePair("MOVING_WALL", MOVING_WALL)
-  MakePair("EXTERNAL", EXTERNAL)
-  MakePair("EXTERNAL_ROTATION", EXTERNAL_ROTATION)
 };
 
 // If you add to ENUM_CENTERED, you must also add the option to ENUM_CONVECTIVE
