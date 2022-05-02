@@ -120,15 +120,6 @@ class CFluidIteration : public CIteration {
  private:
 
   /*!
-   * \brief Imposes a gust via the grid velocities.
-   * \author S. Padron
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver - Container vector with all the solutions.
-   */
-  void SetWind_GustField(CConfig* config, CGeometry** geometry, CSolver*** solver);
-
-  /*!
    * \brief Reads and initializes the vortex positions, strengths and gradient.
    * \author S. Padron
    * \param[in] nVortex - number of vortices.

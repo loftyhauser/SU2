@@ -963,19 +963,6 @@ def main():
     square_cylinder.new_output = True
     test_list.append(square_cylinder)
 
-    # Gust
-    sine_gust           = TestCase('sine_gust')
-    sine_gust.cfg_dir   = "gust"
-    sine_gust.cfg_file  = "inv_gust_NACA0012.cfg"
-    sine_gust.test_iter = 5
-    sine_gust.test_vals = [-1.977520, 3.481804, -0.012277, -0.007309]
-    sine_gust.su2_exec  = "SU2_CFD"
-    sine_gust.timeout   = 1600
-    sine_gust.tol       = 0.00001
-    sine_gust.unsteady  = True
-    sine_gust.new_output = True
-    test_list.append(sine_gust)
-
     # Aeroelastic
     aeroelastic         = TestCase('aeroelastic')
     aeroelastic.cfg_dir   = "aeroelastic"

@@ -115,7 +115,6 @@ private:
   Engine,                   /*!< \brief Flag to know if the code is going to compute a problem with engine. */
   InvDesign_Cp,             /*!< \brief Flag to know if the code is going to compute and plot the inverse design. */
   InvDesign_HeatFlux,       /*!< \brief Flag to know if the code is going to compute and plot the inverse design. */
-  Wind_Gust,                /*!< \brief Flag to know if there is a wind gust. */
   Turb_Fixed_Values,        /*!< \brief Flag to know if there are fixed values for turbulence quantities in one half-plane. */
   Aeroelastic_Simulation,   /*!< \brief Flag to know if there is an aeroelastic simulation. */
   Weakly_Coupled_Heat,      /*!< \brief Flag to know if a heat equation should be weakly coupled to the incompressible solver. */
@@ -925,13 +924,6 @@ private:
   su2double *Aeroelastic_plunge,  /*!< \brief Value of plunging coordinate at the end of an external iteration. */
   *Aeroelastic_pitch;             /*!< \brief Value of pitching coordinate at the end of an external iteration. */
   unsigned short AeroelasticIter; /*!< \brief Solve the aeroelastic equations every given number of internal iterations. */
-  unsigned short Gust_Type,   /*!< \brief Type of Gust. */
-  Gust_Dir;                   /*!< \brief Direction of the gust */
-  su2double Gust_WaveLength,  /*!< \brief The gust wavelength. */
-  Gust_Periods,               /*!< \brief Number of gust periods. */
-  Gust_Ampl,                  /*!< \brief Gust amplitude. */
-  Gust_Begin_Time,            /*!< \brief Time at which to begin the gust. */
-  Gust_Begin_Loc;             /*!< \brief Location at which the gust begins. */
   /*! \brief Maximal scalar product of the normed far-field velocity vector and a space coordinate where fixed turbulence quantities are set. */
   su2double Turb_Fixed_Values_MaxScalarProd;
   long Visualize_CV;          /*!< \brief Node number for the CV to be visualized */
@@ -7899,49 +7891,6 @@ public:
    * \return <code>TRUE</code> if it is an aeroelastic case; otherwise <code>FALSE</code>.
    */
   bool GetAeroelastic_Simulation(void) const { return Aeroelastic_Simulation; }
-
-  /*!
-   * \brief Get information about the wind gust.
-   * \return <code>TRUE</code> if there is a wind gust; otherwise <code>FALSE</code>.
-   */
-  bool GetWind_Gust(void) const { return Wind_Gust; }
-
-  /*!
-   * \brief Get the type of gust to simulate.
-   * \return type of gust to use for the simulation.
-   */
-  unsigned short GetGust_Type(void) const { return Gust_Type; }
-
-  /*!
-   * \brief Get the gust direction.
-   * \return the gust direction.
-   */
-  unsigned short GetGust_Dir(void) const { return Gust_Dir; }
-
-  /*!
-   * \brief Value of the gust wavelength.
-   */
-  su2double GetGust_WaveLength(void) const { return Gust_WaveLength; }
-
-  /*!
-   * \brief Value of the number of gust periods.
-   */
-  su2double GetGust_Periods(void) const { return Gust_Periods; }
-
-  /*!
-   * \brief Value of the gust amplitude.
-   */
-  su2double GetGust_Ampl(void) const { return Gust_Ampl; }
-
-  /*!
-   * \brief Value of the time at which to begin the gust.
-   */
-  su2double GetGust_Begin_Time(void) const { return Gust_Begin_Time; }
-
-  /*!
-   * \brief Value of the location ath which the gust begins.
-   */
-  su2double GetGust_Begin_Loc(void) const { return Gust_Begin_Loc; }
 
   /*!
    * \brief Get whether fixed values for turbulence quantities are applied.

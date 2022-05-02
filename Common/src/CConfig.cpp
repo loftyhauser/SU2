@@ -2085,26 +2085,6 @@ void CConfig::SetConfig_Options() {
   /* DESCRIPTION: Bound the line search in the optimizer */
   addDoubleOption("OPT_LINE_SEARCH_BOUND", Opt_LineSearch_Bound, 1E6);
 
-  /*!\par CONFIG_CATEGORY: Wind Gust \ingroup Config*/
-  /*--- Options related to wind gust simulations ---*/
-
-  /* DESCRIPTION: Apply a wind gust */
-  addBoolOption("WIND_GUST", Wind_Gust, false);
-  /* DESCRIPTION: Type of gust */
-  addEnumOption("GUST_TYPE", Gust_Type, Gust_Type_Map, NO_GUST);
-  /* DESCRIPTION: Gust wavelenght (meters) */
-  addDoubleOption("GUST_WAVELENGTH", Gust_WaveLength, 0.0);
-  /* DESCRIPTION: Number of gust periods */
-  addDoubleOption("GUST_PERIODS", Gust_Periods, 1.0);
-  /* DESCRIPTION: Gust amplitude (m/s) */
-  addDoubleOption("GUST_AMPL", Gust_Ampl, 0.0);
-  /* DESCRIPTION: Time at which to begin the gust (sec) */
-  addDoubleOption("GUST_BEGIN_TIME", Gust_Begin_Time, 0.0);
-  /* DESCRIPTION: Location at which the gust begins (meters) */
-  addDoubleOption("GUST_BEGIN_LOC", Gust_Begin_Loc, 0.0);
-  /* DESCRIPTION: Direction of the gust X or Y dir */
-  addEnumOption("GUST_DIR", Gust_Dir, Gust_Dir_Map, Y_DIR);
-
   /* Fixed values for turbulence quantities to keep them at inflow conditions. */
   /* DESCRIPTION: Fix turbulence quantities to far-field values inside an upstream half-space. */
   addBoolOption("TURB_FIXED_VALUES", Turb_Fixed_Values, false);

@@ -650,14 +650,12 @@ enum ENUM_GRIDMOVEMENT {
   RIGID_MOTION = 2,         /*!< \brief Simulation with rigid mesh motion (plunging/pitching/rotation). */
   ROTATING_FRAME = 8,       /*!< \brief Simulation in a rotating frame. */
   STEADY_TRANSLATION = 11,  /*!< \brief Simulation in a steadily translating frame. */
-  GUST = 12,                /*!< \brief Simulation on a static mesh with a gust. */
 };
 static const MapType<std::string, ENUM_GRIDMOVEMENT> GridMovement_Map = {
   MakePair("NONE", NO_MOVEMENT)
   MakePair("RIGID_MOTION", RIGID_MOTION)
   MakePair("ROTATING_FRAME", ROTATING_FRAME)
   MakePair("STEADY_TRANSLATION", STEADY_TRANSLATION)
-  MakePair("GUST", GUST)
 };
 
 enum ENUM_SURFACEMOVEMENT {
@@ -675,38 +673,6 @@ static const MapType<std::string, ENUM_SURFACEMOVEMENT> SurfaceMovement_Map = {
   MakePair("AEROELASTIC", AEROELASTIC)
   MakePair("EXTERNAL", EXTERNAL)
   MakePair("EXTERNAL_ROTATION", EXTERNAL_ROTATION)
-};
-
-/*!
- * \brief Type of wind gusts
- */
-enum ENUM_GUST_TYPE {
-  NO_GUST = 0,      /*!< \brief No gust. */
-  TOP_HAT = 1,      /*!< \brief Top-hat function shaped gust  */
-  SINE = 2,         /*!< \brief Sine shaped gust */
-  ONE_M_COSINE = 3, /*!< \brief 1-cosine shaped gust */
-  VORTEX = 4,       /*!< \brief A gust made from vortices */
-  EOG = 5           /*!< \brief An extreme operating gust */
-};
-static const MapType<std::string, ENUM_GUST_TYPE> Gust_Type_Map = {
-  MakePair("NONE", NO_GUST)
-  MakePair("TOP_HAT", TOP_HAT)
-  MakePair("SINE", SINE)
-  MakePair("ONE_M_COSINE", ONE_M_COSINE)
-  MakePair("VORTEX", VORTEX)
-  MakePair("EOG", EOG)
-};
-
-/*!
- * \brief Type of wind direction
- */
-enum ENUM_GUST_DIR {
-  X_DIR = 0,  /*!< \brief Gust direction-X. */
-  Y_DIR = 1   /*!< \brief Gust direction-Y. */
-};
-static const MapType<std::string, ENUM_GUST_DIR> Gust_Dir_Map = {
-  MakePair("X_DIR", X_DIR)
-  MakePair("Y_DIR", Y_DIR)
 };
 
 // If you add to ENUM_CENTERED, you must also add the option to ENUM_CONVECTIVE

@@ -67,11 +67,6 @@ CEulerVariable::CEulerVariable(su2double density, const su2double *velocity, su2
     Grad_AuxVar.resize(nPoint,nAuxVar,nDim,0.0);
     AuxVar.resize(nPoint,nAuxVar) = su2double(0.0);
   }
-
-  if (config->GetWind_Gust()) {
-    WindGust.resize(nPoint,nDim);
-    WindGustDer.resize(nPoint,nDim+1);
-  }
 }
 
 bool CEulerVariable::SetPrimVar(unsigned long iPoint, CFluidModel *FluidModel) {
