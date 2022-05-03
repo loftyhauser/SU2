@@ -1980,13 +1980,6 @@ public:
   /*!
    * \brief A virtual member.
    * \param[in] val_marker - Surface marker where the coefficient is computed.
-   * \return Value of the buffet metric on the surface <i>val_marker</i>.
-   */
-  inline virtual su2double GetSurface_Buffet_Metric(unsigned short val_marker) const { return 0; }
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] val_marker - Surface marker where the coefficient is computed.
    * \return Value of the lift coefficient on the surface <i>val_marker</i>.
    */
   inline virtual su2double GetSurface_CL_Mnt(unsigned short val_marker) const { return 0; }
@@ -2726,12 +2719,6 @@ public:
 
   /*!
    * \brief A virtual member.
-   * \return Value of the buffet metric.
-   */
-  inline virtual su2double GetTotal_Buffet_Metric() const { return 0; }
-
-  /*!
-   * \brief A virtual member.
    * \param[in] val_marker - Surface marker where the coefficient is computed.
    * \param[in] val_vertex - Vertex of the marker <i>val_marker</i> where the coefficient is evaluated.
    * \return Value of the pressure coefficient.
@@ -2953,14 +2940,6 @@ public:
   inline virtual void SetHeatFluxTarget(unsigned short val_marker,
                                         unsigned long val_vertex,
                                         su2double val_heat) { }
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] val_marker - Surface marker where the coefficient is computed.
-   * \param[in] val_vertex - Vertex of the marker <i>val_marker</i> where the coefficient is evaluated.
-   * \return Value of the buffet sensor.
-   */
-  inline virtual su2double GetBuffetSensor(unsigned short val_marker, unsigned long val_vertex) const { return 0; }
 
   /*!
    * \brief A virtual member.

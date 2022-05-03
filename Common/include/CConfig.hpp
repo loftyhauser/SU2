@@ -131,8 +131,6 @@ private:
   Hold_GridFixed,           /*!< \brief Flag hold fixed some part of the mesh during the deformation. */
   Axisymmetric,             /*!< \brief Flag for axisymmetric calculations */
   Integrated_HeatFlux;      /*!< \brief Flag for heat flux BC whether it deals with integrated values.*/
-  su2double Buffet_k;       /*!< \brief Sharpness coefficient for buffet sensor.*/
-  su2double Buffet_lambda;  /*!< \brief Offset parameter for buffet sensor.*/
   su2double Damp_Engine_Inflow;   /*!< \brief Damping factor for the engine inlet. */
   su2double Damp_Engine_Exhaust;  /*!< \brief Damping factor for the engine exhaust. */
   su2double Damp_Res_Restric,     /*!< \brief Damping factor for the residual restriction. */
@@ -5730,18 +5728,6 @@ public:
    * \return Design variable identification.
    */
   unsigned short GetDesign_Variable(unsigned short val_dv) const { return Design_Variable[val_dv]; }
-
-  /*!
-   * \brief Get the buffet sensor sharpness coefficient.
-   * \return Sharpness coefficient for buffet sensor.
-   */
-  su2double GetBuffet_k(void) const { return Buffet_k; }
-
-  /*!
-   * \brief Get the buffet sensor offset parameter.
-   * \return Offset parameter for buffet sensor.
-   */
-  su2double GetBuffet_lambda(void) const { return Buffet_lambda; }
 
   /*!
    * \brief Get the index in the config information of the marker <i>val_marker</i>.

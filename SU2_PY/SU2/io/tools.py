@@ -440,7 +440,6 @@ def get_adjointSuffix(objective_function=None):
                  "THRUST"                      : "ct"        ,
                  "TORQUE"                      : "cq"        ,
                  "FIGURE_OF_MERIT"             : "merit"     ,
-                 "BUFFET"                      : "buffet"    ,
                  "SURFACE_TOTAL_PRESSURE"      : "pt"        ,
                  "SURFACE_STATIC_PRESSURE"     : "pe"        ,
                  "SURFACE_MASSFLOW"            : "mfr"       ,

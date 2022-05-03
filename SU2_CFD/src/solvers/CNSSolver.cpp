@@ -41,13 +41,6 @@ CNSSolver::CNSSolver(CGeometry *geometry, CConfig *config, unsigned short iMesh)
 
   /*--- This constructor only allocates/inits what is extra to CEulerSolver. ---*/
 
-  /*--- Buffet sensor in all the markers and coefficients ---*/
-
-  Buffet_Sensor.resize(nMarker);
-  for (unsigned long i = 0; i< nMarker; ++i) Buffet_Sensor[i].resize(nVertex[i], 0.0);
-  Buffet_Metric.resize(nMarker, 0.0);
-  Surface_Buffet_Metric.resize(config->GetnMarker_Monitoring(), 0.0);
-
   /*--- Read farfield conditions from config ---*/
 
   Viscosity_Inf   = config->GetViscosity_FreeStreamND();
@@ -177,94 +170,6 @@ void CNSSolver::Viscous_Residual(unsigned long iEdge, CGeometry *geometry, CSolv
   Viscous_Residual_impl(iEdge, geometry, solver_container, numerics, config);
 }
 
-void CNSSolver::Buffet_Monitoring(const CGeometry *geometry, const CConfig *config) {
-
-  unsigned long iVertex, iMarker;
-  unsigned short iMarker_Monitoring;
-  const su2double* Vel_FS = Velocity_Inf;
-  const su2double k = config->GetBuffet_k(), lam = config->GetBuffet_lambda(), Sref = config->GetRefArea();
-
-  const su2double VelMag_FS = GeometryToolbox::Norm(nDim, Vel_FS);
-
-  /*-- Variables initialization ---*/
-
-  Total_Buffet_Metric = 0.0;
-
-  for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++) {
-    Surface_Buffet_Metric[iMarker_Monitoring] = 0.0;
-  }
-
-  /*--- Loop over the Euler and Navier-Stokes markers ---*/
-
-  for (iMarker = 0; iMarker < nMarker; iMarker++) {
-
-    Buffet_Metric[iMarker] = 0.0;
-
-    const auto Monitoring = config->GetMarker_All_Monitoring(iMarker);
-
-    if (config->GetViscous_Wall(iMarker)) {
-
-      /*--- Loop over the vertices to compute the buffet sensor ---*/
-
-      for (iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++) {
-
-        /*--- Perform dot product of skin friction with freestream velocity ---*/
-
-        const su2double SkinFrictionMag = GeometryToolbox::Norm(nDim, CSkinFriction[iMarker][iVertex]);
-        su2double SkinFrictionDot = GeometryToolbox::DotProduct(nDim, CSkinFriction[iMarker][iVertex], Vel_FS);
-
-        /*--- Normalize the dot product ---*/
-
-        SkinFrictionDot /= SkinFrictionMag*VelMag_FS;
-
-        /*--- Compute Heaviside function ---*/
-
-        Buffet_Sensor[iMarker][iVertex] = 1./(1. + exp(2.*k*(SkinFrictionDot + lam)));
-
-        /*--- Integrate buffet sensor ---*/
-
-        if (Monitoring == YES){
-
-          auto Normal = geometry->vertex[iMarker][iVertex]->GetNormal();
-          su2double Area = GeometryToolbox::Norm(nDim, Normal);
-
-          Buffet_Metric[iMarker] += Buffet_Sensor[iMarker][iVertex]*Area/Sref;
-
-        }
-
-      }
-
-      if (Monitoring == YES){
-
-        Total_Buffet_Metric += Buffet_Metric[iMarker];
-
-        /*--- Per surface buffet metric ---*/
-
-        for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++) {
-          auto Monitoring_Tag = config->GetMarker_Monitoring_TagBound(iMarker_Monitoring);
-          auto Marker_Tag = config->GetMarker_All_TagBound(iMarker);
-          if (Marker_Tag == Monitoring_Tag)
-            Surface_Buffet_Metric[iMarker_Monitoring] = Buffet_Metric[iMarker];
-        }
-
-      }
-
-    }
-
-  }
-
-  /*--- Add buffet metric information using all the nodes ---*/
-
-  su2double MyTotal_Buffet_Metric = Total_Buffet_Metric;
-  SU2_MPI::Allreduce(&MyTotal_Buffet_Metric, &Total_Buffet_Metric, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-
-  /*--- Add the buffet metric on the surfaces using all the nodes ---*/
-
-  auto local_copy = Surface_Buffet_Metric;
-  SU2_MPI::Allreduce(local_copy.data(), Surface_Buffet_Metric.data(), local_copy.size(), MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-
-}
-
 void CNSSolver::Evaluate_ObjFunc(const CConfig *config, CSolver**) {
 
   unsigned short iMarker_Monitoring, Kind_ObjFunc;
@@ -281,13 +186,6 @@ void CNSSolver::Evaluate_ObjFunc(const CConfig *config, CSolver**) {
     Weight_ObjFunc = config->GetWeight_ObjFunc(iMarker_Monitoring);
     Kind_ObjFunc = config->GetKind_ObjFunc(iMarker_Monitoring);
 
-    switch(Kind_ObjFunc) {
-      case BUFFET_SENSOR:
-          Total_ComboObj +=Weight_ObjFunc*Surface_Buffet_Metric[iMarker_Monitoring];
-          break;
-      default:
-          break;
-    }
   }
 
 }

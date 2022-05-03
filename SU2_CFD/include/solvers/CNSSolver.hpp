@@ -38,11 +38,6 @@
 class CNSSolver final : public CEulerSolver {
 private:
 
-  vector<su2double> Surface_Buffet_Metric;  /*!< \brief Integrated separation sensor for each monitoring surface. */
-  vector<su2double> Buffet_Metric;          /*!< \brief Integrated separation sensor for each boundary. */
-  vector<vector<su2double> > Buffet_Sensor; /*!< \brief Separation sensor for each boundary and vertex. */
-  su2double Total_Buffet_Metric = 0.0;      /*!< \brief Integrated separation sensor for all the boundaries. */
-
   /*!
    * \brief A virtual member.
    * \param[in] geometry - Geometrical definition.
@@ -142,19 +137,6 @@ public:
   ~CNSSolver() = default;
 
   /*!
-   * \brief Provide the buffet metric.
-   * \param[in] val_marker - Surface marker where the coefficient is computed.
-   * \return Value of the buffet metric on the surface <i>val_marker</i>.
-   */
-  inline su2double GetSurface_Buffet_Metric(unsigned short val_marker) const override { return Surface_Buffet_Metric[val_marker]; }
-
-  /*!
-   * \brief Get the buffet metric.
-   * \return Value of the buffet metric.
-   */
-  inline su2double GetTotal_Buffet_Metric() const override { return Total_Buffet_Metric; }
-
-  /*!
    * \brief Restart residual and compute gradients.
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] solver_container - Container vector with all the solutions.
@@ -235,20 +217,4 @@ public:
                                   CConfig *config,
                                   unsigned short val_marker) override;
 
-  /*!
-   * \brief Compute the buffet sensor.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void Buffet_Monitoring(const CGeometry *geometry, const CConfig *config) override;
-
-  /*!
-   * \brief Get the value of the buffet sensor
-   * \param[in] val_marker - Surface marker where the coefficient is computed.
-   * \param[in] val_vertex - Vertex of the marker <i>val_marker</i> where the coefficient is evaluated.
-   * \return Value of the buffet sensor.
-   */
-  inline su2double GetBuffetSensor(unsigned short val_marker, unsigned long val_vertex) const override {
-    return Buffet_Sensor[val_marker][val_vertex];
-  }
 };

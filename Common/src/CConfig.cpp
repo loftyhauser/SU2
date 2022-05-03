@@ -1569,11 +1569,6 @@ void CConfig::SetConfig_Options() {
   /* DESCRIPTION: Evaluate a problem with engines */
   addBoolOption("ENGINE", Engine, false);
 
-  /* DESCRIPTION:  Sharpness coefficient for the buffet sensor */
-  addDoubleOption("BUFFET_K", Buffet_k, 10.0);
-  /* DESCRIPTION:  Offset parameter for the buffet sensor */
-  addDoubleOption("BUFFET_LAMBDA", Buffet_lambda, 0.0);
-
   /* DESCRIPTION: Use a Newton-Krylov method. */
   addBoolOption("NEWTON_KRYLOV", NewtonKrylov, false);
   /* DESCRIPTION: Integer parameters {startup iters, precond iters, initial tolerance relaxation}. */
@@ -5993,7 +5988,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
         case TOTAL_HEATFLUX:             cout << "Total heat flux objective function." << endl; break;
         case MAXIMUM_HEATFLUX:           cout << "Maximum heat flux objective function." << endl; break;
         case FIGURE_OF_MERIT:            cout << "Rotor Figure of Merit objective function." << endl; break;
-        case BUFFET_SENSOR:              cout << "Buffet sensor objective function." << endl; break;
         case SURFACE_TOTAL_PRESSURE:     cout << "Average total pressure objective function." << endl; break;
         case SURFACE_STATIC_PRESSURE:    cout << "Average static pressure objective function." << endl; break;
         case SURFACE_STATIC_TEMPERATURE: cout << "Average static temperature objective function." << endl; break;
@@ -7646,7 +7640,6 @@ string CConfig::GetObjFunc_Extension(string val_filename) const {
         case MAXIMUM_HEATFLUX:            AdjExt = "_maxheat";  break;
         case AVG_TEMPERATURE:             AdjExt = "_avtp";     break;
         case FIGURE_OF_MERIT:             AdjExt = "_merit";    break;
-        case BUFFET_SENSOR:               AdjExt = "_buffet";   break;
         case SURFACE_TOTAL_PRESSURE:      AdjExt = "_pt";       break;
         case SURFACE_STATIC_PRESSURE:     AdjExt = "_pe";       break;
         case SURFACE_STATIC_TEMPERATURE:  AdjExt = "_T";        break;

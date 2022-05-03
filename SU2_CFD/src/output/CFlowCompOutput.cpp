@@ -189,10 +189,6 @@ void CFlowCompOutput::SetHistoryOutputFields(CConfig *config){
 
   AddAerodynamicCoefficients(config);
 
-  if (config->GetViscous()) {
-    AddHistoryOutput("BUFFET", "Buffet", ScreenOutputFormat::SCIENTIFIC, "AERO_COEFF", "Buffet sensor", HistoryFieldType::COEFFICIENT);
-  }
-
   AddHeatCoefficients(config);
 
   AddRotatingFrameCoefficients();
@@ -421,9 +417,6 @@ void CFlowCompOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CSol
 
   SetAerodynamicCoefficients(config, flow_solver);
 
-  if (config->GetViscous()) {
-    SetHistoryOutputValue("BUFFET", flow_solver->GetTotal_Buffet_Metric());
-  }
 
   SetHeatCoefficients(config, flow_solver);
 

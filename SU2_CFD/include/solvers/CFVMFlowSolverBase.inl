@@ -2844,8 +2844,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::Friction_Forces(const CGeometry* geometr
   }
 
 
-  Buffet_Monitoring(geometry, config);
-
 }
 
 template<class V, ENUM_REGIME R>
