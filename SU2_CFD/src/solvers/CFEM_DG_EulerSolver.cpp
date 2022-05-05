@@ -3216,8 +3216,7 @@ void CFEM_DG_EulerSolver::Preprocessing(CGeometry *geometry, CSolver **solver_co
   /*                       Check for grid motion.                                */
   /*-----------------------------------------------------------------------------*/
 
-  const bool harmonic_balance = config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE;
-  if(config->GetGrid_Movement() && !harmonic_balance) {
+  if(config->GetGrid_Movement()) {
 
     /*--- Determine the type of grid motion. ---*/
     switch( config->GetKind_GridMovement() ) {

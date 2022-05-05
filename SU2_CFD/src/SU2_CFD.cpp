@@ -102,7 +102,6 @@ int main(int argc, char *argv[]) {
 
   const bool disc_adj = config.GetDiscrete_Adjoint();
   const bool multizone = config.GetMultizone_Problem();
-  const bool harmonic_balance = (config.GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
 
   if (dry_run) {
 
@@ -110,7 +109,7 @@ int main(int argc, char *argv[]) {
     driver = new CDummyDriver(config_file_name, nZone, MPICommunicator);
 
   }
-  else if ((!multizone && !harmonic_balance) || (disc_adj)) {
+  else if ((!multizone) || (disc_adj)) {
 
     /*--- Generic single zone problem: instantiate the single zone driver class. ---*/
     if (nZone != 1)
@@ -133,12 +132,6 @@ int main(int argc, char *argv[]) {
     else {
       driver = new CMultizoneDriver(config_file_name, nZone, MPICommunicator);
     }
-
-  }
-  else if (harmonic_balance) {
-
-    /*--- Harmonic balance problem: instantiate the Harmonic Balance driver class. ---*/
-    driver = new CHBDriver(config_file_name, nZone, MPICommunicator);
 
   }
 

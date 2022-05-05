@@ -152,8 +152,6 @@ private:
   unsigned short Continuous_Eqns;    /*!< \brief Which equations to treat continuously (Hybrid adjoint)*/
   unsigned short Discrete_Eqns;      /*!< \brief Which equations to treat discretely (Hybrid adjoint). */
   unsigned short *Design_Variable;   /*!< \brief Kind of design variable. */
-  unsigned short nTimeInstances;     /*!< \brief Number of periodic time instances for  harmonic balance. */
-  su2double HarmonicBalance_Period;  /*!< \brief Period of oscillation to be used with harmonic balance computations. */
   su2double Delta_UnstTime,          /*!< \brief Time step for unsteady computations. */
   Delta_UnstTimeND;                  /*!< \brief Time step for unsteady computations (non dimensional). */
   su2double Delta_DynTime,        /*!< \brief Time step for dynamic structural computations. */
@@ -698,7 +696,6 @@ private:
   unsigned long StartWindowIteration; /*!< \brief Starting Iteration for long time Windowing apporach . */
   unsigned short nCFL_AdaptParam;     /*!< \brief Number of CFL parameters provided in config. */
   bool CFL_Adapt;        /*!< \brief Use adaptive CFL number. */
-  bool HB_Precondition;  /*!< \brief Flag to turn on harmonic balance source term preconditioning */
   su2double RefArea,     /*!< \brief Reference area for coefficient computation. */
   RefElemLength,         /*!< \brief Reference element length for computing the slope limiting epsilon. */
   RefSharpEdges,         /*!< \brief Reference coefficient for detecting sharp edges. */
@@ -876,9 +873,7 @@ private:
   nMarkerPlunging_Omega,          /*!< \brief Number of values provided for angular frequency of marker. */
   nMarkerPlunging_Ampl,           /*!< \brief Number of values provided for plunging amplitude of marker. */
   nRough_Wall;                    /*!< \brief Number of rough walls. */
-  su2double  *Omega_HB;           /*!< \brief Frequency for Harmonic Balance Operator (in rad/s). */
   unsigned short
-  nOmega_HB,                      /*!< \brief Number of frequencies in Harmonic Balance Operator. */
   nMoveMotion_Origin,             /*!< \brief Number of motion origins. */
   *MoveMotion_Origin;             /*!< \brief Keeps track if we should move moment origin. */
   /*! \brief Maximal scalar product of the normed far-field velocity vector and a space coordinate where fixed turbulence quantities are set. */
@@ -2872,18 +2867,6 @@ public:
    * \return Starting direct iteration number for the unsteady adjoint.
    */
   unsigned long GetIter_Avg_Objective(void) const { return Iter_Avg_Objective ; }
-
-  /*!
-   * \brief Retrieves the number of periodic time instances for Harmonic Balance.
-   * \return: Number of periodic time instances for Harmonic Balance.
-   */
-  unsigned short GetnTimeInstances(void) const { return nTimeInstances; }
-
-  /*!
-   * \brief Retrieves the period of oscillations to be used with Harmonic Balance.
-   * \return: Period for Harmonic Balance.
-   */
-  su2double GetHarmonicBalance_Period(void) const { return HarmonicBalance_Period; }
 
   /*!
    * \brief Set the current external iteration number.
@@ -5291,18 +5274,6 @@ public:
    * \param[in] newRotation_Rate_Z - new rotation rate after computing the ramp value.
    */
   void SetRotation_Rate_Z(su2double newRotation_Rate_Z);
-
-  /*!
-   * \brief Get the Harmonic Balance frequency pointer.
-   * \return Harmonic Balance Frequency pointer.
-   */
-  const su2double* GetOmega_HB(void) const { return  Omega_HB; }
-
-  /*!
-   * \brief Get if harmonic balance source term is to be preconditioned
-   * \return yes or no to harmonic balance preconditioning
-   */
-  bool GetHB_Precondition(void) const { return HB_Precondition; }
 
   /*!
    * \brief Get if we should update the motion origin.

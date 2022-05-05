@@ -1896,7 +1896,6 @@ void CEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_contain
   const bool rotating_frame   = config->GetRotating_Frame();
   const bool axisymmetric     = config->GetAxisymmetric();
   const bool gravity          = (config->GetGravityForce() == YES);
-  const bool harmonic_balance = (config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
   const bool body_force       = config->GetBody_Force();
   const bool ideal_gas        = (config->GetKind_FluidModel() == STANDARD_AIR) ||
                                 (config->GetKind_FluidModel() == IDEAL_GAS);
@@ -2046,23 +2045,6 @@ void CEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_contain
     }
     END_SU2_OMP_FOR
 
-  }
-
-  if (harmonic_balance) {
-
-    /*--- loop over points ---*/
-    SU2_OMP_FOR_STAT(omp_chunk_size)
-    for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
-
-      /*--- Get control volume ---*/
-      su2double Volume = geometry->nodes->GetVolume(iPoint);
-
-      /*--- Get stored time spectral source term and add to residual ---*/
-      for (iVar = 0; iVar < nVar; iVar++) {
-        LinSysRes(iPoint,iVar) += Volume * nodes->GetHarmonicBalance_Source(iPoint,iVar);
-      }
-    }
-    END_SU2_OMP_FOR
   }
 
   /*--- Check if a verification solution is to be computed. ---*/

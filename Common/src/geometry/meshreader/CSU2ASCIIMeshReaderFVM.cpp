@@ -83,7 +83,6 @@ CSU2ASCIIMeshReaderFVM::CSU2ASCIIMeshReaderFVM(CConfig *val_config,
 
 bool CSU2ASCIIMeshReaderFVM::ReadMetadata(const bool single_pass, CConfig *config) {
 
-  const bool harmonic_balance = config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE;
   const bool multizone_file = config->GetMultizone_Mesh();
 
   /*--- Open grid file ---*/
@@ -97,11 +96,7 @@ bool CSU2ASCIIMeshReaderFVM::ReadMetadata(const bool single_pass, CConfig *confi
   /*--- If more than one, find the curent zone in the mesh file. ---*/
 
   string text_line;
-  if ((nZones > 1 && multizone_file) || harmonic_balance) {
-    if (harmonic_balance) {
-      if (rank == MASTER_NODE) cout << "Reading time instance " << config->GetiInst()+1 << "." << endl;
-    }
-    else {
+  if ((nZones > 1 && multizone_file)) {
       bool foundZone = false;
       while (getline (mesh_file,text_line)) {
         /*--- Search for the current domain ---*/
@@ -119,7 +114,6 @@ bool CSU2ASCIIMeshReaderFVM::ReadMetadata(const bool single_pass, CConfig *confi
         SU2_MPI::Error("Could not find the IZONE= keyword or the zone contents.\n"
                        "Check the SU2 ASCII file format.", CURRENT_FUNCTION);
       }
-    }
   }
 
   /*--- Read the metadata: problem dimension, offsets for angle

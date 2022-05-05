@@ -389,7 +389,6 @@ void CPhysicalGeometry::Read_SU2_Format_Parallel_FEM(CConfig        *config,
   string::size_type position;
   unsigned long nDOFsGrid_Local = 0, loc_element_count = 0;
   bool domain_flag   = false;
-  bool time_spectral = config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE;
   unsigned short nMarker_Max = config->GetnMarker_Max();
   nZone = val_nZone;
 
@@ -422,10 +421,7 @@ void CPhysicalGeometry::Read_SU2_Format_Parallel_FEM(CConfig        *config,
 
   /*--- If more than one, find the zone in the mesh file ---*/
 
-  if (val_nZone > 1 || time_spectral) {
-    if (time_spectral) {
-      if (rank == MASTER_NODE) cout << "Reading time spectral instance " << val_iZone+1 << ":" << endl;
-    } else {
+  if (val_nZone > 1) {
       while (getline (mesh_file,text_line)) {
         /*--- Search for the current domain ---*/
         position = text_line.find ("IZONE=",0);
@@ -438,7 +434,6 @@ void CPhysicalGeometry::Read_SU2_Format_Parallel_FEM(CConfig        *config,
           }
         }
       }
-    }
   }
 
   /*--- Read grid file with format SU2 ---*/
@@ -589,7 +584,7 @@ void CPhysicalGeometry::Read_SU2_Format_Parallel_FEM(CConfig        *config,
         the correct zone is stored.                           ---*/
   mesh_file.open(val_mesh_filename.c_str(), ios::in);
 
-  if (val_nZone > 1 && !time_spectral) {
+  if (val_nZone > 1) {
     while (getline (mesh_file,text_line)) {
       position = text_line.find ("IZONE=",0);
       if (position != string::npos) {
@@ -669,7 +664,7 @@ void CPhysicalGeometry::Read_SU2_Format_Parallel_FEM(CConfig        *config,
         the correct zone is stored.                           ---*/
   mesh_file.open(val_mesh_filename.c_str(), ios::in);
 
-  if (val_nZone > 1 && !time_spectral) {
+  if (val_nZone > 1) {
     while (getline (mesh_file,text_line)) {
       position = text_line.find ("IZONE=",0);
       if (position != string::npos) {

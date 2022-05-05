@@ -66,7 +66,7 @@ class CIteration {
       : rank(SU2_MPI::GetRank()),
         size(SU2_MPI::GetSize()),
         nZone(config->GetnZone()),
-        nInst(config->GetnTimeInstances()),
+        nInst(1),
         multizone(config->GetMultizone_Problem()),
         singlezone(!multizone) {}
 

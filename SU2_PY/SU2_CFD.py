@@ -50,8 +50,6 @@ def main():
                     help="Specify if we need to initialize MPI", dest="with_MPI", default=False)
   parser.add_option("--fsi", dest="fsi", default="False", help="Launch the FSI driver", metavar="FSI")
   parser.add_option("--fem", dest="fem", default="False", help="Launch the FEM driver (General driver)", metavar="FEM")
-  parser.add_option("--harmonic_balance", dest="harmonic_balance", default="False",
-                    help="Launch the Harmonic Balance (HB) driver", metavar="HB")
   parser.add_option("--poisson_equation", dest="poisson_equation", default="False",
                     help="Launch the poisson equation driver (General driver)", metavar="POIS_EQ")
   parser.add_option("--wave_equation", dest="wave_equation", default="False",
@@ -64,7 +62,6 @@ def main():
   options.nZone = int( options.nZone )
   options.fsi = options.fsi.upper() == 'TRUE'
   options.fem = options.fem.upper() == 'TRUE'
-  options.harmonic_balance = options.harmonic_balance.upper() == 'TRUE'
   options.poisson_equation = options.poisson_equation.upper() == 'TRUE'
   options.wave_equation    = options.wave_equation.upper()    == 'TRUE'
   options.heat_equation    = options.heat_equation.upper()    == 'TRUE'
@@ -82,8 +79,6 @@ def main():
   try:
     if (options.nZone == 1) and ( options.fem or options.poisson_equation or options.wave_equation or options.heat_equation ):
       SU2Driver = pysu2.CSinglezoneDriver(options.filename, options.nZone, comm);
-    elif options.harmonic_balance:
-      SU2Driver = pysu2.CHBDriver(options.filename, options.nZone, comm);
     elif (options.nZone >= 2):
       SU2Driver = pysu2.CMultizoneDriver(options.filename, options.nZone, comm);
     else:

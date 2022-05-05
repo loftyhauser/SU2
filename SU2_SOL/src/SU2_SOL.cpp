@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
 
     /*--- Read the number of instances for each zone ---*/
 
-    nInst[iZone] = config_container[iZone]->GetnTimeInstances();
+    nInst[iZone] = 1;
 
     geometry_container[iZone] = new CGeometry*[nInst[iZone]];
     solver_container[iZone] = new CSolver*[nInst[iZone]];
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
   if (rank == MASTER_NODE)
     cout << endl <<"------------------------- Solution Postprocessing -----------------------" << endl;
 
-  /*---  Check whether this is an FSI, fluid unsteady, harmonic balance or structural dynamic simulation and call the
+  /*---  Check whether this is an FSI, fluid unsteady, or structural dynamic simulation and call the
    solution merging routines accordingly.---*/
 
   if (multizone) {
@@ -584,37 +584,6 @@ int main(int argc, char *argv[]) {
         TimeIter++;
         if (StopCalc) break;
       }
-
-    }
-
-    else if (config_container[ZONE_0]->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE) {
-
-      /*--- Read in the restart file for this time step ---*/
-      for (iZone = 0; iZone < nZone; iZone++) {
-
-        for (iInst = 0; iInst < nInst[iZone]; iInst++){
-
-          config_container[iZone]->SetiInst(iInst);
-          config_container[iZone]->SetTimeIter(iInst);
-
-          /*--- Either instantiate the solution class or load a restart file. ---*/
-          solver_container[iZone][iInst] = new CBaselineSolver(geometry_container[iZone][iInst], config_container[iZone]);
-          solver_container[iZone][iInst]->LoadRestart(geometry_container[iZone], &solver_container[iZone], config_container[iZone], iInst, true);
-          output[iZone] = new CBaselineOutput(config_container[iZone], geometry_container[iZone][iInst]->GetnDim(), solver_container[iZone][iInst]);
-          output[iZone]->PreprocessVolumeOutput(config_container[iZone]);
-          output[iZone]->PreprocessHistoryOutput(config_container[iZone], false);
-
-          /*--- Print progress in solution writing to the screen. ---*/
-          if (rank == MASTER_NODE) {
-            cout << "Storing the volume solution for time instance " << iInst << "." << endl;
-          }
-
-          WriteFiles(config_container[iZone], geometry_container[iZone][iInst], &solver_container[iZone][iInst], output[iZone], iInst);
-
-        }
-
-      }
-
 
     }
 

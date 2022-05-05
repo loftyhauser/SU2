@@ -45,7 +45,6 @@ class CFlowVariable : public CVariable {
   VectorType Velocity2;         /*!< \brief Squared norm of velocity. */
 
   MatrixType Solution_New; /*!< \brief New solution container for Classical RK4. */
-  MatrixType HB_Source;    /*!< \brief harmonic balance source term. */
 
   /*--- NS Variables declared here to make it easier to re-use code between compressible and incompressible solvers.
    * ---*/
@@ -209,26 +208,6 @@ class CFlowVariable : public CVariable {
    * \brief Set the new solution container for Classical RK4.
    */
   void SetSolution_New() final;
-
-  /*!
-   * \brief Get the harmonic balance source term.
-   * \param[in] iPoint - Point index.
-   * \param[in] iVar - Index of the variable.
-   * \return Value of the harmonic balance source term for the index <i>iVar</i>.
-   */
-  inline su2double GetHarmonicBalance_Source(unsigned long iPoint, unsigned long iVar) const final {
-    return HB_Source(iPoint, iVar);
-  }
-
-  /*!
-   * \brief Set the harmonic balance source term.
-   * \param[in] iPoint - Point index.
-   * \param[in] iVar - Index of the variable.
-   * \param[in] val_solution - Value of the harmonic balance source term. for the index <i>iVar</i>.
-   */
-  inline void SetHarmonicBalance_Source(unsigned long iPoint, unsigned long iVar, su2double val_source) final {
-    HB_Source(iPoint, iVar) = val_source;
-  }
 
   /*!
    * \brief Get the values of the vorticity (3 values also in 2D).

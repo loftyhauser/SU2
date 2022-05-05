@@ -1723,14 +1723,12 @@ enum class TIME_MARCHING {
   DT_STEPPING_1ST,  /*!< \brief Use a dual time stepping strategy for unsteady computations (1st order). */
   DT_STEPPING_2ND,  /*!< \brief Use a dual time stepping strategy for unsteady computations (2nd order). */
   ROTATIONAL_FRAME, /*!< \brief Use a rotational source term. */
-  HARMONIC_BALANCE, /*!< \brief Use a harmonic balance source term. */
 };
 static const MapType<std::string, TIME_MARCHING> TimeMarching_Map = {
   MakePair("NO", TIME_MARCHING::STEADY)
   MakePair("TIME_STEPPING", TIME_MARCHING::TIME_STEPPING)
   MakePair("DUAL_TIME_STEPPING-1ST_ORDER", TIME_MARCHING::DT_STEPPING_1ST)
   MakePair("DUAL_TIME_STEPPING-2ND_ORDER", TIME_MARCHING::DT_STEPPING_2ND)
-  MakePair("HARMONIC_BALANCE", TIME_MARCHING::HARMONIC_BALANCE)
   MakePair("ROTATIONAL_FRAME", TIME_MARCHING::ROTATIONAL_FRAME)
 };
 

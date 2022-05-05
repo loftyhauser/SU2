@@ -40,7 +40,6 @@ protected:
   MatrixType Psi;                /*!< \brief Vector of the adjoint variables. */
   MatrixType ForceProj_Vector;   /*!< \brief Vector d. */
   MatrixType ObjFuncSource;      /*!< \brief Vector containing objective function sensitivity for discrete adjoint. */
-  MatrixType HB_Source;          /*!< \brief Harmonic balance source term. */
 
   CVectorOfMatrix& Gradient_Reconstruction;  /*!< \brief Reference to the gradient of the primitive variables for MUSCL reconstruction for the convective term */
   CVectorOfMatrix Gradient_Aux;              /*!< \brief Auxiliary structure to store a second gradient for reconstruction, if required. */
@@ -130,24 +129,6 @@ public:
    * \param[in] val_SetObjFuncSource - Pointer to the objective function source.
    */
   inline su2double *GetObjFuncSource(unsigned long iPoint) final { return ObjFuncSource[iPoint]; }
-
-  /*!
-   * \brief Set the harmonic balance source term.
-   * \param[in] iVar - Index of the variable.
-   * \param[in] val_solution - Value of the harmonic balance source term. for the index <i>iVar</i>.
-   */
-  inline void SetHarmonicBalance_Source(unsigned long iPoint, unsigned long iVar, su2double val_source) final {
-    HB_Source(iPoint,iVar) = val_source;
-  }
-
-  /*!
-   * \brief Get the harmonic balance source term.
-   * \param[in] iVar - Index of the variable.
-   * \return Value of the harmonic balance source term for the index <i>iVar</i>.
-   */
-  inline su2double GetHarmonicBalance_Source(unsigned long iPoint, unsigned long iVar) const final {
-    return HB_Source(iPoint,iVar);
-  }
 
   /*!
    * \brief Get the array of the reconstruction variables gradient at a node.

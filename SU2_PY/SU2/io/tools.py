@@ -809,10 +809,6 @@ def get_specialCases(config):
         error_str = 'Currently cannot support ' + ' and '.join(special_cases) + ' at once'
         raise Exception(error_str)   
   
-    # Special case for harmonic balance
-    if 'TIME_MARCHING' in config and config['TIME_MARCHING'] == 'HARMONIC_BALANCE':
-        special_cases.append('HARMONIC_BALANCE')
-
     # Special case for rotating frame
     if 'GRID_MOVEMENT_KIND' in config and config['GRID_MOVEMENT_KIND'] == 'ROTATING_FRAME':
         special_cases.append('ROTATING_FRAME')

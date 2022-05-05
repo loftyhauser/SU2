@@ -3870,7 +3870,7 @@ void CGeometry::ComputeWallDistance(const CConfig* const* config_container, CGeo
   bool allEmpty = true;
   vector<bool> wallDistanceNeeded(nZone, false);
 
-  for (int iInst = 0; iInst < config_container[ZONE_0]->GetnTimeInstances(); iInst++){
+  int iInst = 0;
     for (int iZone = 0; iZone < nZone; iZone++){
 
       /*--- Check if a zone needs the wall distance and store a boolean ---*/
@@ -3937,5 +3937,4 @@ void CGeometry::ComputeWallDistance(const CConfig* const* config_container, CGeo
         }
       }
     }
-  }
 }

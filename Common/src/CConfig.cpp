@@ -939,10 +939,6 @@ void CConfig::SetPointersNull(void) {
 
   Periodic_Translation= nullptr;    Periodic_RotAngles  = nullptr;    Periodic_RotCenter  = nullptr;
 
-  /* Harmonic Balance Frequency pointer */
-
-  Omega_HB = nullptr;
-
   /*--- Initialize some default arrays to NULL. ---*/
 
   Riemann_FlowDir       = nullptr;
@@ -1524,12 +1520,6 @@ void CConfig::SetConfig_Options() {
   addUnsignedShortOption("TIME_DOFS_ADER_DG", nTimeDOFsADER_DG, 2);
   /* DESCRIPTION: Unsteady Courant-Friedrichs-Lewy number of the finest grid */
   addDoubleOption("UNST_CFL_NUMBER", Unst_CFL, 0.0);
-  /* DESCRIPTION: Integer number of periodic time instances for Harmonic Balance */
-  addUnsignedShortOption("TIME_INSTANCES", nTimeInstances, 1);
-  /* DESCRIPTION: Time period for Harmonic Balance wihtout moving meshes */
-  addDoubleOption("HB_PERIOD", HarmonicBalance_Period, -1.0);
-  /* DESCRIPTION:  Turn on/off harmonic balance preconditioning */
-  addBoolOption("HB_PRECONDITION", HB_Precondition, false);
   /* DESCRIPTION: Starting direct solver iteration for the unsteady adjoint */
   addLongOption("UNST_ADJOINT_ITER", Unst_AdjointIter, 0);
   /* DESCRIPTION: Number of iterations to average the objective */
@@ -1971,10 +1961,6 @@ void CConfig::SetConfig_Options() {
   addBoolOption("TURB_FIXED_VALUES", Turb_Fixed_Values, false);
   /* DESCRIPTION: Shift of the fixed values half-space, in length units in the direction of far-field velocity. */
   addDoubleOption("TURB_FIXED_VALUES_DOMAIN", Turb_Fixed_Values_MaxScalarProd, numeric_limits<su2double>::lowest());
-
-  /* Harmonic Balance config */
-  /* DESCRIPTION: Omega_HB = 2*PI*frequency - frequencies for Harmonic Balance method */
-  addDoubleListOption("OMEGA_HB", nOmega_HB, Omega_HB);
 
   /*!\par CONFIG_CATEGORY: Equivalent Area \ingroup Config*/
   /*--- Options related to the equivalent area ---*/
@@ -3338,7 +3324,7 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     ScreenWrtFreq[0]  = 1;
     HistoryWrtFreq[0] = 1;
 
-    if (TimeMarching != TIME_MARCHING::HARMONIC_BALANCE) { TimeMarching = TIME_MARCHING::STEADY; }
+    TimeMarching = TIME_MARCHING::STEADY;
   }
 
   if (Time_Domain && !GetWrt_Restart_Overwrite()){
@@ -3394,12 +3380,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     if (Kind_Struct_Solver == STRUCT_DEFORMATION::SMALL){
       MinLogResidual = log10(Linear_Solver_Error);
     }
-  }
-
-  /*--- Check for unsupported features. ---*/
-
-  if ((Kind_Solver != MAIN_SOLVER::EULER && Kind_Solver != MAIN_SOLVER::NAVIER_STOKES && Kind_Solver != MAIN_SOLVER::RANS) && (TimeMarching == TIME_MARCHING::HARMONIC_BALANCE)){
-    SU2_MPI::Error("Harmonic Balance not yet implemented for the incompressible solver.", CURRENT_FUNCTION);
   }
 
   /*--- Check for Fluid model consistency ---*/
@@ -3600,79 +3580,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
       SU2_MPI::Error("Number of MOVE_MOTION_ORIGIN must match number of MARKER_MOVING.", CURRENT_FUNCTION);
     }
   }
-
-  /*-- Setting Harmonic Balance period from the config file */
-
-  if (TimeMarching == TIME_MARCHING::HARMONIC_BALANCE) {
-    HarmonicBalance_Period = GetHarmonicBalance_Period();
-    if (HarmonicBalance_Period < 0)  {
-      SU2_MPI::Error("Not a valid value for time period!!", CURRENT_FUNCTION);
-    }
-    /* Initialize the Harmonic balance Frequency pointer */
-    if (Omega_HB == nullptr) {
-      Omega_HB = new su2double[nOmega_HB];
-      for (unsigned short iZone = 0; iZone < nOmega_HB; iZone++ )
-        Omega_HB[iZone] = 0.0;
-  } else {
-      if (nOmega_HB != nTimeInstances) {
-        SU2_MPI::Error("Length of omega_HB  must match the number TIME_INSTANCES!!" , CURRENT_FUNCTION);
-      }
-    }
-  }
-
-    /*--- Use the various rigid-motion input frequencies to determine the period to be used with harmonic balance cases.
-     There are THREE types of motion to consider, namely: rotation, pitching, and plunging.
-     The largest period of motion is the one to be used for harmonic balance  calculations. ---*/
-
-  /*if (Unsteady_Simulation == HARMONIC_BALANCE) {
-    if (!(GetGrid_Movement())) {
-      // No grid movement - Time period from config file //
-      HarmonicBalance_Period = GetHarmonicBalance_Period();
-    }
-
-    else {
-      unsigned short N_MOTION_TYPES = 3;
-      su2double *periods;
-      periods = new su2double[N_MOTION_TYPES];
-
-      //--- rotation: ---//
-
-      su2double Omega_mag_rot = sqrt(pow(Rotation_Rate_X[ZONE_0],2)+pow(Rotation_Rate_Y[ZONE_0],2)+pow(Rotation_Rate_Z[ZONE_0],2));
-      if (Omega_mag_rot > 0)
-          periods[0] = 2*PI_NUMBER/Omega_mag_rot;
-      else
-          periods[0] = 0.0;
-
-      //--- pitching: ---//
-
-      su2double Omega_mag_pitch = sqrt(pow(Pitching_Omega_X[ZONE_0],2)+pow(Pitching_Omega_Y[ZONE_0],2)+pow(Pitching_Omega_Z[ZONE_0],2));
-      if (Omega_mag_pitch > 0)
-          periods[1] = 2*PI_NUMBER/Omega_mag_pitch;
-      else
-          periods[1] = 0.0;
-
-      //--- plunging: ---//
-
-      su2double Omega_mag_plunge = sqrt(pow(Plunging_Omega_X[ZONE_0],2)+pow(Plunging_Omega_Y[ZONE_0],2)+pow(Plunging_Omega_Z[ZONE_0],2));
-      if (Omega_mag_plunge > 0)
-          periods[2] = 2*PI_NUMBER/Omega_mag_plunge;
-      else
-          periods[2] = 0.0;
-
-      //--- determine which period is largest ---//
-
-      unsigned short iVar;
-      HarmonicBalance_Period = 0.0;
-      for (iVar = 0; iVar < N_MOTION_TYPES; iVar++) {
-          if (periods[iVar] > HarmonicBalance_Period)
-              HarmonicBalance_Period = periods[iVar];
-      }
-
-      delete periods;
-    }
-
-  }*/
-
 
   /*--- In case the moment origin coordinates have not been declared in the
    config file, set them equal to zero for safety. Also check to make sure
@@ -7207,10 +7114,6 @@ string CConfig::GetFilename(string filename, string ext, int timeIter) const {
   /*--- Append the zone number if multizone problems ---*/
   if (Multizone_Problem)
     filename = GetMultizone_FileName(filename, GetiZone(), ext);
-
-  /*--- Append the zone number if multiple instance problems ---*/
-  if (GetnTimeInstances() > 1)
-    filename = GetMultiInstance_FileName(filename, GetiInst(), ext);
 
   /*--- Append the iteration number for unsteady problems ---*/
   if (GetTime_Domain()){

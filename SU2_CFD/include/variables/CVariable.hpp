@@ -1623,18 +1623,6 @@ public:
   inline virtual void SetmuT(unsigned long iPoint, su2double val_muT) {}
 
   /*!
-   * \brief A virtual member.
-   * \param[in] iVar - Index of the variable.
-   * \param[in] val_source - Value of the harmonic balance source.
-   */
-  inline virtual void SetHarmonicBalance_Source(unsigned long iPoint, unsigned long iVar, su2double val_source) {}
-
-  /*!
-   * \brief A virtual member.
-   */
-  inline virtual su2double GetHarmonicBalance_Source(unsigned long iPoint, unsigned long iVar) const { return 0.0; }
-
-  /*!
    * \brief Set the Eddy Viscosity Sensitivity of the problem.
    * \param[in] val_EddyViscSens - Eddy Viscosity Sensitivity.
    * \param[in] numTotalVar - Number of variables.

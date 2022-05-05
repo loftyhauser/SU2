@@ -850,34 +850,6 @@ def main():
     test_list.append(turb_naca0012_p1c2)
 
     ######################################
-    ### Harmonic Balance               ###
-    ######################################
-
-    # Description of the regression test
-    harmonic_balance           = TestCase('harmonic_balance')
-    harmonic_balance.cfg_dir   = "harmonic_balance"
-    harmonic_balance.cfg_file  = "HB.cfg"
-    harmonic_balance.test_iter = 25
-    harmonic_balance.test_vals = [-1.589739, 3.922579, 0.006702, 0.099632]
-    harmonic_balance.su2_exec  = "parallel_computation.py -f"
-    harmonic_balance.timeout   = 1600
-    harmonic_balance.tol       = 0.00001
-    harmonic_balance.new_output = False
-    test_list.append(harmonic_balance)
-
-    # Turbulent pitching NACA 64a010 airfoil
-    hb_rans_preconditioning           = TestCase('hb_rans_preconditioning')
-    hb_rans_preconditioning.cfg_dir   = "harmonic_balance/hb_rans_preconditioning"
-    hb_rans_preconditioning.cfg_file  = "davis.cfg"
-    hb_rans_preconditioning.test_iter = 25
-    hb_rans_preconditioning.test_vals = [-1.902099, -5.949279, 0.007768, 0.128062]
-    hb_rans_preconditioning.su2_exec  = "parallel_computation.py -f"
-    hb_rans_preconditioning.timeout   = 1600
-    hb_rans_preconditioning.tol       = 0.00001
-    hb_rans_preconditioning.new_output = False
-    test_list.append(hb_rans_preconditioning)
-
-    ######################################
     ### Moving Wall                    ###
     ######################################
 

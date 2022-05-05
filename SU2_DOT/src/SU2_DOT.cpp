@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
 
     /*--- Read the number of instances for each zone ---*/
 
-    nInst[iZone] = config_container[iZone]->GetnTimeInstances();
+    nInst[iZone] = 1;
 
     geometry_container[iZone] = new CGeometry*[nInst[iZone]];
 

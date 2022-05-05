@@ -33,14 +33,13 @@ void CAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integratio
                                     CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
                                     CFreeFormDefBox*** FFDBox, unsigned short val_iZone, unsigned short val_iInst) {
   unsigned short iMesh;
-  bool harmonic_balance = (config[ZONE_0]->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
   bool dynamic_mesh = config[ZONE_0]->GetGrid_Movement();
   unsigned long InnerIter = 0;
   unsigned long TimeIter = config[ZONE_0]->GetTimeIter();
 
   /*--- For the unsteady adjoint, load a new direct solution from a restart file. ---*/
 
-  if (((dynamic_mesh && TimeIter == 0) || (config[val_iZone]->GetTime_Marching() != TIME_MARCHING::STEADY)) && !harmonic_balance) {
+  if (((dynamic_mesh && TimeIter == 0) || (config[val_iZone]->GetTime_Marching() != TIME_MARCHING::STEADY))) {
     int Direct_Iter = SU2_TYPE::Int(config[val_iZone]->GetUnst_AdjointIter()) - SU2_TYPE::Int(TimeIter) - 1;
     if (rank == MASTER_NODE && val_iZone == ZONE_0 && (config[val_iZone]->GetTime_Marching() != TIME_MARCHING::STEADY))
       cout << endl << " Loading flow solution from direct iteration " << Direct_Iter << "." << endl;

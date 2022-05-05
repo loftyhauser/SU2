@@ -274,7 +274,6 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
                                     CNumerics **numerics_container, CConfig *config, unsigned short iMesh) {
 
   const bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  const bool harmonic_balance = (config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
   const bool transition_BC = (config->GetKind_Trans_Model() == TURB_TRANS_MODEL::BC);
 
   auto* flowNodes = su2staticcast_p<CFlowVariable*>(solver_container[FLOW_SOL]->GetNodes());
@@ -359,23 +358,6 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
 
   }
   END_SU2_OMP_FOR
-
-  if (harmonic_balance) {
-
-    SU2_OMP_FOR_STAT(omp_chunk_size)
-    for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++) {
-
-      su2double Volume = geometry->nodes->GetVolume(iPoint);
-
-      /*--- Access stored harmonic balance source term ---*/
-
-      for (unsigned short iVar = 0; iVar < nVar; iVar++) {
-        su2double Source = nodes->GetHarmonicBalance_Source(iPoint,iVar);
-        LinSysRes(iPoint,iVar) += Source*Volume;
-      }
-    }
-    END_SU2_OMP_FOR
-  }
 
   AD::EndNoSharedReading();
 

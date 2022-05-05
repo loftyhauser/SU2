@@ -1251,7 +1251,6 @@ void CAdjEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
   bool rotating_frame = config->GetRotating_Frame();
   bool axisymmetric   = config->GetAxisymmetric();
   //  bool gravity        = (config->GetGravityForce() == YES);
-  bool harmonic_balance  = (config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
 
   /*--- Initialize the source residual to zero ---*/
   for (iVar = 0; iVar < nVar; iVar++) Residual[iVar] = 0.0;
@@ -1276,28 +1275,6 @@ void CAdjEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
 
       /*--- Add the implicit Jacobian contribution ---*/
       if (implicit) Jacobian.AddBlock2Diag(iPoint, Jacobian_i);
-
-    }
-  }
-
-  if (harmonic_balance) {
-
-    su2double Volume, Source;
-
-    /*--- loop over points ---*/
-    for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
-
-      /*--- Get control volume ---*/
-      Volume = geometry->nodes->GetVolume(iPoint);
-
-      /*--- Get stored harmonic balance source term ---*/
-      for (iVar = 0; iVar < nVar; iVar++) {
-        Source = nodes->GetHarmonicBalance_Source(iPoint,iVar);
-        Residual[iVar] = Source*Volume;
-      }
-
-      /*--- Add Residual ---*/
-      LinSysRes.AddBlock(iPoint, Residual);
 
     }
   }

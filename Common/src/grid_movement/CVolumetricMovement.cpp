@@ -1851,7 +1851,6 @@ void CVolumetricMovement::Rigid_Rotation(CGeometry *geometry, CConfig *config,
   su2double rotMatrix[3][3] = {{0.0,0.0,0.0}, {0.0,0.0,0.0}, {0.0,0.0,0.0}};
   su2double dtheta, dphi, dpsi, cosTheta, sinTheta;
   su2double cosPhi, sinPhi, cosPsi, sinPsi;
-  bool harmonic_balance = (config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
   bool adjoint = (config->GetContinuous_Adjoint() || config->GetDiscrete_Adjoint());
 
   /*--- Problem dimension and physical time step ---*/
@@ -1875,14 +1874,6 @@ void CVolumetricMovement::Rigid_Rotation(CGeometry *geometry, CConfig *config,
   for (iDim = 0; iDim < 3; iDim++){
     Center[iDim] = config->GetMotion_Origin(iDim);
     Omega[iDim]  = config->GetRotation_Rate(iDim)/config->GetOmega_Ref();
-  }
-
-  /*-- Set dt for harmonic balance cases ---*/
-  if (harmonic_balance) {
-    /*--- period of oscillation & compute time interval using nTimeInstances ---*/
-    su2double period = config->GetHarmonicBalance_Period();
-    period /= config->GetTime_Ref();
-    dt = period * (su2double)iter/(su2double)(config->GetnTimeInstances());
   }
 
   /*--- Compute delta change in the angle about the x, y, & z axes. ---*/
@@ -2013,7 +2004,6 @@ void CVolumetricMovement::Rigid_Pitching(CGeometry *geometry, CConfig *config, u
   unsigned short iDim;
   unsigned short nDim = geometry->GetnDim();
   unsigned long iPoint;
-  bool harmonic_balance = (config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
   bool adjoint = (config->GetContinuous_Adjoint() || config->GetDiscrete_Adjoint());
 
   /*--- Retrieve values from the config file ---*/
@@ -2030,13 +2020,6 @@ void CVolumetricMovement::Rigid_Pitching(CGeometry *geometry, CConfig *config, u
   }
 
 
-  if (harmonic_balance) {
-    /*--- period of oscillation & compute time interval using nTimeInstances ---*/
-    su2double period = config->GetHarmonicBalance_Period();
-    period /= config->GetTime_Ref();
-    deltaT = period/(su2double)(config->GetnTimeInstances());
-  }
-
   /*--- Compute delta time based on physical time step ---*/
   if (adjoint) {
     /*--- For the unsteady adjoint, we integrate backwards through
@@ -2049,13 +2032,8 @@ void CVolumetricMovement::Rigid_Pitching(CGeometry *geometry, CConfig *config, u
   } else {
     /*--- Forward time for the direct problem ---*/
     time_new = static_cast<su2double>(iter)*deltaT;
-    if (harmonic_balance) {
-      /*--- For harmonic balance, begin movement from the zero position ---*/
-      time_old = 0.0;
-    } else {
       time_old = time_new;
       if (iter != 0) time_old = (static_cast<su2double>(iter)-1.0)*deltaT;
-    }
   }
 
   /*--- Compute delta change in the angle about the x, y, & z axes. ---*/
@@ -2159,7 +2137,6 @@ void CVolumetricMovement::Rigid_Plunging(CGeometry *geometry, CConfig *config, u
   su2double deltaT, time_new, time_old;
   unsigned short iDim, nDim = geometry->GetnDim();
   unsigned long iPoint;
-  bool harmonic_balance = (config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
   bool adjoint = (config->GetContinuous_Adjoint() || config->GetDiscrete_Adjoint());
 
   /*--- Retrieve values from the config file ---*/
@@ -2170,15 +2147,6 @@ void CVolumetricMovement::Rigid_Plunging(CGeometry *geometry, CConfig *config, u
     Center[iDim] = config->GetMotion_Origin(iDim);
     Omega[iDim]  = config->GetPlunging_Omega(iDim)/config->GetOmega_Ref();
     Ampl[iDim]   = config->GetPlunging_Ampl(iDim)/Lref;
-  }
-
-  /*--- Plunging frequency and amplitude from config. ---*/
-
-  if (harmonic_balance) {
-    /*--- period of oscillation & time interval using nTimeInstances ---*/
-    su2double period = config->GetHarmonicBalance_Period();
-    period /= config->GetTime_Ref();
-    deltaT = period/(su2double)(config->GetnTimeInstances());
   }
 
   /*--- Compute delta time based on physical time step ---*/
@@ -2193,13 +2161,8 @@ void CVolumetricMovement::Rigid_Plunging(CGeometry *geometry, CConfig *config, u
   } else {
     /*--- Forward time for the direct problem ---*/
     time_new = static_cast<su2double>(iter)*deltaT;
-    if (harmonic_balance) {
-      /*--- For harmonic balance, begin movement from the zero position ---*/
-      time_old = 0.0;
-    } else {
       time_old = time_new;
       if (iter != 0) time_old = (static_cast<su2double>(iter)-1.0)*deltaT;
-    }
   }
 
   /*--- Compute delta change in the position in the x, y, & z directions. ---*/
@@ -2290,7 +2253,6 @@ void CVolumetricMovement::Rigid_Translation(CGeometry *geometry, CConfig *config
   su2double deltaT, time_new, time_old;
   unsigned short iDim, nDim = geometry->GetnDim();
   unsigned long iPoint;
-  bool harmonic_balance = (config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
   bool adjoint = (config->GetContinuous_Adjoint() || config->GetDiscrete_Adjoint());
 
   /*--- Retrieve values from the config file ---*/
@@ -2301,13 +2263,6 @@ void CVolumetricMovement::Rigid_Translation(CGeometry *geometry, CConfig *config
   for (iDim = 0; iDim < 3; iDim++){
     Center[iDim] = config->GetMotion_Origin(iDim);
     xDot[iDim]   = config->GetTranslation_Rate(iDim);
-  }
-
-  if (harmonic_balance) {
-    /*--- period of oscillation & time interval using nTimeInstances ---*/
-    su2double period = config->GetHarmonicBalance_Period();
-    period /= config->GetTime_Ref();
-    deltaT = period/(su2double)(config->GetnTimeInstances());
   }
 
   /*--- Compute delta time based on physical time step ---*/
@@ -2322,13 +2277,8 @@ void CVolumetricMovement::Rigid_Translation(CGeometry *geometry, CConfig *config
   } else {
     /*--- Forward time for the direct problem ---*/
     time_new = static_cast<su2double>(iter)*deltaT;
-    if (harmonic_balance) {
-      /*--- For harmonic balance, begin movement from the zero position ---*/
-      time_old = 0.0;
-    } else {
       time_old = time_new;
       if (iter != 0) time_old = (static_cast<su2double>(iter)-1.0)*deltaT;
-    }
   }
 
   /*--- Compute delta change in the position in the x, y, & z directions. ---*/

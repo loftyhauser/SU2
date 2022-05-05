@@ -5376,8 +5376,7 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
     else                     FullInverseMassMatrix = true;
   }
   else if(config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST ||
-          config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND ||
-          config->GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE) {
+          config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND) {
     if( UseLumpedMassMatrix ) FullMassMatrix = LumpedMassMatrix = true;
     else                      FullInverseMassMatrix = true;
   }
