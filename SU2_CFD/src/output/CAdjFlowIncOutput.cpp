@@ -178,7 +178,6 @@ void CAdjFlowIncOutput::SetHistoryOutputFields(CConfig *config){
 void CAdjFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CSolver **solver) {
 
   CSolver* adjflow_solver = solver[ADJFLOW_SOL];
-  CSolver* adjheat_solver = solver[ADJHEAT_SOL];
   CSolver* mesh_solver = solver[MESH_SOL];
 
   SetHistoryOutputValue("RMS_ADJ_PRESSURE", log10(adjflow_solver->GetRes_RMS(0)));
@@ -186,13 +185,6 @@ void CAdjFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CS
   SetHistoryOutputValue("RMS_ADJ_VELOCITY-Y", log10(adjflow_solver->GetRes_RMS(2)));
   if (nDim == 3) {
     SetHistoryOutputValue("RMS_ADJ_VELOCITY-Z", log10(adjflow_solver->GetRes_RMS(3)));
-  }
-  if (weakly_coupled_heat){
-    SetHistoryOutputValue("RMS_ADJ_TEMPERATURE",         log10(adjheat_solver->GetRes_RMS(0)));
-  }
-  if (heat){
-    if (nDim == 3) SetHistoryOutputValue("RMS_ADJ_TEMPERATURE",         log10(adjflow_solver->GetRes_RMS(4)));
-    else           SetHistoryOutputValue("RMS_ADJ_TEMPERATURE",         log10(adjflow_solver->GetRes_RMS(3)));
   }
 
   if (config->GetKind_Streamwise_Periodic() == ENUM_STREAMWISE_PERIODIC::MASSFLOW) {
@@ -205,13 +197,6 @@ void CAdjFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CS
   if (nDim == 3) {
     SetHistoryOutputValue("MAX_ADJ_VELOCITY-Z", log10(adjflow_solver->GetRes_Max(3)));
   }
-  if (weakly_coupled_heat){
-    SetHistoryOutputValue("MAX_ADJ_TEMPERATURE",         log10(adjheat_solver->GetRes_Max(0)));
-  }
-  if (heat){
-    if (nDim == 3) SetHistoryOutputValue("MAX_ADJ_TEMPERATURE",         log10(adjflow_solver->GetRes_Max(4)));
-    else           SetHistoryOutputValue("MAX_ADJ_TEMPERATURE",         log10(adjflow_solver->GetRes_Max(3)));
-  }
 
   if (multiZone){
     SetHistoryOutputValue("BGS_ADJ_PRESSURE", log10(adjflow_solver->GetRes_BGS(0)));
@@ -219,13 +204,6 @@ void CAdjFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CS
     SetHistoryOutputValue("BGS_ADJ_VELOCITY-Y", log10(adjflow_solver->GetRes_BGS(2)));
     if (nDim == 3) {
       SetHistoryOutputValue("BGS_ADJ_VELOCITY-Z", log10(adjflow_solver->GetRes_BGS(3)));
-    }
-    if (weakly_coupled_heat){
-      SetHistoryOutputValue("BGS_ADJ_TEMPERATURE",         log10(adjheat_solver->GetRes_BGS(0)));
-    }
-    if (heat){
-      if (nDim == 3) SetHistoryOutputValue("BGS_ADJ_TEMPERATURE",         log10(adjflow_solver->GetRes_BGS(4)));
-      else           SetHistoryOutputValue("BGS_ADJ_TEMPERATURE",         log10(adjflow_solver->GetRes_BGS(3)));
     }
 
   }
@@ -317,10 +295,6 @@ void CAdjFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSo
   CVariable* Node_AdjFlow = solver[ADJFLOW_SOL]->GetNodes();
   CVariable* Node_AdjHeat = nullptr;
   CPoint*    Node_Geo     = geometry->nodes;
-
-  if (weakly_coupled_heat){
-    Node_AdjHeat = solver[ADJHEAT_SOL]->GetNodes();
-  }
 
   SetVolumeOutputValue("COORD-X", iPoint,  Node_Geo->GetCoord(iPoint, 0));
   SetVolumeOutputValue("COORD-Y", iPoint,  Node_Geo->GetCoord(iPoint, 1));

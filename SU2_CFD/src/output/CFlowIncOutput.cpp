@@ -192,7 +192,6 @@ void CFlowIncOutput::SetHistoryOutputFields(CConfig *config){
 void CFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CSolver **solver) {
 
   CSolver* flow_solver = solver[FLOW_SOL];
-  CSolver* heat_solver = solver[HEAT_SOL];
   CSolver* mesh_solver = solver[MESH_SOL];
 
   SetHistoryOutputValue("RMS_PRESSURE", log10(flow_solver->GetRes_RMS(0)));
@@ -210,23 +209,6 @@ void CFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CSolv
     SetHistoryOutputValue("BGS_VELOCITY-X", log10(flow_solver->GetRes_BGS(1)));
     SetHistoryOutputValue("BGS_VELOCITY-Y", log10(flow_solver->GetRes_BGS(2)));
     if (nDim == 3) SetHistoryOutputValue("BGS_VELOCITY-Z", log10(flow_solver->GetRes_BGS(3)));
-  }
-
-  if (weakly_coupled_heat){
-    SetHeatCoefficients(config, heat_solver);
-    SetHistoryOutputValue("AVG_TEMPERATURE", heat_solver->GetTotal_AvgTemperature());
-    SetHistoryOutputValue("RMS_TEMPERATURE", log10(heat_solver->GetRes_RMS(0)));
-    SetHistoryOutputValue("MAX_TEMPERATURE", log10(heat_solver->GetRes_Max(0)));
-    if (multiZone) SetHistoryOutputValue("BGS_TEMPERATURE", log10(heat_solver->GetRes_BGS(0)));
-  }
-  if (heat) {
-    SetHeatCoefficients(config, flow_solver);
-    SetHistoryOutputValue("AVG_TEMPERATURE", flow_solver->GetTotal_AvgTemperature());
-    SetHistoryOutputValue("RMS_TEMPERATURE", log10(flow_solver->GetRes_RMS(nDim + 1)));
-    SetHistoryOutputValue("MAX_TEMPERATURE", log10(flow_solver->GetRes_Max(nDim + 1)));
-    if (multiZone) {
-      SetHistoryOutputValue("BGS_TEMPERATURE", log10(flow_solver->GetRes_BGS(nDim + 1)));
-    }
   }
 
   SetHistoryOutputValue("LINSOL_ITER", flow_solver->GetIterLinSolver());
@@ -355,10 +337,6 @@ void CFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolve
   const auto* Node_Flow = solver[FLOW_SOL]->GetNodes();
   const CVariable* Node_Heat = nullptr;
   auto* Node_Geo = geometry->nodes;
-
-  if (weakly_coupled_heat){
-    Node_Heat = solver[HEAT_SOL]->GetNodes();
-  }
 
   LoadCoordinates(Node_Geo->GetCoord(iPoint), iPoint);
 

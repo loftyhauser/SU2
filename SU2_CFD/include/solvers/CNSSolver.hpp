@@ -69,19 +69,7 @@ private:
                                           su2double& Res_Visc) const;
 
   /*!
-   * \brief Get the wall temperature at a given vertex of a given marker for CHT problems.
-   */
-  su2double GetCHTWallTemperature(const CConfig* config,
-                                  unsigned short val_marker,
-                                  unsigned long iVertex,
-                                  su2double thermal_conductivity,
-                                  su2double dist_ij,
-                                  su2double There,
-                                  su2double Temperature_Ref) const;
-
-  /*!
-   * \brief Generic implementation of the isothermal wall also covering CHT cases,
-   * for which the wall temperature is given by GetCHTWallTemperature.
+   * \brief Generic implementation of the isothermal wall
    */
   void BC_Isothermal_Wall_Generic(CGeometry *geometry,
                                   CSolver **solver_container,
@@ -201,20 +189,5 @@ public:
                           CNumerics *visc_numerics,
                           CConfig *config,
                           unsigned short val_marker) override;
-
-  /*!
-   * \brief Impose the Navier-Stokes boundary condition (strong) with values from a CHT coupling.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver_container - Container vector with all the solutions.
-   * \param[in] conv_numerics - Description of the numerical method.
-   * \param[in] visc_numerics - Description of the numerical method.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_marker - Surface marker where the boundary condition is applied.
-   */
-  void BC_ConjugateHeat_Interface(CGeometry *geometry,
-                                  CSolver **solver_container,
-                                  CNumerics *numerics,
-                                  CConfig *config,
-                                  unsigned short val_marker) override;
 
 };

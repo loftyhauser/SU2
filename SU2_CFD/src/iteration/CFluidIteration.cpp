@@ -113,12 +113,6 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
     }
   }
 
-  if (config[val_iZone]->GetWeakly_Coupled_Heat()) {
-    config[val_iZone]->SetGlobalParam(main_solver, RUNTIME_HEAT_SYS);
-    integration[val_iZone][val_iInst][HEAT_SOL]->SingleGrid_Iteration(geometry, solver, numerics, config,
-                                                                      RUNTIME_HEAT_SYS, val_iZone, val_iInst);
-  }
-
   /*--- Adapt the CFL number using an exponential progression with under-relaxation approach. ---*/
 
   if ((config[val_iZone]->GetCFL_Adapt() == YES) && (!disc_adj)) {
@@ -174,14 +168,6 @@ void CFluidIteration::Update(COutput* output, CIntegration**** integration, CGeo
       integration[val_iZone][val_iInst][TRANS_SOL]->SetConvergence(false);
     }
 
-    /*--- Update dual time solver for the weakly coupled energy equation ---*/
-
-    if (config[val_iZone]->GetWeakly_Coupled_Heat()) {
-      integration[val_iZone][val_iInst][HEAT_SOL]->SetDualTime_Solver(geometry[val_iZone][val_iInst][MESH_0],
-                                                                      solver[val_iZone][val_iInst][MESH_0][HEAT_SOL],
-                                                                      config[val_iZone], MESH_0);
-      integration[val_iZone][val_iInst][HEAT_SOL]->SetConvergence(false);
-    }
   }
 }
 
@@ -276,12 +262,7 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
 
     /*--- Set the convergence to false (to make sure outer subiterations converge) ---*/
 
-    if (config[val_iZone]->GetKind_Solver() == MAIN_SOLVER::HEAT_EQUATION) {
-      integration[val_iZone][INST_0][HEAT_SOL]->SetConvergence(false);
-    }
-    else {
       integration[val_iZone][INST_0][FLOW_SOL]->SetConvergence(false);
-    }
   }
 }
 

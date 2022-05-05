@@ -31,11 +31,9 @@ su2_home = os.environ['SU2_HOME']
 fileList = ['CFlowOutput.cpp', 
 'CFlowIncOutput.cpp', 
 'CFlowCompOutput.cpp',
-'CHeatOutput.cpp',
 'CFlowCompFEMOutput.cpp',
 'CElasticityOutput.cpp',
 'CAdjFlowOutput.cpp',
-'CAdjHeatOutput.cpp',
 'CAdjFlowIncOutput.cpp',
 'CAdjFlowCompOutput.cpp',
 'CAdjElasticityOutput.cpp']

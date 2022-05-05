@@ -476,41 +476,6 @@ void CNSSolver::BC_HeatFlux_Wall_Generic(const CGeometry* geometry, const CConfi
 
 }
 
-su2double CNSSolver::GetCHTWallTemperature(const CConfig* config, unsigned short val_marker,
-                                           unsigned long iVertex, su2double thermal_conductivity,
-                                           su2double dist_ij, su2double There,
-                                           su2double Temperature_Ref) const {
-
-  /*--- Compute the normal gradient in temperature using Twall ---*/
-
-  const su2double Tconjugate = GetConjugateHeatVariable(val_marker, iVertex, 0) / Temperature_Ref;
-
-  su2double Twall = 0.0;
-
-  if ((config->GetKind_CHT_Coupling() == CHT_COUPLING::AVERAGED_TEMPERATURE_NEUMANN_HEATFLUX) ||
-      (config->GetKind_CHT_Coupling() == CHT_COUPLING::AVERAGED_TEMPERATURE_ROBIN_HEATFLUX)) {
-
-    /*--- Compute wall temperature from both temperatures ---*/
-
-    su2double HF_FactorHere = thermal_conductivity*config->GetViscosity_Ref()/dist_ij;
-    su2double HF_FactorConjugate = GetConjugateHeatVariable(val_marker, iVertex, 2);
-
-    Twall = (There*HF_FactorHere + Tconjugate*HF_FactorConjugate)/(HF_FactorHere + HF_FactorConjugate);
-  }
-  else if ((config->GetKind_CHT_Coupling() == CHT_COUPLING::DIRECT_TEMPERATURE_NEUMANN_HEATFLUX) ||
-           (config->GetKind_CHT_Coupling() == CHT_COUPLING::DIRECT_TEMPERATURE_ROBIN_HEATFLUX)) {
-
-    /*--- (Directly) Set wall temperature to conjugate temperature. ---*/
-
-    Twall = Tconjugate;
-  }
-  else {
-    SU2_MPI::Error("Unknown CHT coupling method.", CURRENT_FUNCTION);
-  }
-
-  return Twall;
-}
-
 void CNSSolver::BC_Isothermal_Wall_Generic(CGeometry *geometry, CSolver **solver_container,
                                            CNumerics *conv_numerics, CNumerics *visc_numerics,
                                            CConfig *config, unsigned short val_marker, bool cht_mode) {
@@ -603,11 +568,7 @@ void CNSSolver::BC_Isothermal_Wall_Generic(CGeometry *geometry, CSolver **solver
 
     const su2double There = nodes->GetTemperature(Point_Normal);
 
-    if (cht_mode) {
-      Twall = GetCHTWallTemperature(config, val_marker, iVertex, dist_ij,
-                                    thermal_conductivity, There, Temperature_Ref);
-    }
-    else if (config->GetMarker_All_PyCustom(val_marker)) {
+    if (config->GetMarker_All_PyCustom(val_marker)) {
       Twall = geometry->GetCustomBoundaryTemperature(val_marker, iVertex);
     }
 
@@ -677,11 +638,6 @@ void CNSSolver::BC_Isothermal_Wall_Generic(CGeometry *geometry, CSolver **solver
 void CNSSolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics,
                                    CNumerics *visc_numerics, CConfig *config, unsigned short val_marker) {
   BC_Isothermal_Wall_Generic(geometry, solver_container, conv_numerics, visc_numerics, config, val_marker);
-}
-
-void CNSSolver::BC_ConjugateHeat_Interface(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics,
-                                           CConfig *config, unsigned short val_marker) {
-  BC_Isothermal_Wall_Generic(geometry, solver_container, conv_numerics, nullptr, config, val_marker, true);
 }
 
 void CNSSolver::SetTau_Wall_WF(CGeometry *geometry, CSolver **solver_container, const CConfig *config) {

@@ -37,7 +37,6 @@
 #include "../../include/solvers/CAdjEulerSolver.hpp"
 #include "../../include/solvers/CAdjNSSolver.hpp"
 #include "../../include/solvers/CAdjTurbSolver.hpp"
-#include "../../include/solvers/CHeatSolver.hpp"
 #include "../../include/solvers/CFEASolver.hpp"
 #include "../../include/solvers/CTemplateSolver.hpp"
 #include "../../include/solvers/CDiscAdjSolver.hpp"
@@ -69,7 +68,6 @@ CSolver** CSolverFactory::CreateSolverContainer(MAIN_SOLVER kindMainSolver, CCon
       break;
     case MAIN_SOLVER::INC_NAVIER_STOKES:
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::INC_NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[HEAT_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::HEAT, solver, geometry, config, iMGLevel);
       break;
     case MAIN_SOLVER::NAVIER_STOKES:
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
@@ -80,11 +78,7 @@ CSolver** CSolverFactory::CreateSolverContainer(MAIN_SOLVER kindMainSolver, CCon
       break;
     case MAIN_SOLVER::INC_RANS:
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::INC_NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[HEAT_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::HEAT, solver, geometry, config, iMGLevel);
       solver[TURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::HEAT_EQUATION:
-      solver[HEAT_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::HEAT, solver, geometry, config, iMGLevel);
       break;
     case MAIN_SOLVER::ADJ_EULER:
       solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::EULER, solver, geometry, config, iMGLevel);
@@ -121,21 +115,13 @@ CSolver** CSolverFactory::CreateSolverContainer(MAIN_SOLVER kindMainSolver, CCon
     case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES:
       solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::INC_NAVIER_STOKES, solver, geometry, config, iMGLevel);
       solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FLOW, solver, geometry, config, iMGLevel);
-      solver[HEAT_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::HEAT, solver, geometry, config, iMGLevel);
-      solver[ADJHEAT_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_HEAT, solver, geometry, config, iMGLevel);
       break;
     case MAIN_SOLVER::DISC_ADJ_INC_RANS:
       solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::INC_NAVIER_STOKES, solver, geometry, config, iMGLevel);
       solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FLOW, solver, geometry, config, iMGLevel);
-      solver[HEAT_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::HEAT, solver, geometry, config, iMGLevel);
-      solver[ADJHEAT_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_HEAT, solver, geometry, config, iMGLevel);
       solver[TURB_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
       solver[ADJTURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_TURB, solver, geometry, config, iMGLevel);
     break;
-    case MAIN_SOLVER::DISC_ADJ_HEAT:
-      solver[HEAT_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::HEAT, solver, geometry, config, iMGLevel);
-      solver[ADJHEAT_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_HEAT, solver, geometry, config, iMGLevel);
-      break;
     case MAIN_SOLVER::FEM_ELASTICITY:
       solver[FEA_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::FEA, solver, geometry, config, iMGLevel);
       break;
@@ -244,14 +230,6 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
       genericSolver = CreateDGSolver(kindSolver, geometry, config, iMGLevel);
       metaData.integrationType = INTEGRATION_TYPE::FEM_DG;
       break;
-    case SUB_SOLVER_TYPE::HEAT:
-      genericSolver = CreateHeatSolver(solver, geometry, config, iMGLevel, false);
-      metaData.integrationType = INTEGRATION_TYPE::SINGLEGRID;
-      break;
-    case SUB_SOLVER_TYPE::DISC_ADJ_HEAT:
-      genericSolver = CreateHeatSolver(solver, geometry, config, iMGLevel, true);
-      metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
-      break;
     case SUB_SOLVER_TYPE::TRANSITION:
       genericSolver = new CTransLMSolver(geometry, config, iMGLevel);
       metaData.integrationType = INTEGRATION_TYPE::SINGLEGRID;
@@ -311,30 +289,6 @@ CSolver* CSolverFactory::CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **so
   }
 
   return turbSolver;
-}
-
-CSolver* CSolverFactory::CreateHeatSolver(CSolver **solver, CGeometry *geometry, CConfig *config, int iMGLevel, bool adjoint){
-
-  CSolver *heatSolver = nullptr;
-
-  /*--- Only allocate a heat solver if it should run standalone
-   * or if the weakly coupled heat solver is enabled and no energy equation is included ---*/
-
-  if ((config->GetWeakly_Coupled_Heat() && !config->GetEnergy_Equation()) || config->GetHeatProblem()){
-    if (adjoint){
-      if (config->GetDiscrete_Adjoint()){
-        heatSolver = new CDiscAdjSolver(geometry, config, solver[HEAT_SOL], RUNTIME_HEAT_SYS, iMGLevel);
-      }
-      else {
-        SU2_MPI::Error("No continuous adjoint heat solver available.", CURRENT_FUNCTION);
-      }
-    }
-    else {
-      heatSolver = new CHeatSolver(geometry, config, iMGLevel);
-    }
-  }
-  return heatSolver;
-
 }
 
 CSolver* CSolverFactory::CreateMeshSolver(CSolver **solver, CGeometry *geometry, CConfig *config, int iMGLevel, bool adjoint){

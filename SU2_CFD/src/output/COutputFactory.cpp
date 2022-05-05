@@ -35,8 +35,6 @@
 #include "../../include/output/CFlowCompFEMOutput.hpp"
 #include "../../include/output/CFlowIncOutput.hpp"
 #include "../../include/output/CAdjFlowIncOutput.hpp"
-#include "../../include/output/CHeatOutput.hpp"
-#include "../../include/output/CAdjHeatOutput.hpp"
 
 COutput* COutputFactory::CreateOutput(MAIN_SOLVER kindSolver, CConfig* config, int nDim){
 
@@ -48,9 +46,6 @@ COutput* COutputFactory::CreateOutput(MAIN_SOLVER kindSolver, CConfig* config, i
       break;
     case MAIN_SOLVER::INC_EULER: case MAIN_SOLVER::INC_NAVIER_STOKES: case MAIN_SOLVER::INC_RANS:
       output = new CFlowIncOutput(config, nDim);
-      break;
-    case MAIN_SOLVER::HEAT_EQUATION:
-      output = new CHeatOutput(config, nDim);
       break;
     case MAIN_SOLVER::FEM_ELASTICITY:
       output = new CElasticityOutput(config, nDim);
@@ -64,9 +59,6 @@ COutput* COutputFactory::CreateOutput(MAIN_SOLVER kindSolver, CConfig* config, i
       break;
     case MAIN_SOLVER::DISC_ADJ_FEM:
       output = new CAdjElasticityOutput(config, nDim);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_HEAT:
-      output = new CAdjHeatOutput(config, nDim);
       break;
     case MAIN_SOLVER::FEM_EULER: case MAIN_SOLVER::FEM_LES: case MAIN_SOLVER::FEM_RANS: case MAIN_SOLVER::FEM_NAVIER_STOKES:
       output = new CFlowCompFEMOutput(config, nDim);

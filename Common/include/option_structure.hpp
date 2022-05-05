@@ -233,7 +233,6 @@ enum class MAIN_SOLVER {
   INC_EULER,                   /*!< \brief Definition of the incompressible Euler's solver. */
   INC_NAVIER_STOKES,           /*!< \brief Definition of the incompressible Navier-Stokes' solver. */
   INC_RANS,                    /*!< \brief Definition of the incompressible Reynolds-averaged Navier-Stokes' (RANS) solver. */
-  HEAT_EQUATION,               /*!< \brief Definition of the finite volume heat solver. */
   FEM_ELASTICITY,              /*!< \brief Definition of a FEM solver. */
   ADJ_EULER,                   /*!< \brief Definition of the continuous adjoint Euler's solver. */
   ADJ_NAVIER_STOKES,           /*!< \brief Definition of the continuous adjoint Navier-Stokes' solver. */
@@ -245,7 +244,6 @@ enum class MAIN_SOLVER {
   DISC_ADJ_INC_EULER,          /*!< \brief Definition of the discrete adjoint incompressible Euler solver. */
   DISC_ADJ_INC_RANS,           /*!< \brief Definition of the discrete adjoint incompressible Reynolds-averaged Navier-Stokes' (RANS) solver. */
   DISC_ADJ_INC_NAVIER_STOKES,  /*!< \brief Definition of the discrete adjoint incompressible Navier-Stokes'. */
-  DISC_ADJ_HEAT,               /*!< \brief Definition of the discrete adjoint heat solver. */
   DISC_ADJ_FEM_EULER,          /*!< \brief Definition of the discrete adjoint FEM Euler solver. */
   DISC_ADJ_FEM_RANS,           /*!< \brief Definition of the discrete adjoint FEM Reynolds-averaged Navier-Stokes' (RANS) solver. */
   DISC_ADJ_FEM_NS,             /*!< \brief Definition of the discrete adjoint FEM Navier-Stokes' solver. */
@@ -271,7 +269,6 @@ static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
   MakePair("ADJ_EULER", MAIN_SOLVER::ADJ_EULER)
   MakePair("ADJ_NAVIER_STOKES", MAIN_SOLVER::ADJ_NAVIER_STOKES)
   MakePair("ADJ_RANS", MAIN_SOLVER::ADJ_RANS )
-  MakePair("HEAT_EQUATION", MAIN_SOLVER::HEAT_EQUATION)
   MakePair("ELASTICITY", MAIN_SOLVER::FEM_ELASTICITY)
   MakePair("DISC_ADJ_EULER", MAIN_SOLVER::DISC_ADJ_EULER)
   MakePair("DISC_ADJ_RANS", MAIN_SOLVER::DISC_ADJ_RANS)
@@ -279,7 +276,6 @@ static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
   MakePair("DISC_ADJ_INC_EULER", MAIN_SOLVER::DISC_ADJ_INC_EULER)
   MakePair("DISC_ADJ_INC_RANS", MAIN_SOLVER::DISC_ADJ_INC_RANS)
   MakePair("DISC_ADJ_INC_NAVIERSTOKES", MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES)
-  MakePair("DISC_ADJ_HEAT_EQUATION", MAIN_SOLVER::DISC_ADJ_HEAT)
   MakePair("DISC_ADJ_FEM_EULER", MAIN_SOLVER::DISC_ADJ_FEM_EULER)
   MakePair("DISC_ADJ_FEM_RANS", MAIN_SOLVER::DISC_ADJ_FEM_RANS)
   MakePair("DISC_ADJ_FEM_NS", MAIN_SOLVER::DISC_ADJ_FEM_NS)
@@ -386,10 +382,6 @@ enum ENUM_TRANSFER {
   SLIDING_INTERFACE                 = 13,   /*!< \brief Sliding interface (between fluids). */
   CONSERVATIVE_VARIABLES            = 14,   /*!< \brief General coupling that simply transfers the conservative variables (between same solvers). */
   MIXING_PLANE                      = 15,   /*!< \brief Mixing plane between fluids. */
-  CONJUGATE_HEAT_FS                 = 16,   /*!< \brief Conjugate heat transfer (between compressible fluids and solids). */
-  CONJUGATE_HEAT_WEAKLY_FS          = 17,   /*!< \brief Conjugate heat transfer (between incompressible fluids and solids). */
-  CONJUGATE_HEAT_SF                 = 18,   /*!< \brief Conjugate heat transfer (between solids and compressible fluids). */
-  CONJUGATE_HEAT_WEAKLY_SF          = 19,   /*!< \brief Conjugate heat transfer (between solids and incompressible fluids). */
 };
 
 /*!
@@ -444,8 +436,6 @@ enum RUNTIME_TYPE {
   RUNTIME_MULTIGRID_SYS = 14, /*!< \brief Full Approximation Storage Multigrid system of equations. */
   RUNTIME_FEA_SYS = 20,       /*!< \brief One-physics case, the code is solving the FEA equation. */
   RUNTIME_ADJFEA_SYS = 30,    /*!< \brief One-physics case, the code is solving the adjoint FEA equation. */
-  RUNTIME_HEAT_SYS = 21,      /*!< \brief One-physics case, the code is solving the heat equation. */
-  RUNTIME_ADJHEAT_SYS = 31,   /*!< \brief One-physics case, the code is solving the adjoint heat equation. */
   RUNTIME_TRANS_SYS = 22,     /*!< \brief One-physics case, the code is solving the turbulence model. */
 };
 
@@ -456,8 +446,6 @@ const int TURB_SOL = 2;     /*!< \brief Position of the turbulence model solutio
 const int ADJTURB_SOL = 3;  /*!< \brief Position of the continuous adjoint turbulence solution in the solver container array. */
 
 const int TRANS_SOL = 4;    /*!< \brief Position of the transition model solution in the solver container array. */
-const int HEAT_SOL = 5;     /*!< \brief Position of the heat equation in the solution solver array. */
-const int ADJHEAT_SOL = 6;  /*!< \brief Position of the adjoint heat equation in the solution solver array. */
 
 const int MESH_SOL = 9;      /*!< \brief Position of the mesh solver. */
 const int ADJMESH_SOL = 10;   /*!< \brief Position of the adjoint of the mesh solver. */
@@ -954,22 +942,6 @@ static const MapType<std::string, ENUM_ADER_PREDICTOR> Ader_Predictor_Map = {
 };
 
 /*!
- * \brief Type of heat timestep calculation
- */
-enum ENUM_HEAT_TIMESTEP {
-  MINIMUM = 1,     /*!< \brief Local time stepping based on minimum lambda.*/
-  CONVECTIVE = 2,  /*!< \brief Local time stepping based on convective spectral radius.*/
-  VISCOUS = 3,     /*!< \brief Local time stepping based on viscous spectral radius.*/
-  BYFLOW = 4,      /*!< \brief Unsing the mean solvers time step. */
-};
-static const MapType<std::string, ENUM_HEAT_TIMESTEP> Heat_TimeStep_Map = {
-  MakePair("LOCAL", MINIMUM)
-  MakePair("CONVECTIVE", CONVECTIVE)
-  MakePair("VISCOUS", VISCOUS)
-  MakePair("BYFLOW", BYFLOW)
-};
-
-/*!
  * \brief Type of time integration schemes
  */
 enum class STRUCT_TIME_INT {
@@ -1132,24 +1104,6 @@ static const MapType<std::string, ENUM_DVFEA> DVFEA_Map = {
   MakePair("DENSITY", DENSITY_VAL)
   MakePair("DEAD_WEIGHT", DEAD_WEIGHT)
   MakePair("ELECTRIC_FIELD", ELECTRIC_FIELD)
-};
-
-/*!
- * \brief Kinds of coupling methods at CHT interfaces.
- * The first (temperature) part determines the BC method on the fluid side, the second (heatflux) part determines
- * the BC method on the solid side of the CHT interface.
- */
-enum CHT_COUPLING {
-  DIRECT_TEMPERATURE_NEUMANN_HEATFLUX,
-  AVERAGED_TEMPERATURE_NEUMANN_HEATFLUX,
-  DIRECT_TEMPERATURE_ROBIN_HEATFLUX,
-  AVERAGED_TEMPERATURE_ROBIN_HEATFLUX,
-};
-static const MapType<std::string, CHT_COUPLING> CHT_Coupling_Map = {
-  MakePair("DIRECT_TEMPERATURE_NEUMANN_HEATFLUX", CHT_COUPLING::DIRECT_TEMPERATURE_NEUMANN_HEATFLUX)
-  MakePair("AVERAGED_TEMPERATURE_NEUMANN_HEATFLUX", CHT_COUPLING::AVERAGED_TEMPERATURE_NEUMANN_HEATFLUX)
-  MakePair("DIRECT_TEMPERATURE_ROBIN_HEATFLUX", CHT_COUPLING::DIRECT_TEMPERATURE_ROBIN_HEATFLUX)
-  MakePair("AVERAGED_TEMPERATURE_ROBIN_HEATFLUX", CHT_COUPLING::AVERAGED_TEMPERATURE_ROBIN_HEATFLUX)
 };
 
 /*!

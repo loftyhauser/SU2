@@ -70,9 +70,6 @@ CDiscAdjMultizoneDriver::CDiscAdjMultizoneDriver(char* confFile,
         case MAIN_SOLVER::DISC_ADJ_INC_EULER: case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_INC_RANS:
           direct_iteration[iZone][iInst] = CIterationFactory::CreateIteration(MAIN_SOLVER::INC_EULER, config_container[iZone]);
           break;
-        case MAIN_SOLVER::DISC_ADJ_HEAT:
-          direct_iteration[iZone][iInst] = CIterationFactory::CreateIteration(MAIN_SOLVER::HEAT_EQUATION, config_container[iZone]);
-          break;
         case MAIN_SOLVER::DISC_ADJ_FEM:
           direct_iteration[iZone][iInst] = CIterationFactory::CreateIteration(MAIN_SOLVER::FEM_ELASTICITY, config_container[iZone]);
           break;
@@ -91,9 +88,6 @@ CDiscAdjMultizoneDriver::CDiscAdjMultizoneDriver(char* confFile,
         break;
       case MAIN_SOLVER::DISC_ADJ_INC_EULER: case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_INC_RANS:
         direct_output[iZone] = COutputFactory::CreateOutput(MAIN_SOLVER::INC_EULER, config_container[iZone], nDim);
-        break;
-      case MAIN_SOLVER::DISC_ADJ_HEAT:
-        direct_output[iZone] = COutputFactory::CreateOutput(MAIN_SOLVER::HEAT_EQUATION, config_container[iZone], nDim);
         break;
       case MAIN_SOLVER::DISC_ADJ_FEM:
         direct_output[iZone] = COutputFactory::CreateOutput(MAIN_SOLVER::FEM_ELASTICITY, config_container[iZone], nDim);
@@ -535,7 +529,6 @@ void CDiscAdjMultizoneDriver::EvaluateSensitivities(unsigned long Iter, bool for
 
     int IDX_SOL = -1;
     if (config->GetFluidProblem()) IDX_SOL = ADJFLOW_SOL;
-    else if (config->GetHeatProblem()) IDX_SOL = ADJHEAT_SOL;
     else if (config->GetStructuralProblem()) IDX_SOL = ADJFEA_SOL;
     else {
       if (rank == MASTER_NODE)
@@ -724,18 +717,8 @@ void CDiscAdjMultizoneDriver::SetObjFunction(RECORDING kind_recording) {
         solvers[FLOW_SOL]->Momentum_Forces(geometry, config);
         solvers[FLOW_SOL]->Friction_Forces(geometry, config);
 
-        if(config->GetWeakly_Coupled_Heat()) {
-          solvers[HEAT_SOL]->Heat_Fluxes(geometry, solvers, config);
-        }
-
         direct_output[iZone]->SetHistory_Output(geometry, solvers, config);
         ObjFunc += solvers[FLOW_SOL]->GetTotal_ComboObj();
-        break;
-
-      case MAIN_SOLVER::DISC_ADJ_HEAT:
-        solvers[HEAT_SOL]->Heat_Fluxes(geometry, solvers, config);
-        direct_output[iZone]->SetHistory_Output(geometry, solvers, config);
-        ObjFunc += solvers[HEAT_SOL]->GetTotal_ComboObj();
         break;
 
       case MAIN_SOLVER::DISC_ADJ_FEM:

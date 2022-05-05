@@ -98,17 +98,6 @@ private:
   static CSolver* CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **solver, CGeometry *geometry, CConfig *config, int iMGLevel, int adjoint);
 
   /*!
-   * \brief Create a heat solver
-   * \param[in] solver        - The solver container
-   * \param[in] geometry      - The geometry definition
-   * \param[in] config        - The configuration
-   * \param[in] iMGLevel      - The multigrid level
-   * \param[in] adjoint       - Boolean indicating whether a primal or adjoint solver should be allocated
-   * \return                  - A pointer to the allocated heat solver
-   */
-  static CSolver* CreateHeatSolver(CSolver **solver, CGeometry *geometry, CConfig *config, int iMGLevel, bool adjoint);
-
-  /*!
    * \brief Create a mesh solver
    * \param[in] solver        - The solver container
    * \param[in] geometry      - The geometry definition

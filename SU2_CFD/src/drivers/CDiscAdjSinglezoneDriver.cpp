@@ -97,16 +97,6 @@ CDiscAdjSinglezoneDriver::CDiscAdjSinglezoneDriver(char* confFile,
     MainSolver = ADJFEA_SOL;
     break;
 
-  case MAIN_SOLVER::DISC_ADJ_HEAT:
-    if (rank == MASTER_NODE)
-      cout << "Direct iteration: heat equation." << endl;
-    direct_iteration = CIterationFactory::CreateIteration(MAIN_SOLVER::HEAT_EQUATION, config);
-    direct_output = COutputFactory::CreateOutput(MAIN_SOLVER::HEAT_EQUATION, config, nDim);
-    MainVariables = RECORDING::SOLUTION_VARIABLES;
-    SecondaryVariables = RECORDING::MESH_COORDS;
-    MainSolver = ADJHEAT_SOL;
-    break;
-
   default:
     break;
 
@@ -214,7 +204,6 @@ void CDiscAdjSinglezoneDriver::Postprocess() {
   {
     case MAIN_SOLVER::DISC_ADJ_EULER :     case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES :     case MAIN_SOLVER::DISC_ADJ_RANS :
     case MAIN_SOLVER::DISC_ADJ_INC_EULER : case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES : case MAIN_SOLVER::DISC_ADJ_INC_RANS :
-    case MAIN_SOLVER::DISC_ADJ_HEAT :
 
       /*--- Compute the geometrical sensitivities ---*/
       SecondaryRecording();
@@ -355,12 +344,6 @@ void CDiscAdjSinglezoneDriver::SetObjFunction(){
                                      config->GetOuterIter(), config->GetInnerIter());
     ObjFunc += solver[FLOW_SOL]->GetTotal_ComboObj();
 
-    break;
-
-  case MAIN_SOLVER::DISC_ADJ_HEAT:
-    direct_output->SetHistory_Output(geometry, solver, config, config->GetTimeIter(),
-                                     config->GetOuterIter(), config->GetInnerIter());
-    ObjFunc = solver[HEAT_SOL]->GetTotal_ComboObj();
     break;
 
   case MAIN_SOLVER::DISC_ADJ_FEM:

@@ -1538,10 +1538,6 @@ void CConfig::SetConfig_Options() {
   addEnumOption("TIME_DISCRE_ADJTURB", Kind_TimeIntScheme_AdjTurb, Time_Int_Map, EULER_IMPLICIT);
   /* DESCRIPTION: Time discretization */
   addEnumOption("TIME_DISCRE_FEA", Kind_TimeIntScheme_FEA, Time_Int_Map_FEA, STRUCT_TIME_INT::NEWMARK_IMPLICIT);
-  /* DESCRIPTION: Time discretization for radiation problems*/
-  addEnumOption("TIME_DISCRE_HEAT", Kind_TimeIntScheme_Heat, Time_Int_Map, EULER_IMPLICIT);
-  /* DESCRIPTION: Time discretization */
-  addEnumOption("TIMESTEP_HEAT", Kind_TimeStep_Heat, Heat_TimeStep_Map, MINIMUM);
 
   /*!\par CONFIG_CATEGORY: Linear solver definition \ingroup Config*/
   /*--- Options related to the linear solvers ---*/
@@ -2293,13 +2289,6 @@ void CConfig::SetConfig_Options() {
   /* DESCRIPTION: Relaxation required */
   addBoolOption("RELAXATION", Relaxation, false);
 
-  /*!\par CONFIG_CATEGORY: Heat solver \ingroup Config*/
-  /*--- options related to the heat solver ---*/
-
-  /* DESCRIPTION: CHT interface coupling methods */
-  /*  Options: NO, YES \ingroup Config */
-  addEnumOption("CHT_COUPLING_METHOD", Kind_CHT_Coupling, CHT_Coupling_Map, CHT_COUPLING::DIRECT_TEMPERATURE_ROBIN_HEATFLUX);
-
   /*!\par CONFIG_CATEGORY: Visualize Control Volumes \ingroup Config*/
   /*--- options related to visualizing control volumes ---*/
 
@@ -2688,14 +2677,6 @@ void CConfig::SetConfig_Parsing(istream& config_buffer){
           else if (!option_name.compare("CONV_CRITERIA"))
             newString.append("CONV_CRITERIA is deprecated. SU2 will choose the criteria automatically based on the CONV_FIELD.\n"
                              "RESIDUAL for any RMS_* BGS_* value. CAUCHY for coefficients like DRAG etc.\n\n");
-          else if (!option_name.compare("THERMAL_DIFFUSIVITY"))
-            newString.append("THERMAL_DIFFUSIVITY is deprecated. See the INC_ENERGY_EQUATION options instead.\n\n");
-          else if (!option_name.compare("THERMAL_DIFFUSIVITY_SOLID"))
-            newString.append("THERMAL_DIFFUSIVITY_SOLID is deprecated. Set THERMAL_CONDUCTIVITY_CONSTANT, MATERIAL_DENSITY and SPECIFIC_HEAT_CP instead.\n\n");
-          else if (!option_name.compare("SOLID_THERMAL_CONDUCTIVITY"))
-            newString.append("SOLID_THERMAL_CONDUCTIVITY is deprecated. Use THERMAL_CONDUCTIVITY_CONSTANT instead.\n\n");
-          else if (!option_name.compare("SOLID_DENSITY"))
-            newString.append("SOLID_DENSITY is deprecated. Use MATERIAL_DENSITY instead.\n\n");
           else if (!option_name.compare("SOLID_TEMPERATURE_INIT"))
             newString.append("SOLID_TEMPERATURE_INIT is deprecated. Use FREESTREAM_TEMPERATURE instead.\n\n");
           else {
@@ -4567,9 +4548,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
       case MAIN_SOLVER::FEM_ELASTICITY:
         Kind_Solver = MAIN_SOLVER::DISC_ADJ_FEM;
         break;
-      case MAIN_SOLVER::HEAT_EQUATION:
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_HEAT;
-        break;
       default:
         break;
     }
@@ -5262,9 +5240,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
           cout << "Continuous RANS adjoint equations with frozen (laminar and eddy) viscosity." << endl;
         else
           cout << "Continuous RANS adjoint equations." << endl;
-        break;
-      case MAIN_SOLVER::HEAT_EQUATION: case MAIN_SOLVER::DISC_ADJ_HEAT:
-        cout << "Heat solver" << endl;
         break;
       case MAIN_SOLVER::MULTIPHYSICS:
         cout << "Multiphysics solver" << endl;
@@ -7292,7 +7267,6 @@ unsigned short CConfig::GetContainerPosition(unsigned short val_eqsystem) {
     case RUNTIME_FLOW_SYS:      return FLOW_SOL;
     case RUNTIME_TURB_SYS:      return TURB_SOL;
     case RUNTIME_TRANS_SYS:     return TRANS_SOL;
-    case RUNTIME_HEAT_SYS:      return HEAT_SOL;
     case RUNTIME_FEA_SYS:       return FEA_SOL;
     case RUNTIME_ADJFLOW_SYS:   return ADJFLOW_SOL;
     case RUNTIME_ADJTURB_SYS:   return ADJTURB_SOL;
@@ -7359,10 +7333,6 @@ void CConfig::SetGlobalParam(MAIN_SOLVER val_solver,
     case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::INC_NAVIER_STOKES:
       SetFlowParam();
 
-      if (val_system == RUNTIME_HEAT_SYS) {
-        SetKind_ConvNumScheme(Kind_ConvNumScheme_Heat, NONE, NONE, LIMITER::NONE, NONE, NONE);
-        SetKind_TimeIntScheme(Kind_TimeIntScheme_Heat);
-      }
       break;
     case MAIN_SOLVER::RANS: case MAIN_SOLVER::INC_RANS:
       SetFlowParam();
@@ -7373,10 +7343,6 @@ void CConfig::SetGlobalParam(MAIN_SOLVER val_solver,
                               Kind_Upwind_Turb, Kind_SlopeLimit_Turb,
                               MUSCL_Turb, NONE);
         SetKind_TimeIntScheme(Kind_TimeIntScheme_Turb);
-      }
-      if (val_system == RUNTIME_HEAT_SYS) {
-        SetKind_ConvNumScheme(Kind_ConvNumScheme_Heat, NONE, NONE, LIMITER::NONE, NONE, NONE);
-        SetKind_TimeIntScheme(Kind_TimeIntScheme_Heat);
       }
       break;
     case MAIN_SOLVER::FEM_EULER:
@@ -7404,12 +7370,6 @@ void CConfig::SetGlobalParam(MAIN_SOLVER val_solver,
                               Kind_Upwind_AdjTurb, Kind_SlopeLimit_AdjTurb,
                               MUSCL_AdjTurb, NONE);
         SetKind_TimeIntScheme(Kind_TimeIntScheme_AdjTurb);
-      }
-      break;
-    case MAIN_SOLVER::HEAT_EQUATION:
-      if (val_system == RUNTIME_HEAT_SYS) {
-        SetKind_ConvNumScheme(NONE, NONE, NONE, LIMITER::NONE, NONE, NONE);
-        SetKind_TimeIntScheme(Kind_TimeIntScheme_Heat);
       }
       break;
 

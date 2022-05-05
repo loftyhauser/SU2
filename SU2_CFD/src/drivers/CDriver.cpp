@@ -43,7 +43,6 @@
 
 #include "../../include/interfaces/cfd/CConservativeVarsInterface.hpp"
 #include "../../include/interfaces/cfd/CSlidingInterface.hpp"
-#include "../../include/interfaces/cht/CConjugateHeatInterface.hpp"
 #include "../../include/interfaces/fsi/CDisplacementsInterface.hpp"
 #include "../../include/interfaces/fsi/CFlowTractionInterface.hpp"
 #include "../../include/interfaces/fsi/CDiscAdjFlowTractionInterface.hpp"
@@ -1291,8 +1290,7 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   nVar_Turb             = 0,
   nVar_Adj_Flow         = 0,
   nVar_Adj_Turb         = 0,
-  nVar_FEM              = 0,
-  nVar_Heat             = 0;
+  nVar_FEM              = 0;
 
   numerics = new CNumerics***[config->GetnMGLevels()+1] ();
 
@@ -1303,10 +1301,10 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
 
   /*--- Initialize some useful booleans ---*/
   bool euler, ns, turbulent, adj_euler, adj_ns, adj_turb, fem_euler, fem_ns;
-  bool fem, heat, transition, template_solver;
+  bool fem, transition, template_solver;
 
   euler = ns = turbulent = adj_euler = adj_ns = adj_turb = fem_euler = fem_ns = false;
-  fem = heat = transition = template_solver = false;
+  fem = transition = template_solver = false;
 
   /*--- Assign booleans ---*/
   switch (config->GetKind_Solver()) {
@@ -1333,12 +1331,11 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
     case MAIN_SOLVER::INC_NAVIER_STOKES:
     case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES:
       ns = incompressible = true;
-      heat = config->GetWeakly_Coupled_Heat(); break;
+      break;
 
     case MAIN_SOLVER::INC_RANS:
     case MAIN_SOLVER::DISC_ADJ_INC_RANS:
       ns = incompressible = turbulent = true;
-      heat = config->GetWeakly_Coupled_Heat();
       transition = (config->GetKind_Trans_Model() == TURB_TRANS_MODEL::LM); break;
 
     case MAIN_SOLVER::FEM_EULER:
@@ -1355,10 +1352,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
 
     case MAIN_SOLVER::FEM_LES:
       fem_ns = compressible = true; break;
-
-    case MAIN_SOLVER::HEAT_EQUATION:
-    case MAIN_SOLVER::DISC_ADJ_HEAT:
-      heat = true; break;
 
     case MAIN_SOLVER::FEM_ELASTICITY:
     case MAIN_SOLVER::DISC_ADJ_FEM:
@@ -1395,7 +1388,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   if (fem_ns)       nVar_Flow = solver[MESH_0][FLOW_SOL]->GetnVar();
 
   if (fem)          nVar_FEM = solver[MESH_0][FEA_SOL]->GetnVar();
-  if (heat)         nVar_Heat = solver[MESH_0][HEAT_SOL]->GetnVar();
 
   /*--- Number of variables for adjoint problem ---*/
 
@@ -1806,34 +1798,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
     }
   }
 
-  /*--- Solver definition of the finite volume heat solver  ---*/
-  if (heat) {
-
-    /*--- Definition of the viscous scheme for each equation and mesh level ---*/
-    for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-
-      numerics[iMGlevel][HEAT_SOL][visc_term] = new CAvgGrad_Heat(nDim, nVar_Heat, config, true);
-      numerics[iMGlevel][HEAT_SOL][visc_bound_term] = new CAvgGrad_Heat(nDim, nVar_Heat, config, false);
-
-      switch (config->GetKind_ConvNumScheme_Heat()) {
-
-        case SPACE_UPWIND :
-          numerics[iMGlevel][HEAT_SOL][conv_term] = new CUpwSca_Heat(nDim, nVar_Heat, config);
-          numerics[iMGlevel][HEAT_SOL][conv_bound_term] = new CUpwSca_Heat(nDim, nVar_Heat, config);
-          break;
-
-        case SPACE_CENTERED :
-          numerics[iMGlevel][HEAT_SOL][conv_term] = new CCentSca_Heat(nDim, nVar_Heat, config);
-          numerics[iMGlevel][HEAT_SOL][conv_bound_term] = new CUpwSca_Heat(nDim, nVar_Heat, config);
-          break;
-
-        default:
-          SU2_MPI::Error("Invalid convective scheme for the heat transfer equations.", CURRENT_FUNCTION);
-          break;
-      }
-    }
-  }
-
   /*--- Solver definition for the flow adjoint problem ---*/
 
   if (adj_euler || adj_ns) {
@@ -2167,11 +2131,9 @@ void CDriver::Interface_Preprocessing(CConfig **config, CSolver***** solver, CGe
 
         /*--- The type of variables transferred depends on the donor/target physics. ---*/
 
-        const bool heat_target = config[target]->GetHeatProblem();
         const bool fluid_target = config[target]->GetFluidProblem();
         const bool structural_target = config[target]->GetStructuralProblem();
 
-        const bool heat_donor = config[donor]->GetHeatProblem();
         const bool fluid_donor = config[donor]->GetFluidProblem();
         const bool structural_donor = config[donor]->GetStructuralProblem();
 
@@ -2190,9 +2152,9 @@ void CDriver::Interface_Preprocessing(CConfig **config, CSolver***** solver, CGe
           }
           if (rank == MASTER_NODE) cout << "fluid " << (conservative? "forces." : "tractions.") << endl;
         }
-        else if (structural_donor && (fluid_target || heat_target)) {
+        else if (structural_donor && (fluid_target)) {
           if (solver_container[target][INST_0][MESH_0][MESH_SOL] == nullptr) {
-            SU2_MPI::Error("Mesh deformation was not correctly specified for the fluid/heat zone.\n"
+            SU2_MPI::Error("Mesh deformation was not correctly specified for the fluid zone.\n"
                            "Use DEFORM_MESH=YES, and setup MARKER_DEFORM_MESH=(...)", CURRENT_FUNCTION);
           }
           interface_type = BOUNDARY_DISPLACEMENTS;
@@ -2205,28 +2167,6 @@ void CDriver::Interface_Preprocessing(CConfig **config, CSolver***** solver, CGe
           auto nVar = solver[donor][INST_0][MESH_0][FLOW_SOL]->GetnPrimVar();
           interface[donor][target] = new CSlidingInterface(nVar, 0);
           if (rank == MASTER_NODE) cout << "sliding interface." << endl;
-        }
-        else if (heat_donor || heat_target) {
-          if (heat_donor && heat_target)
-            SU2_MPI::Error("Conjugate heat transfer between solids is not implemented.", CURRENT_FUNCTION);
-
-          const auto fluidZone = heat_target? donor : target;
-
-          if (config[fluidZone]->GetEnergy_Equation() || (config[fluidZone]->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE))
-            interface_type = heat_target? CONJUGATE_HEAT_FS : CONJUGATE_HEAT_SF;
-          else if (config[fluidZone]->GetWeakly_Coupled_Heat())
-            interface_type = heat_target? CONJUGATE_HEAT_WEAKLY_FS : CONJUGATE_HEAT_WEAKLY_SF;
-          else
-            interface_type = NO_TRANSFER;
-
-          if (interface_type != NO_TRANSFER) {
-            auto nVar = 4;
-            interface[donor][target] = new CConjugateHeatInterface(nVar, 0);
-            if (rank == MASTER_NODE) cout << "conjugate heat variables." << endl;
-          }
-          else {
-            if (rank == MASTER_NODE) cout << "NO heat variables." << endl;
-          }
         }
         else {
           if (solver[donor][INST_0][MESH_0][FLOW_SOL] == nullptr)
@@ -2426,11 +2366,6 @@ void CDriver::Print_DirectResidual(RECORDING kind_recording) {
           }
         }
 
-        if (!multizone && configs->GetWeakly_Coupled_Heat()){
-          if (!addVals) RMSTable.AddColumn("rms_Heat" + iVar_iZone2string(0, iZone), fieldWidth);
-          else RMSTable << log10(solvers[HEAT_SOL]->GetRes_RMS(0));
-        }
-
       }
       else if (configs->GetStructuralProblem()) {
 
@@ -2460,13 +2395,7 @@ void CDriver::Print_DirectResidual(RECORDING kind_recording) {
         }
 
       }
-      else if (configs->GetHeatProblem()) {
-
-        if (!addVals) RMSTable.AddColumn("rms_Heat" + iVar_iZone2string(0, iZone), fieldWidth);
-        else RMSTable << log10(solvers[HEAT_SOL]->GetRes_RMS(0));
-      } else {
         SU2_MPI::Error("Invalid KindSolver for CDiscAdj-MultiZone/SingleZone-Driver.", CURRENT_FUNCTION);
-      }
     } // loop iZone
 
     if (!addVals) RMSTable.PrintHeader();
@@ -2692,8 +2621,6 @@ bool CFluidDriver::Monitor(unsigned long ExtIter) {
   switch (config_container[ZONE_0]->GetKind_Solver()) {
     case MAIN_SOLVER::EULER: case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::RANS:
       StopCalc = integration_container[ZONE_0][INST_0][FLOW_SOL]->GetConvergence(); break;
-    case MAIN_SOLVER::HEAT_EQUATION:
-      StopCalc = integration_container[ZONE_0][INST_0][HEAT_SOL]->GetConvergence(); break;
     case MAIN_SOLVER::FEM_ELASTICITY:
       StopCalc = integration_container[ZONE_0][INST_0][FEA_SOL]->GetConvergence(); break;
     case MAIN_SOLVER::ADJ_EULER: case MAIN_SOLVER::ADJ_NAVIER_STOKES: case MAIN_SOLVER::ADJ_RANS:

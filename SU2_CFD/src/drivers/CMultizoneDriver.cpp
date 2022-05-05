@@ -67,7 +67,6 @@ CMultizoneDriver::CMultizoneDriver(char* confFile, unsigned short val_nZone, SU2
 
   bool structural_zone = false;
   bool fluid_zone = false;
-  bool heat_zone = false;
 
   /*--- If there is at least a fluid and a structural zone ---*/
   for (iZone = 0; iZone < nZone; iZone++){
@@ -79,19 +78,14 @@ CMultizoneDriver::CMultizoneDriver(char* confFile, unsigned short val_nZone, SU2
     case MAIN_SOLVER::FEM_ELASTICITY:
       structural_zone = true;
       break;
-    case MAIN_SOLVER::HEAT_EQUATION:
-      heat_zone = true;
-      break;
     default:
       break;
     }
   }
 
-  fsi = false; cht = false;
+  fsi = false;
   /*--- If the problem has FSI properties ---*/
   if (fluid_zone && structural_zone) fsi = true;
-  /*--- If the problem has CHT properties ---*/
-  if (fluid_zone && heat_zone) cht = true;
 
   /*----------------------------------------------------*/
   /*- Define if a prefixed motion is imposed in a zone -*/
@@ -233,12 +227,6 @@ void CMultizoneDriver::Preprocess(unsigned long TimeIter) {
       solver_container[iZone][INST_0][MESH_0][FLOW_SOL]->SetInitialCondition(geometry_container[iZone][INST_0],
                                                                              solver_container[iZone][INST_0],
                                                                              config_container[iZone], TimeIter);
-    }
-    else if (!fsi && config_container[iZone]->GetHeatProblem()) {
-      /*--- Set the initial condition for HEAT equation ---------------------------------------------*/
-      solver_container[iZone][INST_0][MESH_0][HEAT_SOL]->SetInitialCondition(geometry_container[iZone][INST_0],
-                                                                              solver_container[iZone][INST_0],
-                                                                              config_container[iZone], TimeIter);
     }
   }
 
@@ -554,30 +542,6 @@ bool CMultizoneDriver::Transfer_Data(unsigned short donorZone, unsigned short ta
           config_container[donorZone],
           config_container[targetZone]);
       }
-      break;
-    }
-    case CONJUGATE_HEAT_FS:
-    {
-      donorSolver  = FLOW_SOL;
-      targetSolver = HEAT_SOL;
-      break;
-    }
-    case CONJUGATE_HEAT_WEAKLY_FS:
-    {
-      donorSolver  = HEAT_SOL;
-      targetSolver = HEAT_SOL;
-      break;
-    }
-    case CONJUGATE_HEAT_SF:
-    {
-      donorSolver  = HEAT_SOL;
-      targetSolver = FLOW_SOL;
-      break;
-    }
-    case CONJUGATE_HEAT_WEAKLY_SF:
-    {
-      donorSolver  = HEAT_SOL;
-      targetSolver = HEAT_SOL;
       break;
     }
     case BOUNDARY_DISPLACEMENTS:

@@ -30,10 +30,8 @@
 #include "../../include/iteration/CAdjFluidIteration.hpp"
 #include "../../include/iteration/CDiscAdjFEAIteration.hpp"
 #include "../../include/iteration/CDiscAdjFluidIteration.hpp"
-#include "../../include/iteration/CDiscAdjHeatIteration.hpp"
 #include "../../include/iteration/CFluidIteration.hpp"
 #include "../../include/iteration/CFEMFluidIteration.hpp"
-#include "../../include/iteration/CHeatIteration.hpp"
 #include "../../include/iteration/CFEAIteration.hpp"
 
 CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CConfig* config){
@@ -57,12 +55,6 @@ CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CCo
       if (rank == MASTER_NODE)
         cout << "Finite element Euler/Navier-Stokes/RANS/LES flow iteration." << endl;
       iteration = new CFEMFluidIteration(config);
-      break;
-
-    case MAIN_SOLVER::HEAT_EQUATION:
-      if (rank == MASTER_NODE)
-        cout << "Heat iteration (finite volume method)." << endl;
-      iteration = new CHeatIteration(config);
       break;
 
     case MAIN_SOLVER::FEM_ELASTICITY:
@@ -94,12 +86,6 @@ CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CCo
       if (rank == MASTER_NODE)
         cout << "Discrete adjoint FEM structural iteration." << endl;
       iteration = new CDiscAdjFEAIteration(config);
-      break;
-
-    case MAIN_SOLVER::DISC_ADJ_HEAT:
-      if (rank == MASTER_NODE)
-        cout << "Discrete adjoint heat iteration." << endl;
-      iteration = new CDiscAdjHeatIteration(config);
       break;
 
     case MAIN_SOLVER::NONE: case MAIN_SOLVER::TEMPLATE_SOLVER: case MAIN_SOLVER::MULTIPHYSICS:

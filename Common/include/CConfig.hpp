@@ -444,7 +444,6 @@ private:
 
   ENUM_MULTIZONE Kind_MZSolver;    /*!< \brief Kind of multizone solver.  */
   INC_DENSITYMODEL Kind_DensityModel; /*!< \brief Kind of the density model for incompressible flows. */
-  CHT_COUPLING Kind_CHT_Coupling;  /*!< \brief Kind of coupling method used at CHT interfaces. */
   VISCOSITYMODEL Kind_ViscosityModel; /*!< \brief Kind of the Viscosity Model*/
   CONDUCTIVITYMODEL Kind_ConductivityModel; /*!< \brief Kind of the Thermal Conductivity Model */
   CONDUCTIVITYMODEL_TURB Kind_ConductivityModel_Turb; /*!< \brief Kind of the Turbulent Thermal Conductivity Model */
@@ -3418,13 +3417,6 @@ public:
    */
   bool GetStructuralProblem(void) const {
     return (Kind_Solver == MAIN_SOLVER::FEM_ELASTICITY) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM);
-  }
-
-  /*!
-   * \brief Return true if a heat solver is in use.
-   */
-  bool GetHeatProblem(void) const {
-    return (Kind_Solver == MAIN_SOLVER::HEAT_EQUATION) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_HEAT);
   }
 
   /*!
@@ -8126,12 +8118,6 @@ public:
    * \return YES if weakly coupled heat equation for inc. flow is enabled.
    */
   bool GetWeakly_Coupled_Heat(void) const { return Weakly_Coupled_Heat; }
-
-  /*!
-   * \brief Get the CHT couling method.
-   * \return Kind of the method.
-   */
-  CHT_COUPLING GetKind_CHT_Coupling() const { return Kind_CHT_Coupling; }
 
   /*!
    * \brief Check if values passed to the BC_HeatFlux-Routine are already integrated.
