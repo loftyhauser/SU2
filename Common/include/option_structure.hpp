@@ -375,34 +375,6 @@ static const MapType<std::string, RADIAL_BASIS> RadialBasisFunction_Map = {
 };
 
 /*!
- * \brief type of radial spanwise interpolation function for the inlet face
- */
-enum class INLET_SPANWISE_INTERP {
-  NONE,
-  LINEAR_1D,
-  AKIMA_1D,
-  CUBIC_1D,
-};
-static const MapType<std::string, INLET_SPANWISE_INTERP> Inlet_SpanwiseInterpolation_Map = {
-  MakePair("NONE", INLET_SPANWISE_INTERP::NONE)
-  MakePair("LINEAR_1D", INLET_SPANWISE_INTERP::LINEAR_1D)
-  MakePair("AKIMA_1D", INLET_SPANWISE_INTERP::AKIMA_1D)
-  MakePair("CUBIC_1D", INLET_SPANWISE_INTERP::CUBIC_1D)
-};
-
-/*!
- * \brief type of radial spanwise interpolation data type for the inlet face
- */
-enum class INLET_INTERP_TYPE {
-  VR_VTHETA,
-  ALPHA_PHI,
-};
-static const MapType<std::string, INLET_INTERP_TYPE> Inlet_SpanwiseInterpolationType_Map = {
-  MakePair("VR_VTHETA", INLET_INTERP_TYPE::VR_VTHETA)
-  MakePair("ALPHA_PHI", INLET_INTERP_TYPE::ALPHA_PHI)
-};
-
-/*!
  * \brief types of (coupling) transfers between distinct physical zones
  */
 enum ENUM_TRANSFER {
@@ -1087,7 +1059,6 @@ enum BC_TYPE {
   CLAMPED_BOUNDARY = 34,      /*!< \brief Clamped Boundary definition. */
   LOAD_DIR_BOUNDARY = 35,     /*!< \brief Boundary Load definition. */
   LOAD_SINE_BOUNDARY = 36,    /*!< \brief Sine-waveBoundary Load definition. */
-  GILES_BOUNDARY= 37,         /*!< \brief Giles Boundary definition. */
   INTERNAL_BOUNDARY= 38,      /*!< \brief Internal Boundary definition. */
   FLUID_INTERFACE = 39,       /*!< \brief Domain interface definition. */
   DISP_DIR_BOUNDARY = 40,     /*!< \brief Boundary displacement definition. */
@@ -1164,18 +1135,6 @@ static const MapType<std::string, ENUM_DVFEA> DVFEA_Map = {
 };
 
 /*!
- * \brief Kinds of P1 initialization
- */
-enum class P1_INIT {
-  ZERO,         /*!< \brief Initialize the P1 model from zero values */
-  TEMPERATURE,  /*!< \brief Initialize the P1 model from blackbody energy computed from the initial temperature. */
-};
-static const MapType<std::string, P1_INIT> P1_Init_Map = {
-  MakePair("ZERO", P1_INIT::ZERO)
-  MakePair("TEMPERATURE_INIT", P1_INIT::TEMPERATURE)
-};
-
-/*!
  * \brief Kinds of coupling methods at CHT interfaces.
  * The first (temperature) part determines the BC method on the fluid side, the second (heatflux) part determines
  * the BC method on the solid side of the CHT interface.
@@ -1227,91 +1186,6 @@ static const MapType<std::string, RIEMANN_TYPE> Riemann_Map = {
   MakePair("RADIAL_EQUILIBRIUM", RADIAL_EQUILIBRIUM)
   MakePair("TOTAL_CONDITIONS_PT_1D", TOTAL_CONDITIONS_PT_1D)
   MakePair("STATIC_PRESSURE_1D", STATIC_PRESSURE_1D)
-};
-
-static const MapType<std::string, RIEMANN_TYPE> Giles_Map = {
-  MakePair("TOTAL_CONDITIONS_PT", TOTAL_CONDITIONS_PT)
-  MakePair("DENSITY_VELOCITY", DENSITY_VELOCITY)
-  MakePair("STATIC_PRESSURE", STATIC_PRESSURE)
-  MakePair("TOTAL_SUPERSONIC_INFLOW", TOTAL_SUPERSONIC_INFLOW)
-  MakePair("STATIC_SUPERSONIC_INFLOW_PT", STATIC_SUPERSONIC_INFLOW_PT)
-  MakePair("STATIC_SUPERSONIC_INFLOW_PD", STATIC_SUPERSONIC_INFLOW_PD)
-  MakePair("MIXING_IN", MIXING_IN)
-  MakePair("MIXING_OUT", MIXING_OUT)
-  MakePair("MIXING_IN_1D", MIXING_IN_1D)
-  MakePair("MIXING_OUT_1D", MIXING_OUT_1D)
-  MakePair("SUPERSONIC_OUTFLOW", SUPERSONIC_OUTFLOW)
-  MakePair("RADIAL_EQUILIBRIUM", RADIAL_EQUILIBRIUM)
-  MakePair("TOTAL_CONDITIONS_PT_1D", TOTAL_CONDITIONS_PT_1D)
-  MakePair("STATIC_PRESSURE_1D", STATIC_PRESSURE_1D)
-};
-
-/*!
- * \brief Types of mixing process for averaging quantities at the boundaries.
- */
-enum AVERAGEPROCESS_TYPE {
-  ALGEBRAIC = 1,  /*!< \brief an algebraic average is computed at the boundary of interest. */
-  AREA = 2,       /*!< \brief an area average is computed at the boundary of interest. */
-  MIXEDOUT = 3,   /*!< \brief an mixed-out average is computed at the boundary of interest. */
-  MASSFLUX = 4    /*!< \brief a mass flow average is computed at the boundary of interest. */
-};
-static const MapType<std::string, AVERAGEPROCESS_TYPE> AverageProcess_Map = {
-  MakePair("ALGEBRAIC", ALGEBRAIC)
-  MakePair("AREA", AREA)
-  MakePair("MIXEDOUT", MIXEDOUT)
-  MakePair("MASSFLUX", MASSFLUX)
-};
-
-/*!
- * \brief Types of mixing process for averaging quantities at the boundaries.
- */
-enum MIXINGPLANE_INTERFACE_TYPE {
-  MATCHING = 1,             /*!< \brief an algebraic average is computed at the boundary of interest. */
-  NEAREST_SPAN = 2,         /*!< \brief an area average is computed at the boundary of interest. */
-  LINEAR_INTERPOLATION = 3  /*!< \brief an mixed-out average is computed at the boundary of interest. */
-};
-static const MapType<std::string, MIXINGPLANE_INTERFACE_TYPE> MixingPlaneInterface_Map = {
-  MakePair("MATCHING", MATCHING)
-  MakePair("NEAREST_SPAN",  NEAREST_SPAN)
-  MakePair("LINEAR_INTERPOLATION", LINEAR_INTERPOLATION)
-};
-
-/*!
- * \brief this option allow to compute the span-wise section in different ways.
- */
-enum SPANWISE_TYPE {
-  AUTOMATIC = 1,      /*!< \brief number of span-wise section are computed automatically */
-  EQUISPACED = 2      /*!< \brief number of span-wise section are specified from the user */
-};
-static const MapType<std::string, SPANWISE_TYPE> SpanWise_Map = {
-  MakePair("AUTOMATIC", AUTOMATIC)
-  MakePair("EQUISPACED", EQUISPACED)
-};
-
-/*!
- * \brief Types of mixing process for averaging quantities at the boundaries.
- */
-enum TURBOMACHINERY_TYPE {
-  AXIAL = 1,              /*!< \brief axial turbomachinery. */
-  CENTRIFUGAL = 2,        /*!< \brief centrifugal turbomachinery. */
-  CENTRIPETAL = 3,        /*!< \brief centripetal turbomachinery. */
-  CENTRIPETAL_AXIAL = 4,  /*!< \brief mixed flow turbine. */
-  AXIAL_CENTRIFUGAL = 5   /*!< \brief mixed flow turbine. */
-};
-static const MapType<std::string, TURBOMACHINERY_TYPE> TurboMachinery_Map = {
-  MakePair("AXIAL", AXIAL)
-  MakePair("CENTRIFUGAL", CENTRIFUGAL)
-  MakePair("CENTRIPETAL",  CENTRIPETAL)
-  MakePair("CENTRIPETAL_AXIAL",  CENTRIPETAL_AXIAL)
-  MakePair("AXIAL_CENTRIFUGAL",  AXIAL_CENTRIFUGAL)
-};
-
-/*!
- * \brief Types of Turbomachinery performance flag.
- */
-enum TURBO_MARKER_TYPE{
-  INFLOW  = 1,    /*!< \brief flag for inflow marker for compute turboperformance. */
-  OUTFLOW = 2     /*!< \brief flag for outflow marker for compute turboperformance. */
 };
 
 /*!

@@ -264,21 +264,6 @@ def main():
     discadj_pitchingNACA0012.unsteady  = True
     test_list.append(discadj_pitchingNACA0012)
 
-    #######################################################
-    ### Disc. adj. turbomachinery                       ###
-    #######################################################
-    
-    # Transonic Stator 2D
-    discadj_trans_stator           = TestCase('transonic_stator')
-    discadj_trans_stator.cfg_dir   = "disc_adj_turbomachinery/transonic_stator_2D"
-    discadj_trans_stator.cfg_file  = "transonic_stator.cfg" 
-    discadj_trans_stator.test_iter = 79
-    discadj_trans_stator.test_vals = [79.000000, -1.941681, -1.998327]
-    discadj_trans_stator.su2_exec  = "parallel_computation.py -f"
-    discadj_trans_stator.timeout   = 1600
-    discadj_trans_stator.tol       = 0.00001
-    test_list.append(discadj_trans_stator)
-    
     ###################################
     ### Structural Adjoint          ###
     ###################################

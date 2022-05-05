@@ -60,46 +60,6 @@ void CTurbSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container, CN
   }
 }
 
-void CTurbSolver::BC_TurboRiemann(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics, CConfig *config, unsigned short val_marker) {
-
-  string Marker_Tag         = config->GetMarker_All_TagBound(val_marker);
-
-  switch(config->GetKind_Data_Riemann(Marker_Tag))
-  {
-  case TOTAL_CONDITIONS_PT: case STATIC_SUPERSONIC_INFLOW_PT: case STATIC_SUPERSONIC_INFLOW_PD: case DENSITY_VELOCITY:
-    BC_Inlet_Turbo(geometry, solver_container, conv_numerics, visc_numerics, config, val_marker);
-    break;
-  case STATIC_PRESSURE:
-    BC_Outlet(geometry, solver_container, conv_numerics, visc_numerics, config, val_marker);
-    break;
-  }
-}
-
-
-void CTurbSolver::BC_Giles(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics, CConfig *config, unsigned short val_marker) {
-
-  string Marker_Tag         = config->GetMarker_All_TagBound(val_marker);
-
-  switch(config->GetKind_Data_Giles(Marker_Tag))
-  {
-  case TOTAL_CONDITIONS_PT:case TOTAL_CONDITIONS_PT_1D: case DENSITY_VELOCITY:
-    BC_Inlet_Turbo(geometry, solver_container, conv_numerics, visc_numerics, config, val_marker);
-    break;
-  case MIXING_IN:
-    if (config->GetBoolTurbMixingPlane()){
-      BC_Inlet_MixingPlane(geometry, solver_container, conv_numerics, visc_numerics, config, val_marker);
-    }
-    else{
-      BC_Inlet_Turbo(geometry, solver_container, conv_numerics, visc_numerics, config, val_marker);
-    }
-    break;
-
-  case STATIC_PRESSURE: case MIXING_OUT: case STATIC_PRESSURE_1D: case RADIAL_EQUILIBRIUM:
-    BC_Outlet(geometry, solver_container, conv_numerics, visc_numerics, config, val_marker);
-    break;
-  }
-}
-
 void CTurbSolver::BC_Fluid_Interface(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics,
                                      CNumerics *visc_numerics, CConfig *config) {
 

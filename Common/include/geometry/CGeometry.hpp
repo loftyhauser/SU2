@@ -56,7 +56,6 @@ extern "C" {
 #include "dual_grid/CPoint.hpp"
 #include "dual_grid/CEdge.hpp"
 #include "dual_grid/CVertex.hpp"
-#include "dual_grid/CTurboVertex.hpp"
 
 #include "../CConfig.hpp"
 #include "../fem/geometry_structure_fem_part.hpp"
@@ -141,31 +140,6 @@ protected:
   vector<idx_t> xadj;      /*!< \brief Index array that points to the start of each node's adjacency in CSR format (needed to interpret the adjacency array).  */
 #endif
 
-  /*--- Turbomachinery variables ---*/
-
-  unsigned short *nSpanWiseSections{nullptr};     /*!< \brief Number of Span wise section for each turbo marker, indexed by inflow/outflow */
-  unsigned short *nSpanSectionsByMarker{nullptr}; /*!< \brief Number of Span wise section for each turbo marker, indexed by marker.  Needed for deallocation.*/
-  unsigned short nTurboPerf{0};                   /*!< \brief Number of Span wise section for each turbo marker. */
-  su2double **SpanWiseValue{nullptr};             /*!< \brief Span wise values for each turbo marker. */
-  long **nVertexSpan{nullptr};                    /*!< \brief number of vertexes for span wise section for each marker.  */
-  unsigned long **nTotVertexSpan{nullptr};        /*!< \brief number of vertexes at each span wise section for each marker.  */
-  unsigned long nVertexSpanMax[3] = {0};          /*!< \brief max number of vertexes for each span section for each marker flag.  */
-  su2double ***AverageTurboNormal{nullptr};       /*!< \brief Average boundary normal at each span wise section for each marker in the turbomachinery frame of reference.*/
-  su2double ***AverageNormal{nullptr};            /*!< \brief Average boundary normal at each span wise section for each marker.*/
-  su2double ***AverageGridVel{nullptr};           /*!< \brief Average boundary grid velocity at each span wise section for each marker.*/
-  su2double **AverageTangGridVel{nullptr};        /*!< \brief Average tangential rotational speed at each span wise section for each marker.*/
-  su2double **SpanArea{nullptr};                  /*!< \brief Area at each span wise section for each marker.*/
-  su2double **MaxAngularCoord{nullptr};           /*!< \brief Max angular pitch at each span wise section for each marker.*/
-  su2double **MinAngularCoord{nullptr};           /*!< \brief Max angular pitch at each span wise section for each marker.*/
-  su2double **MinRelAngularCoord{nullptr};        /*!< \brief Min relative angular coord at each span wise section for each marker.*/
-  su2double **TurboRadius{nullptr};               /*!< \brief Radius at each span wise section for each marker.*/
-  su2double **TangGridVelIn{nullptr};
-  su2double **TangGridVelOut{nullptr};            /*!< \brief Average tangential rotational speed at each span wise section for each turbomachinery marker.*/
-  su2double **SpanAreaIn{nullptr};
-  su2double **SpanAreaOut{nullptr};               /*!< \brief Area at each span wise section for each turbomachinery marker.*/
-  su2double **TurboRadiusIn{nullptr};
-  su2double **TurboRadiusOut{nullptr};            /*!< \brief Radius at each span wise section for each turbomachinery marker*/
-
   /*--- Sparsity patterns associated with the geometry. ---*/
 
   CCompressedSparsePatternUL
@@ -194,7 +168,6 @@ public:
   CPoint* nodes{nullptr};                /*!< \brief Node vector (dual grid information). */
   CEdge* edges{nullptr};                 /*!< \brief Edge vector (dual grid information). */
   CVertex*** vertex{nullptr};            /*!< \brief Boundary Vertex vector (dual grid information). */
-  CTurboVertex**** turbovertex{nullptr}; /*!< \brief Boundary Vertex vector ordered for turbomachinery calculation(dual grid information). */
   unsigned long *nVertex{nullptr};       /*!< \brief Number of vertex for each marker. */
   unsigned long *nElem_Bound{nullptr};   /*!< \brief Number of elements of the boundary. */
   string *Tag_to_Marker{nullptr};        /*!< \brief Names of boundary markers. */
@@ -440,56 +413,7 @@ public:
    * \param[in] val_marker - Marker of the boundary.
    * \return Number of vertices.
    */
-  inline const su2double* GetSpanWiseValue(unsigned short val_marker) const { return SpanWiseValue[val_marker-1]; }
-
-  /*!
-   * \brief Get number of vertices.
-   * \param[in] val_marker - Marker of the boundary.
-   * \return Number of vertices.
-   */
   inline unsigned long GetnVertex(unsigned short val_marker) const { return nVertex[val_marker]; }
-
-  /*!
-   * \brief Get number of span wise section.
-   * \param[in] marker_flag - flag of the turbomachinery boundary.
-   * \return Number of span wise section.
-   */
-  inline unsigned short GetnSpanWiseSections(unsigned short marker_flag) const { return nSpanWiseSections[marker_flag -1]; }
-
-  /*!
-   * \brief Get number of vertices.
-   * \param[in] val_marker - Marker of the boundary.
-   * \return Number of vertices.
-   */
-  inline unsigned long GetnVertexSpan(unsigned short val_marker, unsigned short val_span) const { return nVertexSpan[val_marker][val_span]; }
-
-  /*!
-   * \brief Get number of frequencies per span for NRBC.
-   * \param[in] val_marker - Marker of the boundary.
-   * \return Number of frequencies for NRBC.
-   */
-  inline unsigned long GetnFreqSpan(unsigned short val_marker, unsigned short val_span) const { return (nTotVertexSpan[val_marker][val_span]/2 -1); }
-
-  /*!
-   * \brief Get number of vertices.
-   * \param[in] val_marker - Marker of the boundary.
-   * \return Number of vertices.
-   */
-  inline unsigned long GetnVertexSpanMax(unsigned short marker_flag) const { return nVertexSpanMax[marker_flag]; }
-
-  /*!
-   * \brief Get number of max frequencies for initializing the Fourier Coefficient for NR BC.
-   * \param[in] marker_flag - Marker of the boundary.
-   * \return Number of frequencies.
-   */
-  inline unsigned long GetnFreqSpanMax(unsigned short marker_flag) const { return (nVertexSpanMax[marker_flag]/2 -1); }
-
-  /*!
-   * \brief Get number of vertices.
-   * \param[in] val_marker - Marker of the boundary.
-   * \return Number of vertices.
-   */
-  inline void SetnVertexSpanMax(unsigned short marker_flag, unsigned long nVertMax) {nVertexSpanMax[marker_flag] = nVertMax;}
 
   /*!
    * \brief Get the edge index from using the nodes of the edge.
@@ -658,48 +582,6 @@ public:
    * \param[in] config - Definition of the particular problem.
    */
   inline virtual void SetVertex(const CConfig *config) {}
-
-  /*!
-   * \brief Computes the N span.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_iZone - Zone of the problem
-   * \param[in] marker_flag - Marker being used
-   * \param[in] allocate
-   */
-  inline virtual void ComputeNSpan(CConfig *config, unsigned short val_iZone, unsigned short marker_flag, bool allocate) {}
-
-  /*!
-   * \brief Set vertices for turbomachinery problems.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_iZone - Zone of the problem
-   * \param[in] marker_flag - Marker being used
-   * \param[in] allocate
-   */
-  inline virtual void SetTurboVertex(CConfig *config, unsigned short val_iZone, unsigned short marker_flag, bool allocate) {}
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_iZone - Zone of the problem
-   * \param[in] marker_flag - Marker being used
-   */
-  inline virtual void UpdateTurboVertex(CConfig *config, unsigned short val_iZone, unsigned short marker_flag) {}
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_iZone - Zone of the problem
-   * \param[in] marker_flag - Marker being used
-   * \param[in] allocate
-   */
-  inline virtual void SetAvgTurboValue(CConfig *config, unsigned short val_iZone, unsigned short marker_flag, bool allocate) {}
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] allocate
-   */
-  inline virtual void GatherInOutAverageValues(CConfig *config, bool allocate) {}
 
   /*!
    * \brief Set max length.
@@ -1277,215 +1159,6 @@ public:
    * \param val - Value of the sensitivity
    */
   inline virtual void SetSensitivity(unsigned long iPoint, unsigned short iDim, su2double val) {}
-
-  /*!
-   * \brief Get the average normal at a specific span for a given marker in the turbomachinery reference of frame.
-   * \param[in] val_marker - marker value.
-   * \param[in] val_span - span value.
-   * \return The span-wise averaged turbo normal.
-   */
-  inline const su2double* GetAverageTurboNormal(unsigned short val_marker, unsigned short val_span) const {
-    return AverageTurboNormal[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the average normal at a specific span for a given marker.
-   * \param[in] val_marker - marker value.
-   * \param[in] val_span - span value.
-   * \return The span-wise averaged normal.
-   */
-  inline const su2double* GetAverageNormal(unsigned short val_marker, unsigned short val_span) const {
-    return AverageNormal[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the value of the total area for each span.
-   * \param[in] val_marker - marker value.
-   * \param[in] val_span - span value.
-   * \return The span-wise area.
-   */
-  inline su2double GetSpanArea(unsigned short val_marker, unsigned short val_span) const {
-    return SpanArea[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the value of the total area for each span.
-   * \param[in] val_marker - marker value.
-   * \param[in] val_span - span value.
-   * \return The span-wise averaged turbo normal.
-   */
-  inline su2double GetTurboRadius(unsigned short val_marker, unsigned short val_span) const {
-    return TurboRadius[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the value of the average tangential rotational velocity for each span.
-   * \param[in] val_marker - marker value.
-   * \param[in] val_span - span value.
-   * \return The span-wise averaged tangential velocity.
-   */
-  inline su2double GetAverageTangGridVel(unsigned short val_marker, unsigned short val_span) const {
-    return AverageTangGridVel[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the value of the inflow tangential velocity at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   * \return The span-wise inflow tangential velocity.
-   */
-  inline su2double GetTangGridVelIn(unsigned short val_marker, unsigned short val_span) const {
-    return TangGridVelIn[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the value of the outflow tangential velocity at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   * \return The span-wise outflow tangential velocity.
-   */
-  inline su2double GetTangGridVelOut(unsigned short val_marker, unsigned short val_span) const {
-    return TangGridVelOut[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the value of the inflow area at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   * \return The span-wise inflow area.
-   */
-  inline su2double GetSpanAreaIn(unsigned short val_marker, unsigned short val_span) const {
-    return SpanAreaIn[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the value of the outflow area at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   * \return The span-wise outflow area.
-   */
-  inline su2double GetSpanAreaOut(unsigned short val_marker, unsigned short val_span) const {
-    return SpanAreaOut[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the value of the inflow radius at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   * \return The span-wise inflow radius.
-   */
-  inline su2double GetTurboRadiusIn(unsigned short val_marker, unsigned short val_span) const {
-    return TurboRadiusIn[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the value of the outflow radius at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   * \return The span-wise outflow radius.
-   */
-  inline su2double GetTurboRadiusOut(unsigned short val_marker, unsigned short val_span) const {
-    return TurboRadiusOut[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Set the value of the inflow tangential velocity at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   */
-  inline void SetTangGridVelIn(su2double value, unsigned short val_marker, unsigned short val_span) {
-    TangGridVelIn[val_marker][val_span] = value;
-  }
-
-  /*!
-   * \brief Set the value of the outflow tangential velocity at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   */
-  inline void SetTangGridVelOut(su2double value, unsigned short val_marker, unsigned short val_span) {
-    TangGridVelOut[val_marker][val_span] = value;
-  }
-
-  /*!
-   * \brief Set the value of the inflow area at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   */
-  inline void SetSpanAreaIn(su2double value, unsigned short val_marker, unsigned short val_span) {
-    SpanAreaIn[val_marker][val_span] = value;
-  }
-
-  /*!
-   * \brief Set the value of the outflow area at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   */
-  inline void SetSpanAreaOut(su2double value, unsigned short val_marker, unsigned short val_span) {
-    SpanAreaOut[val_marker][val_span] = value;
-  }
-
-  /*!
-   * \brief Set the value of the inflow radius at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   */
-  inline void SetTurboRadiusIn(su2double value, unsigned short val_marker, unsigned short val_span) {
-    TurboRadiusIn[val_marker][val_span] = value;
-  }
-
-  /*!
-   * \brief Set the value of the outflow radius at each span.
-   * \param[in] val_marker - marker turbo-performance value.
-   * \param[in] val_span - span value.
-   */
-  inline void SetTurboRadiusOut(su2double value, unsigned short val_marker, unsigned short val_span) {
-    TurboRadiusOut[val_marker][val_span] = value;
-  }
-
-  /*!
-   * \brief A total number of vertex independently from the MPI partions.
-   * \param[in] val_marker - marker value.
-   * \param[in] val_span - span value.
-   */
-  inline unsigned long GetnTotVertexSpan(unsigned short val_marker, unsigned short val_span) const {
-    return nTotVertexSpan[val_marker][val_span];
-  }
-
-  /*!
-   * \brief min angular pitch independently from the MPI partions.
-   * \param[in] val_marker - marker value.
-   * \param[in] val_span - span value.
-   */
-  inline su2double GetMinAngularCoord(unsigned short val_marker, unsigned short val_span) const {
-    return MinAngularCoord[val_marker][val_span];
-  }
-
-  /*!
-   * \brief max angular pitch independently from the MPI partions.
-   * \param[in] val_marker - marker value.
-   * \param[in] val_span - span value.
-   */
-  inline su2double GetMaxAngularCoord(unsigned short val_marker, unsigned short val_span) const {
-    return MaxAngularCoord[val_marker][val_span];
-  }
-
-  /*!
-   * \brief min Relatice angular coord independently from the MPI partions.
-   * \param[in] val_marker - marker value.
-   * \param[in] val_span - span value.
-   */
-  inline su2double GetMinRelAngularCoord(unsigned short val_marker, unsigned short val_span) const {
-    return MinRelAngularCoord[val_marker][val_span];
-  }
-
-  /*!
-   * \brief Get the average grid velocity at a specific span for a given marker.
-   * \param[in] val_marker - marker value.
-   * \param[in] val_span - span value.
-   */
-  inline const su2double* GetAverageGridVel(unsigned short val_marker, unsigned short val_span) const {
-    return AverageGridVel[val_marker][val_span];
-  }
 
   /*!
    * \brief A virtual member.

@@ -28,10 +28,8 @@
 #include "../../include/drivers/CDiscAdjSinglezoneDriver.hpp"
 #include "../../include/output/tools/CWindowingTools.hpp"
 #include "../../include/output/COutputFactory.hpp"
-#include "../../include/output/COutputLegacy.hpp"
 #include "../../include/output/COutput.hpp"
 #include "../../include/iteration/CIterationFactory.hpp"
-#include "../../include/iteration/CTurboIteration.hpp"
 #include "../../../Common/include/toolboxes/CQuasiNewtonInvLeastSquares.hpp"
 
 CDiscAdjSinglezoneDriver::CDiscAdjSinglezoneDriver(char* confFile,
@@ -64,11 +62,7 @@ CDiscAdjSinglezoneDriver::CDiscAdjSinglezoneDriver(char* confFile,
     if (rank == MASTER_NODE)
       cout << "Direct iteration: Euler/Navier-Stokes/RANS equation." << endl;
 
-    if (config->GetBoolTurbomachinery()) {
-      direct_iteration = new CTurboIteration(config);
-      output_legacy = COutputFactory::CreateLegacyOutput(config_container[ZONE_0]);
-    }
-    else { direct_iteration = CIterationFactory::CreateIteration(MAIN_SOLVER::EULER, config); }
+    direct_iteration = CIterationFactory::CreateIteration(MAIN_SOLVER::EULER, config); 
 
     if (config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE) {
       direct_output = COutputFactory::CreateOutput(MAIN_SOLVER::EULER, config, nDim);
@@ -361,28 +355,6 @@ void CDiscAdjSinglezoneDriver::SetObjFunction(){
                                      config->GetOuterIter(), config->GetInnerIter());
     ObjFunc += solver[FLOW_SOL]->GetTotal_ComboObj();
 
-    /*--- These calls to be moved to a generic framework at a next stage        ---*/
-    /*--- Some things that are currently hacked into output must be reorganized ---*/
-    if (config->GetBoolTurbomachinery()) {
-      output_legacy->ComputeTurboPerformance(solver[FLOW_SOL], geometry, config);
-
-      unsigned short nMarkerTurboPerf = config->GetnMarker_TurboPerformance();
-      unsigned short nSpanSections = config->GetnSpanWiseSections();
-
-      switch (config_container[ZONE_0]->GetKind_ObjFunc()){
-      case ENTROPY_GENERATION:
-        ObjFunc += output_legacy->GetEntropyGen(nMarkerTurboPerf-1, nSpanSections);
-        break;
-      case FLOW_ANGLE_OUT:
-        ObjFunc += output_legacy->GetFlowAngleOut(nMarkerTurboPerf-1, nSpanSections);
-        break;
-      case MASS_FLOW_IN:
-        ObjFunc += output_legacy->GetMassFlowIn(nMarkerTurboPerf-1, nSpanSections);
-        break;
-      default:
-        break;
-      }
-    }
     break;
 
   case MAIN_SOLVER::DISC_ADJ_HEAT:

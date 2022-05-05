@@ -181,14 +181,6 @@ def get_headerMap(nZones = 1):
 
     return headerMap        
 
-def getTurboPerfIndex(nZones = 1):
-
-  if int(nZones) > 1:
-    index = int(nZones) + int(int(nZones)/2.0) + 1
-  else: 
-    index = 1
-  return index
-
 
 #: def get_headerMap()
 

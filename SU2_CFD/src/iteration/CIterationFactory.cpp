@@ -33,7 +33,6 @@
 #include "../../include/iteration/CDiscAdjHeatIteration.hpp"
 #include "../../include/iteration/CFluidIteration.hpp"
 #include "../../include/iteration/CFEMFluidIteration.hpp"
-#include "../../include/iteration/CTurboIteration.hpp"
 #include "../../include/iteration/CHeatIteration.hpp"
 #include "../../include/iteration/CFEAIteration.hpp"
 
@@ -49,17 +48,9 @@ CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CCo
 
     case MAIN_SOLVER::EULER: case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::RANS:
     case MAIN_SOLVER::INC_EULER: case MAIN_SOLVER::INC_NAVIER_STOKES: case MAIN_SOLVER::INC_RANS:
-      if(config->GetBoolTurbomachinery()){
-        if (rank == MASTER_NODE)
-          cout << "Euler/Navier-Stokes/RANS turbomachinery fluid iteration." << endl;
-        iteration = new CTurboIteration(config);
-
-      }
-      else{
         if (rank == MASTER_NODE)
           cout << "Euler/Navier-Stokes/RANS fluid iteration." << endl;
         iteration = new CFluidIteration(config);
-      }
       break;
 
     case MAIN_SOLVER::FEM_EULER: case MAIN_SOLVER::FEM_NAVIER_STOKES: case MAIN_SOLVER::FEM_RANS: case MAIN_SOLVER::FEM_LES:

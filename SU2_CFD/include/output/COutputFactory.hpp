@@ -29,7 +29,6 @@
 
 class COutput;
 class CConfig;
-class COutputLegacy;
 
 class COutputFactory{
 
@@ -58,10 +57,4 @@ public:
    */
   static COutput* CreateMultizoneOutput(CConfig *driverConfig, CConfig** config_container, int nDim);
 
-  /*!
-   * \brief Create legacy output
-   * \param config          - Pointer to the config
-   * \return                - Pointer to the allocated legacy output
-   */
-  static COutputLegacy* CreateLegacyOutput(CConfig *config);
 };

@@ -38,7 +38,6 @@
 
 using namespace std;
 
-class COutputLegacy;
 class CInterpolator;
 class CIteration;
 class COutput;
@@ -254,12 +253,6 @@ protected:
    * \brief Initiate value for static mesh movement such as the gridVel for the ROTATING frame.
    */
   void StaticMesh_Preprocessing(const CConfig *config, CGeometry **geometry);
-
-  /*!
-   * \brief Initiate value for static mesh movement such as the gridVel for the ROTATING frame.
-   */
-  void Turbomachinery_Preprocessing(CConfig** config, CGeometry**** geometry, CSolver***** solver,
-                                    CInterface*** interface);
 
   /*!
    * \brief A virtual member.
@@ -838,60 +831,6 @@ public:
 
 };
 
-
-/*!
- * \class CTurbomachineryDriver
- * \brief Class for driving an iteration for turbomachinery flow analysis.
- * \author S. Vitale
- */
-class CTurbomachineryDriver : public CFluidDriver {
-private:
-  COutputLegacy* output_legacy;
-
-public:
-
-  /*!
-   * \brief Constructor of the class.
-   * \param[in] confFile - Configuration file name.
-   * \param[in] val_nZone - Total number of zones.
-   * \param[in] val_nDim - Number of dimensions.
-   * \param[in] val_periodic - Bool for periodic BCs.
-   * \param[in] MPICommunicator - MPI communicator for SU2.
-   */
-  CTurbomachineryDriver(char* confFile,
-                        unsigned short val_nZone,
-                        SU2_Comm MPICommunicator);
-
-  /*!
-   * \brief Destructor of the class.
-   */
-  ~CTurbomachineryDriver(void) override;
-
-  /*!
-   * \brief Run a single iteration of the physics within multiple zones.
-   */
-
-  void Run() override;
-
-  /*!
-   * \brief Set Mixing Plane interface within multiple zones.
-   */
-  void SetMixingPlane(unsigned short iZone);
-
-  /*!
-   * \brief Set Mixing Plane interface within multiple zones.
-   */
-  void SetTurboPerformance(unsigned short targetZone);
-
-  /*!
-   * \brief Monitor the computation.
-   */
-  bool Monitor(unsigned long TimeIter) override;
-
-
-
-};
-
 /*!
  * \class CHBDriver
  * \brief Class for driving an iteration of Harmonic Balance (HB) method problem using multiple time zones.
@@ -900,7 +839,6 @@ public:
 class CHBDriver : public CFluidDriver {
 
 private:
-  COutputLegacy* output_legacy;
   unsigned short nInstHB;
   su2double **D; /*!< \brief Harmonic Balance operator. */
 

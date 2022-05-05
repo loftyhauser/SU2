@@ -403,36 +403,6 @@ public:
   void SetVertex(const CConfig *config) override;
 
   /*!
-   * \brief Set number of span wise level for turbomachinery computation.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void ComputeNSpan(CConfig *config, unsigned short val_iZone, unsigned short marker_flag, bool allocate) override;
-
-  /*!
-   * \brief Set turbo boundary vertex.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void SetTurboVertex(CConfig *config,unsigned short val_iZone, unsigned short marker_flag, bool allocate) override;
-
-  /*!
- * \brief update turbo boundary vertex.
- * \param[in] config - Definition of the particular problem.
- */
-  void UpdateTurboVertex(CConfig *config,unsigned short val_iZone, unsigned short marker_flag) override;
-
-  /*!
-   * \brief Set turbo boundary vertex.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void SetAvgTurboValue(CConfig *config, unsigned short val_iZone, unsigned short marker_flag, bool allocate) override;
-
-  /*!
-   * \brief Set turbo boundary vertex.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void GatherInOutAverageValues(CConfig *config, bool allocate) override;
-
-  /*!
    * \brief Set the edge structure of the control volume.
    * \param[in] config - Definition of the particular problem.
    * \param[in] action - Allocate or not the new elements.

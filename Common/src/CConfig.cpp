@@ -492,15 +492,6 @@ void CConfig::addRiemannOption(const string name, unsigned short & nMarker_Riema
   option_map.insert(pair<string, COptionBase *>(name, val));
 }
 
-template <class Tenum>
-void CConfig::addGilesOption(const string name, unsigned short & nMarker_Giles, string * & Marker_Giles, unsigned short* & option_field, const map<string, Tenum> & enum_map,
-                             su2double* & var1, su2double* & var2, su2double** & FlowDir, su2double* & relaxfactor1, su2double* & relaxfactor2) {
-  assert(option_map.find(name) == option_map.end());
-  all_options.insert(pair<string, bool>(name, true));
-  COptionBase* val = new COptionGiles<Tenum>(name, nMarker_Giles, Marker_Giles, option_field, enum_map, var1, var2, FlowDir, relaxfactor1, relaxfactor2);
-  option_map.insert(pair<string, COptionBase *>(name, val));
-}
-
 void CConfig::addExhaustOption(const string name, unsigned short & nMarker_Exhaust, string * & Marker_Exhaust,
                                su2double* & Ttotal, su2double* & Ptotal) {
   assert(option_map.find(name) == option_map.end());
@@ -515,14 +506,6 @@ void CConfig::addPeriodicOption(const string & name, unsigned short & nMarker_Pe
   assert(option_map.find(name) == option_map.end());
   all_options.insert(pair<string, bool>(name, true));
   COptionBase* val = new COptionPeriodic(name, nMarker_PerBound, Marker_PerBound, Marker_PerDonor, RotCenter, RotAngles, Translation);
-  option_map.insert(pair<string, COptionBase *>(name, val));
-}
-
-void CConfig::addTurboPerfOption(const string & name, unsigned short & nMarker_TurboPerf,
-                                 string* & Marker_TurboBoundIn, string* & Marker_TurboBoundOut) {
-  assert(option_map.find(name) == option_map.end());
-  all_options.insert(pair<string, bool>(name, true));
-  COptionBase* val = new COptionTurboPerformance(name, nMarker_TurboPerf, Marker_TurboBoundIn, Marker_TurboBoundOut);
   option_map.insert(pair<string, COptionBase *>(name, val));
 }
 
@@ -798,18 +781,11 @@ void CConfig::SetPointersNull(void) {
   Marker_CfgFile_DV           = nullptr;   Marker_All_DV            = nullptr;
   Marker_CfgFile_Moving       = nullptr;   Marker_All_Moving        = nullptr;
   Marker_CfgFile_PerBound     = nullptr;   Marker_All_PerBound      = nullptr;    Marker_PerBound   = nullptr;
-  Marker_CfgFile_Turbomachinery = nullptr; Marker_All_Turbomachinery = nullptr;
-  Marker_CfgFile_TurbomachineryFlag = nullptr; Marker_All_TurbomachineryFlag = nullptr;
-  Marker_CfgFile_MixingPlaneInterface = nullptr; Marker_All_MixingPlaneInterface = nullptr;
   Marker_CfgFile_ZoneInterface = nullptr;
   Marker_CfgFile_Deform_Mesh   = nullptr;  Marker_All_Deform_Mesh   = nullptr;
   Marker_CfgFile_Deform_Mesh_Sym_Plane   = nullptr;  Marker_All_Deform_Mesh_Sym_Plane   = nullptr;
   Marker_CfgFile_Fluid_Load    = nullptr;  Marker_All_Fluid_Load    = nullptr;
   Marker_CfgFile_SobolevBC     = nullptr;  Marker_All_SobolevBC     = nullptr;
-
-  Marker_CfgFile_Turbomachinery       = nullptr; Marker_All_Turbomachinery       = nullptr;
-  Marker_CfgFile_TurbomachineryFlag   = nullptr; Marker_All_TurbomachineryFlag   = nullptr;
-  Marker_CfgFile_MixingPlaneInterface = nullptr; Marker_All_MixingPlaneInterface = nullptr;
 
   Marker_CfgFile_PyCustom     = nullptr;   Marker_All_PyCustom      = nullptr;
 
@@ -970,7 +946,6 @@ void CConfig::SetPointersNull(void) {
   /*--- Initialize some default arrays to NULL. ---*/
 
   Riemann_FlowDir       = nullptr;
-  Giles_FlowDir         = nullptr;
   CoordFFDBox           = nullptr;
   DegreeFFDBox          = nullptr;
   FFDTag                = nullptr;
@@ -980,22 +955,8 @@ void CConfig::SetPointersNull(void) {
   Kind_Data_Riemann        = nullptr;
   Riemann_Var1             = nullptr;
   Riemann_Var2             = nullptr;
-  Kind_Data_Giles          = nullptr;
-  Giles_Var1               = nullptr;
-  Giles_Var2               = nullptr;
-  RelaxFactorAverage       = nullptr;
-  RelaxFactorFourier       = nullptr;
-  nSpan_iZones             = nullptr;
-  Kind_TurboMachinery      = nullptr;
 
-  Marker_MixingPlaneInterface  = nullptr;
-  Marker_TurboBoundIn          = nullptr;
-  Marker_TurboBoundOut         = nullptr;
-  Marker_Giles                 = nullptr;
   Marker_Shroud                = nullptr;
-
-  nBlades                      = nullptr;
-  FreeStreamTurboNormal        = nullptr;
 
   top_optim_kernels       = nullptr;
   top_optim_kernel_params = nullptr;
@@ -1019,8 +980,6 @@ void CConfig::SetPointersNull(void) {
   AoS_Offset = 0;
 
   nMarker_PerBound = 0;
-
-  nSpanMaxAllZones = 1;
 
   Restart_Bandwidth_Agg = 0.0;
 
@@ -1424,57 +1383,6 @@ void CConfig::SetConfig_Options() {
   /*!\brief MARKER_RIEMANN \n DESCRIPTION: Riemann boundary marker(s) with the following formats, a unit vector.
    * \n OPTIONS: See \link Riemann_Map \endlink. The variables indicated by the option and the flow direction unit vector must be specified. \ingroup Config*/
   addRiemannOption("MARKER_RIEMANN", nMarker_Riemann, Marker_Riemann, Kind_Data_Riemann, Riemann_Map, Riemann_Var1, Riemann_Var2, Riemann_FlowDir);
-  /*!\brief MARKER_GILES \n DESCRIPTION: Giles boundary marker(s) with the following formats, a unit vector. */
-  /* \n OPTIONS: See \link Giles_Map \endlink. The variables indicated by the option and the flow direction unit vector must be specified. \ingroup Config*/
-  addGilesOption("MARKER_GILES", nMarker_Giles, Marker_Giles, Kind_Data_Giles, Giles_Map, Giles_Var1, Giles_Var2, Giles_FlowDir, RelaxFactorAverage, RelaxFactorFourier);
-  /*!\brief SPATIAL_FOURIER \n DESCRIPTION: Option to compute the spatial fourier trasformation for the Giles BC. */
-  addBoolOption("SPATIAL_FOURIER", SpatialFourier, false);
-  /*!\brief GILES_EXTRA_RELAXFACTOR \n DESCRIPTION: the 1st coeff the value of the under relaxation factor to apply to the shroud and hub,
-   * the 2nd coefficient is the the percentage of span-wise height influenced by this extra under relaxation factor.*/
-  extrarelfac[0] = 0.1; extrarelfac[1] = 0.1;
-  addDoubleArrayOption("GILES_EXTRA_RELAXFACTOR", 2, extrarelfac);
-  /*!\brief AVERAGE_PROCESS_TYPE \n DESCRIPTION: types of mixing process for averaging quantities at the boundaries.
-    \n OPTIONS: see \link MixingProcess_Map \endlink \n DEFAULT: AREA_AVERAGE \ingroup Config*/
-  addEnumOption("MIXINGPLANE_INTERFACE_KIND", Kind_MixingPlaneInterface, MixingPlaneInterface_Map, NEAREST_SPAN);
-  /*!\brief AVERAGE_PROCESS_KIND \n DESCRIPTION: types of mixing process for averaging quantities at the boundaries.
-    \n OPTIONS: see \link MixingProcess_Map \endlink \n DEFAULT: AREA_AVERAGE \ingroup Config*/
-  addEnumOption("AVERAGE_PROCESS_KIND", Kind_AverageProcess, AverageProcess_Map, AREA);
-  /*!\brief PERFORMANCE_AVERAGE_PROCESS_KIND \n DESCRIPTION: types of mixing process for averaging quantities at the boundaries for performance computation.
-      \n OPTIONS: see \link MixingProcess_Map \endlink \n DEFAULT: AREA_AVERAGE \ingroup Config*/
-  addEnumOption("PERFORMANCE_AVERAGE_PROCESS_KIND", Kind_PerformanceAverageProcess, AverageProcess_Map, AREA);
-  mixedout_coeff[0] = 1.0; mixedout_coeff[1] = 1.0E-05; mixedout_coeff[2] = 15.0;
-  /*!\brief MIXEDOUT_COEFF \n DESCRIPTION: the 1st coeff is an under relaxation factor for the Newton method,
-   * the 2nd coefficient is the tolerance for the Newton method, 3rd coefficient is the maximum number of
-   * iteration for the Newton Method.*/
-  addDoubleArrayOption("MIXEDOUT_COEFF", 3, mixedout_coeff);
-  /*!\brief RAMP_ROTATING_FRAME\n DESCRIPTION: option to ramp up or down the rotating frame velocity value*/
-  addBoolOption("RAMP_ROTATING_FRAME", RampRotatingFrame, false);
-  rampRotFrame_coeff[0] = 0; rampRotFrame_coeff[1] = 1.0; rampRotFrame_coeff[2] = 1000.0;
-      /*!\brief RAMP_ROTATING_FRAME_COEFF \n DESCRIPTION: the 1st coeff is the staring velocity,
-   * the 2nd coeff is the number of iterations for the update, 3rd is the number of iteration */
-  addDoubleArrayOption("RAMP_ROTATING_FRAME_COEFF", 3, rampRotFrame_coeff);
-  /* DESCRIPTION: AVERAGE_MACH_LIMIT is a limit value for average procedure based on the mass flux. */
-  addDoubleOption("AVERAGE_MACH_LIMIT", AverageMachLimit, 0.03);
-  /*!\brief RAMP_OUTLET_PRESSURE\n DESCRIPTION: option to ramp up or down the rotating frame velocity value*/
-  addBoolOption("RAMP_OUTLET_PRESSURE", RampOutletPressure, false);
-  rampOutPres_coeff[0] = 100000.0; rampOutPres_coeff[1] = 1.0; rampOutPres_coeff[2] = 1000.0;
-  /*!\brief RAMP_OUTLET_PRESSURE_COEFF \n DESCRIPTION: the 1st coeff is the staring outlet pressure,
-   * the 2nd coeff is the number of iterations for the update, 3rd is the number of total iteration till reaching the final outlet pressure value */
-  addDoubleArrayOption("RAMP_OUTLET_PRESSURE_COEFF", 3, rampOutPres_coeff);
-  /*!\brief MARKER_MIXINGPLANE \n DESCRIPTION: Identify the boundaries in which the mixing plane is applied. \ingroup Config*/
-  addStringListOption("MARKER_MIXINGPLANE_INTERFACE", nMarker_MixingPlaneInterface, Marker_MixingPlaneInterface);
-  /*!\brief TURBULENT_MIXINGPLANE \n DESCRIPTION: Activate mixing plane also for turbulent quantities \ingroup Config*/
-  addBoolOption("TURBULENT_MIXINGPLANE", turbMixingPlane, false);
-  /*!\brief MARKER_TURBOMACHINERY \n DESCRIPTION: Identify the inflow and outflow boundaries in which the turbomachinery settings are  applied. \ingroup Config*/
-  addTurboPerfOption("MARKER_TURBOMACHINERY", nMarker_Turbomachinery, Marker_TurboBoundIn, Marker_TurboBoundOut);
-  /*!\brief NUM_SPANWISE_SECTIONS \n DESCRIPTION: Integer number of spanwise sections to compute 3D turbo BC and Performance for turbomachinery */
-  addUnsignedShortOption("NUM_SPANWISE_SECTIONS", nSpanWiseSections_User, 1);
-  /*!\brief SPANWISE_KIND \n DESCRIPTION: type of algorithm to identify the span-wise sections at the turbo boundaries.
-   \n OPTIONS: see \link SpanWise_Map \endlink \n Default: AUTOMATIC */
-  addEnumOption("SPANWISE_KIND", Kind_SpanWise, SpanWise_Map, AUTOMATIC);
-  /*!\brief TURBOMACHINERY_KIND \n DESCRIPTION: types of turbomachynery architecture.
-      \n OPTIONS: see \link TurboMachinery_Map \endlink \n Default: AXIAL */
-  addEnumListOption("TURBOMACHINERY_KIND",nTurboMachineryKind, Kind_TurboMachinery, TurboMachinery_Map);
   /*!\brief MARKER_SHROUD \n DESCRIPTION: markers in which velocity is forced to 0.0 .
    * \n Format: (shroud1, shroud2, ...)*/
   addStringListOption("MARKER_SHROUD", nMarker_Shroud, Marker_Shroud);
@@ -2385,20 +2293,6 @@ void CConfig::SetConfig_Options() {
 
   /* DESCRIPTION: Tolerance to prune small coefficients from the RBF interpolation matrix. */
   addDoubleOption("RADIAL_BASIS_FUNCTION_PRUNE_TOLERANCE", RadialBasisFunction_PruneTol, 1e-6);
-
-   /*!\par INLETINTERPOLATION \n
-   * DESCRIPTION: Type of spanwise interpolation to use for the inlet face. \n OPTIONS: see \link Inlet_SpanwiseInterpolation_Map \endlink
-   * Sets Kind_InletInterpolation \ingroup Config
-   */
-  addEnumOption("INLET_INTERPOLATION_FUNCTION",Kind_InletInterpolationFunction, Inlet_SpanwiseInterpolation_Map, INLET_SPANWISE_INTERP::NONE);
-
-   /*!\par INLETINTERPOLATION \n
-   * DESCRIPTION: Type of spanwise interpolation to use for the inlet face. \n OPTIONS: see \link Inlet_SpanwiseInterpolation_Map \endlink
-   * Sets Kind_InletInterpolation \ingroup Config
-   */
-  addEnumOption("INLET_INTERPOLATION_DATA_TYPE", Kind_Inlet_InterpolationType, Inlet_SpanwiseInterpolationType_Map, INLET_INTERP_TYPE::VR_VTHETA);
-
-  addBoolOption("PRINT_INLET_INTERPOLATED_DATA", PrintInlet_InterpolatedData, false);
 
   /* DESCRIPTION: Number of FSI iterations during which a ramp is applied */
   addUnsignedShortOption("RAMP_FSI_ITER", nIterFSI_Ramp, 2);
@@ -3545,33 +3439,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     }
   }
 
-  if(GetBoolTurbomachinery()){
-    nBlades = new su2double[nZone];
-    FreeStreamTurboNormal= new su2double[3];
-  }
-
-  /*--- Check if Giles are used with turbo markers ---*/
-
-  if (nMarker_Giles > 0 && !GetBoolTurbomachinery()){
-    SU2_MPI::Error("Giles Boundary conditions can only be used with turbomachinery markers", CURRENT_FUNCTION);
-  }
-
-  /*--- Check for Boundary condition available for NICFD ---*/
-
-  if (!ideal_gas) {
-    if (nMarker_Inlet != 0) {
-      SU2_MPI::Error("Riemann Boundary conditions or Giles must be used for inlet and outlet with Not Ideal Compressible Fluids ", CURRENT_FUNCTION);
-    }
-    if (nMarker_Outlet != 0) {
-      SU2_MPI::Error("Riemann Boundary conditions or Giles must be used outlet with Not Ideal Compressible Fluids ", CURRENT_FUNCTION);
-    }
-
-    if (nMarker_FarField != 0) {
-      SU2_MPI::Error("Riemann Boundary conditions or Giles must be used outlet with Not Ideal Compressible Fluids ", CURRENT_FUNCTION);
-    }
-
-  }
-
   /*--- Check for Boundary condition available for NICF ---*/
 
   if (ideal_gas && (Kind_Solver != MAIN_SOLVER::INC_EULER && Kind_Solver != MAIN_SOLVER::INC_NAVIER_STOKES && Kind_Solver != MAIN_SOLVER::INC_RANS)) {
@@ -3753,56 +3620,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     }
   }
 
-  /*--- Force number of span-wise section to 1 if 2D case ---*/
-  if(val_nDim ==2){
-    nSpanWiseSections_User=1;
-    Kind_SpanWise= EQUISPACED;
-  }
-
-  /*--- Set number of TurboPerformance markers ---*/
-  if(nMarker_Turbomachinery > 0){
-    if(nMarker_Turbomachinery > 1){
-      nMarker_TurboPerformance = nMarker_Turbomachinery + SU2_TYPE::Int(nMarker_Turbomachinery/2) + 1;
-    }else{
-      nMarker_TurboPerformance = nMarker_Turbomachinery;
-    }
-  } else {
-    nMarker_TurboPerformance = 0;
-    nSpanWiseSections =1;
-  }
-
-  /*--- Set number of TurboPerformance markers ---*/
-  if(nMarker_Turbomachinery != 0){
-    nSpan_iZones = new unsigned short[nZone];
-  }
-
-  /*--- Set number of TurboPerformance markers ---*/
-  if(GetGrid_Movement() && RampRotatingFrame && !DiscreteAdjoint){
-    FinalRotation_Rate_Z = Rotation_Rate[2];
-    if(abs(FinalRotation_Rate_Z) > 0.0){
-      Rotation_Rate[2] = rampRotFrame_coeff[0];
-    }
-  }
-
-  if(RampOutletPressure && !DiscreteAdjoint){
-    for (iMarker = 0; iMarker < nMarker_Giles; iMarker++){
-      if (Kind_Data_Giles[iMarker] == STATIC_PRESSURE || Kind_Data_Giles[iMarker] == STATIC_PRESSURE_1D || Kind_Data_Giles[iMarker] == RADIAL_EQUILIBRIUM ){
-        FinalOutletPressure = Giles_Var1[iMarker];
-        Giles_Var1[iMarker] = rampOutPres_coeff[0];
-      }
-    }
-    for (iMarker = 0; iMarker < nMarker_Riemann; iMarker++){
-      if (Kind_Data_Riemann[iMarker] == STATIC_PRESSURE || Kind_Data_Riemann[iMarker] == RADIAL_EQUILIBRIUM){
-        FinalOutletPressure = Riemann_Var1[iMarker];
-        Riemann_Var1[iMarker] = rampOutPres_coeff[0];
-      }
-    }
-  }
-
-  /*--- Check on extra Relaxation factor for Giles---*/
-  if(extrarelfac[1] > 0.5){
-    extrarelfac[1] = 0.5;
-  }
     /*--- Use the various rigid-motion input frequencies to determine the period to be used with harmonic balance cases.
      There are THREE types of motion to consider, namely: rotation, pitching, and plunging.
      The largest period of motion is the one to be used for harmonic balance  calculations. ---*/
@@ -4850,7 +4667,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
         break;
     }
 
-    RampOutletPressure = false;
     RampRotatingFrame = false;
   }
 
@@ -4956,7 +4772,7 @@ void CConfig::SetMarkers(SU2_COMPONENT val_software) {
   unsigned short iMarker_All, iMarker_CfgFile, iMarker_Euler, iMarker_Custom,
   iMarker_FarField, iMarker_SymWall, iMarker_PerBound,
   iMarker_NearFieldBound, iMarker_Fluid_InterfaceBound,
-  iMarker_Inlet, iMarker_Riemann, iMarker_Giles, iMarker_Outlet,
+  iMarker_Inlet, iMarker_Riemann, iMarker_Outlet,
   iMarker_Smoluchowski_Maxwell,
   iMarker_Isothermal,iMarker_HeatFlux,iMarker_HeatTansfer,
   iMarker_EngineInflow, iMarker_EngineExhaust, iMarker_Damper,
@@ -4965,8 +4781,7 @@ void CConfig::SetMarkers(SU2_COMPONENT val_software) {
   iMarker_DV, iMarker_Moving, iMarker_SobolevBC, iMarker_PyCustom, iMarker_Supersonic_Inlet, iMarker_Supersonic_Outlet,
   iMarker_Clamped, iMarker_ZoneInterface, iMarker_CHTInterface, iMarker_Load_Dir, iMarker_Disp_Dir, iMarker_Load_Sine,
   iMarker_Fluid_Load, iMarker_Deform_Mesh, iMarker_Deform_Mesh_Sym_Plane,
-  iMarker_ActDiskInlet, iMarker_ActDiskOutlet,
-  iMarker_Turbomachinery, iMarker_MixingPlaneInterface;
+  iMarker_ActDiskInlet, iMarker_ActDiskOutlet;
 
   int size = SINGLE_NODE;
   SU2_MPI::Comm_size(SU2_MPI::GetComm(), &size);
@@ -4975,7 +4790,7 @@ void CConfig::SetMarkers(SU2_COMPONENT val_software) {
   nMarker_CfgFile = nMarker_Euler + nMarker_FarField + nMarker_SymWall +
   nMarker_PerBound + nMarker_NearFieldBound + nMarker_Fluid_InterfaceBound +
   nMarker_CHTInterface + nMarker_Inlet + nMarker_Riemann + nMarker_Smoluchowski_Maxwell +
-  nMarker_Giles + nMarker_Outlet + nMarker_Isothermal +
+  nMarker_Outlet + nMarker_Isothermal +
   nMarker_HeatFlux + nMarker_HeatTransfer +
   nMarker_EngineInflow + nMarker_EngineExhaust + nMarker_Internal +
   nMarker_Supersonic_Inlet + nMarker_Supersonic_Outlet + nMarker_Displacement + nMarker_Load +
@@ -5009,9 +4824,6 @@ void CConfig::SetMarkers(SU2_COMPONENT val_software) {
   Marker_All_Fluid_Load     = new unsigned short[nMarker_All] (); // Store whether the boundary computes/applies fluid loads.
   Marker_All_PyCustom       = new unsigned short[nMarker_All] (); // Store whether the boundary is Python customizable.
   Marker_All_PerBound       = new short[nMarker_All] ();          // Store whether the boundary belongs to a periodic boundary.
-  Marker_All_Turbomachinery       = new unsigned short[nMarker_All] (); // Store whether the boundary is in needed for Turbomachinery computations.
-  Marker_All_TurbomachineryFlag   = new unsigned short[nMarker_All] (); // Store whether the boundary has a flag for Turbomachinery computations.
-  Marker_All_MixingPlaneInterface = new unsigned short[nMarker_All] (); // Store whether the boundary has a in the MixingPlane interface.
   Marker_All_SobolevBC      = new unsigned short[nMarker_All] (); // Store wether the boundary should apply to the gradient smoothing.
 
   for (iMarker_All = 0; iMarker_All < nMarker_All; iMarker_All++) {
@@ -5034,9 +4846,6 @@ void CConfig::SetMarkers(SU2_COMPONENT val_software) {
   Marker_CfgFile_Deform_Mesh_Sym_Plane= new unsigned short[nMarker_CfgFile] ();
   Marker_CfgFile_Fluid_Load           = new unsigned short[nMarker_CfgFile] ();
   Marker_CfgFile_PerBound             = new unsigned short[nMarker_CfgFile] ();
-  Marker_CfgFile_Turbomachinery       = new unsigned short[nMarker_CfgFile] ();
-  Marker_CfgFile_TurbomachineryFlag   = new unsigned short[nMarker_CfgFile] ();
-  Marker_CfgFile_MixingPlaneInterface = new unsigned short[nMarker_CfgFile] ();
   Marker_CfgFile_PyCustom             = new unsigned short[nMarker_CfgFile] ();
   Marker_CfgFile_SobolevBC            = new unsigned short[nMarker_CfgFile] ();
 
@@ -5171,12 +4980,6 @@ void CConfig::SetMarkers(SU2_COMPONENT val_software) {
   for (iMarker_Riemann = 0; iMarker_Riemann < nMarker_Riemann; iMarker_Riemann++) {
     Marker_CfgFile_TagBound[iMarker_CfgFile] = Marker_Riemann[iMarker_Riemann];
     Marker_CfgFile_KindBC[iMarker_CfgFile] = RIEMANN_BOUNDARY;
-    iMarker_CfgFile++;
-  }
-
-  for (iMarker_Giles = 0; iMarker_Giles < nMarker_Giles; iMarker_Giles++) {
-    Marker_CfgFile_TagBound[iMarker_CfgFile] = Marker_Giles[iMarker_Giles];
-    Marker_CfgFile_KindBC[iMarker_CfgFile] = GILES_BOUNDARY;
     iMarker_CfgFile++;
   }
 
@@ -5370,36 +5173,6 @@ void CConfig::SetMarkers(SU2_COMPONENT val_software) {
         Marker_CfgFile_ZoneInterface[iMarker_CfgFile] = YES;
   }
 
-  /*--- Identification of Turbomachinery markers and flag them---*/
-
-  for (iMarker_CfgFile = 0; iMarker_CfgFile < nMarker_CfgFile; iMarker_CfgFile++) {
-    unsigned short indexMarker=0;
-    Marker_CfgFile_Turbomachinery[iMarker_CfgFile] = NO;
-    Marker_CfgFile_TurbomachineryFlag[iMarker_CfgFile] = NO;
-    for (iMarker_Turbomachinery = 0; iMarker_Turbomachinery < nMarker_Turbomachinery; iMarker_Turbomachinery++){
-      if (Marker_CfgFile_TagBound[iMarker_CfgFile] == Marker_TurboBoundIn[iMarker_Turbomachinery]){
-        indexMarker=(iMarker_Turbomachinery+1);
-        Marker_CfgFile_Turbomachinery[iMarker_CfgFile] = indexMarker;
-        Marker_CfgFile_TurbomachineryFlag[iMarker_CfgFile] = INFLOW;
-      }
-      if (Marker_CfgFile_TagBound[iMarker_CfgFile] == Marker_TurboBoundOut[iMarker_Turbomachinery]){
-        indexMarker=(iMarker_Turbomachinery+1);
-        Marker_CfgFile_Turbomachinery[iMarker_CfgFile] = indexMarker;
-        Marker_CfgFile_TurbomachineryFlag[iMarker_CfgFile] = OUTFLOW;
-      }
-    }
-  }
-
-  /*--- Identification of MixingPlane interface markers ---*/
-
-  for (iMarker_CfgFile = 0; iMarker_CfgFile < nMarker_CfgFile; iMarker_CfgFile++) {
-    unsigned short indexMarker=0;
-    Marker_CfgFile_MixingPlaneInterface[iMarker_CfgFile] = NO;
-    for (iMarker_MixingPlaneInterface = 0; iMarker_MixingPlaneInterface < nMarker_MixingPlaneInterface; iMarker_MixingPlaneInterface++)
-      if (Marker_CfgFile_TagBound[iMarker_CfgFile] == Marker_MixingPlaneInterface[iMarker_MixingPlaneInterface])
-        indexMarker=(int)(iMarker_MixingPlaneInterface/2+1);
-    Marker_CfgFile_MixingPlaneInterface[iMarker_CfgFile] = indexMarker;
-  }
 
   for (iMarker_CfgFile = 0; iMarker_CfgFile < nMarker_CfgFile; iMarker_CfgFile++) {
     Marker_CfgFile_DV[iMarker_CfgFile] = NO;
@@ -5483,13 +5256,13 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
   iMarker_Fluid_InterfaceBound, iMarker_Inlet, iMarker_Riemann,
   iMarker_Deform_Mesh, iMarker_Deform_Mesh_Sym_Plane, iMarker_Fluid_Load,
   iMarker_Smoluchowski_Maxwell, 
-  iMarker_Giles, iMarker_Outlet, iMarker_Isothermal, iMarker_HeatFlux, iMarker_HeatTransfer,
+  iMarker_Outlet, iMarker_Isothermal, iMarker_HeatFlux, iMarker_HeatTransfer,
   iMarker_EngineInflow, iMarker_EngineExhaust, iMarker_Displacement, iMarker_Damper,
   iMarker_Load, iMarker_FlowLoad, iMarker_Internal, iMarker_Monitoring,
   iMarker_Designing, iMarker_GeoEval, iMarker_Plotting, iMarker_Analyze, iMarker_DV, iDV_Value,
   iMarker_ZoneInterface, iMarker_PyCustom, iMarker_Load_Dir, iMarker_Disp_Dir, iMarker_Load_Sine, iMarker_Clamped,
   iMarker_Moving, iMarker_Supersonic_Inlet, iMarker_Supersonic_Outlet, iMarker_ActDiskInlet,
-  iMarker_ActDiskOutlet, iMarker_MixingPlaneInterface,
+  iMarker_ActDiskOutlet,
   iMarker_SobolevBC;
 
   bool fea = ((Kind_Solver == MAIN_SOLVER::FEM_ELASTICITY) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM));
@@ -6717,24 +6490,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
     BoundaryTable.PrintFooter();
   }
 
-  if (nMarker_Giles != 0) {
-    BoundaryTable << "Giles boundary";
-    for (iMarker_Giles = 0; iMarker_Giles < nMarker_Giles; iMarker_Giles++) {
-      BoundaryTable << Marker_Giles[iMarker_Giles];
-      if (iMarker_Giles < nMarker_Giles-1)  BoundaryTable << " ";
-    }
-    BoundaryTable.PrintFooter();
-  }
-
-  if (nMarker_MixingPlaneInterface != 0) {
-    BoundaryTable << "MixingPlane boundary";
-    for (iMarker_MixingPlaneInterface = 0; iMarker_MixingPlaneInterface < nMarker_MixingPlaneInterface; iMarker_MixingPlaneInterface++) {
-      BoundaryTable << Marker_MixingPlaneInterface[iMarker_MixingPlaneInterface];
-      if (iMarker_MixingPlaneInterface < nMarker_MixingPlaneInterface-1)  BoundaryTable << " ";
-    }
-    BoundaryTable.PrintFooter();
-  }
-
   if (nMarker_EngineInflow != 0) {
     BoundaryTable << "Engine inflow boundary";
     for (iMarker_EngineInflow = 0; iMarker_EngineInflow < nMarker_EngineInflow; iMarker_EngineInflow++) {
@@ -7149,27 +6904,6 @@ unsigned short CConfig::GetMarker_CfgFile_ZoneInterface(string val_marker) const
   return Marker_CfgFile_ZoneInterface[iMarker_CfgFile];
 }
 
-unsigned short CConfig::GetMarker_CfgFile_Turbomachinery(string val_marker) const {
-  unsigned short iMarker_CfgFile;
-  for (iMarker_CfgFile = 0; iMarker_CfgFile < nMarker_CfgFile; iMarker_CfgFile++)
-    if (Marker_CfgFile_TagBound[iMarker_CfgFile] == val_marker) break;
-  return Marker_CfgFile_Turbomachinery[iMarker_CfgFile];
-}
-
-unsigned short CConfig::GetMarker_CfgFile_TurbomachineryFlag(string val_marker) const {
-  unsigned short iMarker_CfgFile;
-  for (iMarker_CfgFile = 0; iMarker_CfgFile < nMarker_CfgFile; iMarker_CfgFile++)
-    if (Marker_CfgFile_TagBound[iMarker_CfgFile] == val_marker) break;
-  return Marker_CfgFile_TurbomachineryFlag[iMarker_CfgFile];
-}
-
-unsigned short CConfig::GetMarker_CfgFile_MixingPlaneInterface(string val_marker) const {
-  unsigned short iMarker_CfgFile;
-  for (iMarker_CfgFile = 0; iMarker_CfgFile < nMarker_CfgFile; iMarker_CfgFile++)
-    if (Marker_CfgFile_TagBound[iMarker_CfgFile] == val_marker) break;
-  return Marker_CfgFile_MixingPlaneInterface[iMarker_CfgFile];
-}
-
 unsigned short CConfig::GetMarker_CfgFile_DV(string val_marker) const {
   unsigned short iMarker_CfgFile;
   for (iMarker_CfgFile = 0; iMarker_CfgFile < nMarker_CfgFile; iMarker_CfgFile++)
@@ -7335,15 +7069,6 @@ CConfig::~CConfig() {
   delete[] Marker_CfgFile_PerBound;
   delete[] Marker_All_PerBound;
 
-  delete[] Marker_CfgFile_Turbomachinery;
-  delete[] Marker_All_Turbomachinery;
-
-  delete[] Marker_CfgFile_TurbomachineryFlag;
-  delete[] Marker_All_TurbomachineryFlag;
-
-  delete[] Marker_CfgFile_MixingPlaneInterface;
-  delete[] Marker_All_MixingPlaneInterface;
-
   delete[] Marker_CfgFile_SobolevBC;
   delete[] Marker_All_SobolevBC;
 
@@ -7452,12 +7177,6 @@ CConfig::~CConfig() {
     delete [] Riemann_FlowDir;
   }
 
-  if (Giles_FlowDir != nullptr) {
-    for (iMarker = 0; iMarker < nMarker_Giles; iMarker++)
-      delete [] Giles_FlowDir[iMarker];
-    delete [] Giles_FlowDir;
-  }
-
   delete[] PlaneTag;
   delete[] CFL;
 
@@ -7469,20 +7188,9 @@ CConfig::~CConfig() {
   delete [] Kind_Data_Riemann;
   delete [] Riemann_Var1;
   delete [] Riemann_Var2;
-  delete [] Kind_Data_Giles;
-  delete [] Giles_Var1;
-  delete [] Giles_Var2;
-  delete [] RelaxFactorAverage;
-  delete [] RelaxFactorFourier;
-  delete [] nSpan_iZones;
 
-  delete [] Marker_TurboBoundIn;
-  delete [] Marker_TurboBoundOut;
   delete [] Marker_Riemann;
-  delete [] Marker_Giles;
 
-  delete [] nBlades;
-  delete [] FreeStreamTurboNormal;
 }
 
 string CConfig::GetFilename(string filename, string ext, int timeIter) const {
@@ -8220,63 +7928,9 @@ unsigned short CConfig::GetKind_Data_Riemann(string val_marker) const {
   return Kind_Data_Riemann[iMarker_Riemann];
 }
 
-su2double CConfig::GetGiles_Var1(string val_marker) const {
-  unsigned short iMarker_Giles;
-  for (iMarker_Giles = 0; iMarker_Giles < nMarker_Giles; iMarker_Giles++)
-    if (Marker_Giles[iMarker_Giles] == val_marker) break;
-  return Giles_Var1[iMarker_Giles];
-}
-
-void CConfig::SetGiles_Var1(su2double newVar1, string val_marker) {
-  unsigned short iMarker_Giles;
-  for (iMarker_Giles = 0; iMarker_Giles < nMarker_Giles; iMarker_Giles++)
-    if (Marker_Giles[iMarker_Giles] == val_marker) break;
-  Giles_Var1[iMarker_Giles] = newVar1;
-}
-
-su2double CConfig::GetGiles_Var2(string val_marker) const {
-  unsigned short iMarker_Giles;
-  for (iMarker_Giles = 0; iMarker_Giles < nMarker_Giles; iMarker_Giles++)
-    if (Marker_Giles[iMarker_Giles] == val_marker) break;
-  return Giles_Var2[iMarker_Giles];
-}
-
-su2double CConfig::GetGiles_RelaxFactorAverage(string val_marker) const {
-  unsigned short iMarker_Giles;
-  for (iMarker_Giles = 0; iMarker_Giles < nMarker_Giles; iMarker_Giles++)
-    if (Marker_Giles[iMarker_Giles] == val_marker) break;
-  return RelaxFactorAverage[iMarker_Giles];
-}
-
-su2double CConfig::GetGiles_RelaxFactorFourier(string val_marker) const {
-  unsigned short iMarker_Giles;
-  for (iMarker_Giles = 0; iMarker_Giles < nMarker_Giles; iMarker_Giles++)
-    if (Marker_Giles[iMarker_Giles] == val_marker) break;
-  return RelaxFactorFourier[iMarker_Giles];
-}
-
-const su2double* CConfig::GetGiles_FlowDir(string val_marker) const {
-  unsigned short iMarker_Giles;
-  for (iMarker_Giles = 0; iMarker_Giles < nMarker_Giles; iMarker_Giles++)
-    if (Marker_Giles[iMarker_Giles] == val_marker) break;
-  return Giles_FlowDir[iMarker_Giles];
-}
-
-unsigned short CConfig::GetKind_Data_Giles(string val_marker) const {
-  unsigned short iMarker_Giles;
-  for (iMarker_Giles = 0; iMarker_Giles < nMarker_Giles; iMarker_Giles++)
-    if (Marker_Giles[iMarker_Giles] == val_marker) break;
-  return Kind_Data_Giles[iMarker_Giles];
-}
-
 su2double CConfig::GetPressureOut_BC() const {
   unsigned short iMarker_BC;
   su2double pres_out = 0.0;
-  for (iMarker_BC = 0; iMarker_BC < nMarker_Giles; iMarker_BC++){
-    if (Kind_Data_Giles[iMarker_BC] == STATIC_PRESSURE || Kind_Data_Giles[iMarker_BC] == STATIC_PRESSURE_1D || Kind_Data_Giles[iMarker_BC] == RADIAL_EQUILIBRIUM ){
-      pres_out = Giles_Var1[iMarker_BC];
-    }
-  }
   for (iMarker_BC = 0; iMarker_BC < nMarker_Riemann; iMarker_BC++){
     if (Kind_Data_Riemann[iMarker_BC] == STATIC_PRESSURE || Kind_Data_Riemann[iMarker_BC] == RADIAL_EQUILIBRIUM){
       pres_out = Riemann_Var1[iMarker_BC];
@@ -8287,11 +7941,6 @@ su2double CConfig::GetPressureOut_BC() const {
 
 void CConfig::SetPressureOut_BC(su2double val_press) {
   unsigned short iMarker_BC;
-  for (iMarker_BC = 0; iMarker_BC < nMarker_Giles; iMarker_BC++){
-    if (Kind_Data_Giles[iMarker_BC] == STATIC_PRESSURE || Kind_Data_Giles[iMarker_BC] == STATIC_PRESSURE_1D || Kind_Data_Giles[iMarker_BC] == RADIAL_EQUILIBRIUM ){
-      Giles_Var1[iMarker_BC] = val_press*Pressure_Ref;
-    }
-  }
   for (iMarker_BC = 0; iMarker_BC < nMarker_Riemann; iMarker_BC++){
     if (Kind_Data_Riemann[iMarker_BC] == STATIC_PRESSURE || Kind_Data_Riemann[iMarker_BC] == RADIAL_EQUILIBRIUM){
       Riemann_Var1[iMarker_BC] = val_press*Pressure_Ref;
@@ -8302,11 +7951,6 @@ void CConfig::SetPressureOut_BC(su2double val_press) {
 su2double CConfig::GetTotalPressureIn_BC() const {
   unsigned short iMarker_BC;
   su2double tot_pres_in = 0.0;
-  for (iMarker_BC = 0; iMarker_BC < nMarker_Giles; iMarker_BC++){
-    if (Kind_Data_Giles[iMarker_BC] == TOTAL_CONDITIONS_PT || Kind_Data_Giles[iMarker_BC] == TOTAL_CONDITIONS_PT_1D){
-      tot_pres_in = Giles_Var1[iMarker_BC];
-    }
-  }
   for (iMarker_BC = 0; iMarker_BC < nMarker_Riemann; iMarker_BC++){
     if (Kind_Data_Riemann[iMarker_BC] == TOTAL_CONDITIONS_PT ){
       tot_pres_in = Riemann_Var1[iMarker_BC];
@@ -8321,11 +7965,6 @@ su2double CConfig::GetTotalPressureIn_BC() const {
 su2double CConfig::GetTotalTemperatureIn_BC() const {
   unsigned short iMarker_BC;
   su2double tot_temp_in = 0.0;
-  for (iMarker_BC = 0; iMarker_BC < nMarker_Giles; iMarker_BC++){
-    if (Kind_Data_Giles[iMarker_BC] == TOTAL_CONDITIONS_PT || Kind_Data_Giles[iMarker_BC] == TOTAL_CONDITIONS_PT_1D){
-      tot_temp_in = Giles_Var2[iMarker_BC];
-    }
-  }
   for (iMarker_BC = 0; iMarker_BC < nMarker_Riemann; iMarker_BC++){
     if (Kind_Data_Riemann[iMarker_BC] == TOTAL_CONDITIONS_PT ){
       tot_temp_in = Riemann_Var2[iMarker_BC];
@@ -8340,11 +7979,6 @@ su2double CConfig::GetTotalTemperatureIn_BC() const {
 
 void CConfig::SetTotalTemperatureIn_BC(su2double val_temp) {
   unsigned short iMarker_BC;
-  for (iMarker_BC = 0; iMarker_BC < nMarker_Giles; iMarker_BC++){
-    if (Kind_Data_Giles[iMarker_BC] == TOTAL_CONDITIONS_PT || Kind_Data_Giles[iMarker_BC] == TOTAL_CONDITIONS_PT_1D){
-      Giles_Var2[iMarker_BC] = val_temp*Temperature_Ref;
-    }
-  }
   for (iMarker_BC = 0; iMarker_BC < nMarker_Riemann; iMarker_BC++){
     if (Kind_Data_Riemann[iMarker_BC] == TOTAL_CONDITIONS_PT ){
       Riemann_Var2[iMarker_BC] = val_temp*Temperature_Ref;
@@ -8359,11 +7993,6 @@ void CConfig::SetTotalTemperatureIn_BC(su2double val_temp) {
 su2double CConfig::GetFlowAngleIn_BC() const {
   unsigned short iMarker_BC;
   su2double alpha_in = 0.0;
-  for (iMarker_BC = 0; iMarker_BC < nMarker_Giles; iMarker_BC++){
-    if (Kind_Data_Giles[iMarker_BC] == TOTAL_CONDITIONS_PT || Kind_Data_Giles[iMarker_BC] == TOTAL_CONDITIONS_PT_1D){
-      alpha_in = atan(Giles_FlowDir[iMarker_BC][1]/Giles_FlowDir[iMarker_BC][0]);
-    }
-  }
   for (iMarker_BC = 0; iMarker_BC < nMarker_Riemann; iMarker_BC++){
     if (Kind_Data_Riemann[iMarker_BC] == TOTAL_CONDITIONS_PT ){
       alpha_in = atan(Riemann_FlowDir[iMarker_BC][1]/Riemann_FlowDir[iMarker_BC][0]);
@@ -9310,14 +8939,6 @@ void CConfig::GEMMProfilingCSV(void) {
   }
 
 #endif
-
-}
-
-void CConfig::SetFreeStreamTurboNormal(const su2double* turboNormal){
-
-  FreeStreamTurboNormal[0] = turboNormal[0];
-  FreeStreamTurboNormal[1] = turboNormal[1];
-  FreeStreamTurboNormal[2] = 0.0;
 
 }
 

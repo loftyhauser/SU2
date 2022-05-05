@@ -488,55 +488,6 @@ def main():
     test_list.append(edge_PPR)
 
     ######################################
-    ### Turbomachinery                 ###
-    ######################################
-
-    # Jones APU Turbocharger
-    Jones_tc           = TestCase('jones_turbocharger')
-    Jones_tc.cfg_dir   = "turbomachinery/APU_turbocharger"
-    Jones_tc.cfg_file  = "Jones.cfg"
-    Jones_tc.test_iter = 5
-    Jones_tc.test_vals = [-5.279930, 0.379651, 72.212100, 1.277439]
-    Jones_tc.new_output = False
-    test_list.append(Jones_tc)
-
-	# Jones APU Turbocharger restart
-    Jones_tc_rst           = TestCase('jones_turbocharger_restart')
-    Jones_tc_rst.cfg_dir   = "turbomachinery/APU_turbocharger"
-    Jones_tc_rst.cfg_file  = "Jones_rst.cfg"
-    Jones_tc_rst.test_iter = 5
-    Jones_tc_rst.test_vals = [-4.625251, -1.568824, 33.995140, 10.181940]
-    Jones_tc_rst.new_output = False
-    test_list.append(Jones_tc_rst)
-
-    # 2D axial stage
-    axial_stage2D           = TestCase('axial_stage2D')
-    axial_stage2D.cfg_dir   = "turbomachinery/axial_stage_2D"
-    axial_stage2D.cfg_file  = "Axial_stage2D.cfg"
-    axial_stage2D.test_iter = 20
-    axial_stage2D.test_vals = [-1.933139, 5.380376, 73.357910, 0.925874]
-    axial_stage2D.new_output = False
-    test_list.append(axial_stage2D)
-
-    # 2D transonic stator
-    transonic_stator           = TestCase('transonic_stator')
-    transonic_stator.cfg_dir   = "turbomachinery/transonic_stator_2D"
-    transonic_stator.cfg_file  = "transonic_stator.cfg"
-    transonic_stator.test_iter = 20
-    transonic_stator.test_vals = [-0.565608, 5.833408, 96.476150, 0.062517]
-    transonic_stator.new_output = False
-    test_list.append(transonic_stator)
-
-    # 2D transonic stator restart
-    transonic_stator_rst           = TestCase('transonic_stator_restart')
-    transonic_stator_rst.cfg_dir   = "turbomachinery/transonic_stator_2D"
-    transonic_stator_rst.cfg_file  = "transonic_stator_rst.cfg"
-    transonic_stator_rst.test_iter = 20
-    transonic_stator_rst.test_vals = [-6.619122, -0.615716, 5.002986, 0.002951]
-    transonic_stator_rst.new_output = False
-    test_list.append(transonic_stator_rst)
-
-    ######################################
     ### Sliding Mesh                   ###
     ######################################
 

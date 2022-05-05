@@ -1193,7 +1193,6 @@ public:
   }
 };
 
-
 template <class Tenum>
 class COptionRiemann : public COptionBase {
 
@@ -1296,130 +1295,6 @@ public:
     this->marker = nullptr;
     this->var1 = nullptr;
     this->var2 = nullptr;
-    this->flowdir = nullptr;
-    this->size = 0; // There is no default value for list
-  }
-};
-
-template <class Tenum>
-class COptionGiles : public COptionBase{
-
-  map<string, Tenum> m;
-  unsigned short & size;
-  string * & marker;
-  unsigned short* & field; // Reference to the fieldname
-  string name; // identifier for the option
-  su2double * & var1;
-  su2double * & var2;
-  su2double ** & flowdir;
-  su2double * & relfac1;
-  su2double * & relfac2;
-
-public:
-  COptionGiles(string option_field_name, unsigned short & nMarker_Giles, string* & Marker_Giles, unsigned short* & option_field, const map<string, Tenum> m, su2double* & var1, su2double* & var2, su2double** & FlowDir, su2double* & relfac1, su2double* & relfac2) : size(nMarker_Giles),
-               marker(Marker_Giles), field(option_field), var1(var1), var2(var2), flowdir(FlowDir), relfac1(relfac1), relfac2(relfac2) {
-    this->name = option_field_name;
-    this->m = m;
-  }
-  ~COptionGiles() override {};
-
-  string SetValue(const vector<string>& option_value) override {
-    COptionBase::SetValue(option_value);
-    unsigned long totalVals = option_value.size();
-    if ((totalVals == 1) && (option_value[0].compare("NONE") == 0)) {
-      this->size = 0;
-      this->marker = nullptr;
-      this->field = nullptr;
-      this->var1 = nullptr;
-      this->var2 = nullptr;
-      this->flowdir = nullptr;
-      this->relfac1 = nullptr;
-      this->relfac2 = nullptr;
-      return "";
-    }
-
-    if (totalVals % 9 != 0) {
-      string newstring;
-      newstring.append(this->name);
-      newstring.append(": must have a number of entries divisible by 9");
-      this->size = 0;
-      this->marker = nullptr;
-      this->var1 = nullptr;
-      this->var2 = nullptr;
-      this->flowdir = nullptr;
-      this->field = nullptr;
-      this->relfac1 = nullptr;
-      this->relfac2 = nullptr;
-      return newstring;
-    }
-
-    unsigned long nVals = totalVals / 9;
-    this->size = nVals;
-    this->marker = new string[nVals];
-    this->var1 = new su2double[nVals];
-    this->var2 = new su2double[nVals];
-    this->flowdir = new su2double*[nVals];
-    this->field = new unsigned short[nVals];
-    this->relfac1 = new su2double[nVals];
-    this->relfac2 = new su2double[nVals];
-
-    for (unsigned int i = 0; i < nVals; i++) {
-      this->flowdir[i] = new su2double[3];
-    }
-
-    for (unsigned int i = 0; i < nVals; i++) {
-      this->marker[i].assign(option_value[9*i]);
-        // Check to see if the enum value is in the map
-    if (this->m.find(option_value[9*i + 1]) == m.end()) {
-      string str;
-      str.append(this->name);
-      str.append(": invalid option value ");
-      str.append(option_value[0]);
-      str.append(". Check current SU2 options in config_template.cfg.");
-      return str;
-    }
-      Tenum val = this->m[option_value[9*i + 1]];
-      this->field[i] = val;
-
-      istringstream ss_1st(option_value[9*i + 2]);
-      if (!(ss_1st >> this->var1[i])) {
-        return badValue("Giles BC", this->name);
-      }
-      istringstream ss_2nd(option_value[9*i + 3]);
-      if (!(ss_2nd >> this->var2[i])) {
-        return badValue("Giles BC", this->name);
-      }
-      istringstream ss_3rd(option_value[9*i + 4]);
-      if (!(ss_3rd >> this->flowdir[i][0])) {
-        return badValue("Giles BC", this->name);
-      }
-      istringstream ss_4th(option_value[9*i + 5]);
-      if (!(ss_4th >> this->flowdir[i][1])) {
-        return badValue("Giles BC", this->name);
-      }
-      istringstream ss_5th(option_value[9*i + 6]);
-      if (!(ss_5th >> this->flowdir[i][2])) {
-        return badValue("Giles BC", this->name);
-      }
-      istringstream ss_6th(option_value[9*i + 7]);
-      if (!(ss_6th >> this->relfac1[i])) {
-        return badValue("Giles BC", this->name);
-      }
-      istringstream ss_7th(option_value[9*i + 8]);
-      if (!(ss_7th >> this->relfac2[i])) {
-        return badValue("Giles BC", this->name);
-      }
-    }
-
-    return "";
-  }
-
-  void SetDefault() override {
-    this->marker = nullptr;
-    this->var1 = nullptr;
-    this->var2 = nullptr;
-    this->relfac1 = nullptr;
-    this->relfac2 = nullptr;
     this->flowdir = nullptr;
     this->size = 0; // There is no default value for list
   }
@@ -1598,61 +1473,6 @@ public:
     rot_center = nullptr;
     rot_angles = nullptr;
     translation = nullptr;
-  }
-};
-
-class COptionTurboPerformance : public COptionBase {
-  string name; // identifier for the option
-  unsigned short & size;
-  string * & marker_turboIn;
-  string * & marker_turboOut;
-
-public:
-  COptionTurboPerformance(const string option_field_name, unsigned short & nMarker_TurboPerf,
-                          string* & Marker_TurboBoundIn, string* & Marker_TurboBoundOut) : size(nMarker_TurboPerf), marker_turboIn(Marker_TurboBoundIn), marker_turboOut(Marker_TurboBoundOut){
-    this->name = option_field_name;
-  }
-
-  ~COptionTurboPerformance() override {};
-  string SetValue(const vector<string>& option_value) override {
-    COptionBase::SetValue(option_value);
-    const int mod_num = 2;
-
-    unsigned long totalVals = option_value.size();
-    if ((totalVals == 1) && (option_value[0].compare("NONE") == 0)) {
-      this->size = 0;
-      this->marker_turboIn= nullptr;
-      this->marker_turboOut = nullptr;
-      return "";
-    }
-
-    if (totalVals % mod_num != 0) {
-      string newstring;
-      newstring.append(this->name);
-      newstring.append(": must have a number of entries divisible by 2");
-      this->size = 0;
-      this->marker_turboIn= nullptr;
-      this->marker_turboOut = nullptr;;
-      return newstring;
-    }
-
-    unsigned long nVals = totalVals / mod_num;
-    this->size = nVals;
-    this->marker_turboIn = new string[nVals];
-    this->marker_turboOut = new string[nVals];
-    for (unsigned long i = 0; i < nVals; i++) {
-      this->marker_turboIn[i].assign(option_value[mod_num*i]);
-      this->marker_turboOut[i].assign(option_value[mod_num*i+1]);
-     }
-
-
-    return "";
-  }
-
-  void SetDefault() override {
-    this->size = 0;
-    this->marker_turboIn= nullptr;
-    this->marker_turboOut = nullptr;
   }
 };
 

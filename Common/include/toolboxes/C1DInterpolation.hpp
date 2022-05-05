@@ -162,30 +162,3 @@ public:
   su2double EvaluateSpline(su2double Point_Interp) const override;
 };
 
-/*!
- * \brief to correct for interpolation type.
- * \param[in] Inlet_Interpolated - the interpolated data after spline evaluation.
- * \param[in] Theta - the angle of the vertex (in xy plane).
- * \param[in] nDim - the dimensions of the case.
- * \param[in] Coord - the coordinates of the vertex.
- * \param[in] nVar_Turb - the number of turbulence variables as defined by turbulence model
- * \param[in] ENUM_INLET_INTERPOLATIONTYPE - enum of the interpolation type to be done
- * \returns the corrected Inlet Interpolated Data.
- */
-std::vector<su2double> CorrectedInletValues(const std::vector<su2double> &Inlet_Interpolated,
-                                       su2double Theta ,
-                                       unsigned short nDim,
-                                       const su2double *Coord,
-                                       unsigned short nVar_Turb,
-                                       INLET_INTERP_TYPE Interpolation_Type);
-
-/*!
- * \brief to print the Inlet Interpolated Data
- * \param[in] Inlet_Interpolated_Interpolated - the final std::vector for the interpolated data
- * \param[in] Marker - name of the inlet marker
- * \param[in] nVertex - total number of vertexes.
- * \param[in] nDim - the dimensions of the problem.
- * \param[in] nColumns - the number of columns in the final interpolated data
- */
-void PrintInletInterpolatedData(const std::vector<su2double>& Inlet_Data_Interpolated, std::string Marker,
-                                unsigned long nVertex, unsigned short nDim, unsigned short nColumns);

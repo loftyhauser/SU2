@@ -941,61 +941,6 @@ void CNumerics::GetLMatrix(su2double val_soundspeed, su2double val_density, su2d
 
 }
 
-void CNumerics::ComputeResJacobianGiles(CFluidModel *FluidModel, su2double pressure, su2double density, const su2double *turboVel, su2double alphaInBC, su2double gammaInBC,  su2double **R_c, su2double **R_c_inv){
-  su2double rhoc, cc;
-  su2double dhdrho_P, dhdP_rho, dsdrho_P,dsdP_rho;
-
-  FluidModel->ComputeDerivativeNRBC_Prho(pressure, density);
-  cc   = FluidModel->GetSoundSpeed2();
-  rhoc = density*sqrt(cc);
-
-
-  dhdrho_P  = FluidModel->Getdhdrho_P();
-  dhdP_rho  = FluidModel->GetdhdP_rho();
-  dsdrho_P  = FluidModel->Getdsdrho_P();
-  dsdP_rho  = FluidModel->GetdsdP_rho();
-
-  if (nDim == 2) {
-
-    R_c[0][0] = -1/cc*dsdrho_P;                   //a11
-    R_c[0][1] = 0.0;                              //a12
-    R_c[0][2] = 0.5/cc*dsdrho_P + 0.5*dsdP_rho;   //a13
-
-    R_c[1][0] = 0.0;                              //a21
-    R_c[1][1] = 1/rhoc;                           //a22
-    R_c[1][2] = -0.5/rhoc*tan(alphaInBC);         //a23
-
-    R_c[2][0] = -1/cc*dhdrho_P;                   //a31
-    R_c[2][1] = turboVel[1]/rhoc;                 //a32
-    R_c[2][2] = 0.5/cc*dhdrho_P + 0.5*turboVel[0]/rhoc + 0.5*dhdP_rho;  //a33
-
-    InvMatrix3D(R_c, R_c_inv);
-  }
-  else {
-    R_c[0][0] = -1/cc*dsdrho_P;                     //a11
-    R_c[0][1] = 0.0;                                //a12
-    R_c[0][2] = 0.0;                                //a13
-    R_c[0][3] = 0.5/cc*dsdrho_P + 0.5*dsdP_rho;     //a14
-
-    R_c[1][0] = 0.0;                                //a21
-    R_c[1][1] = 1/rhoc;                             //a22
-    R_c[1][2] = 0.0;                                //a23
-    R_c[1][3] = -0.5/rhoc*tan(alphaInBC);           //a24
-
-    R_c[2][0] = 0.0;                                //a31
-    R_c[2][1] = 0.0;                                //a32
-    R_c[2][2] = 1/rhoc;                             //a33
-    R_c[2][3] = -0.5/rhoc*tan(gammaInBC);           //a34
-
-    R_c[3][0] = -1/cc*dhdrho_P;                                          //a41
-    R_c[3][1] = turboVel[1]/rhoc;                                        //a42
-    R_c[3][2] = turboVel[2]/rhoc;                                        //a43
-    R_c[3][3] = 0.5/cc*dhdrho_P + 0.5*turboVel[0]/rhoc + 0.5*dhdP_rho;   //a44
-
-    InvMatrix4D(R_c, R_c_inv);
-  }
-}
-
 void CNumerics::InvMatrix3D(su2double **matrix, su2double **invMatrix){
 
   su2double invDet;

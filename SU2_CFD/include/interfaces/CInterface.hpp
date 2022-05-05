@@ -64,11 +64,6 @@ protected:
   su2double *Target_Variable = nullptr;
   bool valAggregated = false;
 
-  /*--- Mixing Plane interface variable ---*/
-  su2double *SpanValueCoeffTarget = nullptr;
-  unsigned short *SpanLevelDonor = nullptr;
-  unsigned short nSpanMaxAllZones = 0;
-
   unsigned short nVar = 0;
   static constexpr size_t MAXNDIM = 3;  /*!< \brief Max number of space dimensions, used in some static arrays. */
 
@@ -167,64 +162,6 @@ protected:
   inline virtual void SetAverageValues(CSolver *donor_solution, CSolver *target_solution,
                                        unsigned short donorZone) { }
 
-  /*!
-   * \brief A virtual member.
-   * \param[in] donor_geometry - Geometry of the target mesh.
-   * \param[in] target_geometry - Geometry of the target mesh.
-   * \param[in] donor_zone - Index of the donorZone.
-   */
-  inline virtual void SetAverageTurboGeoValues(CGeometry *donor_geometry, CGeometry *target_geometry,
-                                               unsigned short donorZone) { }
-
 public:
-  /*!
-   * \brief A virtual member.
-   * \param[in] donor_config - Definition of the problem at the donor mesh.
-   * \param[in] target_config - Definition of the problem at the target mesh.
-   */
-  inline virtual void SetSpanWiseLevels(const CConfig *donor_config, const CConfig *target_config) { }
-
-  /*!
-   * \brief Transfer pre-processing for the mixing plane inteface.
-   * \param[in] donor_geometry - Geometry of the donor mesh.
-   * \param[in] target_geometry - Geometry of the target mesh.
-   * \param[in] donor_config - Definition of the problem at the donor mesh.
-   * \param[in] target_config - Definition of the problem at the target mesh.
-   */
-  void PreprocessAverage(CGeometry *donor_geometry, CGeometry *target_geometry,
-                         const CConfig *donor_config, const CConfig *target_config, unsigned short iMarkerInt);
-
-  /*!
-   * \brief Interpolate data and scatter it into different processors, for matching meshes.
-   * \param[in] donor_solution - Solution from the donor mesh.
-   * \param[in] target_solution - Solution from the target mesh.
-   * \param[in] donor_geometry - Geometry of the donor mesh.
-   * \param[in] target_geometry - Geometry of the target mesh.
-   * \param[in] donor_config - Definition of the problem at the donor mesh.
-   * \param[in] target_config - Definition of the problem at the target mesh.
-   */
-  void AllgatherAverage(CSolver *donor_solution, CSolver *target_solution,
-                        CGeometry *donor_geometry, CGeometry *target_geometry,
-                        const CConfig *donor_config, const CConfig *target_config, unsigned short iMarkerInt);
-
-  /*!
-   * \brief Interpolate data and scatter it into different processors, for matching meshes.
-   * \param[in] donor_solution - Solution from the donor mesh.
-   * \param[in] target_solution - Solution from the target mesh.
-   * \param[in] donor_geometry - Geometry of the donor mesh.
-   * \param[in] target_geometry - Geometry of the target mesh.
-   * \param[in] donor_config - Definition of the problem at the donor mesh.
-   * \param[in] target_config - Definition of the problem at the target mesh.
-   */
-  void GatherAverageValues(CSolver *donor_solution, CSolver *target_solution, unsigned short donorZone);
-
-  /*!
-   * \brief Exchange Average geometrical value beteween zones .
-   * \param[in] donor_geometry - Geometry of the donor mesh.
-   * \param[in] target_geometry - Geometry of the target mesh.
-   * \param[in] donor_config - Definition of the problem at the donor mesh.
-   * \param[in] target_config - Definition of the problem at the target mesh.
-   */
-  void GatherAverageTurboGeoValues(CGeometry *donor_geometry, CGeometry *target_geometry, unsigned short donorZone);
 
 };

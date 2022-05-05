@@ -176,7 +176,7 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
 
   /*--- Register farfield values as input ---*/
 
-  if((config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS && !config->GetBoolTurbomachinery())) {
+  if((config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS )) {
 
     su2double Velocity_Ref = config->GetVelocity_Ref();
     Alpha                  = config->GetAoA()*PI_NUMBER/180.0;
@@ -216,25 +216,10 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
 
   }
 
-  if ((config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS) && config->GetBoolTurbomachinery()){
-
-    BPressure = config->GetPressureOut_BC();
-    Temperature = config->GetTotalTemperatureIn_BC();
-
-    if (!reset){
-      AD::RegisterInput(BPressure);
-      AD::RegisterInput(Temperature);
-    }
-
-    config->SetPressureOut_BC(BPressure);
-    config->SetTotalTemperatureIn_BC(Temperature);
-  }
-
   /*--- Register incompressible initialization values as input ---*/
 
   if ((config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE) &&
-      ((KindDirect_Solver == RUNTIME_FLOW_SYS &&
-        (!config->GetBoolTurbomachinery())))) {
+      ((KindDirect_Solver == RUNTIME_FLOW_SYS))) {
 
     /*--- Access the velocity (or pressure) and temperature at the
      inlet BC and the back pressure at the outlet. Note that we are
@@ -361,7 +346,7 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
 
   /*--- Extract the adjoint values of the farfield values ---*/
 
-  if ((config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS) && !config->GetBoolTurbomachinery()) {
+  if ((config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS)) {
     su2double Local_Sens_Press, Local_Sens_Temp, Local_Sens_AoA, Local_Sens_Mach;
 
     Local_Sens_Mach  = SU2_TYPE::GetDerivative(Mach);
@@ -375,19 +360,8 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
     SU2_MPI::Allreduce(&Local_Sens_Press, &Total_Sens_Press, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
   }
 
-  if ((config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS) && config->GetBoolTurbomachinery()){
-    su2double Local_Sens_BPress, Local_Sens_Temperature;
-
-    Local_Sens_BPress = SU2_TYPE::GetDerivative(BPressure);
-    Local_Sens_Temperature = SU2_TYPE::GetDerivative(Temperature);
-
-    SU2_MPI::Allreduce(&Local_Sens_BPress,   &Total_Sens_BPress,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-    SU2_MPI::Allreduce(&Local_Sens_Temperature,   &Total_Sens_Temp,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-  }
-
   if ((config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE) &&
-      (KindDirect_Solver == RUNTIME_FLOW_SYS &&
-       (!config->GetBoolTurbomachinery()))) {
+      (KindDirect_Solver == RUNTIME_FLOW_SYS )) {
 
     su2double Local_Sens_ModVel, Local_Sens_BPress, Local_Sens_Temp;
 

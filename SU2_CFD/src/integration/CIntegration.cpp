@@ -84,13 +84,6 @@ void CIntegration::Space_Integration(CGeometry *geometry,
 
   solver_container[MainSolver]->BC_Fluid_Interface(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config);
 
-  /*--- Compute Fourier Transformations for markers where NRBC_BOUNDARY is applied---*/
-
-  if (config->GetBoolGiles() && config->GetSpatialFourier()){
-    solver_container[MainSolver]->PreprocessBC_Giles(geometry, config, conv_bound_numerics, INFLOW);
-
-    solver_container[MainSolver]->PreprocessBC_Giles(geometry, config, conv_bound_numerics, OUTFLOW);
-  }
 
   /*--- Weak boundary conditions ---*/
 
@@ -124,16 +117,8 @@ void CIntegration::Space_Integration(CGeometry *geometry,
       case SUPERSONIC_OUTLET:
         solver_container[MainSolver]->BC_Supersonic_Outlet(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);
         break;
-      case GILES_BOUNDARY:
-        solver_container[MainSolver]->BC_Giles(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);
-        break;
       case RIEMANN_BOUNDARY:
-        if (config->GetBoolTurbomachinery()){
-          solver_container[MainSolver]->BC_TurboRiemann(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);
-        }
-        else{
           solver_container[MainSolver]->BC_Riemann(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);
-        }
         break;
       case FAR_FIELD:
         solver_container[MainSolver]->BC_Far_Field(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);

@@ -54,8 +54,6 @@ protected:
   COutput *direct_output;
   CNumerics ***numerics;                        /*!< \brief Container vector with all the numerics. */
 
-  COutputLegacy* output_legacy;
-
 public:
 
   /*!

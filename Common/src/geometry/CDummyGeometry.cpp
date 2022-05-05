@@ -40,6 +40,4 @@ CDummyGeometry::CDummyGeometry(CConfig *config) : CGeometry() {
   Tag_to_Marker = new string[config->GetnMarker_All()];
 
   nDim = CConfig::GetnDim(config->GetMesh_FileName(), config->GetMesh_FileFormat());
-
-  config->SetnSpanWiseSections(0);
 }

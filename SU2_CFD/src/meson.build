@@ -24,9 +24,7 @@ su2_cfd_src += files(['output/COutputFactory.cpp',
                       'output/CFlowIncOutput.cpp',
                       'output/CHeatOutput.cpp',
                       'output/CMeshOutput.cpp',
-                      'output/output_physics.cpp',
                       'output/COutput.cpp',
-                      'output/output_structure_legacy.cpp',
                       'output/filewriter/CParallelDataSorter.cpp',
                       'output/filewriter/CFVMDataSorter.cpp',
                       'output/filewriter/CFEMDataSorter.cpp',
@@ -127,7 +125,6 @@ su2_cfd_src += files(['../include/numerics_simd/CNumericsSIMD.cpp'])
 
 su2_cfd_src += files(['interfaces/CInterface.cpp',
                       'interfaces/cfd/CConservativeVarsInterface.cpp',
-                      'interfaces/cfd/CMixingPlaneInterface.cpp',
                       'interfaces/cfd/CSlidingInterface.cpp',
                       'interfaces/cht/CConjugateHeatInterface.cpp',
                       'interfaces/fsi/CDisplacementsInterface.cpp',
@@ -158,8 +155,7 @@ su2_cfd_src += files(['iteration/CIteration.cpp',
                       'iteration/CFEAIteration.cpp',
                       'iteration/CFEMFluidIteration.cpp',
                       'iteration/CFluidIteration.cpp',
-                      'iteration/CHeatIteration.cpp',
-                      'iteration/CTurboIteration.cpp'])
+                      'iteration/CHeatIteration.cpp'])
 
 su2_cfd_src += files(['limiters/CLimiterDetails.cpp'])
 
