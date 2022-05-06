@@ -83,12 +83,6 @@ protected:
   Density_i,  /*!< \brief Density at point i. */
   Density_j;  /*!< \brief Density at point j. */
   su2double
-  DensityInc_i,  /*!< \brief Incompressible density at point i. */
-  DensityInc_j;  /*!< \brief Incompressible density at point j. */
-  su2double
-  BetaInc2_i,  /*!< \brief Beta incompressible at point i. */
-  BetaInc2_j;  /*!< \brief Beta incompressible at point j. */
-  su2double
   Lambda_i,  /*!< \brief Spectral radius at point i. */
   Lambda_j;  /*!< \brief Spectral radius at point j. */
   su2double
@@ -809,26 +803,6 @@ public:
   void SetPressure(su2double val_pressure_i, su2double val_pressure_j) {
     Pressure_i = val_pressure_i;
     Pressure_j = val_pressure_j;
-  }
-
-  /*!
-   * \brief Set the value of the density for the incompressible solver.
-   * \param[in] val_densityinc_i - Value of the pressure at point i.
-   * \param[in] val_densityinc_j - Value of the pressure at point j.
-   */
-  void SetDensity(su2double val_densityinc_i, su2double val_densityinc_j) {
-    DensityInc_i = val_densityinc_i;
-    DensityInc_j = val_densityinc_j;
-  }
-
-  /*!
-   * \brief Set the value of the beta for incompressible flows.
-   * \param[in] val_betainc2_i - Value of beta for incompressible flows at point i.
-   * \param[in] val_betainc2_j - Value of beta for incompressible flows at point j.
-   */
-  inline void SetBetaInc2(su2double val_betainc2_i, su2double val_betainc2_j) {
-    BetaInc2_i = val_betainc2_i;
-    BetaInc2_j = val_betainc2_j;
   }
 
   /*!

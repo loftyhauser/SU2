@@ -368,128 +368,6 @@ def main():
     turb_naca0012_sst_restart_mg.tol       = 0.000001
     test_list.append(turb_naca0012_sst_restart_mg)
 
-    #############################
-    ### Incompressible Euler  ###
-    #############################
-
-    # NACA0012 Hydrofoil
-    inc_euler_naca0012           = TestCase('inc_euler_naca0012')
-    inc_euler_naca0012.cfg_dir   = "incomp_euler/naca0012"
-    inc_euler_naca0012.cfg_file  = "incomp_NACA0012.cfg"
-    inc_euler_naca0012.test_iter = 20
-    inc_euler_naca0012.test_vals = [-4.801273, -3.773079, 0.495236, 0.007346]
-    inc_euler_naca0012.su2_exec  = "parallel_computation.py -f"
-    inc_euler_naca0012.timeout   = 1600
-    inc_euler_naca0012.tol       = 0.00001
-    test_list.append(inc_euler_naca0012)
-
-    # C-D nozzle with pressure inlet and mass flow outlet
-    inc_nozzle           = TestCase('inc_nozzle')
-    inc_nozzle.cfg_dir   = "incomp_euler/nozzle"
-    inc_nozzle.cfg_file  = "inv_nozzle.cfg"
-    inc_nozzle.test_iter = 20
-    inc_nozzle.test_vals = [-5.982321, -4.953536, 0.000454, 0.121390]
-    inc_nozzle.su2_exec  = "parallel_computation.py -f"
-    inc_nozzle.timeout   = 1600
-    inc_nozzle.tol       = 0.00001
-    test_list.append(inc_nozzle)
-
-    #############################
-    ### Incompressible N-S    ###
-    #############################
-
-    # Laminar cylinder
-    inc_lam_cylinder          = TestCase('inc_lam_cylinder')
-    inc_lam_cylinder.cfg_dir   = "incomp_navierstokes/cylinder"
-    inc_lam_cylinder.cfg_file  = "incomp_cylinder.cfg"
-    inc_lam_cylinder.test_iter = 10
-    inc_lam_cylinder.test_vals = [-4.004072, -3.194881, -0.076553, 7.780048]
-    inc_lam_cylinder.su2_exec  = "parallel_computation.py -f"
-    inc_lam_cylinder.timeout   = 1600
-    inc_lam_cylinder.tol       = 0.00001
-    test_list.append(inc_lam_cylinder)
-
-    # Buoyancy-driven cavity
-    inc_buoyancy          = TestCase('inc_buoyancy')
-    inc_buoyancy.cfg_dir   = "incomp_navierstokes/buoyancy_cavity"
-    inc_buoyancy.cfg_file  = "lam_buoyancy_cavity.cfg"
-    inc_buoyancy.test_iter = 20
-    inc_buoyancy.test_vals = [-4.435827, 0.508037, 0.000000, 0.000000]
-    inc_buoyancy.su2_exec  = "parallel_computation.py -f"
-    inc_buoyancy.timeout   = 1600
-    inc_buoyancy.tol       = 0.00001
-    test_list.append(inc_buoyancy)
-
-    # Laminar heated cylinder with polynomial fluid model
-    inc_poly_cylinder          = TestCase('inc_poly_cylinder')
-    inc_poly_cylinder.cfg_dir   = "incomp_navierstokes/cylinder"
-    inc_poly_cylinder.cfg_file  = "poly_cylinder.cfg"
-    inc_poly_cylinder.test_iter = 20
-    inc_poly_cylinder.test_vals = [-7.791831, -2.062292, 0.013040, 1.913997]
-    inc_poly_cylinder.su2_exec  = "parallel_computation.py -f"
-    inc_poly_cylinder.timeout   = 1600
-    inc_poly_cylinder.tol       = 0.00001
-    test_list.append(inc_poly_cylinder)
-
-    # X-coarse laminar bend as a mixed element CGNS test
-    inc_lam_bend          = TestCase('inc_lam_bend')
-    inc_lam_bend.cfg_dir   = "incomp_navierstokes/bend"
-    inc_lam_bend.cfg_file  = "lam_bend.cfg"
-    inc_lam_bend.test_iter = 10
-    inc_lam_bend.test_vals = [-3.446599, -3.089644, -0.022793, -0.194320]
-    inc_lam_bend.su2_exec  = "mpirun -n 2 SU2_CFD"
-    inc_lam_bend.timeout   = 1600
-    inc_lam_bend.tol       = 0.00001
-    test_list.append(inc_lam_bend)
-
-    # 3D laminar channnel with 1 cell in flow direction, streamwise periodic
-    sp_pipeSlice_3d_dp_hf_tp           = TestCase('sp_pipeSlice_3d_dp_hf_tp')
-    sp_pipeSlice_3d_dp_hf_tp.cfg_dir   = "incomp_navierstokes/streamwise_periodic/pipeSlice_3d"
-    sp_pipeSlice_3d_dp_hf_tp.cfg_file  = "sp_pipeSlice_3d_dp_hf_tp.cfg"
-    sp_pipeSlice_3d_dp_hf_tp.test_iter = 10
-    sp_pipeSlice_3d_dp_hf_tp.test_vals = [-11.119796, -11.234737, -8.694310, -0.000023] #last 4 lines
-    sp_pipeSlice_3d_dp_hf_tp.su2_exec  = "mpirun -n 2 SU2_CFD"
-    sp_pipeSlice_3d_dp_hf_tp.timeout   = 1600
-    sp_pipeSlice_3d_dp_hf_tp.tol       = 0.00001
-    test_list.append(sp_pipeSlice_3d_dp_hf_tp)
-
-    # 2D pin array with heat transfer BC on pin surfaces
-    inc_heatTransfer_BC           = TestCase('inc_heatTransfer_BC')
-    inc_heatTransfer_BC.cfg_dir   = "incomp_navierstokes/streamwise_periodic/chtPinArray_2d"
-    inc_heatTransfer_BC.cfg_file  = "BC_HeatTransfer.cfg"
-    inc_heatTransfer_BC.test_iter = 50
-    inc_heatTransfer_BC.test_vals = [-8.242458, -7.340502, -7.407009, -0.152357, -1.6675e+03] #last 7 lines
-    inc_heatTransfer_BC.su2_exec  = "mpirun -n 2 SU2_CFD"
-    inc_heatTransfer_BC.timeout   = 1600
-    inc_heatTransfer_BC.tol       = 0.00001
-    test_list.append(inc_heatTransfer_BC)
-
-    ############################
-    ### Incompressible RANS  ###
-    ############################
-
-    # NACA0012
-    inc_turb_naca0012           = TestCase('inc_turb_naca0012')
-    inc_turb_naca0012.cfg_dir   = "incomp_rans/naca0012"
-    inc_turb_naca0012.cfg_file  = "naca0012.cfg"
-    inc_turb_naca0012.test_iter = 20
-    inc_turb_naca0012.test_vals = [-4.788595, -11.040557, -0.000002, 0.309519]
-    inc_turb_naca0012.su2_exec  = "parallel_computation.py -f"
-    inc_turb_naca0012.timeout   = 1600
-    inc_turb_naca0012.tol       = 0.00001
-    test_list.append(inc_turb_naca0012)
-
-    # NACA0012, SST_SUST
-    inc_turb_naca0012_sst_sust           = TestCase('inc_turb_naca0012_sst_sust')
-    inc_turb_naca0012_sst_sust.cfg_dir   = "incomp_rans/naca0012"
-    inc_turb_naca0012_sst_sust.cfg_file  = "naca0012_SST_SUST.cfg"
-    inc_turb_naca0012_sst_sust.test_iter = 20
-    inc_turb_naca0012_sst_sust.test_vals = [-7.276430, 0.145859, -0.000001, 0.312020]
-    inc_turb_naca0012_sst_sust.su2_exec  = "parallel_computation.py -f"
-    inc_turb_naca0012_sst_sust.timeout   = 1600
-    inc_turb_naca0012_sst_sust.tol       = 0.00001
-    test_list.append(inc_turb_naca0012_sst_sust)
-
     ####################
     ### DG-FEM Euler ###
     ####################
@@ -1159,73 +1037,6 @@ def main():
     stat_fsi_restart.tol       = 0.00001
     test_list.append(stat_fsi_restart)
 
-    # #############################
-    # ### Solid Heat Conduction ###
-    # #############################
-
-    # 2D pins, periodically connected
-    solid_periodic_pins           = TestCase('solid_periodic_pins')
-    solid_periodic_pins.cfg_dir   = "solid_heat_conduction/periodic_pins"
-    solid_periodic_pins.cfg_file  = "configSolid.cfg"
-    solid_periodic_pins.test_iter = 750
-    solid_periodic_pins.test_vals = [-15.878958, -14.569206, 300.900000, 425.320000, 0.000000, 5.000000, -1.672714] #last 7 lines
-    solid_periodic_pins.su2_exec  = "mpirun -n 2 SU2_CFD"
-    solid_periodic_pins.timeout   = 1600
-    solid_periodic_pins.tol       = 0.00001
-    test_list.append(solid_periodic_pins)
-
-    # ###############################
-    # ### Conjugate heat transfer ###
-    # ###############################
-
-    # CHT incompressible
-    cht_incompressible           = TestCase('cht_incompressible')
-    cht_incompressible.cfg_dir   = "coupled_cht/incomp_2d"
-    cht_incompressible.cfg_file  = "cht_2d_3cylinders.cfg"
-    cht_incompressible.test_iter = 10
-    cht_incompressible.test_vals = [-2.128826, -0.588813, -0.588813, -0.588813] #last 4 columns
-    cht_incompressible.su2_exec  = "SU2_CFD"
-    cht_incompressible.timeout   = 1600
-    cht_incompressible.multizone = True
-    cht_incompressible.tol       = 0.00001
-    test_list.append(cht_incompressible)
-
-    # CHT compressible
-    cht_compressible           = TestCase('cht_compressible')
-    cht_compressible.cfg_dir   = "coupled_cht/comp_2d"
-    cht_compressible.cfg_file  = "cht_2d_3cylinders.cfg"
-    cht_compressible.test_iter = 10
-    cht_compressible.test_vals = [-4.256032, -0.532728, -0.532729, -0.532728]
-    cht_compressible.su2_exec  = "SU2_CFD"
-    cht_compressible.timeout   = 1600
-    cht_compressible.multizone = True
-    cht_compressible.tol       = 0.00001
-    test_list.append(cht_compressible)
-
-    # 2D CHT case streamwise periodicity. Also test Multizone PerSurface screen output.
-    sp_pinArray_cht_2d_dp_hf           = TestCase('sp_pinArray_cht_2d_dp_hf')
-    sp_pinArray_cht_2d_dp_hf.cfg_dir   = "incomp_navierstokes/streamwise_periodic/chtPinArray_2d"
-    sp_pinArray_cht_2d_dp_hf.cfg_file  = "configMaster.cfg"
-    sp_pinArray_cht_2d_dp_hf.test_iter = 100
-    sp_pinArray_cht_2d_dp_hf.test_vals = [0.246959, -0.811849, -0.962120, -0.753320, 208.023676, 349.990000, -8.9660e-10, -7.5332e-01, 7.5332e-01]
-    sp_pinArray_cht_2d_dp_hf.su2_exec  = "mpirun -n 2 SU2_CFD"
-    sp_pinArray_cht_2d_dp_hf.timeout   = 1600
-    sp_pinArray_cht_2d_dp_hf.tol       = 0.00001
-    sp_pinArray_cht_2d_dp_hf.multizone = True
-    test_list.append(sp_pinArray_cht_2d_dp_hf)
-
-    # simple small 3D pin case massflow periodic with heatflux BC
-    sp_pinArray_3d_cht_mf_hf_tp           = TestCase('sp_pinArray_3d_cht_mf_hf_tp')
-    sp_pinArray_3d_cht_mf_hf_tp.cfg_dir   = "incomp_navierstokes/streamwise_periodic/chtPinArray_3d"
-    sp_pinArray_3d_cht_mf_hf_tp.cfg_file  = "configMaster.cfg"
-    sp_pinArray_3d_cht_mf_hf_tp.test_iter = 30
-    sp_pinArray_3d_cht_mf_hf_tp.test_vals = [-13.380430, -7.476945, -7.025285, -0.009675, 99.879812, 4.1920e+02]
-    sp_pinArray_3d_cht_mf_hf_tp.su2_exec  = "mpirun -n 2 SU2_CFD"
-    sp_pinArray_3d_cht_mf_hf_tp.timeout   = 1600
-    sp_pinArray_3d_cht_mf_hf_tp.tol       = 0.00001
-    sp_pinArray_3d_cht_mf_hf_tp.multizone = True
-    test_list.append(sp_pinArray_3d_cht_mf_hf_tp)
-
     ##########################
     ###   Python wrapper   ###
     ##########################
@@ -1276,19 +1087,6 @@ def main():
     pywrapper_fsi2d.multizone = True
     pywrapper_fsi2d.tol       = 0.00001
     test_list.append(pywrapper_fsi2d)
-
-    # Unsteady CHT
-    pywrapper_unsteadyCHT               = TestCase('pywrapper_unsteadyCHT')
-    pywrapper_unsteadyCHT.cfg_dir       = "py_wrapper/flatPlate_unsteady_CHT"
-    pywrapper_unsteadyCHT.cfg_file      = "unsteady_CHT_FlatPlate_Conf.cfg"
-    pywrapper_unsteadyCHT.test_iter     = 5
-    pywrapper_unsteadyCHT.test_vals     = [-1.614167, 2.245726, -0.001240, 0.175715]
-    pywrapper_unsteadyCHT.su2_exec      = "mpirun -np 2 python launch_unsteady_CHT_FlatPlate.py --parallel -f"
-    pywrapper_unsteadyCHT.timeout       = 1600
-    pywrapper_unsteadyCHT.tol           = 0.00001
-    pywrapper_unsteadyCHT.unsteady      = True
-    pywrapper_unsteadyCHT.new_output    = True
-    test_list.append(pywrapper_unsteadyCHT)
 
     # Rigid motion
     pywrapper_rigidMotion               = TestCase('pywrapper_rigidMotion')
@@ -1566,21 +1364,6 @@ def main():
 
     pass_list.append(sphere_ffd_def_bspline.run_def())
     test_list.append(sphere_ffd_def_bspline)
-
-    # 2D FD streamwise periodic cht, avg temp obj func
-    fd_sp_pinArray_cht_2d_dp_hf                = TestCase('fd_sp_pinArray_cht_2d_dp_hf')
-    fd_sp_pinArray_cht_2d_dp_hf.cfg_dir        = "incomp_navierstokes/streamwise_periodic/chtPinArray_2d"
-    fd_sp_pinArray_cht_2d_dp_hf.cfg_file       = "FD_configMaster.cfg"
-    fd_sp_pinArray_cht_2d_dp_hf.test_iter      = 100
-    fd_sp_pinArray_cht_2d_dp_hf.su2_exec       = "finite_differences.py -z 2 -n 2 -f"
-    fd_sp_pinArray_cht_2d_dp_hf.timeout        = 1600
-    fd_sp_pinArray_cht_2d_dp_hf.reference_file = "of_grad_findiff.csv.ref"
-    fd_sp_pinArray_cht_2d_dp_hf.test_file      = "FINDIFF/of_grad_findiff.csv"
-    fd_sp_pinArray_cht_2d_dp_hf.multizone      = True
-
-    pass_list.append(fd_sp_pinArray_cht_2d_dp_hf.run_filediff())
-    test_list.append(fd_sp_pinArray_cht_2d_dp_hf)
-
 
     # Tests summary
     print('==================================================================')

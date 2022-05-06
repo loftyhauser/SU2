@@ -33,9 +33,6 @@
 #include "../../include/fluid/CConstantPrandtl.hpp"
 #include "../../include/fluid/CConstantPrandtlRANS.hpp"
 #include "../../include/fluid/CConstantViscosity.hpp"
-#include "../../include/fluid/CPolynomialConductivity.hpp"
-#include "../../include/fluid/CPolynomialConductivityRANS.hpp"
-#include "../../include/fluid/CPolynomialViscosity.hpp"
 #include "../../include/fluid/CSutherland.hpp"
 
 void CFluidModel::SetLaminarViscosityModel(const CConfig* config) {
@@ -46,10 +43,6 @@ void CFluidModel::SetLaminarViscosityModel(const CConfig* config) {
     case VISCOSITYMODEL::SUTHERLAND:
       LaminarViscosity = unique_ptr<CSutherland>(
           new CSutherland(config->GetMu_RefND(), config->GetMu_Temperature_RefND(), config->GetMu_SND()));
-      break;
-    case VISCOSITYMODEL::POLYNOMIAL:
-      LaminarViscosity = unique_ptr<CPolynomialViscosity<N_POLY_COEFFS>>(
-          new CPolynomialViscosity<N_POLY_COEFFS>(config->GetMu_PolyCoeffND()));
       break;
   }
 }
@@ -70,15 +63,6 @@ void CFluidModel::SetThermalConductivityModel(const CConfig* config) {
             new CConstantPrandtlRANS(config->GetPrandtl_Lam(), config->GetPrandtl_Turb()));
       } else {
         ThermalConductivity = unique_ptr<CConstantPrandtl>(new CConstantPrandtl(config->GetPrandtl_Lam()));
-      }
-      break;
-    case CONDUCTIVITYMODEL::POLYNOMIAL:
-      if (config->GetKind_ConductivityModel_Turb() == CONDUCTIVITYMODEL_TURB::CONSTANT_PRANDTL) {
-        ThermalConductivity = unique_ptr<CPolynomialConductivityRANS<N_POLY_COEFFS>>(
-            new CPolynomialConductivityRANS<N_POLY_COEFFS>(config->GetKt_PolyCoeffND(), config->GetPrandtl_Turb()));
-      } else {
-        ThermalConductivity = unique_ptr<CPolynomialConductivity<N_POLY_COEFFS>>(
-            new CPolynomialConductivity<N_POLY_COEFFS>(config->GetKt_PolyCoeffND()));
       }
       break;
     default:

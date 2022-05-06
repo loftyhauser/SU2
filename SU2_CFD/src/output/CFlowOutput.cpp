@@ -125,8 +125,6 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
   const unsigned short Kind_Average = config->GetKind_Average();
 
   const bool compressible   = config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE;
-  const bool incompressible = config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE;
-  const bool energy         = config->GetEnergy_Equation();
   const bool streamwisePeriodic = (config->GetKind_Streamwise_Periodic() != ENUM_STREAMWISE_PERIODIC::NONE);
 
   const bool axisymmetric               = config->GetAxisymmetric();
@@ -219,26 +217,11 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
             Vtang2       += TangVel[iDim]*TangVel[iDim];
           }
 
-          if (incompressible){
-            if (config->GetKind_DensityModel() == INC_DENSITYMODEL::VARIABLE) {
-              Mach = sqrt(flow_nodes->GetVelocity2(iPoint))/
-              sqrt(flow_nodes->GetSpecificHeatCp(iPoint)*config->GetPressure_ThermodynamicND()/(flow_nodes->GetSpecificHeatCv(iPoint)*flow_nodes->GetDensity(iPoint)));
-            } else {
-              Mach = sqrt(flow_nodes->GetVelocity2(iPoint))/
-              sqrt(config->GetBulk_Modulus()/(flow_nodes->GetDensity(iPoint)));
-            }
-            Temperature       = flow_nodes->GetTemperature(iPoint);
-            Enthalpy          = flow_nodes->GetSpecificHeatCp(iPoint)*Temperature;
-            TotalTemperature  = Temperature + 0.5*Velocity2/flow_nodes->GetSpecificHeatCp(iPoint);
-            TotalPressure     = Pressure + 0.5*Density*Velocity2;
-          }
-          else{
             Mach              = sqrt(Velocity2)/SoundSpeed;
             Temperature       = Pressure / (Gas_Constant * Density);
             Enthalpy          = flow_nodes->GetEnthalpy(iPoint);
             TotalTemperature  = Temperature * (1.0 + Mach * Mach * 0.5 * (Gamma - 1.0));
             TotalPressure     = Pressure * pow( 1.0 + Mach * Mach * 0.5 * (Gamma - 1.0), Gamma / (Gamma - 1.0));
-          }
 
           /*--- Compute the mass Surface_MassFlow ---*/
 
@@ -566,7 +549,7 @@ void CFlowOutput::SetAnalyzeSurface(const CSolver* const*solver, const CGeometry
 
       cout << endl;
 
-      if (compressible || energy) {
+      if (compressible) {
         su2double Temperature = config->GetSurface_Temperature(iMarker_Analyze);
         if (si_units)      cout << setw(20) << "T (K): " << setw(15) << Temperature;
         else if (us_units) cout << setw(20) << "T (R): " << setw(15) << Temperature;
@@ -1592,7 +1575,6 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
   if (rank != MASTER_NODE) return;
 
   const bool compressible = (config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE);
-  const bool incompressible = (config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE);
   const bool unsteady = config->GetTime_Domain();
   const bool viscous = config->GetViscous();
   const bool dynamic_grid = config->GetDynamic_Grid();
@@ -1813,19 +1795,13 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
 
   switch (Kind_Solver) {
     case MAIN_SOLVER::EULER:
-    case MAIN_SOLVER::INC_EULER:
       if (compressible) file << "Compressible Euler equations.\n";
-      if (incompressible) file << "Incompressible Euler equations.\n";
       break;
     case MAIN_SOLVER::NAVIER_STOKES:
-    case MAIN_SOLVER::INC_NAVIER_STOKES:
       if (compressible) file << "Compressible Laminar Navier-Stokes' equations.\n";
-      if (incompressible) file << "Incompressible Laminar Navier-Stokes' equations.\n";
       break;
     case MAIN_SOLVER::RANS:
-    case MAIN_SOLVER::INC_RANS:
       if (compressible) file << "Compressible RANS equations.\n";
-      if (incompressible) file << "Incompressible RANS equations.\n";
       file << "Turbulence model: ";
       switch (Kind_Turb_Model) {
         case TURB_MODEL::NONE: break;
@@ -2158,348 +2134,6 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
       file << "Time step (non-dim): " << config->GetDelta_UnstTimeND() << "\n";
     }
 
-  } else {
-
-    /*--- Incompressible version of the console output ---*/
-
-    const bool energy = config->GetEnergy_Equation();
-    const bool boussinesq = (config->GetKind_DensityModel() == INC_DENSITYMODEL::BOUSSINESQ);
-
-    if (config->GetRef_Inc_NonDim() == DIMENSIONAL) {
-      file << "Viscous and Inviscid flow: rho_ref, vel_ref, temp_ref, p_ref\n";
-      file << "are set to 1.0 in order to perform a dimensional calculation.\n";
-    } else if (config->GetRef_Inc_NonDim() == INITIAL_VALUES) {
-      file << "Viscous and Inviscid flow: rho_ref, vel_ref, and temp_ref\n";
-      file << "are based on the initial values, p_ref = rho_ref*vel_ref^2.\n";
-    } else if (config->GetRef_Inc_NonDim() == REFERENCE_VALUES) {
-      file << "Viscous and Inviscid flow: rho_ref, vel_ref, and temp_ref\n";
-      file << "are user-provided reference values, p_ref = rho_ref*vel_ref^2.\n";
-    }
-    if (dynamic_grid)
-      file << "Force coefficients computed using MACH_MOTION.\n";
-    else
-      file << "Force coefficients computed using initial values.\n";
-
-    file << "The reference area for force coeffs. is " << config->GetRefArea() << " m^2.\n";
-    file << "The reference length for force coeffs. is " << config->GetRefLength() << " m.\n";
-
-    file << "The pressure is decomposed into thermodynamic and dynamic components.\n";
-    file << "The initial value of the dynamic pressure is 0.\n";
-
-    file << "Mach number: " << config->GetMach();
-    if (config->GetKind_FluidModel() == CONSTANT_DENSITY) {
-      file << ", computed using the Bulk modulus.\n";
-    } else {
-      file << ", computed using fluid speed of sound.\n";
-    }
-    file << "For external flows, the initial state is imposed at the far-field.\n";
-    file << "Angle of attack (deg): " << config->GetAoA() << ", computed using the initial velocity.\n";
-    file << "Side slip angle (deg): " << config->GetAoS() << ", computed using the initial velocity.\n";
-
-    if (viscous) {
-      file << "Reynolds number per meter: " << config->GetReynolds() << ", computed using initial values.\n";
-      file << "Reynolds number is a byproduct of inputs only (not used internally).\n";
-    }
-    file << "SI units only. The grid should be dimensional (meters).\n";
-
-    switch (config->GetKind_DensityModel()) {
-      case INC_DENSITYMODEL::CONSTANT:
-        if (energy)
-          file << "Energy equation is active and decoupled.\n";
-        else
-          file << "No energy equation.\n";
-        break;
-
-      case INC_DENSITYMODEL::BOUSSINESQ:
-        if (energy) file << "Energy equation is active and coupled through Boussinesq approx.\n";
-        break;
-
-      case INC_DENSITYMODEL::VARIABLE:
-        if (energy) file << "Energy equation is active and coupled for variable density.\n";
-        break;
-    }
-
-    file << "-- Input conditions:\n";
-
-    switch (config->GetKind_FluidModel()) {
-      case CONSTANT_DENSITY:
-        file << "Fluid Model: CONSTANT_DENSITY \n";
-        if (energy) {
-          file << "Specific heat at constant pressure (Cp): " << config->GetSpecific_Heat_Cp() << " N.m/kg.K.\n";
-        }
-        if (boussinesq) file << "Thermal expansion coefficient: " << config->GetThermal_Expansion_Coeff() << " K^-1.\n";
-        file << "Thermodynamic pressure not required.\n";
-        break;
-
-      case INC_IDEAL_GAS:
-        file << "Fluid Model: INC_IDEAL_GAS \n";
-        file << "Variable density incompressible flow using ideal gas law.\n";
-        file << "Density is a function of temperature (constant thermodynamic pressure).\n";
-        file << "Specific heat at constant pressure (Cp): " << config->GetSpecific_Heat_Cp() << " N.m/kg.K.\n";
-        file << "Molecular weight : " << config->GetMolecular_Weight() << " g/mol\n";
-        file << "Specific gas constant: " << config->GetGas_Constant() << " N.m/kg.K.\n";
-        file << "Thermodynamic pressure: " << config->GetPressure_Thermodynamic();
-        if (si_units) file << " Pa.\n";
-        else file << " psf.\n";
-        break;
-
-      case INC_IDEAL_GAS_POLY:
-        file << "Fluid Model: INC_IDEAL_GAS_POLY \n";
-        file << "Variable density incompressible flow using ideal gas law.\n";
-        file << "Density is a function of temperature (constant thermodynamic pressure).\n";
-        file << "Molecular weight: " << config->GetMolecular_Weight() << " g/mol.\n";
-        file << "Specific gas constant: " << config->GetGas_Constant() << " N.m/kg.K.\n";
-        file << "Specific gas constant (non-dim): " << config->GetGas_ConstantND() << "\n";
-        file << "Thermodynamic pressure: " << config->GetPressure_Thermodynamic();
-        if (si_units) file << " Pa.\n";
-        else file << " psf.\n";
-        file << "Cp(T) polynomial coefficients: \n  (";
-        for (unsigned short iVar = 0; iVar < config->GetnPolyCoeffs(); iVar++) {
-          file << config->GetCp_PolyCoeff(iVar);
-          if (iVar < config->GetnPolyCoeffs() - 1) file << ", ";
-        }
-        file << ").\n";
-        file << "Cp(T) polynomial coefficients (non-dim.): \n  (";
-        for (unsigned short iVar = 0; iVar < config->GetnPolyCoeffs(); iVar++) {
-          file << config->GetCp_PolyCoeffND(iVar);
-          if (iVar < config->GetnPolyCoeffs() - 1) file << ", ";
-        }
-        file << ").\n";
-        break;
-    }
-    if (viscous) {
-      switch (config->GetKind_ViscosityModel()) {
-        case VISCOSITYMODEL::CONSTANT:
-          file << "Viscosity Model: CONSTANT_VISCOSITY  \n";
-          file << "Constant Laminar Viscosity: " << config->GetMu_Constant();
-          if (si_units) file << " N.s/m^2.\n";
-          else file << " lbf.s/ft^2.\n";
-          file << "Laminar Viscosity (non-dim): " << config->GetMu_ConstantND() << "\n";
-          break;
-
-        case VISCOSITYMODEL::SUTHERLAND:
-          file << "Viscosity Model: SUTHERLAND \n";
-          file << "Ref. Laminar Viscosity: " << config->GetMu_Ref();
-          if (si_units) file << " N.s/m^2.\n";
-          else file << " lbf.s/ft^2.\n";
-          file << "Ref. Temperature: " << config->GetMu_Temperature_Ref();
-          if (si_units) file << " K.\n";
-          else file << " R.\n";
-          file << "Sutherland Constant: " << config->GetMu_S();
-          if (si_units) file << " K.\n";
-          else file << " R.\n";
-          file << "Laminar Viscosity (non-dim): " << config->GetMu_ConstantND() << "\n";
-          file << "Ref. Temperature (non-dim): " << config->GetMu_Temperature_RefND() << "\n";
-          file << "Sutherland constant (non-dim): " << config->GetMu_SND() << "\n";
-          break;
-
-        case VISCOSITYMODEL::POLYNOMIAL:
-          file << "Viscosity Model: POLYNOMIAL_VISCOSITY  \n";
-          file << "Mu(T) polynomial coefficients: \n  (";
-          for (unsigned short iVar = 0; iVar < config->GetnPolyCoeffs(); iVar++) {
-            file << config->GetMu_PolyCoeff(iVar);
-            if (iVar < config->GetnPolyCoeffs() - 1) file << ", ";
-          }
-          file << ").\n";
-          file << "Mu(T) polynomial coefficients (non-dim.): \n  (";
-          for (unsigned short iVar = 0; iVar < config->GetnPolyCoeffs(); iVar++) {
-            file << config->GetMu_PolyCoeffND(iVar);
-            if (iVar < config->GetnPolyCoeffs() - 1) file << ", ";
-          }
-          file << ").\n";
-          break;
-      }
-
-      if (energy) {
-        switch (config->GetKind_ConductivityModel()) {
-          case CONDUCTIVITYMODEL::CONSTANT_PRANDTL:
-            file << "Conductivity Model: CONSTANT_PRANDTL  \n";
-            file << "Prandtl (Laminar): " << config->GetPrandtl_Lam() << "\n";
-            break;
-
-          case CONDUCTIVITYMODEL::CONSTANT:
-            file << "Conductivity Model: CONSTANT \n";
-            file << "Molecular Conductivity: " << config->GetThermal_Conductivity_Constant() << " W/m^2.K.\n";
-            file << "Molecular Conductivity (non-dim): " << config->GetThermal_Conductivity_ConstantND() << "\n";
-            break;
-
-          case CONDUCTIVITYMODEL::POLYNOMIAL:
-            file << "Viscosity Model: POLYNOMIAL \n";
-            file << "Kt(T) polynomial coefficients: \n  (";
-            for (unsigned short iVar = 0; iVar < config->GetnPolyCoeffs(); iVar++) {
-              file << config->GetKt_PolyCoeff(iVar);
-              if (iVar < config->GetnPolyCoeffs() - 1) file << ", ";
-            }
-            file << ").\n";
-            file << "Kt(T) polynomial coefficients (non-dim.): \n  (";
-            for (unsigned short iVar = 0; iVar < config->GetnPolyCoeffs(); iVar++) {
-              file << config->GetKt_PolyCoeffND(iVar);
-              if (iVar < config->GetnPolyCoeffs() - 1) file << ", ";
-            }
-            file << ").\n";
-            break;
-        }
-
-        if (turbulent) {
-          switch (config->GetKind_ConductivityModel_Turb()) {
-            case CONDUCTIVITYMODEL_TURB::CONSTANT_PRANDTL:
-              file << "Turbulent Conductivity Model: CONSTANT_PRANDTL  \n";
-              file << "Turbulent Prandtl: " << config->GetPrandtl_Turb() << "\n";
-              break;
-            case CONDUCTIVITYMODEL_TURB::NONE:
-              file << "Turbulent Conductivity Model: CONDUCTIVITYMODEL_TURB::NONE \n";
-              file << "No turbulent component in effective thermal conductivity.\n";
-              break;
-          }
-        }
-      }
-    }
-
-    if (config->GetKind_FluidModel() == CONSTANT_DENSITY) {
-      file << "Bulk modulus: " << config->GetBulk_Modulus();
-      if (si_units) file << " Pa.\n";
-      else file << " psf.\n";
-    }
-
-    file << "Initial dynamic pressure: " << config->GetPressure_FreeStream();
-    if (si_units) file << " Pa.\n";
-    else file << " psf.\n";
-
-    file << "Initial total pressure: "
-         << config->GetPressure_FreeStream() +
-                0.5 * config->GetDensity_FreeStream() * config->GetModVel_FreeStream() * config->GetModVel_FreeStream();
-    if (si_units) file << " Pa.\n";
-    else file << " psf.\n";
-
-    if (energy) {
-      file << "Initial temperature: " << config->GetTemperature_FreeStream();
-      if (si_units) file << " K.\n";
-      else file << " R.\n";
-    }
-
-    file << "Initial density: " << config->GetDensity_FreeStream();
-    if (si_units) file << " kg/m^3.\n";
-    else file << " slug/ft^3.\n";
-
-    file << "Free-stream velocity: (" << config->GetVelocity_FreeStream()[0];
-    file << ", " << config->GetVelocity_FreeStream()[1];
-    if (nDim == 3) {
-      file << ", " << config->GetVelocity_FreeStream()[2];
-    }
-    if (si_units) file << ") m/s. ";
-    else file << ") ft/s. ";
-
-    file << "Magnitude: " << config->GetModVel_FreeStream();
-    if (si_units) file << " m/s.\n";
-    else file << " ft/s.\n";
-
-    if (viscous) {
-      file << "Initial laminar viscosity: " << config->GetViscosity_FreeStream();
-      if (si_units) file << " N.s/m^2.\n";
-      else file << " lbf.s/ft^2.\n";
-      if (turbulent) {
-        file << "Initial turb. kinetic energy per unit mass: " << config->GetTke_FreeStream();
-        if (si_units) file << " m^2/s^2.\n";
-        else file << " ft^2/s^2.\n";
-        file << "Initial specific dissipation: " << config->GetOmega_FreeStream();
-        if (si_units) file << " 1/s.\n";
-        else file << " 1/s.\n";
-      }
-    }
-
-    if (unsteady) {
-      file << "Total time: " << config->GetTotal_UnstTime() << " s. Time step: " << config->GetDelta_UnstTime()
-           << " s.\n";
-    }
-
-    /*--- Print out reference values. ---*/
-
-    file << "-- Reference values:\n";
-
-    if (config->GetKind_FluidModel() != CONSTANT_DENSITY) {
-      file << "Reference specific gas constant: " << config->GetGas_Constant_Ref();
-      if (si_units) file << " N.m/kg.K.\n";
-      else file << " lbf.ft/slug.R.\n";
-    } else {
-      if (energy) {
-        file << "Reference specific heat: " << config->GetGas_Constant_Ref();
-        if (si_units) file << " N.m/kg.K.\n";
-        else file << " lbf.ft/slug.R.\n";
-      }
-    }
-
-    file << "Reference pressure: " << config->GetPressure_Ref();
-    if (si_units) file << " Pa.\n";
-    else file << " psf.\n";
-
-    if (energy) {
-      file << "Reference temperature: " << config->GetTemperature_Ref();
-      if (si_units) file << " K.\n";
-      else file << " R.\n";
-    }
-
-    file << "Reference density: " << config->GetDensity_Ref();
-    if (si_units) file << " kg/m^3.\n";
-    else file << " slug/ft^3.\n";
-
-    file << "Reference velocity: " << config->GetVelocity_Ref();
-    if (si_units) file << " m/s.\n";
-    else file << " ft/s.\n";
-
-    file << "Reference length: " << config->GetLength_Ref();
-    if (si_units) file << " m.\n";
-    else file << " in.\n";
-
-    if (viscous) {
-      file << "Reference viscosity: " << config->GetViscosity_Ref();
-      if (si_units) file << " N.s/m^2.\n";
-      else file << " lbf.s/ft^2.\n";
-    }
-
-    if (unsteady) file << "Reference time: " << config->GetTime_Ref() << " s.\n";
-
-    /*--- Print out resulting non-dim values here. ---*/
-
-    file << "-- Resulting non-dimensional state:\n";
-    file << "Mach number (non-dim): " << config->GetMach() << "\n";
-    if (viscous) {
-      file << "Reynolds number (per m): " << config->GetReynolds() << "\n";
-    }
-
-    if (config->GetKind_FluidModel() != CONSTANT_DENSITY) {
-      file << "Specific gas constant (non-dim): " << config->GetGas_ConstantND() << "\n";
-      file << "Initial thermodynamic pressure (non-dim): " << config->GetPressure_ThermodynamicND() << "\n";
-    } else {
-      if (energy) {
-        file << "Specific heat at constant pressure (non-dim): " << config->GetSpecific_Heat_CpND() << "\n";
-        if (boussinesq)
-          file << "Thermal expansion coefficient (non-dim.): " << config->GetThermal_Expansion_CoeffND() << " K^-1.\n";
-      }
-    }
-
-    if (energy) file << "Initial temperature (non-dim): " << config->GetTemperature_FreeStreamND() << "\n";
-    file << "Initial pressure (non-dim): " << config->GetPressure_FreeStreamND() << "\n";
-    file << "Initial density (non-dim): " << config->GetDensity_FreeStreamND() << "\n";
-
-    file << "Initial velocity (non-dim): (" << config->GetVelocity_FreeStreamND()[0];
-    file << ", " << config->GetVelocity_FreeStreamND()[1];
-    if (nDim == 3) {
-      file << ", " << config->GetVelocity_FreeStreamND()[2];
-    }
-    file << "). Magnitude: " << config->GetModVel_FreeStreamND() << "\n";
-
-    if (viscous) {
-      file << "Initial viscosity (non-dim): " << config->GetViscosity_FreeStreamND() << "\n";
-      if (turbulent) {
-        file << "Initial turb. kinetic energy (non-dim): " << config->GetTke_FreeStreamND() << "\n";
-        file << "Initial specific dissipation (non-dim): " << config->GetOmega_FreeStreamND() << "\n";
-      }
-    }
-
-    if (unsteady) {
-      file << "Total time (non-dim): " << config->GetTotal_UnstTimeND() << "\n";
-      file << "Time step (non-dim): " << config->GetDelta_UnstTimeND() << "\n";
-    }
   }
 
   /*--- Begin forces breakdown info. ---*/

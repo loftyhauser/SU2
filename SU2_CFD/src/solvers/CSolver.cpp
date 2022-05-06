@@ -30,10 +30,7 @@
 #include "../../include/gradients/computeGradientsGreenGauss.hpp"
 #include "../../include/gradients/computeGradientsLeastSquares.hpp"
 #include "../../include/limiters/computeLimiters.hpp"
-#include "../../../Common/include/toolboxes/MMS/CIncTGVSolution.hpp"
 #include "../../../Common/include/toolboxes/MMS/CInviscidVortexSolution.hpp"
-#include "../../../Common/include/toolboxes/MMS/CMMSIncEulerSolution.hpp"
-#include "../../../Common/include/toolboxes/MMS/CMMSIncNSSolution.hpp"
 #include "../../../Common/include/toolboxes/MMS/CMMSNSTwoHalfCirclesSolution.hpp"
 #include "../../../Common/include/toolboxes/MMS/CMMSNSTwoHalfSpheresSolution.hpp"
 #include "../../../Common/include/toolboxes/MMS/CMMSNSUnitQuadSolution.hpp"
@@ -619,15 +616,6 @@ void CSolver::InitiatePeriodicComms(CGeometry *geometry,
                 Diff[iVar] = (base_nodes->GetSolution(iPoint, iVar) -
                               base_nodes->GetSolution(jPoint,iVar));
 
-                /*--- Correction for compressible flows (use enthalpy) ---*/
-
-                if (!(config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE)) {
-                  Pressure_i   = base_nodes->GetPressure(iPoint);
-                  Pressure_j   = base_nodes->GetPressure(jPoint);
-                  Diff[nVar-1] = ((base_nodes->GetSolution(iPoint,nVar-1) + Pressure_i) -
-                                  (base_nodes->GetSolution(jPoint,nVar-1) + Pressure_j));
-                }
-
                 boundary_i = geometry->nodes->GetPhysicalBoundary(iPoint);
                 boundary_j = geometry->nodes->GetPhysicalBoundary(jPoint);
 
@@ -680,13 +668,8 @@ void CSolver::InitiatePeriodicComms(CGeometry *geometry,
 
                 /*--- Use density instead of pressure for incomp. flows. ---*/
 
-                if ((config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE)) {
-                  Pressure_i = base_nodes->GetDensity(iPoint);
-                  Pressure_j = base_nodes->GetDensity(jPoint);
-                } else {
                   Pressure_i = base_nodes->GetPressure(iPoint);
                   Pressure_j = base_nodes->GetPressure(jPoint);
-                }
 
                 boundary_i = geometry->nodes->GetPhysicalBoundary(iPoint);
                 boundary_j = geometry->nodes->GetPhysicalBoundary(jPoint);
@@ -3425,8 +3408,6 @@ void CSolver::SetVerificationSolution(unsigned short nDim,
       VerificationSolution = new CNSUnitQuadSolution(nDim, nVar, MGLevel, config); break;
     case VERIFICATION_SOLUTION::TAYLOR_GREEN_VORTEX:
       VerificationSolution = new CTGVSolution(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::INC_TAYLOR_GREEN_VORTEX:
-      VerificationSolution = new CIncTGVSolution(nDim, nVar, MGLevel, config); break;
     case VERIFICATION_SOLUTION::MMS_NS_UNIT_QUAD:
       VerificationSolution = new CMMSNSUnitQuadSolution(nDim, nVar, MGLevel, config); break;
     case VERIFICATION_SOLUTION::MMS_NS_UNIT_QUAD_WALL_BC:
@@ -3435,10 +3416,6 @@ void CSolver::SetVerificationSolution(unsigned short nDim,
       VerificationSolution = new CMMSNSTwoHalfCirclesSolution(nDim, nVar, MGLevel, config); break;
     case VERIFICATION_SOLUTION::MMS_NS_TWO_HALF_SPHERES:
       VerificationSolution = new CMMSNSTwoHalfSpheresSolution(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::MMS_INC_EULER:
-      VerificationSolution = new CMMSIncEulerSolution(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::MMS_INC_NS:
-      VerificationSolution = new CMMSIncNSSolution(nDim, nVar, MGLevel, config); break;
     case VERIFICATION_SOLUTION::USER_DEFINED_SOLUTION:
       VerificationSolution = new CUserDefinedSolution(nDim, nVar, MGLevel, config); break;
   }

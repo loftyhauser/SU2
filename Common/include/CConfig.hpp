@@ -111,7 +111,6 @@ private:
   InvDesign_Cp,             /*!< \brief Flag to know if the code is going to compute and plot the inverse design. */
   InvDesign_HeatFlux,       /*!< \brief Flag to know if the code is going to compute and plot the inverse design. */
   Turb_Fixed_Values,        /*!< \brief Flag to know if there are fixed values for turbulence quantities in one half-plane. */
-  Weakly_Coupled_Heat,      /*!< \brief Flag to know if a heat equation should be weakly coupled to the incompressible solver. */
   Rotating_Frame,           /*!< \brief Flag to know if there is a rotating frame. */
   PoissonSolver,            /*!< \brief Flag to know if we are solving  poisson forces  in plasma solver. */
   Low_Mach_Precon,          /*!< \brief Flag to know if we are using a low Mach number preconditioner. */
@@ -443,7 +442,6 @@ private:
   su2double *LocationStations;        /*!< \brief Airfoil sections in wing slicing subroutine. */
 
   ENUM_MULTIZONE Kind_MZSolver;    /*!< \brief Kind of multizone solver.  */
-  INC_DENSITYMODEL Kind_DensityModel; /*!< \brief Kind of the density model for incompressible flows. */
   VISCOSITYMODEL Kind_ViscosityModel; /*!< \brief Kind of the Viscosity Model*/
   CONDUCTIVITYMODEL Kind_ConductivityModel; /*!< \brief Kind of the Thermal Conductivity Model */
   CONDUCTIVITYMODEL_TURB Kind_ConductivityModel_Turb; /*!< \brief Kind of the Turbulent Thermal Conductivity Model */
@@ -508,7 +506,6 @@ private:
   BGS_RELAXATION Kind_BGS_RelaxMethod; /*!< \brief Kind of relaxation method for Block Gauss Seidel method in FSI problems. */
   bool ReconstructionGradientRequired; /*!< \brief Enable or disable a second gradient calculation for upwind reconstruction only. */
   bool LeastSquaresRequired;    /*!< \brief Enable or disable memory allocation for least-squares gradient methods. */
-  bool Energy_Equation;         /*!< \brief Solve the energy equation for incompressible flows. */
 
   bool MUSCL,              /*!< \brief MUSCL scheme .*/
   MUSCL_Flow,              /*!< \brief MUSCL scheme for the flow equations.*/
@@ -536,15 +533,8 @@ private:
   unsigned short Kind_ActDisk, Kind_Engine_Inflow,
   *Kind_Data_Riemann;
   INLET_TYPE Kind_Inlet;
-  INLET_TYPE *Kind_Inc_Inlet;
-  INC_OUTLET_TYPE *Kind_Inc_Outlet;
   WALL_TYPE *Kind_Wall;            /*!< \brief Type of wall treatment. */
   unsigned short nWall_Types;      /*!< \brief Number of wall treatment types listed. */
-  unsigned short nInc_Inlet;       /*!< \brief Number of inlet boundary treatment types listed. */
-  unsigned short nInc_Outlet;      /*!< \brief Number of inlet boundary treatment types listed. */
-  su2double Inc_Inlet_Damping;     /*!< \brief Damping factor applied to the iterative updates to the velocity at a pressure inlet in incompressible flow. */
-  su2double Inc_Outlet_Damping;    /*!< \brief Damping factor applied to the iterative updates to the pressure at a mass flow outlet in incompressible flow. */
-  bool Inc_Inlet_UseNormal;        /*!< \brief Flag for whether to use the local normal as the flow direction for an incompressible pressure inlet. */
   su2double Linear_Solver_Error;   /*!< \brief Min error of the linear solver for the implicit formulation. */
   su2double Deform_Linear_Solver_Error;          /*!< \brief Min error of the linear solver for the implicit formulation. */
   su2double Linear_Solver_Smoother_Relaxation;   /*!< \brief Relaxation factor for iterative linear smoothers. */
@@ -570,9 +560,8 @@ private:
   Kappa_4th_Flow,           /*!< \brief JST 4th order dissipation coefficient for flow equations. */
   Kappa_2nd_Heat,           /*!< \brief 2nd order dissipation coefficient for heat equation. */
   Kappa_4th_Heat,           /*!< \brief 4th order dissipation coefficient for heat equation. */
-  Cent_Jac_Fix_Factor,              /*!< \brief Multiply the dissipation contribution to the Jacobian of central schemes
+  Cent_Jac_Fix_Factor;              /*!< \brief Multiply the dissipation contribution to the Jacobian of central schemes
                                                 by this factor to make the global matrix more diagonal dominant. */
-  Cent_Inc_Jac_Fix_Factor;          /*!< \brief Multiply the dissipation contribution to the Jacobian of incompressible central schemes */
   su2double Geo_Waterline_Location; /*!< \brief Location of the waterline. */
 
   su2double Min_Beta_RoeTurkel,     /*!< \brief Minimum value of Beta for the Roe-Turkel low Mach preconditioner. */
@@ -740,22 +729,14 @@ private:
   Console_Output_Verb,  /*!< \brief Level of verbosity for console output */
   Kind_Average;         /*!< \brief Particular average for the marker analyze. */
   su2double Gamma,      /*!< \brief Ratio of specific heats of the gas. */
-  Bulk_Modulus,         /*!< \brief Value of the bulk modulus for incompressible flows. */
-  Beta_Factor,          /*!< \brief Value of the epsilon^2 multiplier for Beta for the incompressible preconditioner. */
   Gas_Constant,         /*!< \brief Specific gas constant. */
   Gas_ConstantND,       /*!< \brief Non-dimensional specific gas constant. */
-  Molecular_Weight,     /*!< \brief Molecular weight of an incompressible ideal gas (g/mol). */
   Specific_Heat_Cp,           /*!< \brief Specific heat at constant pressure. */
   Specific_Heat_CpND,         /*!< \brief Non-dimensional specific heat at constant pressure. */
   Specific_Heat_Cv,           /*!< \brief Specific heat at constant volume. */
   Specific_Heat_CvND,         /*!< \brief Non-dimensional specific heat at constant volume. */
   Thermal_Expansion_Coeff,    /*!< \brief Thermal expansion coefficient. */
   Thermal_Expansion_CoeffND,  /*!< \brief Non-dimensional thermal expansion coefficient. */
-  Inc_Density_Ref,       /*!< \brief Reference density for custom incompressible non-dim. */
-  Inc_Velocity_Ref,      /*!< \brief Reference velocity for custom incompressible non-dim. */
-  Inc_Temperature_Ref,   /*!< \brief Reference temperature for custom incompressible non-dim. */
-  Inc_Density_Init,      /*!< \brief Initial density for incompressible flows. */
-  Inc_Temperature_Init,  /*!< \brief Initial temperature for incompressible flows w/ heat transfer. */
   Heat_Flux_Ref,         /*!< \brief Reference heat flux for non-dim. */
   Gas_Constant_Ref,      /*!< \brief Reference specific gas constant. */
   Temperature_Critical,  /*!< \brief Critical Temperature for real fluid model.  */
@@ -953,7 +934,6 @@ private:
   su2double Streamwise_Periodic_OutletHeat;          /*!< /brief Heatflux boundary [W/m^2] imposed at streamwise periodic outlet. */
 
   su2double Restart_Bandwidth_Agg;      /*!< \brief The aggregate of the bandwidth for writing binary restarts (to be averaged later). */
-  su2double Max_Vel2;                   /*!< \brief The maximum velocity^2 in the domain for the incompressible preconditioner. */
   bool topology_optimization;           /*!< \brief If the structural solver should consider a variable density field to penalize element stiffness. */
   string top_optim_output_file;         /*!< \brief File to where the derivatives w.r.t. element densities will be written to. */
   su2double simp_exponent;              /*!< \brief Exponent for the density-based stiffness penalization of the SIMP method. */
@@ -1431,18 +1411,6 @@ public:
   su2double GetFFD_Axis(unsigned short val_var) const { return ffd_axis[val_var]; }
 
   /*!
-   * \brief Get the value of the bulk modulus.
-   * \return Value of the bulk modulus.
-   */
-  su2double GetBulk_Modulus(void) const { return Bulk_Modulus; }
-
-  /*!
-   * \brief Get the epsilon^2 multiplier for Beta in the incompressible preconditioner.
-   * \return Value of the epsilon^2 multiplier for Beta in the incompressible preconditioner.
-   */
-  su2double GetBeta_Factor(void) const { return Beta_Factor; }
-
-  /*!
    * \brief Get the value of specific gas constant.
    * \return Value of the constant: Gamma
    */
@@ -1453,12 +1421,6 @@ public:
    * \return Value of the constant: Gamma
    */
   su2double GetGas_ConstantND(void) const { return Gas_ConstantND; }
-
-  /*!
-   * \brief Get the value of the molecular weight for an incompressible ideal gas (g/mol).
-   * \return Value of the molecular weight for an incompressible ideal gas (g/mol).
-   */
-  su2double GetMolecular_Weight(void) const { return Molecular_Weight; }
 
   /*!
    * \brief Get the value of specific heat at constant pressure.
@@ -1853,42 +1815,6 @@ public:
    * \param[in] val_thermal_expansion - non-dim. thermal expansion coefficient
    */
   void SetThermal_Expansion_CoeffND(su2double val_thermal_expansionnd) { Thermal_Expansion_CoeffND = val_thermal_expansionnd; }
-
-  /*!
-   * \brief Get the value of the reference density for custom incompressible non-dimensionalization.
-   * \return Reference density for custom incompressible non-dimensionalization.
-   */
-  su2double GetInc_Density_Ref(void) const { return Inc_Density_Ref; }
-
-  /*!
-   * \brief Get the value of the reference velocity for custom incompressible non-dimensionalization.
-   * \return Reference velocity for custom incompressible non-dimensionalization.
-   */
-  su2double GetInc_Velocity_Ref(void) const { return Inc_Velocity_Ref; }
-
-  /*!
-   * \brief Get the value of the reference temperature for custom incompressible non-dimensionalization.
-   * \return Reference temperature for custom incompressible non-dimensionalization.
-   */
-  su2double GetInc_Temperature_Ref(void) const { return Inc_Temperature_Ref; }
-
-  /*!
-   * \brief Get the value of the initial density for incompressible flows.
-   * \return Initial density for incompressible flows.
-   */
-  su2double GetInc_Density_Init(void) const { return Inc_Density_Init; }
-
-  /*!
-   * \brief Get the value of the initial velocity for incompressible flows.
-   * \return Initial velocity for incompressible flows.
-   */
-  const su2double* GetInc_Velocity_Init(void) const { return vel_init; }
-
-  /*!
-   * \brief Get the value of the initial temperature for incompressible flows.
-   * \return Initial temperature for incompressible flows.
-   */
-  su2double GetInc_Temperature_Init(void) const { return Inc_Temperature_Init; }
 
   /*!
    * \brief Get the Young's modulus of elasticity.
@@ -3403,8 +3329,6 @@ public:
   bool GetFluidProblem(void) const {
     switch (Kind_Solver) {
       case MAIN_SOLVER::EULER : case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::RANS:
-      case MAIN_SOLVER::INC_EULER : case MAIN_SOLVER::INC_NAVIER_STOKES: case MAIN_SOLVER::INC_RANS:
-      case MAIN_SOLVER::DISC_ADJ_INC_EULER: case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_INC_RANS:
       case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
         return true;
       default:
@@ -3469,18 +3393,6 @@ public:
    * \return Fluid model that we are using.
    */
   unsigned short GetKind_FluidModel(void) const { return Kind_FluidModel; }
-
-  /*!
-   * \brief Option to define the density model for incompressible flows.
-   * \return Density model option
-   */
-  INC_DENSITYMODEL GetKind_DensityModel() const { return Kind_DensityModel; }
-
-  /*!
-   * \brief Flag for whether to solve the energy equation for incompressible flows.
-   * \return Flag for energy equation
-   */
-  bool GetEnergy_Equation(void) const { return Energy_Equation; }
 
   /*!
    * \brief free stream option to initialize the solution
@@ -4294,12 +4206,6 @@ public:
   su2double GetCent_Jac_Fix_Factor(void) const { return Cent_Jac_Fix_Factor; }
 
   /*!
-   * \brief Factor by which to multiply the dissipation contribution to Jacobians of incompressible central schemes.
-   * \return The factor.
-   */
-  su2double GetCent_Inc_Jac_Fix_Factor(void) const { return Cent_Inc_Jac_Fix_Factor; }
-
-  /*!
    * \brief Get the kind of integration scheme (explicit or implicit)
    *        for the adjoint flow equations.
    * \note This value is obtained from the config file, and it is constant
@@ -4489,42 +4395,6 @@ public:
    * \return Tolerance used for matching a point to a specified inlet
    */
   su2double GetInlet_Profile_Matching_Tolerance(void) const { return Inlet_Matching_Tol; }
-
-  /*!
-   * \brief Get the type of incompressible inlet from the list.
-   * \return Kind of the incompressible inlet.
-   */
-  INLET_TYPE GetKind_Inc_Inlet(string val_marker) const;
-
-  /*!
-   * \brief Get the total number of types in Kind_Inc_Inlet list
-   * \return Total number of types in Kind_Inc_Inlet list
-   */
-  unsigned short GetnInc_Inlet(void) const { return nInc_Inlet;}
-
-  /*!
-   * \brief Flag for whether the local boundary normal is used as the flow direction for an incompressible pressure inlet.
-   * \return <code>FALSE</code> means the prescribed flow direction is used.
-   */
-  bool GetInc_Inlet_UseNormal(void) const { return Inc_Inlet_UseNormal;}
-
-  /*!
-   * \brief Get the type of incompressible outlet from the list.
-   * \return Kind of the incompressible outlet.
-   */
-  INC_OUTLET_TYPE GetKind_Inc_Outlet(string val_marker) const;
-
-  /*!
-   * \brief Get the damping factor applied to velocity updates at incompressible pressure inlets.
-   * \return Damping factor applied to velocity updates at incompressible pressure inlets.
-   */
-  su2double GetInc_Inlet_Damping(void) const { return Inc_Inlet_Damping; }
-
-  /*!
-   * \brief Get the damping factor applied to pressure updates at incompressible mass flow outlet.
-   * \return Damping factor applied to pressure updates at incompressible mass flow outlet.
-   */
-  su2double GetInc_Outlet_Damping(void) const { return Inc_Outlet_Damping; }
 
   /*!
    * \brief Get final Outlet Pressure value for the ramp.
@@ -5989,42 +5859,6 @@ public:
    * \param[in] val_temp - New value of the outlet pressure.
    */
   void SetPressureOut_BC(su2double val_press);
-
-  /*!
-   * \brief Get the inlet velocity or pressure imposed for incompressible flow.
-   * \return inlet velocity or pressure
-   */
-  su2double GetIncInlet_BC() const;
-
-  /*!
-   * \brief Set the inlet velocity or pressure imposed as BC for incompressible flow.
-   * \param[in] val_in - New value of the inlet velocity or pressure.
-   */
-  void SetIncInlet_BC(su2double val_in);
-
-  /*!
-   * \brief Get the inlet temperature imposed as BC for incompressible flow.
-   * \return inlet temperature
-   */
-  su2double GetIncTemperature_BC() const;
-
-  /*!
-   * \brief Set the inlet temperature imposed as BC for incompressible flow.
-   * \param[in] val_temperature - New value of the inlet temperature.
-   */
-  void SetIncTemperature_BC(su2double val_temperature);
-
-  /*!
-   * \brief Get the outlet pressure imposed as BC for incompressible flow.
-   * \return outlet pressure
-   */
-  su2double GetIncPressureOut_BC() const;
-
-  /*!
-   * \brief Set the outlet pressure imposed as BC for incompressible flow.
-   * \param[in] val_pressure - New value of the outlet pressure.
-   */
-  void SetIncPressureOut_BC(su2double val_pressure);
 
   /*!
    * \brief Get the inlet total pressure imposed as BC for internal flow.
@@ -8062,18 +7896,6 @@ public:
   bool GetAD_Mode(void) const { return AD_Mode;}
 
   /*!
-   * \brief Set the maximum velocity^2 in the domain for the incompressible preconditioner.
-   * \param[in] Value of the maximum velocity^2 in the domain for the incompressible preconditioner.
-   */
-  void SetMax_Vel2(su2double val_max_vel2) { Max_Vel2 = val_max_vel2; }
-
-  /*!
-   * \brief Get the maximum velocity^2 in the domain for the incompressible preconditioner.
-   * \return Value of the maximum velocity^2 in the domain for the incompressible preconditioner.
-   */
-  su2double GetMax_Vel2(void) const { return Max_Vel2; }
-
-  /*!
    * \brief Set the sum of the bandwidth for writing binary restarts (to be averaged later).
    * \param[in] Sum of the bandwidth for writing binary restarts.
    */
@@ -8112,12 +7934,6 @@ public:
    * \brief Get if AD preaccumulation should be performed.
    */
   bool GetAD_Preaccumulation(void) const { return AD_Preaccumulation;}
-
-  /*!
-   * \brief Get the heat equation.
-   * \return YES if weakly coupled heat equation for inc. flow is enabled.
-   */
-  bool GetWeakly_Coupled_Heat(void) const { return Weakly_Coupled_Heat; }
 
   /*!
    * \brief Check if values passed to the BC_HeatFlux-Routine are already integrated.

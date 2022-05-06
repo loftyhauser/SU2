@@ -537,7 +537,6 @@ CAvgGradInc_Flow::CAvgGradInc_Flow(unsigned short val_nDim,
                                    bool val_correct_grad, const CConfig* config)
     : CAvgGrad_Base(val_nDim, val_nVar, val_nDim+3, val_correct_grad, config) {
 
-  energy   = config->GetEnergy_Equation();
 
 }
 
@@ -655,7 +654,6 @@ CNumerics::ResidualType<> CAvgGradInc_Flow::ComputeResidual(const CConfig* confi
 
   }
 
-  if (!energy) {
     Proj_Flux_Tensor[nDim+1] = 0.0;
     if (implicit) {
       for (iVar = 0; iVar < nVar; iVar++) {
@@ -666,7 +664,6 @@ CNumerics::ResidualType<> CAvgGradInc_Flow::ComputeResidual(const CConfig* confi
         Jacobian_j[nDim+1][iVar] = 0.0;
       }
     }
-  }
 
   AD::SetPreaccOut(Proj_Flux_Tensor, nVar);
   AD::EndPreacc();

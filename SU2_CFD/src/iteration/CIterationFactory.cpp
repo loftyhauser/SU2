@@ -45,7 +45,6 @@ CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CCo
   switch (kindSolver) {
 
     case MAIN_SOLVER::EULER: case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::RANS:
-    case MAIN_SOLVER::INC_EULER: case MAIN_SOLVER::INC_NAVIER_STOKES: case MAIN_SOLVER::INC_RANS:
         if (rank == MASTER_NODE)
           cout << "Euler/Navier-Stokes/RANS fluid iteration." << endl;
         iteration = new CFluidIteration(config);
@@ -70,7 +69,6 @@ CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CCo
       break;
 
     case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
-    case MAIN_SOLVER::DISC_ADJ_INC_EULER: case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_INC_RANS:
       if (rank == MASTER_NODE)
         cout << "Discrete adjoint Euler/Navier-Stokes/RANS fluid iteration." << endl;
       iteration = new CDiscAdjFluidIteration(config);

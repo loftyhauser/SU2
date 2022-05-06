@@ -39,7 +39,6 @@ void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integr
   const bool dual_time_2nd = (config[iZone]->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND);
   const bool dual_time = (dual_time_1st || dual_time_2nd);
   const bool grid_IsMoving = config[iZone]->GetGrid_Movement();
-  const bool heat = config[iZone]->GetWeakly_Coupled_Heat();
 
   auto solvers0 = solver[iZone][iInst][MESH_0];
   auto geometries = geometry[iZone][iInst];

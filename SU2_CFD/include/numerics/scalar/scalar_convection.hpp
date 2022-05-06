@@ -83,7 +83,6 @@ class CUpwScalar : public CNumerics {
     : CNumerics(ndim, nvar, config),
       idx(ndim, 1),
       implicit(config->GetKind_TimeIntScheme_Turb() == EULER_IMPLICIT),
-      incompressible(config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE),
       dynamic_grid(config->GetDynamic_Grid()) {
     if (nVar > MAXNVAR) {
       SU2_MPI::Error("Static arrays are too small.", CURRENT_FUNCTION);

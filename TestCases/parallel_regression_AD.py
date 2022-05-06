@@ -112,62 +112,6 @@ def main():
     discadj_rans_naca0012_sst.tol       = 0.00001
     test_list.append(discadj_rans_naca0012_sst)
 
-    #######################################
-    ### Disc. adj. incompressible Euler ###
-    #######################################
-
-    # Adjoint Incompressible Inviscid NACA0012
-    discadj_incomp_NACA0012           = TestCase('discadj_incomp_NACA0012')
-    discadj_incomp_NACA0012.cfg_dir   = "disc_adj_incomp_euler/naca0012"
-    discadj_incomp_NACA0012.cfg_file  = "incomp_NACA0012_disc.cfg"
-    discadj_incomp_NACA0012.test_iter = 20
-    discadj_incomp_NACA0012.test_vals = [20.000000, -4.095412, -2.690483, 0.000000]
-    discadj_incomp_NACA0012.su2_exec  = "parallel_computation.py -f"
-    discadj_incomp_NACA0012.timeout   = 1600
-    discadj_incomp_NACA0012.tol       = 0.00001
-    test_list.append(discadj_incomp_NACA0012)
-
-    #####################################
-    ### Disc. adj. incompressible N-S ###
-    #####################################
-
-    # Adjoint Incompressible Viscous Cylinder (Heated)
-    discadj_incomp_cylinder           = TestCase('discadj_incomp_cylinder')
-    discadj_incomp_cylinder.cfg_dir   = "disc_adj_incomp_navierstokes/cylinder"
-    discadj_incomp_cylinder.cfg_file  = "heated_cylinder.cfg"
-    discadj_incomp_cylinder.test_iter = 20
-    discadj_incomp_cylinder.test_vals = [20.000000, -2.195581, -2.162081, 0.000000]
-    discadj_incomp_cylinder.su2_exec  = "parallel_computation.py -f"
-    discadj_incomp_cylinder.timeout   = 1600
-    discadj_incomp_cylinder.tol       = 0.00001
-    test_list.append(discadj_incomp_cylinder)
-
-    ######################################
-    ### Disc. adj. incompressible RANS ###
-    ######################################
-
-    # Adjoint Incompressible Turbulent NACA 0012 SA
-    discadj_incomp_turb_NACA0012_sa           = TestCase('discadj_incomp_turb_NACA0012_sa')
-    discadj_incomp_turb_NACA0012_sa.cfg_dir   = "disc_adj_incomp_rans/naca0012"
-    discadj_incomp_turb_NACA0012_sa.cfg_file  = "turb_naca0012_sa.cfg"
-    discadj_incomp_turb_NACA0012_sa.test_iter = 10
-    discadj_incomp_turb_NACA0012_sa.test_vals = [10.000000, -3.846018, -1.031079, 0.000000]
-    discadj_incomp_turb_NACA0012_sa.su2_exec  = "parallel_computation.py -f"
-    discadj_incomp_turb_NACA0012_sa.timeout   = 1600
-    discadj_incomp_turb_NACA0012_sa.tol       = 0.00001
-    test_list.append(discadj_incomp_turb_NACA0012_sa)
-
-    # Adjoint Incompressible Turbulent NACA 0012 SST
-    discadj_incomp_turb_NACA0012_sst           = TestCase('discadj_incomp_turb_NACA0012_sst')
-    discadj_incomp_turb_NACA0012_sst.cfg_dir   = "disc_adj_incomp_rans/naca0012"
-    discadj_incomp_turb_NACA0012_sst.cfg_file  = "turb_naca0012_sst.cfg"
-    discadj_incomp_turb_NACA0012_sst.test_iter = 10
-    discadj_incomp_turb_NACA0012_sst.test_vals = [-3.845593, -2.413098, -8.419991, 0.000000]
-    discadj_incomp_turb_NACA0012_sst.su2_exec  = "parallel_computation.py -f"
-    discadj_incomp_turb_NACA0012_sst.timeout   = 1600
-    discadj_incomp_turb_NACA0012_sst.tol       = 0.00001
-    test_list.append(discadj_incomp_turb_NACA0012_sst)
-
     ####################################################################
     ###  Disc. Adj. Axisymmetric RANS                                ###
     ####################################################################
@@ -319,58 +263,6 @@ def main():
     discadj_fsi2.timeout   = 1600
     discadj_fsi2.tol       = 1e-16
     test_list.append(discadj_fsi2)
-
-    ###################################
-    ### Coupled CHT Adjoint         ###
-    ###################################
-
-    # Coupled discrete adjoint for heatflux in heated cylinder array
-    discadj_cht           = TestCase('discadj_cht')
-    discadj_cht.cfg_dir   = "coupled_cht/disc_adj_incomp_2d"
-    discadj_cht.cfg_file  = "cht_2d_3cylinders.cfg"
-    discadj_cht.test_iter = 10
-    discadj_cht.test_vals = [-2.364405, -3.085549, -3.085516, -3.085511]
-    discadj_cht.su2_exec  = "mpirun -n 2 SU2_CFD_AD"
-    discadj_cht.timeout   = 1600
-    discadj_cht.tol       = 0.00001
-    test_list.append(discadj_cht)
-
-    # 2D DA cht streamwise periodic case, 2 zones, avg temp objective
-    da_sp_pinArray_cht_2d_dp_hf           = TestCase('da_sp_pinArray_cht_2d_dp_hf')
-    da_sp_pinArray_cht_2d_dp_hf.cfg_dir   = "incomp_navierstokes/streamwise_periodic/chtPinArray_2d"
-    da_sp_pinArray_cht_2d_dp_hf.cfg_file  = "DA_configMaster.cfg"
-    da_sp_pinArray_cht_2d_dp_hf.test_iter = 100
-    da_sp_pinArray_cht_2d_dp_hf.test_vals = [-4.800597, -4.065541, -4.137339]
-    da_sp_pinArray_cht_2d_dp_hf.su2_exec  = "mpirun -n 2 SU2_CFD_AD"
-    da_sp_pinArray_cht_2d_dp_hf.timeout   = 1600
-    da_sp_pinArray_cht_2d_dp_hf.tol       = 0.00001
-    da_sp_pinArray_cht_2d_dp_hf.multizone = True
-    test_list.append(da_sp_pinArray_cht_2d_dp_hf)
-
-    # 2D DA cht streamwise periodic case, 2 zones, PressureDrop objective, additional pressure drop adjoint equation
-    da_sp_pinArray_cht_2d_mf           = TestCase('da_sp_pinArray_cht_2d_mf')
-    da_sp_pinArray_cht_2d_mf.cfg_dir   = "incomp_navierstokes/streamwise_periodic/dp-adjoint_chtPinArray_2d"
-    da_sp_pinArray_cht_2d_mf.cfg_file  = "configMaster.cfg"
-    da_sp_pinArray_cht_2d_mf.test_iter = 100
-    da_sp_pinArray_cht_2d_mf.test_vals = [-4.609357, -1.273838, -1.502734, -18.503852, -0.834358, -5.813324, -19.074376, -48.287655]
-    da_sp_pinArray_cht_2d_mf.su2_exec  = "mpirun -n 2 SU2_CFD_AD"
-    da_sp_pinArray_cht_2d_mf.timeout   = 1600
-    da_sp_pinArray_cht_2d_mf.tol       = 0.00001
-    da_sp_pinArray_cht_2d_mf.multizone = True
-    test_list.append(da_sp_pinArray_cht_2d_mf)
-
-    # 2D unsteady CHT vortex shedding at RE=200. TAVG_Temperature OF
-    da_unsteadyCHT_cylinder           = TestCase('da_unsteadyCHT_cylinder')
-    da_unsteadyCHT_cylinder.cfg_dir   = "coupled_cht/disc_adj_unsteadyCHT_cylinder"
-    da_unsteadyCHT_cylinder.cfg_file  = "chtMaster.cfg"
-    da_unsteadyCHT_cylinder.test_iter = 2
-    da_unsteadyCHT_cylinder.test_vals = [-3.521358, -4.312658, -4.271025, -9.846075, -7.967741, 0.0000e+00, 3.6840e+00, 2.9483e-01]
-    da_unsteadyCHT_cylinder.su2_exec  = "mpirun -n 2 SU2_CFD_AD"
-    da_unsteadyCHT_cylinder.timeout   = 1600
-    da_unsteadyCHT_cylinder.tol       = 0.00001
-    da_unsteadyCHT_cylinder.unsteady  = True
-    da_unsteadyCHT_cylinder.multizone = True
-    test_list.append(da_unsteadyCHT_cylinder)
 
     ######################################
     ### RUN TESTS                      ###

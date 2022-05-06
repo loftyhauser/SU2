@@ -48,18 +48,14 @@
 #include "../../include/interfaces/fsi/CDiscAdjFlowTractionInterface.hpp"
 
 #include "../../include/variables/CEulerVariable.hpp"
-#include "../../include/variables/CIncEulerVariable.hpp"
 
 #include "../../include/numerics/template.hpp"
 #include "../../include/numerics/transition.hpp"
-#include "../../include/numerics/heat.hpp"
 #include "../../include/numerics/flow/convection/roe.hpp"
-#include "../../include/numerics/flow/convection/fds.hpp"
 #include "../../include/numerics/flow/convection/fvs.hpp"
 #include "../../include/numerics/flow/convection/cusp.hpp"
 #include "../../include/numerics/flow/convection/hllc.hpp"
 #include "../../include/numerics/flow/convection/ausm_slau.hpp"
-#include "../../include/numerics/flow/convection/centered.hpp"
 #include "../../include/numerics/flow/flow_diffusion.hpp"
 #include "../../include/numerics/flow/flow_sources.hpp"
 #include "../../include/numerics/continuous_adjoint/adj_convection.hpp"
@@ -1274,9 +1270,6 @@ void CDriver::InstantiateTurbulentNumerics(unsigned short nVar_Turb, int offset,
 template void CDriver::InstantiateTurbulentNumerics<CEulerVariable::CIndices<unsigned short>>(
     unsigned short, int, const CConfig*, const CSolver*, CNumerics****&) const;
 
-template void CDriver::InstantiateTurbulentNumerics<CIncEulerVariable::CIndices<unsigned short>>(
-    unsigned short, int, const CConfig*, const CSolver*, CNumerics****&) const;
-
 void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSolver ***solver, CNumerics ****&numerics) const {
 
   if (rank == MASTER_NODE)
@@ -1295,7 +1288,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   numerics = new CNumerics***[config->GetnMGLevels()+1] ();
 
   bool compressible = false;
-  bool incompressible = false;
   bool ideal_gas = (config->GetKind_FluidModel() == STANDARD_AIR) || (config->GetKind_FluidModel() == IDEAL_GAS);
   bool roe_low_dissipation = (config->GetKind_RoeLowDiss() != NO_ROELOWDISS);
 
@@ -1322,20 +1314,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
     case MAIN_SOLVER::RANS:
     case MAIN_SOLVER::DISC_ADJ_RANS:
       ns = compressible = turbulent = true;
-      transition = (config->GetKind_Trans_Model() == TURB_TRANS_MODEL::LM); break;
-
-    case MAIN_SOLVER::INC_EULER:
-    case MAIN_SOLVER::DISC_ADJ_INC_EULER:
-      euler = incompressible = true; break;
-
-    case MAIN_SOLVER::INC_NAVIER_STOKES:
-    case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES:
-      ns = incompressible = true;
-      break;
-
-    case MAIN_SOLVER::INC_RANS:
-    case MAIN_SOLVER::DISC_ADJ_INC_RANS:
-      ns = incompressible = turbulent = true;
       transition = (config->GetKind_Trans_Model() == TURB_TRANS_MODEL::LM); break;
 
     case MAIN_SOLVER::FEM_EULER:
@@ -1468,23 +1446,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
             numerics[iMGlevel][FLOW_SOL][conv_bound_term] = new CUpwRoe_Flow(nDim, nVar_Flow, config, false);
 
         }
-        if (incompressible) {
-          /*--- Incompressible flow, use preconditioning method ---*/
-          switch (config->GetKind_Centered_Flow()) {
-            case LAX : numerics[MESH_0][FLOW_SOL][conv_term] = new CCentLaxInc_Flow(nDim, nVar_Flow, config); break;
-            case JST : numerics[MESH_0][FLOW_SOL][conv_term] = new CCentJSTInc_Flow(nDim, nVar_Flow, config); break;
-            default:
-              SU2_MPI::Error("Invalid centered scheme or not implemented.\n Currently, only JST and LAX-FRIEDRICH are available for incompressible flows.", CURRENT_FUNCTION);
-              break;
-          }
-          for (iMGlevel = 1; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-            numerics[iMGlevel][FLOW_SOL][conv_term] = new CCentLaxInc_Flow(nDim, nVar_Flow, config);
-
-          /*--- Definition of the boundary condition method ---*/
-          for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-            numerics[iMGlevel][FLOW_SOL][conv_bound_term] = new CUpwFDSInc_Flow(nDim, nVar_Flow, config);
-
-        }
         break;
       case SPACE_UPWIND :
         if (compressible) {
@@ -1596,20 +1557,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
           }
 
         }
-        if (incompressible) {
-          /*--- Incompressible flow, use artificial compressibility method ---*/
-          switch (config->GetKind_Upwind_Flow()) {
-            case FDS:
-              for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-                numerics[iMGlevel][FLOW_SOL][conv_term] = new CUpwFDSInc_Flow(nDim, nVar_Flow, config);
-                numerics[iMGlevel][FLOW_SOL][conv_bound_term] = new CUpwFDSInc_Flow(nDim, nVar_Flow, config);
-              }
-              break;
-            default:
-              SU2_MPI::Error("Invalid upwind scheme or not implemented.\n Currently, only FDS is available for incompressible flows.", CURRENT_FUNCTION);
-              break;
-          }
-        }
         break;
 
       default:
@@ -1643,42 +1590,18 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
 
       }
     }
-    if (incompressible) {
-      /*--- Incompressible flow, use preconditioning method ---*/
-      numerics[MESH_0][FLOW_SOL][visc_term] = new CAvgGradInc_Flow(nDim, nVar_Flow, true, config);
-      for (iMGlevel = 1; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-        numerics[iMGlevel][FLOW_SOL][visc_term] = new CAvgGradInc_Flow(nDim, nVar_Flow, false, config);
-
-      /*--- Definition of the boundary condition method ---*/
-      for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-        numerics[iMGlevel][FLOW_SOL][visc_bound_term] = new CAvgGradInc_Flow(nDim, nVar_Flow, false, config);
-    }
 
     /*--- Definition of the source term integration scheme for each equation and mesh level ---*/
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
 
       if (config->GetBody_Force() == YES) {
-        if (incompressible)
-          numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceIncBodyForce(nDim, nVar_Flow, config);
-        else
           numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceBodyForce(nDim, nVar_Flow, config);
       }
-      else if (incompressible && (config->GetKind_Streamwise_Periodic() != ENUM_STREAMWISE_PERIODIC::NONE)) {
-        numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceIncStreamwise_Periodic(nDim, nVar_Flow, config);
-      }
-      else if (incompressible && (config->GetKind_DensityModel() == INC_DENSITYMODEL::BOUSSINESQ)) {
-        numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceBoussinesq(nDim, nVar_Flow, config);
-      }
       else if (config->GetRotating_Frame() == YES) {
-        if (incompressible)
-          numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceIncRotatingFrame_Flow(nDim, nVar_Flow, config);
-        else
         numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceRotatingFrame_Flow(nDim, nVar_Flow, config);
       }
       else if (config->GetAxisymmetric() == YES) {
-        if (incompressible)
-          numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceIncAxisymmetric_Flow(nDim, nVar_Flow, config);
-        else if (ideal_gas)
+        if (ideal_gas)
           numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceAxisymmetric_Flow(nDim, nVar_Flow, config);
         else
           numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceGeneralAxisymmetric_Flow(nDim, nVar_Flow, config);
@@ -1691,10 +1614,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
       }
 
       /*--- At the moment it is necessary to have the RHT equation in order to have a volumetric heat source. ---*/
-      if ((incompressible && (config->GetKind_Streamwise_Periodic() != ENUM_STREAMWISE_PERIODIC::NONE)) &&
-               (config->GetEnergy_Equation() && !config->GetStreamwise_Periodic_Temperature()))
-        numerics[iMGlevel][FLOW_SOL][source_second_term] = new CSourceIncStreamwisePeriodic_Outlet(nDim, nVar_Flow, config);
-      else
         numerics[iMGlevel][FLOW_SOL][source_second_term] = new CSourceNothing(nDim, nVar_Flow, config);
     }
 
@@ -1755,10 +1674,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   /*--- Solver definition for the turbulent model problem ---*/
 
   if (turbulent) {
-    if (incompressible)
-      InstantiateTurbulentNumerics<CIncEulerVariable::CIndices<unsigned short> >(nVar_Turb, offset, config,
-                                                                                 solver[MESH_0][TURB_SOL], numerics);
-    else
       InstantiateTurbulentNumerics<CEulerVariable::CIndices<unsigned short> >(nVar_Turb, offset, config,
                                                                               solver[MESH_0][TURB_SOL], numerics);
   }
@@ -1801,9 +1716,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   /*--- Solver definition for the flow adjoint problem ---*/
 
   if (adj_euler || adj_ns) {
-
-    if (incompressible)
-      SU2_MPI::Error("Convective schemes not implemented for incompressible continuous adjoint.", CURRENT_FUNCTION);
 
     /*--- Definition of the convective scheme for each equation and mesh level ---*/
 
@@ -2625,7 +2537,6 @@ bool CFluidDriver::Monitor(unsigned long ExtIter) {
       StopCalc = integration_container[ZONE_0][INST_0][FEA_SOL]->GetConvergence(); break;
     case MAIN_SOLVER::ADJ_EULER: case MAIN_SOLVER::ADJ_NAVIER_STOKES: case MAIN_SOLVER::ADJ_RANS:
     case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
-    case MAIN_SOLVER::DISC_ADJ_INC_EULER: case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_INC_RANS:
     case MAIN_SOLVER::DISC_ADJ_FEM_EULER: case MAIN_SOLVER::DISC_ADJ_FEM_NS: case MAIN_SOLVER::DISC_ADJ_FEM_RANS:
       StopCalc = integration_container[ZONE_0][INST_0][ADJFLOW_SOL]->GetConvergence(); break;
     default:

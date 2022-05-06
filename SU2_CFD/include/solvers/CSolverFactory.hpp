@@ -46,8 +46,6 @@ enum class SUB_SOLVER_TYPE {
   DISC_ADJ_HEAT,           /*!< \brief Discrete adjoint heat solver */
   EULER,                   /*!< \brief Compressible Euler solver */
   NAVIER_STOKES,           /*!< \brief Compressible Navier-Stokes solver */
-  INC_EULER,               /*!< \brief Incompressible Euler solver */
-  INC_NAVIER_STOKES,       /*!< \brief Incompressible Navier-stokes solver */
   FEA,                     /*!< \brief Structural Finite-Element solver */
   DG_EULER,                /*!< \brief Higher-order DG Euler solver*/
   DG_NAVIER_STOKES,        /*!< \brief Higher-order DG Navier-Stokes solver*/

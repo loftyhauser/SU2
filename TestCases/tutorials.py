@@ -42,57 +42,6 @@ def main():
     ### RUN TUTORIAL CASES             ###
     ######################################
 
-    ### CHT
-
-    # CHT incompressible unsteady
-    cht_incompressible_unsteady           = TestCase('cht_incompressible_unsteady')
-    cht_incompressible_unsteady.cfg_dir   = "../Tutorials/multiphysics/unsteady_cht/"
-    cht_incompressible_unsteady.cfg_file  = "cht_2d_3cylinders.cfg"
-    cht_incompressible_unsteady.test_iter = 2
-    cht_incompressible_unsteady.test_vals = [-2.659390, -2.533160, -0.080399, -0.080399, -0.080399, -12.421450,  0.0000e+00, 0.0, 0.0, 0.0, 0.0000e+00, 2.3824e+02] #last columns
-    cht_incompressible_unsteady.su2_exec  = "mpirun -n 2 SU2_CFD"
-    cht_incompressible_unsteady.timeout   = 1600
-    cht_incompressible_unsteady.multizone = True
-    cht_incompressible_unsteady.unsteady  = True
-    cht_incompressible_unsteady.tol       = 0.00001
-    test_list.append(cht_incompressible_unsteady)
-
-    # CHT incompressible, 2D, 3 pins in crossflow
-    cht_incompressible           = TestCase('cht_incompressible')
-    cht_incompressible.cfg_dir   = "../Tutorials/multiphysics/steady_cht"
-    cht_incompressible.cfg_file  = "cht_2d_3cylinders.cfg"
-    cht_incompressible.test_iter = 10
-    cht_incompressible.test_vals = [-2.128826, -0.588813, -0.588813, -0.588813] #last 4 columns
-    cht_incompressible.su2_exec  = "SU2_CFD"
-    cht_incompressible.timeout   = 1600
-    cht_incompressible.multizone = True
-    cht_incompressible.tol       = 0.00001
-    test_list.append(cht_incompressible)
-
-    ### Incompressible Flow
-
-    # 2D pin case massflow periodic with heatflux BC and prescribed extracted outlet heat
-    sp_pinArray_2d_mf_hf           = TestCase('sp_pinArray_2d_mf_hf')
-    sp_pinArray_2d_mf_hf.cfg_dir   = "../Tutorials/incompressible_flow/Inc_Streamwise_Periodic"
-    sp_pinArray_2d_mf_hf.cfg_file  = "sp_pinArray_2d_mf_hf.cfg"
-    sp_pinArray_2d_mf_hf.test_iter = 25
-    sp_pinArray_2d_mf_hf.test_vals = [-4.626384, 1.444465, -0.750978, 241.757337] #last 4 lines
-    sp_pinArray_2d_mf_hf.su2_exec  = "mpirun -n 2 SU2_CFD"
-    sp_pinArray_2d_mf_hf.timeout   = 1600
-    sp_pinArray_2d_mf_hf.tol       = 0.00001
-    test_list.append(sp_pinArray_2d_mf_hf)
-
-    # 2D pin case pressure drop periodic with heatflux BC and temperature periodicity
-    sp_pinArray_2d_dp_hf_tp           = TestCase('sp_pinArray_2d_dp_hf_tp')
-    sp_pinArray_2d_dp_hf_tp.cfg_dir   = "../Tutorials/incompressible_flow/Inc_Streamwise_Periodic"
-    sp_pinArray_2d_dp_hf_tp.cfg_file  = "sp_pinArray_2d_dp_hf_tp.cfg"
-    sp_pinArray_2d_dp_hf_tp.test_iter = 25
-    sp_pinArray_2d_dp_hf_tp.test_vals = [-4.667133, 1.395801, -0.709306, 208.023676] #last 4 lines
-    sp_pinArray_2d_dp_hf_tp.su2_exec  = "mpirun -n 2 SU2_CFD"
-    sp_pinArray_2d_dp_hf_tp.timeout   = 1600
-    sp_pinArray_2d_dp_hf_tp.tol       = 0.00001
-    test_list.append(sp_pinArray_2d_dp_hf_tp)
-
     ### Compressible Flow
 
     # Inviscid Bump

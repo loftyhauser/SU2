@@ -28,9 +28,7 @@
 #include "../../include/solvers/CSolver.hpp"
 #include "../../include/solvers/CSolverFactory.hpp"
 #include "../../include/solvers/CEulerSolver.hpp"
-#include "../../include/solvers/CIncEulerSolver.hpp"
 #include "../../include/solvers/CNSSolver.hpp"
-#include "../../include/solvers/CIncNSSolver.hpp"
 #include "../../include/solvers/CTurbSASolver.hpp"
 #include "../../include/solvers/CTurbSSTSolver.hpp"
 #include "../../include/solvers/CTransLMSolver.hpp"
@@ -60,24 +58,14 @@ CSolver** CSolverFactory::CreateSolverContainer(MAIN_SOLVER kindMainSolver, CCon
     case MAIN_SOLVER::TEMPLATE_SOLVER:
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::TEMPLATE, solver, geometry, config, iMGLevel);
       break;
-    case MAIN_SOLVER::INC_EULER:
-      solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::INC_EULER, solver, geometry, config, iMGLevel);
-      break;
     case MAIN_SOLVER::EULER:
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::EULER, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::INC_NAVIER_STOKES:
-      solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::INC_NAVIER_STOKES, solver, geometry, config, iMGLevel);
       break;
     case MAIN_SOLVER::NAVIER_STOKES:
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
       break;
     case MAIN_SOLVER::RANS:
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[TURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::INC_RANS:
-      solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::INC_NAVIER_STOKES, solver, geometry, config, iMGLevel);
       solver[TURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
       break;
     case MAIN_SOLVER::ADJ_EULER:
@@ -108,20 +96,6 @@ CSolver** CSolverFactory::CreateSolverContainer(MAIN_SOLVER kindMainSolver, CCon
       solver[TURB_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
       solver[ADJTURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_TURB, solver, geometry, config, iMGLevel);
       break;
-    case MAIN_SOLVER::DISC_ADJ_INC_EULER:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::INC_EULER, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FLOW, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::INC_NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FLOW, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_INC_RANS:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::INC_NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FLOW, solver, geometry, config, iMGLevel);
-      solver[TURB_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
-      solver[ADJTURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_TURB, solver, geometry, config, iMGLevel);
-    break;
     case MAIN_SOLVER::FEM_ELASTICITY:
       solver[FEA_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::FEA, solver, geometry, config, iMGLevel);
       break;
@@ -208,9 +182,7 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
       metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
       break;
     case SUB_SOLVER_TYPE::EULER:
-    case SUB_SOLVER_TYPE::INC_EULER:
     case SUB_SOLVER_TYPE::NAVIER_STOKES:
-    case SUB_SOLVER_TYPE::INC_NAVIER_STOKES:
       genericSolver = CreateFlowSolver(kindSolver, solver, geometry, config, iMGLevel);
       if (!config->GetNewtonKrylov() || config->GetDiscrete_Adjoint() || config->GetContinuous_Adjoint())
         metaData.integrationType = INTEGRATION_TYPE::MULTIGRID;
@@ -341,13 +313,6 @@ CSolver* CSolverFactory::CreateFlowSolver(SUB_SOLVER_TYPE kindFlowSolver, CSolve
       break;
     case SUB_SOLVER_TYPE::NAVIER_STOKES:
       flowSolver = new CNSSolver(geometry, config, iMGLevel);
-      break;
-    case SUB_SOLVER_TYPE::INC_EULER:
-      flowSolver = new CIncEulerSolver(geometry, config, iMGLevel);
-      flowSolver->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-      break;
-    case SUB_SOLVER_TYPE::INC_NAVIER_STOKES:
-      flowSolver = new CIncNSSolver(geometry, config, iMGLevel);
       break;
     default:
       SU2_MPI::Error("Flow solver not found", CURRENT_FUNCTION);

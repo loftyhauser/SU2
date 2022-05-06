@@ -101,62 +101,6 @@ def main():
     discadj_rans_naca0012_sst.tol       = 0.00001
     test_list.append(discadj_rans_naca0012_sst)
 
-    #######################################
-    ### Disc. adj. incompressible Euler ###
-    #######################################
-
-    # Adjoint Incompressible Inviscid NACA0012
-    discadj_incomp_NACA0012           = TestCase('discadj_incomp_NACA0012')
-    discadj_incomp_NACA0012.cfg_dir   = "disc_adj_incomp_euler/naca0012"
-    discadj_incomp_NACA0012.cfg_file  = "incomp_NACA0012_disc.cfg"
-    discadj_incomp_NACA0012.test_iter = 20
-    discadj_incomp_NACA0012.test_vals = [20.000000, -4.092007, -2.652750, 0.000000]
-    discadj_incomp_NACA0012.su2_exec  = "SU2_CFD_AD"
-    discadj_incomp_NACA0012.timeout   = 1600
-    discadj_incomp_NACA0012.tol       = 0.00001
-    test_list.append(discadj_incomp_NACA0012)
-
-    #####################################
-    ### Disc. adj. incompressible N-S ###
-    #####################################
-
-    # Adjoint Incompressible Viscous Cylinder (Heated)
-    discadj_incomp_cylinder           = TestCase('discadj_incomp_cylinder')
-    discadj_incomp_cylinder.cfg_dir   = "disc_adj_incomp_navierstokes/cylinder"
-    discadj_incomp_cylinder.cfg_file  = "heated_cylinder.cfg"
-    discadj_incomp_cylinder.test_iter = 20
-    discadj_incomp_cylinder.test_vals = [20.000000, -2.373367, -2.368305, 0.000000] #last 4 columns
-    discadj_incomp_cylinder.su2_exec  = "SU2_CFD_AD"
-    discadj_incomp_cylinder.timeout   = 1600
-    discadj_incomp_cylinder.tol       = 0.00001
-    test_list.append(discadj_incomp_cylinder)
-
-    ######################################
-    ### Disc. adj. incompressible RANS ###
-    ######################################
-
-    # Adjoint Incompressible Turbulent NACA 0012 SA
-    discadj_incomp_turb_NACA0012_sa           = TestCase('discadj_incomp_turb_NACA0012_sa')
-    discadj_incomp_turb_NACA0012_sa.cfg_dir   = "disc_adj_incomp_rans/naca0012"
-    discadj_incomp_turb_NACA0012_sa.cfg_file  = "turb_naca0012_sa.cfg"
-    discadj_incomp_turb_NACA0012_sa.test_iter = 10
-    discadj_incomp_turb_NACA0012_sa.test_vals = [10.000000, -3.845979, -1.031095, 0.000000] #last 4 columns
-    discadj_incomp_turb_NACA0012_sa.su2_exec  = "SU2_CFD_AD"
-    discadj_incomp_turb_NACA0012_sa.timeout   = 1600
-    discadj_incomp_turb_NACA0012_sa.tol       = 0.00001
-    test_list.append(discadj_incomp_turb_NACA0012_sa)
-
-    # Adjoint Incompressible Turbulent NACA 0012 SST
-    discadj_incomp_turb_NACA0012_sst           = TestCase('discadj_incomp_turb_NACA0012_sst')
-    discadj_incomp_turb_NACA0012_sst.cfg_dir   = "disc_adj_incomp_rans/naca0012"
-    discadj_incomp_turb_NACA0012_sst.cfg_file  = "turb_naca0012_sst.cfg"
-    discadj_incomp_turb_NACA0012_sst.test_iter = 10
-    discadj_incomp_turb_NACA0012_sst.test_vals = [-3.845577, -2.414021, -8.420183, 0.000000] #last 4 columns
-    discadj_incomp_turb_NACA0012_sst.su2_exec  = "SU2_CFD_AD"
-    discadj_incomp_turb_NACA0012_sst.timeout   = 1600
-    discadj_incomp_turb_NACA0012_sst.tol       = 0.00001
-    test_list.append(discadj_incomp_turb_NACA0012_sst)
-
     #######################################################
     ### Unsteady Disc. adj. compressible RANS           ###
     #######################################################
@@ -261,21 +205,6 @@ def main():
     discadj_fsi.timeout   = 1600
     discadj_fsi.tol       = 0.00001
     test_list.append(discadj_fsi)
-
-    ###################################
-    ### Coupled CHT Adjoint         ###
-    ###################################
-
-    # Coupled discrete adjoint for heatflux in heated cylinder array
-    discadj_cht           = TestCase('discadj_cht')
-    discadj_cht.cfg_dir   = "coupled_cht/disc_adj_incomp_2d"
-    discadj_cht.cfg_file  = "cht_2d_3cylinders.cfg"
-    discadj_cht.test_iter = 10
-    discadj_cht.test_vals = [-2.364405, -3.085551, -3.085518, -3.085513] #last 4 columns
-    discadj_cht.su2_exec  = "SU2_CFD_AD"
-    discadj_cht.timeout   = 1600
-    discadj_cht.tol       = 0.00001
-    test_list.append(discadj_cht)
 
     ######################################
     ### RUN TESTS                      ###

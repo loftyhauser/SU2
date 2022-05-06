@@ -66,22 +66,16 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
   switch (config[val_iZone]->GetKind_Solver()) {
     case MAIN_SOLVER::EULER:
     case MAIN_SOLVER::DISC_ADJ_EULER:
-    case MAIN_SOLVER::INC_EULER:
-    case MAIN_SOLVER::DISC_ADJ_INC_EULER:
       main_solver = MAIN_SOLVER::EULER;
       break;
 
     case MAIN_SOLVER::NAVIER_STOKES:
     case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:
-    case MAIN_SOLVER::INC_NAVIER_STOKES:
-    case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES:
       main_solver = MAIN_SOLVER::NAVIER_STOKES;
       break;
 
     case MAIN_SOLVER::RANS:
     case MAIN_SOLVER::DISC_ADJ_RANS:
-    case MAIN_SOLVER::INC_RANS:
-    case MAIN_SOLVER::DISC_ADJ_INC_RANS:
       main_solver = MAIN_SOLVER::RANS;
       break;
 
@@ -150,9 +144,7 @@ void CFluidIteration::Update(COutput* output, CIntegration**** integration, CGeo
 
     /*--- Update dual time solver for the turbulence model ---*/
 
-    if ((config[val_iZone]->GetKind_Solver() == MAIN_SOLVER::RANS) || (config[val_iZone]->GetKind_Solver() == MAIN_SOLVER::DISC_ADJ_RANS) ||
-        (config[val_iZone]->GetKind_Solver() == MAIN_SOLVER::INC_RANS) ||
-        (config[val_iZone]->GetKind_Solver() == MAIN_SOLVER::DISC_ADJ_INC_RANS)) {
+    if ((config[val_iZone]->GetKind_Solver() == MAIN_SOLVER::RANS) || (config[val_iZone]->GetKind_Solver() == MAIN_SOLVER::DISC_ADJ_RANS)) {
       integration[val_iZone][val_iInst][TURB_SOL]->SetDualTime_Solver(geometry[val_iZone][val_iInst][MESH_0],
                                                                       solver[val_iZone][val_iInst][MESH_0][TURB_SOL],
                                                                       config[val_iZone], MESH_0);

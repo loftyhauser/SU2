@@ -912,9 +912,6 @@ void CConfig::SetPointersNull(void) {
   MG_PostSmooth             = nullptr;
   Int_Coeffs                = nullptr;
 
-  Kind_Inc_Inlet = nullptr;
-  Kind_Inc_Outlet = nullptr;
-
   Kind_ObjFunc   = nullptr;
 
   Weight_ObjFunc = nullptr;
@@ -1035,9 +1032,6 @@ void CConfig::SetConfig_Options() {
   /*!\brief KIND_MATRIX_COLORING \n DESCRIPTION: Specify the method for matrix coloring for Jacobian computations OPTIONS: see \link MatrixColoring_Map \endlink \n DEFAULT GREEDY_COLORING \ingroup Config*/
   addEnumOption("KIND_MATRIX_COLORING", Kind_Matrix_Coloring, MatrixColoring_Map, GREEDY_COLORING);
 
-  /*!\brief WEAKLY_COUPLED_HEAT_EQUATION \n DESCRIPTION: Enable heat equation for incompressible flows. \ingroup Config*/
-  addBoolOption("WEAKLY_COUPLED_HEAT_EQUATION", Weakly_Coupled_Heat, NO);
-
   /*\brief AXISYMMETRIC \n DESCRIPTION: Axisymmetric simulation \n DEFAULT: false \ingroup Config */
   addBoolOption("AXISYMMETRIC", Axisymmetric, false);
   /* DESCRIPTION: Add the gravity force */
@@ -1090,8 +1084,6 @@ void CConfig::SetConfig_Options() {
   addDoubleOption("SPECIFIC_HEAT_CV", Specific_Heat_Cv, 717.645);
   /*!\brief THERMAL_EXPANSION_COEFF  \n DESCRIPTION: Thermal expansion coefficient (0.00347 K^-1 (air), used for Boussinesq approximation for liquids/non-ideal gases) \ingroup Config*/
   addDoubleOption("THERMAL_EXPANSION_COEFF", Thermal_Expansion_Coeff, 0.00347);
-  /*!\brief MOLECULAR_WEIGHT \n DESCRIPTION: Molecular weight for an incompressible ideal gas (28.96 g/mol (air) default) \ingroup Config*/
-  addDoubleOption("MOLECULAR_WEIGHT", Molecular_Weight, 28.96);
 
   /*--- Options related to VAN der WAALS MODEL and PENG ROBINSON ---*/
 
@@ -1167,10 +1159,6 @@ void CConfig::SetConfig_Options() {
   /*!\brief WALLMODEL_B \n DESCRIPTION: constant B used for the wall model \n DEFAULT 5.5 \ingroup Config*/
   addDoubleOption("WALLMODEL_B", wallModel_B, 5.5);
 
-  /*!\brief BULK_MODULUS \n DESCRIPTION: Value of the Bulk Modulus  \n DEFAULT 1.42E5 \ingroup Config*/
-  addDoubleOption("BULK_MODULUS", Bulk_Modulus, 1.42E5);
-  /* DESCRIPTION: Epsilon^2 multipier in Beta calculation for incompressible preconditioner.  */
-  addDoubleOption("BETA_FACTOR", Beta_Factor, 4.1);
   /*!\brief MACH_NUMBER  \n DESCRIPTION:  Mach number (non-dimensional, based on the free-stream values). 0.0 by default \ingroup Config*/
   addDoubleOption("MACH_NUMBER", Mach, 0.0);
   /*!\brief INIT_OPTION \n DESCRIPTION: Init option to choose between Reynolds or thermodynamics quantities for initializing the solution \n OPTIONS: see \link InitOption_Map \endlink \n DEFAULT REYNOLDS \ingroup Config*/
@@ -1185,35 +1173,6 @@ void CConfig::SetConfig_Options() {
   addDoubleOption("FREESTREAM_TEMPERATURE", Temperature_FreeStream, 288.15);
   /*!\brief FREESTREAM_TEMPERATURE_VE\n DESCRIPTION: Free-stream vibrational-electronic temperature (288.15 K by default) \ingroup Config*/
   addDoubleOption("FREESTREAM_TEMPERATURE_VE", Temperature_ve_FreeStream, 288.15);
-
-
-  /*--- Options related to incompressible flow solver ---*/
-
-  /* DESCRIPTION: Option to choose the density model used in the incompressible flow solver. */
-  addEnumOption("INC_DENSITY_MODEL", Kind_DensityModel, DensityModel_Map, INC_DENSITYMODEL::CONSTANT);
-    /*!\brief ENERGY_EQUATION \n DESCRIPTION: Solve the energy equation in the incompressible flow solver. \ingroup Config*/
-  addBoolOption("INC_ENERGY_EQUATION", Energy_Equation, false);
-  /*!\brief INC_DENSITY_REF \n DESCRIPTION: Reference density for incompressible flows  \ingroup Config*/
-  addDoubleOption("INC_DENSITY_REF", Inc_Density_Ref, 1.0);
-  /*!\brief INC_VELOCITY_REF \n DESCRIPTION: Reference velocity for incompressible flows (1.0 by default) \ingroup Config*/
-  addDoubleOption("INC_VELOCITY_REF", Inc_Velocity_Ref, 1.0);
-  /*!\brief INC_TEMPERATURE_REF \n DESCRIPTION: Reference temperature for incompressible flows with the energy equation (1.0 by default) \ingroup Config*/
-  addDoubleOption("INC_TEMPERATURE_REF", Inc_Temperature_Ref, 1.0);
-  /*!\brief INC_DENSITY_INIT \n DESCRIPTION: Initial density for incompressible flows (1.2886 kg/m^3 by default) \ingroup Config*/
-  addDoubleOption("INC_DENSITY_INIT", Inc_Density_Init, 1.2886);
-  /*!\brief INC_VELOCITY_INIT \n DESCRIPTION: Initial velocity for incompressible flows (1.0,0,0 m/s by default) \ingroup Config*/
-  vel_init[0] = 1.0; vel_init[1] = 0.0; vel_init[2] = 0.0;
-  addDoubleArrayOption("INC_VELOCITY_INIT", 3, vel_init);
-  /*!\brief INC_TEMPERATURE_INIT \n DESCRIPTION: Initial temperature for incompressible flows with the energy equation (288.15 K by default) \ingroup Config*/
-  addDoubleOption("INC_TEMPERATURE_INIT", Inc_Temperature_Init, 288.15);
-  /*!\brief INC_NONDIM \n DESCRIPTION: Non-dimensionalization scheme for incompressible flows. \ingroup Config*/
-  addEnumOption("INC_NONDIM", Ref_Inc_NonDim, NonDim_Map, INITIAL_VALUES);
-    /*!\brief INC_INLET_USENORMAL \n DESCRIPTION: Use the local boundary normal for the flow direction with the incompressible pressure inlet. \ingroup Config*/
-  addBoolOption("INC_INLET_USENORMAL", Inc_Inlet_UseNormal, false);
-  /*!\brief INC_INLET_DAMPING \n DESCRIPTION: Damping factor applied to the iterative updates to the velocity at a pressure inlet in incompressible flow (0.1 by default). \ingroup Config*/
-  addDoubleOption("INC_INLET_DAMPING", Inc_Inlet_Damping, 0.1);
-  /*!\brief INC_OUTLET_DAMPING \n DESCRIPTION: Damping factor applied to the iterative updates to the pressure at a mass flow outlet in incompressible flow (0.1 by default). \ingroup Config*/
-  addDoubleOption("INC_OUTLET_DAMPING", Inc_Outlet_Damping, 0.1);
 
   vel_inf[0] = 1.0; vel_inf[1] = 0.0; vel_inf[2] = 0.0;
   /*!\brief FREESTREAM_VELOCITY\n DESCRIPTION: Free-stream velocity (m/s) */
@@ -1356,9 +1315,6 @@ void CConfig::SetConfig_Options() {
   addStringOption("ACTDISK_FILENAME", ActDisk_FileName, string("actdiskinput.dat"));
 
   /*!\brief INLET_TYPE  \n DESCRIPTION: Inlet boundary type \n OPTIONS: see \link Inlet_Map \endlink \n DEFAULT: TOTAL_CONDITIONS \ingroup Config*/
-  addEnumOption("INLET_TYPE", Kind_Inlet, Inlet_Map, INLET_TYPE::TOTAL_CONDITIONS);
-  /*!\brief INC_INLET_TYPE \n DESCRIPTION: List of inlet types for incompressible flows. List length must match number of inlet markers. Options: VELOCITY_INLET, PRESSURE_INLET, INPUT_FILE. \ingroup Config*/
-  addEnumListOption("INC_INLET_TYPE", nInc_Inlet, Kind_Inc_Inlet, Inlet_Map);
   addBoolOption("SPECIFIED_INLET_PROFILE", Inlet_From_File, false);
   /*!\brief INLET_FILENAME \n DESCRIPTION: Input file for a specified inlet profile (w/ extension) \n DEFAULT: inlet.dat \ingroup Config*/
   addStringOption("INLET_FILENAME", Inlet_Filename, string("inlet.dat"));
@@ -1390,8 +1346,6 @@ void CConfig::SetConfig_Options() {
   /*!\brief MARKER_OUTLET  \n DESCRIPTION: Outlet boundary marker(s)\n
    Format: ( outlet marker, back pressure (static), ... ) \ingroup Config*/
   addStringDoubleListOption("MARKER_OUTLET", nMarker_Outlet, Marker_Outlet, Outlet_Pressure);
-  /*!\brief INC_INLET_TYPE \n DESCRIPTION: List of outlet types for incompressible flows. List length must match number of inlet markers. Options: PRESSURE_OUTLET, MASS_FLOW_OUTLET. \ingroup Config*/
-  addEnumListOption("INC_OUTLET_TYPE", nInc_Outlet, Kind_Inc_Outlet, Inc_Outlet_Map);
   /*!\brief MARKER_ISOTHERMAL DESCRIPTION: Isothermal wall boundary marker(s)\n
    * Format: ( isothermal marker, wall temperature (static), ... ) \ingroup Config  */
   addStringDoubleListOption("MARKER_ISOTHERMAL", nMarker_Isothermal, Marker_Isothermal, Isothermal_Temperature);
@@ -1676,8 +1630,6 @@ void CConfig::SetConfig_Options() {
   addBoolOption("USE_ACCURATE_FLUX_JACOBIANS", Use_Accurate_Jacobians, false);
   /*!\brief CENTRAL_JACOBIAN_FIX_FACTOR \n DESCRIPTION: Improve the numerical properties (diagonal dominance) of the global Jacobian matrix, 3 to 4 is "optimum" (central schemes) \ingroup Config*/
   addDoubleOption("CENTRAL_JACOBIAN_FIX_FACTOR", Cent_Jac_Fix_Factor, 4.0);
-  /*!\brief CENTRAL_JACOBIAN_FIX_FACTOR \n DESCRIPTION: Control numerical properties of the global Jacobian matrix using a multiplication factor for incompressible central schemes \ingroup Config*/
-  addDoubleOption("CENTRAL_INC_JACOBIAN_FIX_FACTOR", Cent_Inc_Jac_Fix_Factor, 1.0);
 
   /*!\brief CONV_NUM_METHOD_ADJFLOW
    *  \n DESCRIPTION: Convective numerical method for the adjoint solver.
@@ -2973,8 +2925,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   unsigned short iCFL, iMarker;
   bool ideal_gas = ((Kind_FluidModel == STANDARD_AIR) ||
                     (Kind_FluidModel == IDEAL_GAS) ||
-                    (Kind_FluidModel == INC_IDEAL_GAS) ||
-                    (Kind_FluidModel == INC_IDEAL_GAS_POLY) ||
                     (Kind_FluidModel == CONSTANT_DENSITY));
   bool standard_air = ((Kind_FluidModel == STANDARD_AIR));
 
@@ -3064,14 +3014,8 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   if (Kind_Solver == MAIN_SOLVER::NAVIER_STOKES && Kind_Turb_Model != TURB_MODEL::NONE){
     SU2_MPI::Error("KIND_TURB_MODEL must be NONE if SOLVER= NAVIER_STOKES", CURRENT_FUNCTION);
   }
-  if (Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES && Kind_Turb_Model != TURB_MODEL::NONE){
-    SU2_MPI::Error("KIND_TURB_MODEL must be NONE if SOLVER= INC_NAVIER_STOKES", CURRENT_FUNCTION);
-  }
   if (Kind_Solver == MAIN_SOLVER::RANS && Kind_Turb_Model == TURB_MODEL::NONE){
     SU2_MPI::Error("A turbulence model must be specified with KIND_TURB_MODEL if SOLVER= RANS", CURRENT_FUNCTION);
-  }
-  if (Kind_Solver == MAIN_SOLVER::INC_RANS && Kind_Turb_Model == TURB_MODEL::NONE){
-    SU2_MPI::Error("A turbulence model must be specified with KIND_TURB_MODEL if SOLVER= INC_RANS", CURRENT_FUNCTION);
   }
 
   /*--- Check if turbulence model can be used for AXISYMMETRIC case---*/
@@ -3094,52 +3038,13 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
         SU2_MPI::Error(string("For RANS problems, use NONE, STANDARD_WALL_FUNCTION or EQUILIBRIUM_WALL_MODEL.\n"), CURRENT_FUNCTION);
 
       if (Kind_WallFunctions[iMarker] == WALL_FUNCTIONS::STANDARD_FUNCTION) {
-        if (!((Kind_Solver == MAIN_SOLVER::RANS) || (Kind_Solver == MAIN_SOLVER::INC_RANS)))
+        if (!((Kind_Solver == MAIN_SOLVER::RANS) ))
           SU2_MPI::Error(string("Wall model STANDARD_FUNCTION only available for RANS or INC_RANS.\n"), CURRENT_FUNCTION);
         if (nRough_Wall != 0)
           SU2_MPI::Error(string("Wall model STANDARD_FUNCTION and WALL_ROUGHNESS migh not be compatible. Checking required!\n"), CURRENT_FUNCTION);
       }
 
     }
-  }
-
-  /*--- Initialize the AoA and Sideslip variables for the incompressible
-   solver. This is typically unused (often internal flows). Also fixed CL
-   mode for incompressible flows is not implemented ---*/
-
-  if (Kind_Solver == MAIN_SOLVER::INC_EULER ||
-      Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES ||
-      Kind_Solver == MAIN_SOLVER::INC_RANS) {
-
-    /*--- Compute x-velocity with a safegaurd for 0.0. ---*/
-
-    su2double Vx = 1e-10;
-    if (vel_init[0] != 0.0) {
-      Vx = vel_init[0];
-    }
-
-    /*--- Compute the angle-of-attack and sideslip. ---*/
-
-    su2double alpha = 0.0, beta = 0.0;
-    if (val_nDim == 2) {
-      alpha = atan(vel_init[1]/Vx)*180.0/PI_NUMBER;
-    } else {
-      alpha = atan(vel_init[2]/Vx)*180.0/PI_NUMBER;
-      beta  = atan(vel_init[1]/Vx)*180.0/PI_NUMBER;
-    }
-
-    /*--- Set alpha and beta in the config class. ---*/
-
-    SetAoA(alpha);
-    SetAoS(beta);
-
-    if (Fixed_CL_Mode) {
-      SU2_MPI::Error(string("Fixed CL mode not implemented for the incompressible solver. \n"), CURRENT_FUNCTION);
-    }
-
-    /*--- Inc CHT simulation, but energy equation of fluid is inactive. ---*/
-    if (Multizone_Problem && (nMarker_CHTInterface > 0) && !Energy_Equation)
-      SU2_MPI::Error(string("You probably want to set INC_ENERGY_EQUATION= YES for the fluid solver. \n"), CURRENT_FUNCTION);
   }
 
   /*--- By default, in 2D we should use TWOD_AIRFOIL (independenly from the input file) ---*/
@@ -3337,10 +3242,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
       Kind_Solver == MAIN_SOLVER::FEM_RANS ||
       Kind_Solver == MAIN_SOLVER::FEM_LES){
     Kind_Regime = ENUM_REGIME::COMPRESSIBLE;
-  } else if (Kind_Solver == MAIN_SOLVER::INC_EULER ||
-             Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES ||
-             Kind_Solver == MAIN_SOLVER::INC_RANS){
-    Kind_Regime = ENUM_REGIME::INCOMPRESSIBLE;
   }  else {
     Kind_Regime = ENUM_REGIME::NO_FLOW;
   }
@@ -3400,19 +3301,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     }
   }
 
-  /*--- Check for Boundary condition available for NICF ---*/
-
-  if (ideal_gas && (Kind_Solver != MAIN_SOLVER::INC_EULER && Kind_Solver != MAIN_SOLVER::INC_NAVIER_STOKES && Kind_Solver != MAIN_SOLVER::INC_RANS)) {
-    if (SystemMeasurements == US && standard_air) {
-      if (Kind_ViscosityModel != VISCOSITYMODEL::SUTHERLAND) {
-        SU2_MPI::Error("Only SUTHERLAND viscosity model can be used with US Measurement", CURRENT_FUNCTION);
-      }
-    }
-    if (Kind_ConductivityModel != CONDUCTIVITYMODEL::CONSTANT_PRANDTL ) {
-      SU2_MPI::Error("Only CONSTANT_PRANDTL thermal conductivity model can be used with STANDARD_AIR and IDEAL_GAS", CURRENT_FUNCTION);
-    }
-
-  }
     /*--- Check for Boundary condition option agreement ---*/
   if (Kind_InitOption == REYNOLDS){
     if ((Kind_Solver == MAIN_SOLVER::NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::RANS) && Reynolds <=0){
@@ -3640,12 +3528,7 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
       (Kind_Turb_Model != TURB_MODEL::NONE))
     Kind_Solver = MAIN_SOLVER::RANS;
 
-  if ((Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES) &&
-      (Kind_Turb_Model != TURB_MODEL::NONE))
-    Kind_Solver = MAIN_SOLVER::INC_RANS;
-
   if (Kind_Solver == MAIN_SOLVER::EULER ||
-      Kind_Solver == MAIN_SOLVER::INC_EULER ||
       Kind_Solver == MAIN_SOLVER::FEM_EULER)
     Kind_Turb_Model = TURB_MODEL::NONE;
 
@@ -3966,9 +3849,7 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
              ( Kind_Solver == MAIN_SOLVER::ADJ_RANS               ) ||
              ( Kind_Solver == MAIN_SOLVER::FEM_NAVIER_STOKES      ) ||
              ( Kind_Solver == MAIN_SOLVER::FEM_RANS               ) ||
-             ( Kind_Solver == MAIN_SOLVER::FEM_LES                ) ||
-             ( Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES      ) ||
-             ( Kind_Solver == MAIN_SOLVER::INC_RANS               ) );
+             ( Kind_Solver == MAIN_SOLVER::FEM_LES                ) );
 
   /*--- To avoid boundary intersections, let's add a small constant to the planes. ---*/
 
@@ -4142,127 +4023,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     Design_Variable[0] = NO_DEFORMATION;
   }
 
-  /*--- Checks for incompressible flow problems. ---*/
-
-  if (Kind_Solver == MAIN_SOLVER::INC_EULER) {
-    /*--- Force inviscid problems to use constant density and disable energy. ---*/
-    if (Kind_DensityModel != INC_DENSITYMODEL::CONSTANT || Energy_Equation == true) {
-      SU2_MPI::Error("Inviscid incompressible problems must be constant density (no energy eqn.).\n Use DENSITY_MODEL= CONSTANT and ENERGY_EQUATION= NO.", CURRENT_FUNCTION);
-    }
-  }
-
-  /*--- Default values should recover original incompressible behavior (for old config files). ---*/
-
-  if (Kind_Solver == MAIN_SOLVER::INC_EULER || Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::INC_RANS) {
-    if ((Kind_DensityModel == INC_DENSITYMODEL::CONSTANT) || (Kind_DensityModel == INC_DENSITYMODEL::BOUSSINESQ))
-      Kind_FluidModel = CONSTANT_DENSITY;
-  }
-
-  /*--- Energy equation must be active for any fluid models other than constant density. ---*/
-
-  if (Kind_DensityModel != INC_DENSITYMODEL::CONSTANT) Energy_Equation = true;
-
-  if (Kind_DensityModel == INC_DENSITYMODEL::BOUSSINESQ) {
-    Energy_Equation = true;
-    if (Body_Force) {
-      SU2_MPI::Error("Body force and Boussinesq source terms are not currently compatible.", CURRENT_FUNCTION);
-    }
-  }
-
-  if (Kind_DensityModel == INC_DENSITYMODEL::VARIABLE) {
-    if (Kind_FluidModel != INC_IDEAL_GAS && Kind_FluidModel != INC_IDEAL_GAS_POLY) {
-      SU2_MPI::Error("Variable density incompressible solver limited to ideal gases.\n Check the fluid model options (use INC_IDEAL_GAS, INC_IDEAL_GAS_POLY).", CURRENT_FUNCTION);
-    }
-  }
-
-  if (Kind_Solver != MAIN_SOLVER::INC_EULER && Kind_Solver != MAIN_SOLVER::INC_NAVIER_STOKES && Kind_Solver != MAIN_SOLVER::INC_RANS) {
-    if ((Kind_FluidModel == CONSTANT_DENSITY) || (Kind_FluidModel == INC_IDEAL_GAS) || (Kind_FluidModel == INC_IDEAL_GAS_POLY)) {
-      SU2_MPI::Error("Fluid model not compatible with compressible flows.\n CONSTANT_DENSITY/INC_IDEAL_GAS/INC_IDEAL_GAS_POLY are for incompressible only.", CURRENT_FUNCTION);
-    }
-  }
-
-  if (Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::INC_RANS) {
-    if (Kind_ViscosityModel == VISCOSITYMODEL::SUTHERLAND) {
-      if ((Kind_FluidModel != INC_IDEAL_GAS) && (Kind_FluidModel != INC_IDEAL_GAS_POLY)) {
-        SU2_MPI::Error("Sutherland's law only valid for ideal gases in incompressible flows.\n Must use VISCOSITY_MODEL=CONSTANT_VISCOSITY and set viscosity with\n MU_CONSTANT, or use DENSITY_MODEL= VARIABLE with FLUID_MODEL= INC_IDEAL_GAS or INC_IDEAL_GAS_POLY for VISCOSITY_MODEL=SUTHERLAND.\n NOTE: FREESTREAM_VISCOSITY is no longer used for incompressible flows!", CURRENT_FUNCTION);
-      }
-    }
-  }
-
-  /*--- Check the coefficients for the polynomial models. ---*/
-
-  if (Kind_Solver != MAIN_SOLVER::INC_EULER && Kind_Solver != MAIN_SOLVER::INC_NAVIER_STOKES && Kind_Solver != MAIN_SOLVER::INC_RANS) {
-    if ((Kind_ViscosityModel == VISCOSITYMODEL::POLYNOMIAL) || (Kind_ConductivityModel == CONDUCTIVITYMODEL::POLYNOMIAL) || (Kind_FluidModel == INC_IDEAL_GAS_POLY)) {
-      SU2_MPI::Error("POLYNOMIAL_VISCOSITY and POLYNOMIAL_CONDUCTIVITY are for incompressible only currently.", CURRENT_FUNCTION);
-    }
-  }
-
-  if ((Kind_Solver == MAIN_SOLVER::INC_EULER || Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::INC_RANS) && (Kind_FluidModel == INC_IDEAL_GAS_POLY)) {
-    su2double sum = 0.0;
-    for (unsigned short iVar = 0; iVar < N_POLY_COEFFS; iVar++) {
-      sum += GetCp_PolyCoeff(iVar);
-    }
-    if ((N_POLY_COEFFS < 1) || (sum == 0.0))
-      SU2_MPI::Error(string("CP_POLYCOEFFS not set for fluid model INC_IDEAL_GAS_POLY. \n"), CURRENT_FUNCTION);
-  }
-
-  if (((Kind_Solver == MAIN_SOLVER::INC_EULER || Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::INC_RANS)) && (Kind_ViscosityModel == VISCOSITYMODEL::POLYNOMIAL)) {
-    su2double sum = 0.0;
-    for (unsigned short iVar = 0; iVar < N_POLY_COEFFS; iVar++) {
-      sum += GetMu_PolyCoeff(iVar);
-    }
-    if ((N_POLY_COEFFS < 1) || (sum == 0.0))
-      SU2_MPI::Error(string("MU_POLYCOEFFS not set for viscosity model POLYNOMIAL_VISCOSITY. \n"), CURRENT_FUNCTION);
-  }
-
-  if ((Kind_Solver == MAIN_SOLVER::INC_EULER || Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::INC_RANS) && (Kind_ConductivityModel == CONDUCTIVITYMODEL::POLYNOMIAL)) {
-    su2double sum = 0.0;
-    for (unsigned short iVar = 0; iVar < N_POLY_COEFFS; iVar++) {
-      sum += GetKt_PolyCoeff(iVar);
-    }
-    if ((N_POLY_COEFFS < 1) || (sum == 0.0))
-      SU2_MPI::Error(string("KT_POLYCOEFFS not set for conductivity model POLYNOMIAL_CONDUCTIVITY. \n"), CURRENT_FUNCTION);
-  }
-
-  /*--- Incompressible solver currently limited to SI units. ---*/
-
-  if ((Kind_Solver == MAIN_SOLVER::INC_EULER || Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::INC_RANS) && (SystemMeasurements == US)) {
-    SU2_MPI::Error("Must use SI units for incompressible solver.", CURRENT_FUNCTION);
-  }
-
-  /*--- Check that the non-dim type is valid. ---*/
-
-  if ((Kind_Solver == MAIN_SOLVER::INC_EULER || Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::INC_RANS)) {
-    if ((Ref_Inc_NonDim != INITIAL_VALUES) && (Ref_Inc_NonDim != REFERENCE_VALUES) && (Ref_Inc_NonDim != DIMENSIONAL)) {
-      SU2_MPI::Error("Incompressible non-dim. scheme invalid.\n Must use INITIAL_VALUES, REFERENCE_VALUES, or DIMENSIONAL.", CURRENT_FUNCTION);
-    }
-  }
-
-  /*--- Check that the incompressible inlets are correctly specified. ---*/
-
-  if ((Kind_Solver == MAIN_SOLVER::INC_EULER || Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::INC_RANS) && (nMarker_Inlet != 0)) {
-    if (nMarker_Inlet != nInc_Inlet) {
-      SU2_MPI::Error("Inlet types for incompressible problem improperly specified.\n Use INC_INLET_TYPE= VELOCITY_INLET or PRESSURE_INLET.\n Must list a type for each inlet marker, including duplicates, e.g.,\n INC_INLET_TYPE= VELOCITY_INLET VELOCITY_INLET PRESSURE_INLET", CURRENT_FUNCTION);
-    }
-    for (unsigned short iInlet = 0; iInlet < nInc_Inlet; iInlet++){
-      if ((Kind_Inc_Inlet[iInlet] != INLET_TYPE::VELOCITY_INLET) && (Kind_Inc_Inlet[iInlet] != INLET_TYPE::PRESSURE_INLET)) {
-        SU2_MPI::Error("Undefined incompressible inlet type. VELOCITY_INLET or PRESSURE_INLET possible.", CURRENT_FUNCTION);
-      }
-    }
-  }
-
-  /*--- Check that the incompressible inlets are correctly specified. ---*/
-
-  if ((Kind_Solver == MAIN_SOLVER::INC_EULER || Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::INC_RANS) && (nMarker_Outlet != 0)) {
-    if (nMarker_Outlet != nInc_Outlet) {
-      SU2_MPI::Error("Outlet types for incompressible problem improperly specified.\n Use INC_OUTLET_TYPE= PRESSURE_OUTLET or MASS_FLOW_OUTLET.\n Must list a type for each inlet marker, including duplicates, e.g.,\n INC_OUTLET_TYPE= PRESSURE_OUTLET PRESSURE_OUTLET MASS_FLOW_OUTLET", CURRENT_FUNCTION);
-    }
-    for (unsigned short iInlet = 0; iInlet < nInc_Outlet; iInlet++){
-      if ((Kind_Inc_Outlet[iInlet] != INC_OUTLET_TYPE::PRESSURE_OUTLET) && (Kind_Inc_Outlet[iInlet] != INC_OUTLET_TYPE::MASS_FLOW_OUTLET)) {
-        SU2_MPI::Error("Undefined incompressible outlet type. PRESSURE_OUTLET or MASS_FLOW_OUTLET possible.", CURRENT_FUNCTION);
-      }
-    }
-  }
 
   /*--- Assert that there are two markers being analyzed if the
    pressure drop objective function is selected. ---*/
@@ -4275,19 +4035,13 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
 
   /*--- Check feasibility for Streamwise Periodic flow ---*/
   if (Kind_Streamwise_Periodic != ENUM_STREAMWISE_PERIODIC::NONE) {
-    if (Kind_Regime != ENUM_REGIME::INCOMPRESSIBLE)
-      SU2_MPI::Error("Streamwise Periodic Flow currently only implemented for incompressible flow.", CURRENT_FUNCTION);
-    if (Kind_Solver == MAIN_SOLVER::INC_EULER)
-      SU2_MPI::Error("Streamwise Periodic Flow + Incompressible Euler: Not tested yet.", CURRENT_FUNCTION);
     if (nMarker_PerBound == 0)
       SU2_MPI::Error("A MARKER_PERIODIC pair has to be set with KIND_STREAMWISE_PERIODIC != NONE.", CURRENT_FUNCTION);
-    if (Energy_Equation && Streamwise_Periodic_Temperature && nMarker_Isothermal != 0)
-      SU2_MPI::Error("No MARKER_ISOTHERMAL marker allowed with STREAMWISE_PERIODIC_TEMPERATURE= YES, only MARKER_HEATFLUX & MARKER_SYM.", CURRENT_FUNCTION);
     if (Ref_Inc_NonDim != DIMENSIONAL)
       SU2_MPI::Error("Streamwise Periodicity only works with \"INC_NONDIM= DIMENSIONAL\", the nondimensionalization with source terms doesn;t work in general.", CURRENT_FUNCTION);
     if (Axisymmetric)
       SU2_MPI::Error("Streamwise Periodicity terms does not not have axisymmetric corrections.", CURRENT_FUNCTION);
-    if (!Energy_Equation) Streamwise_Periodic_Temperature = false;
+    Streamwise_Periodic_Temperature = false;
   } else {
     /*--- Safety measure ---*/
     Streamwise_Periodic_Temperature = false;
@@ -4455,9 +4209,7 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
 
   if ((Kind_Solver != MAIN_SOLVER::RANS) &&
       (Kind_Solver != MAIN_SOLVER::ADJ_RANS) &&
-      (Kind_Solver != MAIN_SOLVER::DISC_ADJ_RANS) &&
-      (Kind_Solver != MAIN_SOLVER::INC_RANS) &&
-      (Kind_Solver != MAIN_SOLVER::DISC_ADJ_INC_RANS)){
+      (Kind_Solver != MAIN_SOLVER::DISC_ADJ_RANS)){
     Kind_ConductivityModel_Turb = CONDUCTIVITYMODEL_TURB::NONE;
   }
 
@@ -4526,15 +4278,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
         break;
       case MAIN_SOLVER::NAVIER_STOKES:
         Kind_Solver = MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES;
-        break;
-      case MAIN_SOLVER::INC_EULER:
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_INC_EULER;
-        break;
-      case MAIN_SOLVER::INC_RANS:
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_INC_RANS;
-        break;
-      case MAIN_SOLVER::INC_NAVIER_STOKES:
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES;
         break;
       case MAIN_SOLVER::FEM_EULER :
         Kind_Solver = MAIN_SOLVER::DISC_ADJ_FEM_EULER;
@@ -5163,22 +4906,16 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
     }
     switch (Kind_Solver) {
       case MAIN_SOLVER::EULER:     case MAIN_SOLVER::DISC_ADJ_EULER:
-      case MAIN_SOLVER::INC_EULER: case MAIN_SOLVER::DISC_ADJ_INC_EULER:
       case MAIN_SOLVER::FEM_EULER: case MAIN_SOLVER::DISC_ADJ_FEM_EULER:
         if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) cout << "Compressible Euler equations." << endl;
-        if (Kind_Regime == ENUM_REGIME::INCOMPRESSIBLE) cout << "Incompressible Euler equations." << endl;
         break;
       case MAIN_SOLVER::NAVIER_STOKES:     case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:
-      case MAIN_SOLVER::INC_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES:
       case MAIN_SOLVER::FEM_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_FEM_NS:
         if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) cout << "Compressible Laminar Navier-Stokes' equations." << endl;
-        if (Kind_Regime == ENUM_REGIME::INCOMPRESSIBLE) cout << "Incompressible Laminar Navier-Stokes' equations." << endl;
         break;
       case MAIN_SOLVER::RANS:     case MAIN_SOLVER::DISC_ADJ_RANS:
-      case MAIN_SOLVER::INC_RANS: case MAIN_SOLVER::DISC_ADJ_INC_RANS:
       case MAIN_SOLVER::FEM_RANS: case MAIN_SOLVER::DISC_ADJ_FEM_RANS:
         if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) cout << "Compressible RANS equations." << endl;
-        if (Kind_Regime == ENUM_REGIME::INCOMPRESSIBLE) cout << "Incompressible RANS equations." << endl;
         cout << "Turbulence model: ";
         switch (Kind_Turb_Model) {
           case TURB_MODEL::NONE: break;
@@ -5207,7 +4944,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
         break;
       case MAIN_SOLVER::FEM_LES:
         if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE)   cout << "Compressible LES equations." << endl;
-        if (Kind_Regime == ENUM_REGIME::INCOMPRESSIBLE) cout << "Incompressible LES equations." << endl;
         cout << "LES Subgrid Scale model: ";
         switch (Kind_SGS_Model) {
           case TURB_SGS_MODEL::IMPLICIT_LES: cout << "Implicit LES" << endl; break;
@@ -5295,11 +5031,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
         else if (Ref_NonDim == FREESTREAM_PRESS_EQ_ONE) { cout << "Non-Dimensional simulation (P=1.0, Rho=1.0, T=1.0 at the farfield)." << endl; }
         else if (Ref_NonDim == FREESTREAM_VEL_EQ_MACH) { cout << "Non-Dimensional simulation (V=Mach, Rho=1.0, T=1.0 at the farfield)." << endl; }
         else if (Ref_NonDim == FREESTREAM_VEL_EQ_ONE) { cout << "Non-Dimensional simulation (V=1.0, Rho=1.0, T=1.0 at the farfield)." << endl; }
-    } else if (Kind_Regime == ENUM_REGIME::INCOMPRESSIBLE) {
-        if (Ref_Inc_NonDim == DIMENSIONAL) { cout << "Dimensional simulation." << endl; }
-        else if (Ref_Inc_NonDim == INITIAL_VALUES) { cout << "Non-Dimensional simulation using intialization values." << endl; }
-        else if (Ref_Inc_NonDim == REFERENCE_VALUES) { cout << "Non-Dimensional simulation using user-specified reference values." << endl; }
-      }
+    }
 
       if (RefArea == 0.0) cout << "The reference area will be computed using y(2D) or z(3D) projection." << endl;
       else { cout << "The reference area is " << RefArea;
@@ -5705,7 +5437,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
     if (SmoothNumGrid) cout << "There are some smoothing iterations on the grid coordinates." << endl;
 
     if ((Kind_Solver == MAIN_SOLVER::EULER)          || (Kind_Solver == MAIN_SOLVER::NAVIER_STOKES)          || (Kind_Solver == MAIN_SOLVER::RANS) ||
-        (Kind_Solver == MAIN_SOLVER::INC_EULER)      || (Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES)      || (Kind_Solver == MAIN_SOLVER::INC_RANS) ||
         (Kind_Solver == MAIN_SOLVER::DISC_ADJ_EULER) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS) ) {
 
       if (Kind_ConvNumScheme_Flow == SPACE_CENTERED) {
@@ -5812,8 +5543,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
     }
 
     if ((Kind_Solver == MAIN_SOLVER::NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::RANS) ||
-        (Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::INC_RANS) ||
-        (Kind_Solver == MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_INC_RANS) ||
         (Kind_Solver == MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS)) {
         cout << "Average of gradients with correction (viscous flow terms)." << endl;
     }
@@ -5822,7 +5551,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
       cout << "Average of gradients with correction (viscous adjoint terms)." << endl;
     }
 
-    if ((Kind_Solver == MAIN_SOLVER::RANS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS) || (Kind_Solver == MAIN_SOLVER::INC_RANS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_INC_RANS) ) {
+    if ((Kind_Solver == MAIN_SOLVER::RANS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS)) {
       cout << "Average of gradients with correction (viscous turbulence terms)." << endl;
     }
 
@@ -5917,8 +5646,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
   }
 
     if ((Kind_Solver == MAIN_SOLVER::EULER) || (Kind_Solver == MAIN_SOLVER::NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::RANS) ||
-        (Kind_Solver == MAIN_SOLVER::INC_EULER) || (Kind_Solver == MAIN_SOLVER::INC_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::INC_RANS) ||
-        (Kind_Solver == MAIN_SOLVER::DISC_ADJ_INC_EULER) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_INC_RANS) ||
         (Kind_Solver == MAIN_SOLVER::DISC_ADJ_EULER) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS) ||
         (Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM_EULER) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM_NS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM_RANS)) {
       switch (Kind_TimeIntScheme_Flow) {
@@ -6116,8 +5843,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
 
     }
 
-    if ((Kind_Solver == MAIN_SOLVER::RANS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS) ||
-        (Kind_Solver == MAIN_SOLVER::INC_RANS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_INC_RANS))
+    if ((Kind_Solver == MAIN_SOLVER::RANS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS))
       if (Kind_TimeIntScheme_Turb == EULER_IMPLICIT)
         cout << "Euler implicit time integration for the turbulence model." << endl;
   }
@@ -7327,14 +7053,14 @@ void CConfig::SetGlobalParam(MAIN_SOLVER val_solver,
   };
 
   switch (val_solver) {
-    case MAIN_SOLVER::EULER: case MAIN_SOLVER::INC_EULER:
+    case MAIN_SOLVER::EULER:
       SetFlowParam();
       break;
-    case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::INC_NAVIER_STOKES:
+    case MAIN_SOLVER::NAVIER_STOKES:
       SetFlowParam();
 
       break;
-    case MAIN_SOLVER::RANS: case MAIN_SOLVER::INC_RANS:
+    case MAIN_SOLVER::RANS:
       SetFlowParam();
       SetTurbParam();
 
@@ -7686,20 +7412,6 @@ su2double CConfig::GetExhaust_Pressure_Target(string val_marker) const {
   return Exhaust_Pressure_Target[iMarker_EngineExhaust];
 }
 
-INLET_TYPE CConfig::GetKind_Inc_Inlet(string val_marker) const {
-  unsigned short iMarker_Inlet;
-  for (iMarker_Inlet = 0; iMarker_Inlet < nMarker_Inlet; iMarker_Inlet++)
-    if (Marker_Inlet[iMarker_Inlet] == val_marker) break;
-  return Kind_Inc_Inlet[iMarker_Inlet];
-}
-
-INC_OUTLET_TYPE CConfig::GetKind_Inc_Outlet(string val_marker) const {
-  unsigned short iMarker_Outlet;
-  for (iMarker_Outlet = 0; iMarker_Outlet < nMarker_Outlet; iMarker_Outlet++)
-    if (Marker_Outlet[iMarker_Outlet] == val_marker) break;
-  return Kind_Inc_Outlet[iMarker_Outlet];
-}
-
 su2double CConfig::GetInlet_Ttotal(string val_marker) const {
   unsigned short iMarker_Inlet;
   for (iMarker_Inlet = 0; iMarker_Inlet < nMarker_Inlet; iMarker_Inlet++)
@@ -7867,68 +7579,6 @@ su2double CConfig::GetFlowAngleIn_BC() const {
   }
 
   return alpha_in;
-}
-
-su2double CConfig::GetIncInlet_BC() const {
-
-  su2double val_out = 0.0;
-
-  if (nMarker_Inlet > 0) {
-    if (Kind_Inc_Inlet[0] == INLET_TYPE::VELOCITY_INLET)
-      val_out = Inlet_Ptotal[0]/Velocity_Ref;
-    else if (Kind_Inc_Inlet[0] == INLET_TYPE::PRESSURE_INLET)
-      val_out = Inlet_Ptotal[0]/Pressure_Ref;
-  }
-
-  return val_out;
-}
-
-void CConfig::SetIncInlet_BC(su2double val_in) {
-
-  if (nMarker_Inlet > 0) {
-    if (Kind_Inc_Inlet[0] == INLET_TYPE::VELOCITY_INLET)
-      Inlet_Ptotal[0] = val_in*Velocity_Ref;
-    else if (Kind_Inc_Inlet[0] == INLET_TYPE::PRESSURE_INLET)
-      Inlet_Ptotal[0] = val_in*Pressure_Ref;
-  }
-}
-
-su2double CConfig::GetIncTemperature_BC() const {
-
-  su2double val_out = 0.0;
-
-  if (nMarker_Inlet > 0)
-    val_out = Inlet_Ttotal[0]/Temperature_Ref;
-
-  return val_out;
-}
-
-void CConfig::SetIncTemperature_BC(su2double val_temperature) {
-  if (nMarker_Inlet > 0)
-    Inlet_Ttotal[0] = val_temperature*Temperature_Ref;
-}
-
-su2double CConfig::GetIncPressureOut_BC() const {
-
-  su2double pressure_out = 0.0;
-
-  if (nMarker_FarField > 0){
-    pressure_out = Pressure_FreeStreamND;
-  } else if (nMarker_Outlet > 0) {
-    pressure_out = Outlet_Pressure[0]/Pressure_Ref;
-  }
-
-  return pressure_out;
-}
-
-void CConfig::SetIncPressureOut_BC(su2double val_pressure) {
-
-  if (nMarker_FarField > 0){
-    Pressure_FreeStreamND = val_pressure;
-  } else if (nMarker_Outlet > 0) {
-    Outlet_Pressure[0] = val_pressure*Pressure_Ref;
-  }
-
 }
 
 su2double CConfig::GetIsothermal_Temperature(string val_marker) const {

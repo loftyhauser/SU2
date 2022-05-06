@@ -84,8 +84,7 @@ class CAvgGrad_Scalar : public CNumerics {
     : CNumerics(val_nDim, val_nVar, config),
       idx(val_nDim, 1),
       correct_gradient(correct_grad),
-      implicit(config->GetKind_TimeIntScheme_Turb() == EULER_IMPLICIT),
-      incompressible(config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE) {
+      implicit(config->GetKind_TimeIntScheme_Turb() == EULER_IMPLICIT){
     if (nVar > MAXNVAR) {
       SU2_MPI::Error("Static arrays are too small.", CURRENT_FUNCTION);
     }

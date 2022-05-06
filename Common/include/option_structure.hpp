@@ -230,9 +230,6 @@ enum class MAIN_SOLVER {
   EULER,                       /*!< \brief Definition of the Euler's solver. */
   NAVIER_STOKES,               /*!< \brief Definition of the Navier-Stokes' solver. */
   RANS,                        /*!< \brief Definition of the Reynolds-averaged Navier-Stokes' (RANS) solver. */
-  INC_EULER,                   /*!< \brief Definition of the incompressible Euler's solver. */
-  INC_NAVIER_STOKES,           /*!< \brief Definition of the incompressible Navier-Stokes' solver. */
-  INC_RANS,                    /*!< \brief Definition of the incompressible Reynolds-averaged Navier-Stokes' (RANS) solver. */
   FEM_ELASTICITY,              /*!< \brief Definition of a FEM solver. */
   ADJ_EULER,                   /*!< \brief Definition of the continuous adjoint Euler's solver. */
   ADJ_NAVIER_STOKES,           /*!< \brief Definition of the continuous adjoint Navier-Stokes' solver. */
@@ -241,9 +238,6 @@ enum class MAIN_SOLVER {
   DISC_ADJ_EULER,              /*!< \brief Definition of the discrete adjoint Euler solver. */
   DISC_ADJ_RANS,               /*!< \brief Definition of the discrete adjoint Reynolds-averaged Navier-Stokes' (RANS) solver. */
   DISC_ADJ_NAVIER_STOKES,      /*!< \brief Definition of the discrete adjoint Navier-Stokes' solver. */
-  DISC_ADJ_INC_EULER,          /*!< \brief Definition of the discrete adjoint incompressible Euler solver. */
-  DISC_ADJ_INC_RANS,           /*!< \brief Definition of the discrete adjoint incompressible Reynolds-averaged Navier-Stokes' (RANS) solver. */
-  DISC_ADJ_INC_NAVIER_STOKES,  /*!< \brief Definition of the discrete adjoint incompressible Navier-Stokes'. */
   DISC_ADJ_FEM_EULER,          /*!< \brief Definition of the discrete adjoint FEM Euler solver. */
   DISC_ADJ_FEM_RANS,           /*!< \brief Definition of the discrete adjoint FEM Reynolds-averaged Navier-Stokes' (RANS) solver. */
   DISC_ADJ_FEM_NS,             /*!< \brief Definition of the discrete adjoint FEM Navier-Stokes' solver. */
@@ -259,9 +253,6 @@ static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
   MakePair("EULER", MAIN_SOLVER::EULER)
   MakePair("NAVIER_STOKES", MAIN_SOLVER::NAVIER_STOKES)
   MakePair("RANS", MAIN_SOLVER::RANS)
-  MakePair("INC_EULER", MAIN_SOLVER::INC_EULER)
-  MakePair("INC_NAVIER_STOKES", MAIN_SOLVER::INC_NAVIER_STOKES)
-  MakePair("INC_RANS", MAIN_SOLVER::INC_RANS)
   MakePair("FEM_EULER", MAIN_SOLVER::FEM_EULER)
   MakePair("FEM_NAVIER_STOKES", MAIN_SOLVER::FEM_NAVIER_STOKES)
   MakePair("FEM_RANS", MAIN_SOLVER::FEM_RANS)
@@ -273,9 +264,6 @@ static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
   MakePair("DISC_ADJ_EULER", MAIN_SOLVER::DISC_ADJ_EULER)
   MakePair("DISC_ADJ_RANS", MAIN_SOLVER::DISC_ADJ_RANS)
   MakePair("DISC_ADJ_NAVIERSTOKES", MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES)
-  MakePair("DISC_ADJ_INC_EULER", MAIN_SOLVER::DISC_ADJ_INC_EULER)
-  MakePair("DISC_ADJ_INC_RANS", MAIN_SOLVER::DISC_ADJ_INC_RANS)
-  MakePair("DISC_ADJ_INC_NAVIERSTOKES", MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES)
   MakePair("DISC_ADJ_FEM_EULER", MAIN_SOLVER::DISC_ADJ_FEM_EULER)
   MakePair("DISC_ADJ_FEM_RANS", MAIN_SOLVER::DISC_ADJ_FEM_RANS)
   MakePair("DISC_ADJ_FEM_NS", MAIN_SOLVER::DISC_ADJ_FEM_NS)
@@ -389,7 +377,6 @@ enum ENUM_TRANSFER {
  */
 enum class ENUM_REGIME {
   COMPRESSIBLE = 0,   /*!< \brief Definition of compressible solver. */
-  INCOMPRESSIBLE = 1, /*!< \brief Definition of incompressible solver. */
   NO_FLOW = 2
 };
 
@@ -511,8 +498,6 @@ enum ENUM_FLUIDMODEL {
   VW_GAS = 2,             /*!< \brief Van Der Waals gas model. */
   PR_GAS = 3,             /*!< \brief Perfect Real gas model. */
   CONSTANT_DENSITY = 4,   /*!< \brief Constant density gas model. */
-  INC_IDEAL_GAS = 5,      /*!< \brief Incompressible ideal gas model. */
-  INC_IDEAL_GAS_POLY = 6, /*!< \brief Inc. ideal gas, polynomial gas model. */
 };
 static const MapType<std::string, ENUM_FLUIDMODEL> FluidModel_Map = {
   MakePair("STANDARD_AIR", STANDARD_AIR)
@@ -520,22 +505,6 @@ static const MapType<std::string, ENUM_FLUIDMODEL> FluidModel_Map = {
   MakePair("VW_GAS", VW_GAS)
   MakePair("PR_GAS", PR_GAS)
   MakePair("CONSTANT_DENSITY", CONSTANT_DENSITY)
-  MakePair("INC_IDEAL_GAS", INC_IDEAL_GAS)
-  MakePair("INC_IDEAL_GAS_POLY", INC_IDEAL_GAS_POLY)
-};
-
-/*!
- * \brief Types of density models
- */
-enum class INC_DENSITYMODEL {
-  CONSTANT,   /*!< \brief Constant density. */
-  BOUSSINESQ, /*!< \brief Boussinesq density model. */
-  VARIABLE,   /*!< \brief Variable density model. */
-};
-static const MapType<std::string, INC_DENSITYMODEL> DensityModel_Map = {
-  MakePair("CONSTANT", INC_DENSITYMODEL::CONSTANT)
-  MakePair("BOUSSINESQ", INC_DENSITYMODEL::BOUSSINESQ)
-  MakePair("VARIABLE", INC_DENSITYMODEL::VARIABLE)
 };
 
 /*!
@@ -568,12 +537,10 @@ static const MapType<std::string, FREESTREAM_OPTION> FreeStreamOption_Map = {
 enum class VISCOSITYMODEL {
   CONSTANT, /*!< \brief Constant viscosity. */
   SUTHERLAND, /*!< \brief Sutherlands Law viscosity. */
-  POLYNOMIAL, /*!< \brief Polynomial viscosity. */
 };
 static const MapType<std::string, VISCOSITYMODEL> ViscosityModel_Map = {
   MakePair("CONSTANT_VISCOSITY", VISCOSITYMODEL::CONSTANT)
   MakePair("SUTHERLAND", VISCOSITYMODEL::SUTHERLAND)
-  MakePair("POLYNOMIAL_VISCOSITY", VISCOSITYMODEL::POLYNOMIAL)
 };
 
 /*!
@@ -1149,27 +1116,11 @@ enum class INLET_TYPE {
   TOTAL_CONDITIONS, /*!< \brief User specifies total pressure, total temperature, and flow direction. */
   MASS_FLOW,        /*!< \brief User specifies density and velocity (mass flow). */
   INPUT_FILE,       /*!< \brief User specifies an input file. */
-  VELOCITY_INLET,   /*!< \brief Velocity inlet for an incompressible flow. */
-  PRESSURE_INLET,   /*!< \brief Total pressure inlet for an incompressible flow. */
 };
 static const MapType<std::string, INLET_TYPE> Inlet_Map = {
   MakePair("TOTAL_CONDITIONS", INLET_TYPE::TOTAL_CONDITIONS)
   MakePair("MASS_FLOW", INLET_TYPE::MASS_FLOW)
   MakePair("INPUT_FILE", INLET_TYPE::INPUT_FILE)
-  MakePair("VELOCITY_INLET", INLET_TYPE::VELOCITY_INLET)
-  MakePair("PRESSURE_INLET", INLET_TYPE::PRESSURE_INLET)
-};
-
-/*!
- * \brief Types outlet boundary treatments
- */
-enum class INC_OUTLET_TYPE {
-  PRESSURE_OUTLET,    /*!< \brief Gauge pressure outlet for incompressible flow */
-  MASS_FLOW_OUTLET,   /*!< \brief Mass flow outlet for incompressible flow. */
-};
-static const MapType<std::string, INC_OUTLET_TYPE> Inc_Outlet_Map = {
-  MakePair("PRESSURE_OUTLET",  INC_OUTLET_TYPE::PRESSURE_OUTLET)
-  MakePair("MASS_FLOW_OUTLET", INC_OUTLET_TYPE::MASS_FLOW_OUTLET)
 };
 
 /*!
@@ -1889,13 +1840,10 @@ enum class VERIFICATION_SOLUTION {
   RINGLEB,                  /*!< \brief Ringleb flow. Exact solution of the steady Euler equations. */
   NS_UNIT_QUAD,             /*!< \brief Exact solution of the laminar Navier Stokes equations without heat conduction. */
   TAYLOR_GREEN_VORTEX,      /*!< \brief Taylor Green Vortex. */
-  INC_TAYLOR_GREEN_VORTEX,  /*!< \brief Incompressible Taylor Green Vortex (2D). */
   MMS_NS_UNIT_QUAD,         /*!< \brief Manufactured solution of the laminar Navier Stokes equations on a unit quad. */
   MMS_NS_UNIT_QUAD_WALL_BC, /*!< \brief Manufactured solution of the laminar Navier Stokes equations on a unit quad with wall BC's. */
   MMS_NS_TWO_HALF_CIRCLES,  /*!< \brief Manufactured solution of the laminar Navier Stokes equations between two half circles. */
   MMS_NS_TWO_HALF_SPHERES,  /*!< \brief Manufactured solution of the laminar Navier Stokes equations between two half spheres. */
-  MMS_INC_EULER,            /*!< \brief Manufactured solution of the incompressible Euler equations. */
-  MMS_INC_NS,               /*!< \brief Manufactured solution of the laminar incompressible Navier Stokes equations. */
   USER_DEFINED_SOLUTION,    /*!< \brief User defined solution. */
 };
 static const MapType<std::string, VERIFICATION_SOLUTION> Verification_Solution_Map = {
@@ -1904,13 +1852,10 @@ static const MapType<std::string, VERIFICATION_SOLUTION> Verification_Solution_M
   MakePair("RINGLEB",                  VERIFICATION_SOLUTION::RINGLEB)
   MakePair("NS_UNIT_QUAD",             VERIFICATION_SOLUTION::NS_UNIT_QUAD)
   MakePair("TAYLOR_GREEN_VORTEX",      VERIFICATION_SOLUTION::TAYLOR_GREEN_VORTEX)
-  MakePair("INC_TAYLOR_GREEN_VORTEX",  VERIFICATION_SOLUTION::INC_TAYLOR_GREEN_VORTEX)
   MakePair("MMS_NS_UNIT_QUAD",         VERIFICATION_SOLUTION::MMS_NS_UNIT_QUAD)
   MakePair("MMS_NS_UNIT_QUAD_WALL_BC", VERIFICATION_SOLUTION::MMS_NS_UNIT_QUAD_WALL_BC)
   MakePair("MMS_NS_TWO_HALF_CIRCLES",  VERIFICATION_SOLUTION::MMS_NS_TWO_HALF_CIRCLES)
   MakePair("MMS_NS_TWO_HALF_SPHERES",  VERIFICATION_SOLUTION::MMS_NS_TWO_HALF_SPHERES)
-  MakePair("MMS_INC_EULER",            VERIFICATION_SOLUTION::MMS_INC_EULER)
-  MakePair("MMS_INC_NS",               VERIFICATION_SOLUTION::MMS_INC_NS)
   MakePair("USER_DEFINED_SOLUTION",    VERIFICATION_SOLUTION::USER_DEFINED_SOLUTION)
 };
 

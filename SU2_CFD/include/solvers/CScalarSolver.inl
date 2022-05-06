@@ -471,7 +471,6 @@ void CScalarSolver<VariableType>::SetResidual_DualTime(CGeometry* geometry, CSol
   const bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
   const bool first_order = (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST);
   const bool second_order = (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND);
-  const bool incompressible = (config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE);
 
   /*--- Flow solution, needed to get density. ---*/
 
@@ -503,19 +502,9 @@ void CScalarSolver<VariableType>::SetResidual_DualTime(CGeometry* geometry, CSol
     SU2_OMP_FOR_STAT(omp_chunk_size)
     for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
       if (Conservative) {
-        if (incompressible) {
-          /*--- This is temporary and only valid for constant-density problems:
-          density could also be temperature dependent, but as it is not a part
-          of the solution vector it's neither stored for previous time steps
-          nor updated with the solution at the end of each iteration. */
-          Density_nM1 = flowNodes->GetDensity(iPoint);
-          Density_n = flowNodes->GetDensity(iPoint);
-          Density_nP1 = flowNodes->GetDensity(iPoint);
-        } else {
           Density_nM1 = flowNodes->GetSolution_time_n1(iPoint)[0];
           Density_n = flowNodes->GetSolution_time_n(iPoint, 0);
           Density_nP1 = flowNodes->GetSolution(iPoint, 0);
-        }
       }
 
       /*--- Retrieve the solution at time levels n-1, n, and n+1. Note that
@@ -569,9 +558,6 @@ void CScalarSolver<VariableType>::SetResidual_DualTime(CGeometry* geometry, CSol
       U_time_n = nodes->GetSolution_time_n(iPoint);
 
       if (Conservative) {
-        if (incompressible)
-          Density_n = flowNodes->GetDensity(iPoint);  // Temporary fix
-        else
           Density_n = flowNodes->GetSolution_time_n(iPoint, 0);
       }
 
@@ -625,9 +611,6 @@ void CScalarSolver<VariableType>::SetResidual_DualTime(CGeometry* geometry, CSol
           /*--- Multiply by density at node i for the SST model ---*/
 
           if (Conservative) {
-            if (incompressible)
-              Density_n = flowNodes->GetDensity(iPoint);  // Temporary fix
-            else
               Density_n = flowNodes->GetSolution_time_n(iPoint, 0);
           }
 
@@ -666,19 +649,9 @@ void CScalarSolver<VariableType>::SetResidual_DualTime(CGeometry* geometry, CSol
       if (Conservative) {
         /*--- If this is the SST model, we need to multiply by the density
          in order to get the conservative variables ---*/
-        if (incompressible) {
-          /*--- This is temporary and only valid for constant-density problems:
-          density could also be temperature dependent, but as it is not a part
-          of the solution vector it's neither stored for previous time steps
-          nor updated with the solution at the end of each iteration. */
-          Density_nM1 = flowNodes->GetDensity(iPoint);
-          Density_n = flowNodes->GetDensity(iPoint);
-          Density_nP1 = flowNodes->GetDensity(iPoint);
-        } else {
           Density_nM1 = flowNodes->GetSolution_time_n1(iPoint)[0];
           Density_n = flowNodes->GetSolution_time_n(iPoint, 0);
           Density_nP1 = flowNodes->GetSolution(iPoint, 0);
-        }
       }
 
       for (iVar = 0; iVar < nVar; iVar++) {

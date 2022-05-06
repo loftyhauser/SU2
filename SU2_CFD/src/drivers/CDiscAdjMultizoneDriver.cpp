@@ -67,9 +67,6 @@ CDiscAdjMultizoneDriver::CDiscAdjMultizoneDriver(char* confFile,
         case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
           direct_iteration[iZone][iInst] = CIterationFactory::CreateIteration(MAIN_SOLVER::EULER, config_container[iZone]);
           break;
-        case MAIN_SOLVER::DISC_ADJ_INC_EULER: case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_INC_RANS:
-          direct_iteration[iZone][iInst] = CIterationFactory::CreateIteration(MAIN_SOLVER::INC_EULER, config_container[iZone]);
-          break;
         case MAIN_SOLVER::DISC_ADJ_FEM:
           direct_iteration[iZone][iInst] = CIterationFactory::CreateIteration(MAIN_SOLVER::FEM_ELASTICITY, config_container[iZone]);
           break;
@@ -85,9 +82,6 @@ CDiscAdjMultizoneDriver::CDiscAdjMultizoneDriver(char* confFile,
 
       case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
         direct_output[iZone] = COutputFactory::CreateOutput(MAIN_SOLVER::EULER, config_container[iZone], nDim);
-        break;
-      case MAIN_SOLVER::DISC_ADJ_INC_EULER: case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_INC_RANS:
-        direct_output[iZone] = COutputFactory::CreateOutput(MAIN_SOLVER::INC_EULER, config_container[iZone], nDim);
         break;
       case MAIN_SOLVER::DISC_ADJ_FEM:
         direct_output[iZone] = COutputFactory::CreateOutput(MAIN_SOLVER::FEM_ELASTICITY, config_container[iZone], nDim);
@@ -711,7 +705,6 @@ void CDiscAdjMultizoneDriver::SetObjFunction(RECORDING kind_recording) {
     switch (config->GetKind_Solver()) {
 
       case MAIN_SOLVER::DISC_ADJ_EULER:     case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:     case MAIN_SOLVER::DISC_ADJ_RANS:
-      case MAIN_SOLVER::DISC_ADJ_INC_EULER: case MAIN_SOLVER::DISC_ADJ_INC_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_INC_RANS:
 
         solvers[FLOW_SOL]->Pressure_Forces(geometry, config);
         solvers[FLOW_SOL]->Momentum_Forces(geometry, config);

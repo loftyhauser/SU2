@@ -31,11 +31,9 @@
 CCentLaxInc_Flow::CCentLaxInc_Flow(unsigned short val_nDim, unsigned short val_nVar, const CConfig* config) : CNumerics(val_nDim, val_nVar, config) {
 
   implicit         = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-  variable_density = (config->GetKind_DensityModel() == INC_DENSITYMODEL::VARIABLE);
   /* A grid is defined as dynamic if there's rigid grid movement or grid deformation AND the problem is time domain */
   dynamic_grid = config->GetDynamic_Grid();
-  fix_factor = config->GetCent_Inc_Jac_Fix_Factor();
-  energy           = config->GetEnergy_Equation();
+  fix_factor = 1;
 
   /*--- Artificial dissipation part ---*/
 
@@ -127,9 +125,6 @@ CNumerics::ResidualType<> CCentLaxInc_Flow::ComputeResidual(const CConfig* confi
    law, but in the future, dRhodT should be in the fluid model. ---*/
 
   MeandRhodT = 0.0;
-  if (variable_density) {
-    MeandRhodT = -MeanDensity/MeanTemperature;
-  }
 
   /*--- Get projected flux tensor ---*/
 
@@ -230,7 +225,6 @@ CNumerics::ResidualType<> CCentLaxInc_Flow::ComputeResidual(const CConfig* confi
 
   /*--- Remove energy contributions if we aren't solving the energy equation. ---*/
 
-  if (!energy) {
     ProjFlux[nDim+1] = 0.0;
     if (implicit) {
       for (iVar = 0; iVar < nVar; iVar++) {
@@ -241,7 +235,6 @@ CNumerics::ResidualType<> CCentLaxInc_Flow::ComputeResidual(const CConfig* confi
         Jacobian_j[nDim+1][iVar] = 0.0;
       }
     }
-  }
 
   return ResidualType<>(ProjFlux, Jacobian_i, Jacobian_j);
 
@@ -251,11 +244,9 @@ CNumerics::ResidualType<> CCentLaxInc_Flow::ComputeResidual(const CConfig* confi
 CCentJSTInc_Flow::CCentJSTInc_Flow(unsigned short val_nDim, unsigned short val_nVar, const CConfig* config) : CNumerics(val_nDim, val_nVar, config) {
 
   implicit         = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-  variable_density = (config->GetKind_DensityModel() == INC_DENSITYMODEL::VARIABLE);
-  energy           = config->GetEnergy_Equation();
   /* A grid is defined as dynamic if there's rigid grid movement or grid deformation AND the problem is time domain */
   dynamic_grid = config->GetDynamic_Grid();
-  fix_factor = config->GetCent_Inc_Jac_Fix_Factor();
+  fix_factor = 1;
 
   /*--- Artifical dissipation part ---*/
 
@@ -350,9 +341,6 @@ CNumerics::ResidualType<> CCentJSTInc_Flow::ComputeResidual(const CConfig* confi
    law, but in the future, dRhodT should be in the fluid model. ---*/
 
   MeandRhodT = 0.0;
-  if (variable_density) {
-    MeandRhodT = -MeanDensity/MeanTemperature;
-  }
 
   /*--- Get projected flux tensor ---*/
 
@@ -459,7 +447,6 @@ CNumerics::ResidualType<> CCentJSTInc_Flow::ComputeResidual(const CConfig* confi
 
   /*--- Remove energy contributions if not solving the energy equation. ---*/
 
-  if (!energy) {
     ProjFlux[nDim+1] = 0.0;
     if (implicit) {
       for (iVar = 0; iVar < nVar; iVar++) {
@@ -470,7 +457,6 @@ CNumerics::ResidualType<> CCentJSTInc_Flow::ComputeResidual(const CConfig* confi
         Jacobian_j[nDim+1][iVar] = 0.0;
       }
     }
-  }
 
   return ResidualType<>(ProjFlux, Jacobian_i, Jacobian_j);
 

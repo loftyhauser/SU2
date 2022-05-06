@@ -213,37 +213,6 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
 
   }
 
-  /*--- Register incompressible initialization values as input ---*/
-
-  if ((config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE) &&
-      ((KindDirect_Solver == RUNTIME_FLOW_SYS))) {
-
-    /*--- Access the velocity (or pressure) and temperature at the
-     inlet BC and the back pressure at the outlet. Note that we are
-     assuming that have internal flow, which will be true for the
-     majority of cases. External flows with far-field BCs will report
-     zero for these sensitivities. ---*/
-
-    ModVel    = config->GetIncInlet_BC();
-    BPressure = config->GetIncPressureOut_BC();
-    Temperature = config->GetIncTemperature_BC();
-
-    /*--- Register the variables for AD. ---*/
-
-    if (!reset) {
-      AD::RegisterInput(ModVel);
-      AD::RegisterInput(BPressure);
-      AD::RegisterInput(Temperature);
-    }
-
-    /*--- Set the BC values in the config class. ---*/
-
-    config->SetIncInlet_BC(ModVel);
-    config->SetIncPressureOut_BC(BPressure);
-    config->SetIncTemperature_BC(Temperature);
-
-  }
-
   /*--- Here it is possible to register other variables as input that influence the flow solution
    * and thereby also the objective function. The adjoint values (i.e. the derivatives) can be
    * extracted in the ExtractAdjointVariables routine. ---*/
@@ -355,20 +324,6 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
     SU2_MPI::Allreduce(&Local_Sens_AoA,   &Total_Sens_AoA,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
     SU2_MPI::Allreduce(&Local_Sens_Temp,  &Total_Sens_Temp,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
     SU2_MPI::Allreduce(&Local_Sens_Press, &Total_Sens_Press, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-  }
-
-  if ((config->GetKind_Regime() == ENUM_REGIME::INCOMPRESSIBLE) &&
-      (KindDirect_Solver == RUNTIME_FLOW_SYS )) {
-
-    su2double Local_Sens_ModVel, Local_Sens_BPress, Local_Sens_Temp;
-
-    Local_Sens_ModVel = SU2_TYPE::GetDerivative(ModVel);
-    Local_Sens_BPress = SU2_TYPE::GetDerivative(BPressure);
-    Local_Sens_Temp   = SU2_TYPE::GetDerivative(Temperature);
-
-    SU2_MPI::Allreduce(&Local_Sens_ModVel, &Total_Sens_ModVel, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-    SU2_MPI::Allreduce(&Local_Sens_BPress, &Total_Sens_BPress, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
-    SU2_MPI::Allreduce(&Local_Sens_Temp,   &Total_Sens_Temp,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
   }
 
   /*--- Extract here the adjoint values of everything else that is registered as input in RegisterInput. ---*/
