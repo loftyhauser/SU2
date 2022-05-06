@@ -30,7 +30,6 @@
 #include "../../include/integration/CMultiGridIntegration.hpp"
 #include "../../include/integration/CNewtonIntegration.hpp"
 #include "../../include/integration/CStructuralIntegration.hpp"
-#include "../../include/integration/CFEM_DG_Integration.hpp"
 
 CIntegration** CIntegrationFactory::CreateIntegrationContainer(MAIN_SOLVER kindMainSolver,
                                                                const CSolver* const* solver_container){
@@ -66,9 +65,6 @@ CIntegration* CIntegrationFactory::CreateIntegration(INTEGRATION_TYPE integratio
       break;
     case INTEGRATION_TYPE::STRUCTURAL:
       integration = new CStructuralIntegration();
-      break;
-    case INTEGRATION_TYPE::FEM_DG:
-      integration = new CFEM_DG_Integration();
       break;
     case INTEGRATION_TYPE::NONE:
       integration = nullptr;

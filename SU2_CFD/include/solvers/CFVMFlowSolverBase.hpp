@@ -842,11 +842,6 @@ class CFVMFlowSolverBase : public CSolver {
     InitiateComms(geometry, config, SOLUTION);
     CompleteComms(geometry, config, SOLUTION);
 
-    if (!adjoint) {
-      /*--- For verification cases, compute the global error metrics. ---*/
-      ComputeVerificationError(geometry, config);
-    }
-
   }
 
   /*!
@@ -967,8 +962,6 @@ class CFVMFlowSolverBase : public CSolver {
     InitiateComms(geometry, config, SOLUTION);
     CompleteComms(geometry, config, SOLUTION);
 
-    /*--- For verification cases, compute the global error metrics. ---*/
-    ComputeVerificationError(geometry, config);
   }
 
   /*!
@@ -2169,19 +2162,6 @@ class CFVMFlowSolverBase : public CSolver {
     else
       Inlet_FlowDir[val_marker][val_vertex][val_dim] = val_flowdir;
   }
-
-  /*!
-   * \brief Compute the global error measures (L2, Linf) for verification cases.
-   * \param[in] geometry - Geometrical definition.
-   * \param[in] config   - Definition of the particular problem.
-   */
-  void ComputeVerificationError(CGeometry* geometry, CConfig* config) final;
-
-  /*!
-   * \brief Print verification error to screen, derived solvers must define this.
-   * \param[in] config - Definition of the particular problem.
-   */
-  virtual void PrintVerificationError(const CConfig* config) const = 0;
 
   /*!
    * \brief Compute the pressure forces and all the adimensional coefficients.

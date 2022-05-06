@@ -53,7 +53,6 @@
 #include "../../../Common/include/grid_movement/CVolumetricMovement.hpp"
 #include "../../../Common/include/linear_algebra/blas_structure.hpp"
 #include "../../../Common/include/graph_coloring_structure.hpp"
-#include "../../../Common/include/toolboxes/MMS/CVerificationSolution.hpp"
 #include "../variables/CVariable.hpp"
 
 using namespace std;
@@ -195,8 +194,6 @@ public:
 
   CSysVector<su2double> OutputVariables;    /*!< \brief vector to store the extra variables to be written. */
   string* OutputHeadingNames;               /*!< \brief vector of strings to store the headings for the exra variables */
-
-  CVerificationSolution *VerificationSolution; /*!< \brief Verification solution class used within the solver. */
 
   vector<string> fields;
 
@@ -3731,13 +3728,6 @@ public:
   inline vector<string> GetSolutionFields() const{return fields;}
 
   /*!
-   * \brief A virtual member.
-   * \param[in] geometry - Geometrical definition.
-   * \param[in] config   - Definition of the particular problem.
-   */
-  inline virtual void ComputeVerificationError(CGeometry *geometry, CConfig *config) { }
-
-  /*!
    * \brief Compute the tractions at the vertices.
    * \param[in] geometry - Geometrical definition.
    * \param[in] config   - Definition of the particular problem.
@@ -3808,15 +3798,6 @@ public:
   virtual StreamwisePeriodicValues GetStreamwisePeriodicValues() const { return StreamwisePeriodicValues(); }
 
 protected:
-  /*!
-   * \brief Allocate the memory for the verification solution, if necessary.
-   * \param[in] nDim   - Number of dimensions of the problem.
-   * \param[in] nVar   - Number of variables of the problem.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void SetVerificationSolution(unsigned short nDim,
-                               unsigned short nVar,
-                               CConfig        *config);
 
   /*!
    * \brief "Add" residual at (iPoint,iVar) to residual variables local to the thread.

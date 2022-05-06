@@ -466,70 +466,6 @@ void CFVMFlowSolverBase<V, R>::Viscous_Residual_impl(unsigned long iEdge, CGeome
 }
 
 template <class V, ENUM_REGIME R>
-void CFVMFlowSolverBase<V, R>::ComputeVerificationError(CGeometry* geometry, CConfig* config) {
-
-  /*--- The errors only need to be computed on the finest grid. ---*/
-  if (MGLevel != MESH_0) return;
-
-  /*--- If this is a verification case, we can compute the global
-   error metrics by using the difference between the local error
-   and the known solution at each DOF. This is then collected into
-   RMS (L2) and maximum (Linf) global error norms. From these
-   global measures, one can compute the order of accuracy. ---*/
-
-  bool write_heads =
-      ((((config->GetInnerIter() % (config->GetScreen_Wrt_Freq(2) * 40)) == 0) && (config->GetInnerIter() != 0)) ||
-       (config->GetInnerIter() == 1));
-  if (!write_heads) return;
-
-  SU2_OMP_MASTER {
-
-  /*--- Check if there actually is an exact solution for this
-        verification case, if computed at all. ---*/
-  if (VerificationSolution && VerificationSolution->ExactSolutionKnown()) {
-    /*--- Get the physical time if necessary. ---*/
-    su2double time = 0.0;
-    if (config->GetTime_Marching() != TIME_MARCHING::STEADY) time = config->GetPhysicalTime();
-
-    /*--- Reset the global error measures to zero. ---*/
-    for (unsigned short iVar = 0; iVar < nVar; iVar++) {
-      VerificationSolution->SetError_RMS(iVar, 0.0);
-      VerificationSolution->SetError_Max(iVar, 0.0, 0);
-    }
-
-    /*--- Loop over all owned points. ---*/
-    for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++) {
-      /* Set the pointers to the coordinates and solution of this DOF. */
-      const su2double* coor = geometry->nodes->GetCoord(iPoint);
-      su2double* solDOF = nodes->GetSolution(iPoint);
-
-      /* Get local error from the verification solution class. */
-      vector<su2double> error(nVar, 0.0);
-      VerificationSolution->GetLocalError(coor, time, solDOF, error.data());
-
-      /* Increment the global error measures */
-      for (unsigned short iVar = 0; iVar < nVar; iVar++) {
-        VerificationSolution->AddError_RMS(iVar, error[iVar] * error[iVar]);
-        VerificationSolution->AddError_Max(iVar, fabs(error[iVar]), geometry->nodes->GetGlobalIndex(iPoint),
-                                           geometry->nodes->GetCoord(iPoint));
-      }
-    }
-
-    /* Finalize the calculation of the global error measures. */
-    VerificationSolution->SetVerificationError(geometry->GetGlobal_nPointDomain(), config);
-
-    /*--- Screen output of the error metrics. This can be improved
-     once the new output classes are in place. ---*/
-
-    PrintVerificationError(config);
-  }
-
-  }
-  END_SU2_OMP_MASTER
-  SU2_OMP_BARRIER
-}
-
-template <class V, ENUM_REGIME R>
 void CFVMFlowSolverBase<V, R>::ComputeUnderRelaxationFactor(const CConfig* config) {
   /* Loop over the solution update given by relaxing the linear
    system for this nonlinear iteration. */
@@ -1004,29 +940,6 @@ void CFVMFlowSolverBase<V, R>::SetInitialCondition(CGeometry **geometry, CSolver
 
   unsigned long iPoint;
   unsigned short iMesh;
-
-  /*--- Check if a verification solution is to be computed. ---*/
-  if ((VerificationSolution) && (TimeIter == 0) && !restart) {
-
-    /*--- Loop over the multigrid levels. ---*/
-    for (iMesh = 0; iMesh <= config->GetnMGLevels(); iMesh++) {
-
-      /*--- Loop over all grid points. ---*/
-      SU2_OMP_FOR_STAT(omp_chunk_size)
-      for (iPoint = 0; iPoint < geometry[iMesh]->GetnPoint(); iPoint++) {
-
-        /* Set the pointers to the coordinates and solution of this DOF. */
-        const su2double *coor = geometry[iMesh]->nodes->GetCoord(iPoint);
-        su2double *solDOF     = solver_container[iMesh][FLOW_SOL]->GetNodes()->GetSolution(iPoint);
-
-        /* Set the solution in this DOF to the initial condition provided by
-           the verification solution class. This can be the exact solution,
-           but this is not necessary. */
-        VerificationSolution->GetInitialCondition(coor, solDOF);
-      }
-      END_SU2_OMP_FOR
-    }
-  }
 
   /*--- The value of the solution for the first iteration of the dual time ---*/
 
@@ -1517,62 +1430,8 @@ void CFVMFlowSolverBase<V, R>::BC_Custom(CGeometry* geometry, CSolver** solver_c
                                          CNumerics* visc_numerics, CConfig* config, unsigned short val_marker) {
   /* Check for a verification solution. */
 
-  if (VerificationSolution) {
-    unsigned short iVar;
-    unsigned long iVertex, iPoint, total_index;
-
-    bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-
-    /*--- Get the physical time. ---*/
-
-    su2double time = 0.0;
-    if (config->GetTime_Marching() != TIME_MARCHING::STEADY) time = config->GetPhysicalTime();
-
-    /*--- Loop over all the vertices on this boundary marker ---*/
-
-    SU2_OMP_FOR_STAT(OMP_MIN_SIZE)
-    for (iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-      /*--- Get the point index for the current node. ---*/
-
-      iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-
-      /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
-
-      if (geometry->nodes->GetDomain(iPoint)) {
-        /*--- Get the coordinates for the current node. ---*/
-
-        const su2double* coor = geometry->nodes->GetCoord(iPoint);
-
-        /*--- Get the conservative state from the verification solution. ---*/
-
-        su2double Solution[MAXNVAR] = {0.0};
-        VerificationSolution->GetBCState(coor, time, Solution);
-
-        /*--- For verification cases, we will apply a strong Dirichlet
-         condition by setting the solution values at the boundary nodes
-         directly and setting the residual to zero at those nodes. ---*/
-
-        nodes->SetSolution_Old(iPoint, Solution);
-        nodes->SetSolution(iPoint, Solution);
-        nodes->SetRes_TruncErrorZero(iPoint);
-        LinSysRes.SetBlock_Zero(iPoint);
-
-        /*--- Adjust rows of the Jacobian (includes 1 in the diagonal) ---*/
-
-        if (implicit) {
-          for (iVar = 0; iVar < nVar; iVar++) {
-            total_index = iPoint * nVar + iVar;
-            Jacobian.DeleteValsRowi(total_index);
-          }
-        }
-      }
-    }
-    END_SU2_OMP_FOR
-
-  } else {
     /* The user must specify the custom BC's here. */
     SU2_MPI::Error("Implement customized boundary conditions here.", CURRENT_FUNCTION);
-  }
 }
 
 template <class V, ENUM_REGIME R>

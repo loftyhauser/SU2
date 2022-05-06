@@ -39,8 +39,6 @@
 #include "../../include/solvers/CTemplateSolver.hpp"
 #include "../../include/solvers/CDiscAdjSolver.hpp"
 #include "../../include/solvers/CDiscAdjFEASolver.hpp"
-#include "../../include/solvers/CFEM_DG_EulerSolver.hpp"
-#include "../../include/solvers/CFEM_DG_NSSolver.hpp"
 #include "../../include/solvers/CMeshSolver.hpp"
 #include "../../include/solvers/CDiscAdjMeshSolver.hpp"
 #include "../../include/solvers/CBaselineSolver.hpp"
@@ -98,30 +96,6 @@ CSolver** CSolverFactory::CreateSolverContainer(MAIN_SOLVER kindMainSolver, CCon
       break;
     case MAIN_SOLVER::FEM_ELASTICITY:
       solver[FEA_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::FEA, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_FEM:
-      solver[FEA_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::FEA, solver, geometry, config, iMGLevel);
-      solver[ADJFEA_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FEA, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::FEM_EULER:
-      solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DG_EULER, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::FEM_NAVIER_STOKES: case MAIN_SOLVER::FEM_LES:
-      solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DG_NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::FEM_RANS:
-      SU2_MPI::Error("FEM RANS not available", CURRENT_FUNCTION);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_FEM_EULER:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::DG_EULER, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FLOW, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_FEM_NS:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::DG_NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FLOW, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_FEM_RANS:
-      SU2_MPI::Error("Adjoint FEM RANS not available", CURRENT_FUNCTION);
       break;
      default:
       solver = nullptr;
@@ -196,11 +170,6 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
     case SUB_SOLVER_TYPE::MESH:
       genericSolver = CreateMeshSolver(solver, geometry, config, iMGLevel, false);
       metaData.integrationType = INTEGRATION_TYPE::NONE;
-      break;
-    case SUB_SOLVER_TYPE::DG_EULER:
-    case SUB_SOLVER_TYPE::DG_NAVIER_STOKES:
-      genericSolver = CreateDGSolver(kindSolver, geometry, config, iMGLevel);
-      metaData.integrationType = INTEGRATION_TYPE::FEM_DG;
       break;
     case SUB_SOLVER_TYPE::TRANSITION:
       genericSolver = new CTransLMSolver(geometry, config, iMGLevel);
@@ -277,29 +246,6 @@ CSolver* CSolverFactory::CreateMeshSolver(CSolver **solver, CGeometry *geometry,
   }
   return meshSolver;
 
-}
-
-CSolver* CSolverFactory::CreateDGSolver(SUB_SOLVER_TYPE kindDGSolver, CGeometry *geometry, CConfig *config, int iMGLevel){
-
-  CSolver *DGSolver = nullptr;
-
-  switch (kindDGSolver) {
-    case SUB_SOLVER_TYPE::DG_EULER:
-      if (config->GetKind_FEM_DG_Shock() == FEM_SHOCK_CAPTURING_DG::PERSSON){
-        DGSolver = new CFEM_DG_NSSolver(geometry, config, iMGLevel);
-      } else {
-        DGSolver = new CFEM_DG_EulerSolver(geometry, config, iMGLevel);
-      }
-      break;
-    case SUB_SOLVER_TYPE::DG_NAVIER_STOKES:
-      DGSolver = new CFEM_DG_NSSolver(geometry, config, iMGLevel);
-      break;
-    default:
-      SU2_MPI::Error("Requested DG solver not found", CURRENT_FUNCTION);
-      break;
-  }
-
-  return DGSolver;
 }
 
 CSolver* CSolverFactory::CreateFlowSolver(SUB_SOLVER_TYPE kindFlowSolver, CSolver **solver,  CGeometry *geometry, CConfig *config, int iMGLevel){

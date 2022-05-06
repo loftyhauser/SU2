@@ -4,4 +4,3 @@ common_src += files(['CLinearPartitioner.cpp',
                      'CSquareMatrixCM.cpp',
                      'CSymmetricMatrix.cpp'])
 
-subdir('MMS')

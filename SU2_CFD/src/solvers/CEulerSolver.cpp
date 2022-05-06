@@ -136,14 +136,6 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config,
 
   SetNondimensionalization(config, iMesh);
 
-  /*--- Check if we are executing a verification case. If so, the
-   VerificationSolution object will be instantiated for a particular
-   option from the available library of verification solutions. Note
-   that this is done after SetNondim(), as problem-specific initial
-   parameters are needed by the solution constructors. ---*/
-
-  SetVerificationSolution(nDim, nVar, config);
-
   /*--- Allocate base class members. ---*/
 
   Allocate(*config);
@@ -2045,38 +2037,6 @@ void CEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_contain
     }
     END_SU2_OMP_FOR
 
-  }
-
-  /*--- Check if a verification solution is to be computed. ---*/
-
-  if ( VerificationSolution ) {
-    if ( VerificationSolution->IsManufacturedSolution() ) {
-
-      /*--- Get the physical time. ---*/
-      su2double time = 0.0;
-      if (config->GetTime_Marching() != TIME_MARCHING::STEADY) time = config->GetPhysicalTime();
-
-      /*--- Loop over points ---*/
-      SU2_OMP_FOR_DYN(omp_chunk_size)
-      for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
-
-        /*--- Get control volume size. ---*/
-        su2double Volume = geometry->nodes->GetVolume(iPoint);
-
-        /*--- Get the current point coordinates. ---*/
-        const su2double *coor = geometry->nodes->GetCoord(iPoint);
-
-        /*--- Get the MMS source term. ---*/
-        vector<su2double> sourceMan(nVar,0.0);
-        VerificationSolution->GetMMSSourceTerm(coor, time, sourceMan.data());
-
-        /*--- Compute the residual for this control volume and subtract. ---*/
-        for (iVar = 0; iVar < nVar; iVar++) {
-          LinSysRes(iPoint,iVar) -= sourceMan[iVar]*Volume;
-        }
-      }
-      END_SU2_OMP_FOR
-    }
   }
 
   AD::EndNoSharedReading();
@@ -6765,44 +6725,6 @@ void CEulerSolver::BC_ActDisk_VariableLoad(CGeometry *geometry, CSolver **solver
     }
   }
   END_SU2_OMP_FOR
-}
-
-void CEulerSolver::PrintVerificationError(const CConfig *config) const {
-
-  if ((rank != MASTER_NODE) || (MGLevel != MESH_0)) return;
-
-  if (config && !config->GetDiscrete_Adjoint()) {
-
-    cout.precision(5);
-    cout.setf(ios::scientific, ios::floatfield);
-
-    cout << endl   << "------------------------ Global Error Analysis --------------------------" << endl;
-
-    cout << setw(20) << "RMS Error  [Rho]: " << setw(12) << VerificationSolution->GetError_RMS(0) << "     | ";
-    cout << setw(20) << "Max Error  [Rho]: " << setw(12) << VerificationSolution->GetError_Max(0);
-    cout << endl;
-
-    cout << setw(20) << "RMS Error [RhoU]: " << setw(12) << VerificationSolution->GetError_RMS(1) << "     | ";
-    cout << setw(20) << "Max Error [RhoU]: " << setw(12) << VerificationSolution->GetError_Max(1);
-    cout << endl;
-
-    cout << setw(20) << "RMS Error [RhoV]: " << setw(12) << VerificationSolution->GetError_RMS(2) << "     | ";
-    cout << setw(20) << "Max Error [RhoV]: " << setw(12) << VerificationSolution->GetError_Max(2);
-    cout << endl;
-
-    if (nDim == 3) {
-      cout << setw(20) << "RMS Error [RhoW]: " << setw(12) << VerificationSolution->GetError_RMS(3) << "     | ";
-      cout << setw(20) << "Max Error [RhoW]: " << setw(12) << VerificationSolution->GetError_Max(3);
-      cout << endl;
-    }
-
-    cout << setw(20) << "RMS Error [RhoE]: " << setw(12) << VerificationSolution->GetError_RMS(nDim+1) << "     | ";
-    cout << setw(20) << "Max Error [RhoE]: " << setw(12) << VerificationSolution->GetError_Max(nDim+1);
-    cout << endl;
-
-    cout << "-------------------------------------------------------------------------" << endl << endl;
-    cout.unsetf(ios_base::floatfield);
-  }
 }
 
 void CEulerSolver::SetFreeStream_Solution(const CConfig *config) {

@@ -31,7 +31,6 @@
 #include "../../include/iteration/CDiscAdjFEAIteration.hpp"
 #include "../../include/iteration/CDiscAdjFluidIteration.hpp"
 #include "../../include/iteration/CFluidIteration.hpp"
-#include "../../include/iteration/CFEMFluidIteration.hpp"
 #include "../../include/iteration/CFEAIteration.hpp"
 
 CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CConfig* config){
@@ -50,12 +49,6 @@ CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CCo
         iteration = new CFluidIteration(config);
       break;
 
-    case MAIN_SOLVER::FEM_EULER: case MAIN_SOLVER::FEM_NAVIER_STOKES: case MAIN_SOLVER::FEM_RANS: case MAIN_SOLVER::FEM_LES:
-      if (rank == MASTER_NODE)
-        cout << "Finite element Euler/Navier-Stokes/RANS/LES flow iteration." << endl;
-      iteration = new CFEMFluidIteration(config);
-      break;
-
     case MAIN_SOLVER::FEM_ELASTICITY:
       if (rank == MASTER_NODE)
         cout << "FEM iteration." << endl;
@@ -72,18 +65,6 @@ CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CCo
       if (rank == MASTER_NODE)
         cout << "Discrete adjoint Euler/Navier-Stokes/RANS fluid iteration." << endl;
       iteration = new CDiscAdjFluidIteration(config);
-      break;
-
-    case MAIN_SOLVER::DISC_ADJ_FEM_EULER : case MAIN_SOLVER::DISC_ADJ_FEM_NS : case MAIN_SOLVER::DISC_ADJ_FEM_RANS :
-      if (rank == MASTER_NODE)
-        cout << "Discrete adjoint finite element Euler/Navier-Stokes/RANS fluid iteration." << endl;
-      iteration = new CDiscAdjFluidIteration(config);
-      break;
-
-    case MAIN_SOLVER::DISC_ADJ_FEM:
-      if (rank == MASTER_NODE)
-        cout << "Discrete adjoint FEM structural iteration." << endl;
-      iteration = new CDiscAdjFEAIteration(config);
       break;
 
     case MAIN_SOLVER::NONE: case MAIN_SOLVER::TEMPLATE_SOLVER: case MAIN_SOLVER::MULTIPHYSICS:

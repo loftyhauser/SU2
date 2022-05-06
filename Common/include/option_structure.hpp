@@ -238,14 +238,6 @@ enum class MAIN_SOLVER {
   DISC_ADJ_EULER,              /*!< \brief Definition of the discrete adjoint Euler solver. */
   DISC_ADJ_RANS,               /*!< \brief Definition of the discrete adjoint Reynolds-averaged Navier-Stokes' (RANS) solver. */
   DISC_ADJ_NAVIER_STOKES,      /*!< \brief Definition of the discrete adjoint Navier-Stokes' solver. */
-  DISC_ADJ_FEM_EULER,          /*!< \brief Definition of the discrete adjoint FEM Euler solver. */
-  DISC_ADJ_FEM_RANS,           /*!< \brief Definition of the discrete adjoint FEM Reynolds-averaged Navier-Stokes' (RANS) solver. */
-  DISC_ADJ_FEM_NS,             /*!< \brief Definition of the discrete adjoint FEM Navier-Stokes' solver. */
-  DISC_ADJ_FEM,                /*!< \brief Definition of the discrete adjoint FEM solver. */
-  FEM_EULER,                   /*!< \brief Definition of the finite element Euler's solver. */
-  FEM_NAVIER_STOKES,           /*!< \brief Definition of the finite element Navier-Stokes' solver. */
-  FEM_RANS,                    /*!< \brief Definition of the finite element Reynolds-averaged Navier-Stokes' (RANS) solver. */
-  FEM_LES,                     /*!< \brief Definition of the finite element Large Eddy Simulation Navier-Stokes' (LES) solver. */
   MULTIPHYSICS,
 };
 static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
@@ -253,10 +245,6 @@ static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
   MakePair("EULER", MAIN_SOLVER::EULER)
   MakePair("NAVIER_STOKES", MAIN_SOLVER::NAVIER_STOKES)
   MakePair("RANS", MAIN_SOLVER::RANS)
-  MakePair("FEM_EULER", MAIN_SOLVER::FEM_EULER)
-  MakePair("FEM_NAVIER_STOKES", MAIN_SOLVER::FEM_NAVIER_STOKES)
-  MakePair("FEM_RANS", MAIN_SOLVER::FEM_RANS)
-  MakePair("FEM_LES", MAIN_SOLVER::FEM_LES)
   MakePair("ADJ_EULER", MAIN_SOLVER::ADJ_EULER)
   MakePair("ADJ_NAVIER_STOKES", MAIN_SOLVER::ADJ_NAVIER_STOKES)
   MakePair("ADJ_RANS", MAIN_SOLVER::ADJ_RANS )
@@ -264,10 +252,6 @@ static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
   MakePair("DISC_ADJ_EULER", MAIN_SOLVER::DISC_ADJ_EULER)
   MakePair("DISC_ADJ_RANS", MAIN_SOLVER::DISC_ADJ_RANS)
   MakePair("DISC_ADJ_NAVIERSTOKES", MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES)
-  MakePair("DISC_ADJ_FEM_EULER", MAIN_SOLVER::DISC_ADJ_FEM_EULER)
-  MakePair("DISC_ADJ_FEM_RANS", MAIN_SOLVER::DISC_ADJ_FEM_RANS)
-  MakePair("DISC_ADJ_FEM_NS", MAIN_SOLVER::DISC_ADJ_FEM_NS)
-  MakePair("DISC_ADJ_FEM", MAIN_SOLVER::DISC_ADJ_FEM)
   MakePair("TEMPLATE_SOLVER", MAIN_SOLVER::TEMPLATE_SOLVER)
   MakePair("MULTIPHYSICS", MAIN_SOLVER::MULTIPHYSICS)
 };
@@ -886,14 +870,12 @@ enum ENUM_TIME_INT {
   EULER_EXPLICIT = 2,         /*!< \brief Explicit Euler time integration definition. */
   EULER_IMPLICIT = 3,         /*!< \brief Implicit Euler time integration definition. */
   CLASSICAL_RK4_EXPLICIT = 4, /*!< \brief Classical RK4 time integration definition. */
-  ADER_DG = 5                 /*!< \brief ADER-DG time integration definition. */
 };
 static const MapType<std::string, ENUM_TIME_INT> Time_Int_Map = {
   MakePair("RUNGE-KUTTA_EXPLICIT", RUNGE_KUTTA_EXPLICIT)
   MakePair("EULER_EXPLICIT", EULER_EXPLICIT)
   MakePair("EULER_IMPLICIT", EULER_IMPLICIT)
   MakePair("CLASSICAL_RK4_EXPLICIT", CLASSICAL_RK4_EXPLICIT)
-  MakePair("ADER_DG", ADER_DG)
 };
 
 /*!

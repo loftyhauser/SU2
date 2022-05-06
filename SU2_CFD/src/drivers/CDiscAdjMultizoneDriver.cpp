@@ -67,9 +67,6 @@ CDiscAdjMultizoneDriver::CDiscAdjMultizoneDriver(char* confFile,
         case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
           direct_iteration[iZone][iInst] = CIterationFactory::CreateIteration(MAIN_SOLVER::EULER, config_container[iZone]);
           break;
-        case MAIN_SOLVER::DISC_ADJ_FEM:
-          direct_iteration[iZone][iInst] = CIterationFactory::CreateIteration(MAIN_SOLVER::FEM_ELASTICITY, config_container[iZone]);
-          break;
         default:
           SU2_MPI::Error("There is no discrete adjoint functionality for one of the specified solvers yet.",
                          CURRENT_FUNCTION);
@@ -82,9 +79,6 @@ CDiscAdjMultizoneDriver::CDiscAdjMultizoneDriver(char* confFile,
 
       case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
         direct_output[iZone] = COutputFactory::CreateOutput(MAIN_SOLVER::EULER, config_container[iZone], nDim);
-        break;
-      case MAIN_SOLVER::DISC_ADJ_FEM:
-        direct_output[iZone] = COutputFactory::CreateOutput(MAIN_SOLVER::FEM_ELASTICITY, config_container[iZone], nDim);
         break;
       default:
         direct_output[iZone] = nullptr;
@@ -712,12 +706,6 @@ void CDiscAdjMultizoneDriver::SetObjFunction(RECORDING kind_recording) {
 
         direct_output[iZone]->SetHistory_Output(geometry, solvers, config);
         ObjFunc += solvers[FLOW_SOL]->GetTotal_ComboObj();
-        break;
-
-      case MAIN_SOLVER::DISC_ADJ_FEM:
-        solvers[FEA_SOL]->Postprocessing(geometry, config, numerics_container[iZone][INST_0][MESH_0][FEA_SOL], true);
-        direct_output[iZone]->SetHistory_Output(geometry, solvers, config);
-        ObjFunc += solvers[FEA_SOL]->GetTotal_ComboObj();
         break;
 
       default:

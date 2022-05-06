@@ -1,4 +1,4 @@
-/*!
+ /*!
  * \file CConfig.cpp
  * \brief Main file for managing the config file
  * \author F. Palacios, T. Economon, B. Tracey, H. Kline
@@ -1020,15 +1020,6 @@ void CConfig::SetConfig_Options() {
   /*!\brief KIND_TRANS_MODEL \n DESCRIPTION: Specify transition model OPTIONS: see \link Trans_Model_Map \endlink \n DEFAULT: NONE \ingroup Config*/
   addEnumOption("KIND_TRANS_MODEL", Kind_Trans_Model, Trans_Model_Map, TURB_TRANS_MODEL::NONE);
 
-  /*!\brief KIND_SGS_MODEL \n DESCRIPTION: Specify subgrid scale model OPTIONS: see \link SGS_Model_Map \endlink \n DEFAULT: NONE \ingroup Config*/
-  addEnumOption("KIND_SGS_MODEL", Kind_SGS_Model, SGS_Model_Map, TURB_SGS_MODEL::NONE);
-
-  /*!\brief KIND_FEM_DG_SHOCK \n DESCRIPTION: Specify shock capturing method for DG OPTIONS: see \link ShockCapturingDG_Map \endlink \n DEFAULT: NONE \ingroup Config*/
-  addEnumOption("KIND_FEM_DG_SHOCK", Kind_FEM_Shock_Capturing_DG, ShockCapturingDG_Map, FEM_SHOCK_CAPTURING_DG::NONE);
-
-  /*!\brief KIND_VERIFICATION_SOLUTION \n DESCRIPTION: Specify the verification solution OPTIONS: see \link Verification_Solution_Map \endlink \n DEFAULT: NO_VERIFICATION_SOLUTION \ingroup Config*/
-  addEnumOption("KIND_VERIFICATION_SOLUTION", Kind_Verification_Solution, Verification_Solution_Map, VERIFICATION_SOLUTION::NONE);
-
   /*!\brief KIND_MATRIX_COLORING \n DESCRIPTION: Specify the method for matrix coloring for Jacobian computations OPTIONS: see \link MatrixColoring_Map \endlink \n DEFAULT GREEDY_COLORING \ingroup Config*/
   addEnumOption("KIND_MATRIX_COLORING", Kind_Matrix_Coloring, MatrixColoring_Map, GREEDY_COLORING);
 
@@ -1481,10 +1472,6 @@ void CConfig::SetConfig_Options() {
   /* DESCRIPTION: Time discretization */
   addEnumOption("TIME_DISCRE_FLOW", Kind_TimeIntScheme_Flow, Time_Int_Map, EULER_IMPLICIT);
   /* DESCRIPTION: Time discretization */
-  addEnumOption("TIME_DISCRE_FEM_FLOW", Kind_TimeIntScheme_FEM_Flow, Time_Int_Map, RUNGE_KUTTA_EXPLICIT);
-  /* DESCRIPTION: ADER-DG predictor step */
-  addEnumOption("ADER_PREDICTOR", Kind_ADER_Predictor, Ader_Predictor_Map, ADER_ALIASED_PREDICTOR);
-  /* DESCRIPTION: Time discretization */
   addEnumOption("TIME_DISCRE_ADJFLOW", Kind_TimeIntScheme_AdjFlow, Time_Int_Map, EULER_IMPLICIT);
   /* DESCRIPTION: Time discretization */
   addEnumOption("TIME_DISCRE_TURB", Kind_TimeIntScheme_Turb, Time_Int_Map, EULER_IMPLICIT);
@@ -1608,10 +1595,6 @@ void CConfig::SetConfig_Options() {
   /*!\brief CONV_NUM_METHOD_FLOW
    *  \n DESCRIPTION: Convective numerical method \n OPTIONS: See \link Upwind_Map \endlink , \link Centered_Map \endlink. \ingroup Config*/
   addConvectOption("CONV_NUM_METHOD_FLOW", Kind_ConvNumScheme_Flow, Kind_Centered_Flow, Kind_Upwind_Flow);
-
-  /*!\brief NUM_METHOD_FEM_FLOW
-   *  \n DESCRIPTION: Numerical method \n OPTIONS: See \link FEM_Map \endlink , \link Centered_Map \endlink. \ingroup Config*/
-  addConvectFEMOption("NUM_METHOD_FEM_FLOW", Kind_ConvNumScheme_FEM_Flow, Kind_FEM_Flow);
 
   /*!\brief MUSCL_FLOW \n DESCRIPTION: Check if the MUSCL scheme should be used \ingroup Config*/
   addBoolOption("MUSCL_FLOW", MUSCL_Flow, true);
@@ -2004,26 +1987,6 @@ void CConfig::SetConfig_Options() {
   addDoubleOption("CYCLIC_PITCH", Cyclic_Pitch, 0.0);
   /* DESCRIPTION: MISSING ---*/
   addDoubleOption("COLLECTIVE_PITCH", Collective_Pitch, 0.0);
-
-  /*!\par CONFIG_CATEGORY: FEM flow solver definition \ingroup Config*/
-  /*--- Options related to the finite element flow solver---*/
-
-  /* DESCRIPTION: Riemann solver used for DG (ROE, LAX-FRIEDRICH, AUSM, AUSMPW+, HLLC, VAN_LEER) */
-  addEnumOption("RIEMANN_SOLVER_FEM", Riemann_Solver_FEM, Upwind_Map, ROE);
-  /* DESCRIPTION: Constant factor applied for quadrature with straight elements (2.0 by default) */
-  addDoubleOption("QUADRATURE_FACTOR_STRAIGHT_FEM", Quadrature_Factor_Straight, 2.0);
-  /* DESCRIPTION: Constant factor applied for quadrature with curved elements (3.0 by default) */
-  addDoubleOption("QUADRATURE_FACTOR_CURVED_FEM", Quadrature_Factor_Curved, 3.0);
-  /* DESCRIPTION: Factor applied during quadrature in time for ADER-DG. (2.0 by default) */
-  addDoubleOption("QUADRATURE_FACTOR_TIME_ADER_DG", Quadrature_Factor_Time_ADER_DG, 2.0);
-  /* DESCRIPTION: Factor for the symmetrizing terms in the DG FEM discretization (1.0 by default) */
-  addDoubleOption("THETA_INTERIOR_PENALTY_DG_FEM", Theta_Interior_Penalty_DGFEM, 1.0);
-  /* DESCRIPTION: Compute the entropy in the fluid model (YES, NO) */
-  addBoolOption("COMPUTE_ENTROPY_FLUID_MODEL", Compute_Entropy, true);
-  /* DESCRIPTION: Use the lumped mass matrix for steady DGFEM computations */
-  addBoolOption("USE_LUMPED_MASSMATRIX_DGFEM", Use_Lumped_MassMatrix_DGFEM, false);
-  /* DESCRIPTION: Only compute the exact Jacobian of the spatial discretization (NO, YES) */
-  addBoolOption("JACOBIAN_SPATIAL_DISCRETIZATION_ONLY", Jacobian_Spatial_Discretization_Only, false);
 
   /* DESCRIPTION: Number of aligned bytes for the matrix multiplications. Multiple of 64. (128 by default) */
   addUnsignedShortOption("ALIGNED_BYTES_MATMUL", byteAlignmentMatMul, 128);
@@ -3236,11 +3199,7 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
 
   if (Kind_Solver == MAIN_SOLVER::EULER ||
       Kind_Solver == MAIN_SOLVER::NAVIER_STOKES ||
-      Kind_Solver == MAIN_SOLVER::RANS ||
-      Kind_Solver == MAIN_SOLVER::FEM_EULER ||
-      Kind_Solver == MAIN_SOLVER::FEM_NAVIER_STOKES ||
-      Kind_Solver == MAIN_SOLVER::FEM_RANS ||
-      Kind_Solver == MAIN_SOLVER::FEM_LES){
+      Kind_Solver == MAIN_SOLVER::RANS){
     Kind_Regime = ENUM_REGIME::COMPRESSIBLE;
   }  else {
     Kind_Regime = ENUM_REGIME::NO_FLOW;
@@ -3528,8 +3487,7 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
       (Kind_Turb_Model != TURB_MODEL::NONE))
     Kind_Solver = MAIN_SOLVER::RANS;
 
-  if (Kind_Solver == MAIN_SOLVER::EULER ||
-      Kind_Solver == MAIN_SOLVER::FEM_EULER)
+  if (Kind_Solver == MAIN_SOLVER::EULER)
     Kind_Turb_Model = TURB_MODEL::NONE;
 
   Kappa_2nd_Flow = jst_coeff[0];
@@ -3738,59 +3696,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   if (nLevels_TimeAccurateLTS == 0)  nLevels_TimeAccurateLTS =  1;
   if (nLevels_TimeAccurateLTS  > 15) nLevels_TimeAccurateLTS = 15;
 
-  /* Check that no time accurate local time stepping is specified for time
-     integration schemes other than ADER. */
-  if (Kind_TimeIntScheme_FEM_Flow != ADER_DG && nLevels_TimeAccurateLTS != 1) {
-
-    if (rank==MASTER_NODE) {
-      cout << endl << "WARNING: "
-           << nLevels_TimeAccurateLTS << " levels specified for time accurate local time stepping." << endl
-           << "Time accurate local time stepping is only possible for ADER, hence this option is not used." << endl
-           << endl;
-    }
-
-    nLevels_TimeAccurateLTS = 1;
-  }
-
-  if (Kind_TimeIntScheme_FEM_Flow == ADER_DG) {
-
-    TimeMarching = TIME_MARCHING::TIME_STEPPING;  // Only time stepping for ADER.
-
-    /* If time accurate local time stepping is used, make sure that an unsteady
-       CFL is specified. If not, terminate. */
-    if (nLevels_TimeAccurateLTS != 1) {
-      if(Unst_CFL == 0.0)
-        SU2_MPI::Error("ERROR: Unsteady CFL not specified for time accurate local time stepping.",
-                       CURRENT_FUNCTION);
-    }
-
-    /* Determine the location of the ADER time DOFs, which are the Gauss-Legendre
-       integration points corresponding to the number of time DOFs. */
-    vector<passivedouble> GLPoints(nTimeDOFsADER_DG), GLWeights(nTimeDOFsADER_DG);
-    CGaussJacobiQuadrature GaussJacobi;
-    GaussJacobi.GetQuadraturePoints(0.0, 0.0, -1.0, 1.0, GLPoints, GLWeights);
-
-    TimeDOFsADER_DG = new su2double[nTimeDOFsADER_DG];
-    for(unsigned short i=0; i<nTimeDOFsADER_DG; ++i)
-      TimeDOFsADER_DG[i] = GLPoints[i];
-
-    /* Determine the number of integration points in time, their locations
-       on the interval [-1..1] and their integration weights. */
-    unsigned short orderExact = ceil(Quadrature_Factor_Time_ADER_DG*(nTimeDOFsADER_DG-1));
-    nTimeIntegrationADER_DG = orderExact/2 + 1;
-    nTimeIntegrationADER_DG = max(nTimeIntegrationADER_DG, nTimeDOFsADER_DG);
-    GLPoints.resize(nTimeIntegrationADER_DG);
-    GLWeights.resize(nTimeIntegrationADER_DG);
-    GaussJacobi.GetQuadraturePoints(0.0, 0.0, -1.0, 1.0, GLPoints, GLWeights);
-
-    TimeIntegrationADER_DG    = new su2double[nTimeIntegrationADER_DG];
-    WeightsIntegrationADER_DG = new su2double[nTimeIntegrationADER_DG];
-    for(unsigned short i=0; i<nTimeIntegrationADER_DG; ++i) {
-      TimeIntegrationADER_DG[i]    = GLPoints[i];
-      WeightsIntegrationADER_DG[i] = GLWeights[i];
-    }
-  }
-
   if(Kind_TimeIntScheme_Turb != EULER_IMPLICIT &&
      Kind_TimeIntScheme_Turb != EULER_EXPLICIT){
     SU2_MPI::Error("Only TIME_DISCRE_TURB = EULER_IMPLICIT, EULER_EXPLICIT have been implemented.", CURRENT_FUNCTION);
@@ -3846,10 +3751,7 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   Viscous = (( Kind_Solver == MAIN_SOLVER::NAVIER_STOKES          ) ||
              ( Kind_Solver == MAIN_SOLVER::ADJ_NAVIER_STOKES      ) ||
              ( Kind_Solver == MAIN_SOLVER::RANS                   ) ||
-             ( Kind_Solver == MAIN_SOLVER::ADJ_RANS               ) ||
-             ( Kind_Solver == MAIN_SOLVER::FEM_NAVIER_STOKES      ) ||
-             ( Kind_Solver == MAIN_SOLVER::FEM_RANS               ) ||
-             ( Kind_Solver == MAIN_SOLVER::FEM_LES                ) );
+             ( Kind_Solver == MAIN_SOLVER::ADJ_RANS               ));
 
   /*--- To avoid boundary intersections, let's add a small constant to the planes. ---*/
 
@@ -3975,15 +3877,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
 #endif
 
   delete [] tmp_smooth;
-
-  /*--- Make sure that implicit time integration is disabled
-        for the FEM fluid solver (numerics). ---*/
-  if ((Kind_Solver == MAIN_SOLVER::FEM_EULER)         ||
-      (Kind_Solver == MAIN_SOLVER::FEM_NAVIER_STOKES) ||
-      (Kind_Solver == MAIN_SOLVER::FEM_RANS)          ||
-      (Kind_Solver == MAIN_SOLVER::FEM_LES)) {
-     Kind_TimeIntScheme_Flow = Kind_TimeIntScheme_FEM_Flow;
-  }
 
   /*--- Set up the time stepping / unsteady CFL options. ---*/
   if ((TimeMarching == TIME_MARCHING::TIME_STEPPING) && (Unst_CFL != 0.0)) {
@@ -4278,18 +4171,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
         break;
       case MAIN_SOLVER::NAVIER_STOKES:
         Kind_Solver = MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES;
-        break;
-      case MAIN_SOLVER::FEM_EULER :
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_FEM_EULER;
-        break;
-      case MAIN_SOLVER::FEM_RANS :
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_FEM_RANS;
-        break;
-      case MAIN_SOLVER::FEM_NAVIER_STOKES :
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_FEM_NS;
-        break;
-      case MAIN_SOLVER::FEM_ELASTICITY:
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_FEM;
         break;
       default:
         break;
@@ -4893,7 +4774,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
   iMarker_ActDiskOutlet,
   iMarker_SobolevBC;
 
-  bool fea = ((Kind_Solver == MAIN_SOLVER::FEM_ELASTICITY) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM));
+  bool fea = ((Kind_Solver == MAIN_SOLVER::FEM_ELASTICITY));
 
   cout << endl <<"----------------- Physical Case Definition ( Zone "  << iZone << " ) -------------------" << endl;
   if (val_software == SU2_COMPONENT::SU2_CFD) {
@@ -4906,15 +4787,12 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
     }
     switch (Kind_Solver) {
       case MAIN_SOLVER::EULER:     case MAIN_SOLVER::DISC_ADJ_EULER:
-      case MAIN_SOLVER::FEM_EULER: case MAIN_SOLVER::DISC_ADJ_FEM_EULER:
         if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) cout << "Compressible Euler equations." << endl;
         break;
       case MAIN_SOLVER::NAVIER_STOKES:     case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:
-      case MAIN_SOLVER::FEM_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_FEM_NS:
         if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) cout << "Compressible Laminar Navier-Stokes' equations." << endl;
         break;
       case MAIN_SOLVER::RANS:     case MAIN_SOLVER::DISC_ADJ_RANS:
-      case MAIN_SOLVER::FEM_RANS: case MAIN_SOLVER::DISC_ADJ_FEM_RANS:
         if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) cout << "Compressible RANS equations." << endl;
         cout << "Turbulence model: ";
         switch (Kind_Turb_Model) {
@@ -4942,20 +4820,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
           if (uq_permute) cout << "Permuting eigenvectors" << endl;
         }
         break;
-      case MAIN_SOLVER::FEM_LES:
-        if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE)   cout << "Compressible LES equations." << endl;
-        cout << "LES Subgrid Scale model: ";
-        switch (Kind_SGS_Model) {
-          case TURB_SGS_MODEL::IMPLICIT_LES: cout << "Implicit LES" << endl; break;
-          case TURB_SGS_MODEL::SMAGORINSKY:  cout << "Smagorinsky " << endl; break;
-          case TURB_SGS_MODEL::WALE:         cout << "WALE"         << endl; break;
-          case TURB_SGS_MODEL::VREMAN:       cout << "VREMAN"         << endl; break;
-          default:
-            SU2_MPI::Error("Subgrid Scale model not specified.", CURRENT_FUNCTION);
-
-        }
-        break;
-      case MAIN_SOLVER::FEM_ELASTICITY: case MAIN_SOLVER::DISC_ADJ_FEM:
+      case MAIN_SOLVER::FEM_ELASTICITY:
         if (Kind_Struct_Solver == STRUCT_DEFORMATION::SMALL) cout << "Geometrically linear elasticity solver." << endl;
         if (Kind_Struct_Solver == STRUCT_DEFORMATION::LARGE) cout << "Geometrically non-linear elasticity solver." << endl;
         if (Kind_Material == STRUCT_MODEL::LINEAR_ELASTIC) cout << "Linear elastic material." << endl;
@@ -5560,10 +5425,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
       if (Kind_TimeIntScheme_AdjTurb == EULER_IMPLICIT) cout << "Euler implicit method for the turbulent adjoint equation." << endl;
     }
 
-    if(Kind_Solver != MAIN_SOLVER::FEM_EULER && Kind_Solver != MAIN_SOLVER::FEM_NAVIER_STOKES &&
-       Kind_Solver != MAIN_SOLVER::FEM_RANS  && Kind_Solver != MAIN_SOLVER::FEM_LES &&
-       Kind_Solver != MAIN_SOLVER::DISC_ADJ_FEM_EULER && Kind_Solver != MAIN_SOLVER::DISC_ADJ_FEM_NS &&
-       Kind_Solver != MAIN_SOLVER::DISC_ADJ_FEM_RANS) {
       if (!fea){
         switch (Kind_Gradient_Method_Recon) {
           case GREEN_GAUSS: cout << "Gradient for upwind reconstruction: Green-Gauss." << endl; break;
@@ -5579,33 +5440,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
       else{
         cout << "Spatial discretization using the Finite Element Method." << endl;
       }
-    }
-
-    if(Kind_Solver == MAIN_SOLVER::FEM_EULER || Kind_Solver == MAIN_SOLVER::FEM_NAVIER_STOKES ||
-       Kind_Solver == MAIN_SOLVER::FEM_RANS  || Kind_Solver == MAIN_SOLVER::FEM_LES ||
-       Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM_EULER || Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM_NS ||
-       Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM_RANS) {
-      if(Kind_FEM_Flow == DG) {
-        cout << "Discontinuous Galerkin Finite element solver" << endl;
-
-        switch( Riemann_Solver_FEM ) {
-          case ROE:           cout << "Roe (with entropy fix) solver for inviscid fluxes over the faces" << endl; break;
-          case LAX_FRIEDRICH: cout << "Lax-Friedrich solver for inviscid fluxes over the faces" << endl; break;
-          case AUSM:          cout << "AUSM solver inviscid fluxes over the faces" << endl; break;
-          case HLLC:          cout << "HLLC solver inviscid fluxes over the faces" << endl; break;
-        }
-
-        if(Kind_Solver != MAIN_SOLVER::FEM_EULER && Kind_Solver != MAIN_SOLVER::DISC_ADJ_FEM_EULER) {
-          cout << "Theta symmetrizing terms interior penalty: " << Theta_Interior_Penalty_DGFEM << endl;
-        }
-      }
-
-      cout << "Quadrature factor for elements with constant Jacobian:     " << Quadrature_Factor_Straight << endl;
-      cout << "Quadrature factor for elements with non-constant Jacobian: " << Quadrature_Factor_Curved << endl;
-
-      cout << "Byte alignment matrix multiplications:      " << byteAlignmentMatMul << endl;
-      cout << "Padded matrix size for optimal performance: " << sizeMatMulPadding << endl;
-    }
 
     cout << endl <<"--------------- Time Numerical Integration  ( Zone "  << iZone << " ) ------------------" << endl;
 
@@ -5646,8 +5480,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
   }
 
     if ((Kind_Solver == MAIN_SOLVER::EULER) || (Kind_Solver == MAIN_SOLVER::NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::RANS) ||
-        (Kind_Solver == MAIN_SOLVER::DISC_ADJ_EULER) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS) ||
-        (Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM_EULER) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM_NS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM_RANS)) {
+        (Kind_Solver == MAIN_SOLVER::DISC_ADJ_EULER) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS)) {
       switch (Kind_TimeIntScheme_Flow) {
         case RUNGE_KUTTA_EXPLICIT:
           cout << "Runge-Kutta explicit method for the flow equations." << endl;
@@ -5747,62 +5580,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
       }
     }
 
-    if(Kind_Solver == MAIN_SOLVER::FEM_EULER || Kind_Solver == MAIN_SOLVER::FEM_NAVIER_STOKES ||
-       Kind_Solver == MAIN_SOLVER::FEM_RANS  || Kind_Solver == MAIN_SOLVER::FEM_LES) {
-      switch (Kind_TimeIntScheme_FEM_Flow) {
-        case RUNGE_KUTTA_EXPLICIT:
-          cout << "Runge-Kutta explicit method for the flow equations." << endl;
-          cout << "Number of steps: " << nRKStep << endl;
-          cout << "Alpha coefficients: ";
-          for (unsigned short iRKStep = 0; iRKStep < nRKStep; iRKStep++) {
-            cout << "\t" << RK_Alpha_Step[iRKStep];
-          }
-          cout << endl;
-          break;
-        case CLASSICAL_RK4_EXPLICIT:
-          cout << "Classical RK4 explicit method for the flow equations." << endl;
-          cout << "Number of steps: " << 4 << endl;
-          cout << "Time coefficients: {0.5, 0.5, 1, 1}" << endl;
-          cout << "Function coefficients: {1/6, 1/3, 1/3, 1/6}" << endl;
-          break;
-
-        case ADER_DG:
-          if(nLevels_TimeAccurateLTS == 1)
-            cout << "ADER-DG for the flow equations with global time stepping." << endl;
-          else
-            cout << "ADER-DG for the flow equations with " << nLevels_TimeAccurateLTS
-                 << " levels for time accurate local time stepping." << endl;
-
-          switch( Kind_ADER_Predictor ) {
-            case ADER_ALIASED_PREDICTOR:
-              cout << "An aliased approach is used in the predictor step. " << endl;
-              break;
-            case ADER_NON_ALIASED_PREDICTOR:
-              cout << "A non-aliased approach is used in the predictor step. " << endl;
-              break;
-          }
-          cout << "Number of time DOFs ADER-DG predictor step: " << nTimeDOFsADER_DG << endl;
-          cout << "Location of time DOFs ADER-DG on the interval [-1,1]: ";
-          for (unsigned short iDOF=0; iDOF<nTimeDOFsADER_DG; iDOF++) {
-            cout << "\t" << TimeDOFsADER_DG[iDOF];
-          }
-          cout << endl;
-          cout << "Time quadrature factor for ADER-DG: " << Quadrature_Factor_Time_ADER_DG << endl;
-          cout << "Number of time integration points ADER-DG: " << nTimeIntegrationADER_DG << endl;
-          cout << "Location of time integration points ADER-DG on the interval [-1,1]: ";
-          for (unsigned short iDOF=0; iDOF<nTimeIntegrationADER_DG; iDOF++) {
-            cout << "\t" << TimeIntegrationADER_DG[iDOF];
-          }
-          cout << endl;
-          cout << "Weights of time integration points ADER-DG on the interval [-1,1]: ";
-          for (unsigned short iDOF=0; iDOF<nTimeIntegrationADER_DG; iDOF++) {
-            cout << "\t" << WeightsIntegrationADER_DG[iDOF];
-          }
-          cout << endl;
-          break;
-      }
-    }
-
     if (nMGLevels !=0) {
 
       if (MGCycle == V_CYCLE) cout << "V Multigrid Cycle, with " << nMGLevels << " multigrid levels."<< endl;
@@ -5813,7 +5590,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
       cout << "Damping factor for the correction prolongation: " << Damp_Correc_Prolong <<"."<< endl;
     }
 
-    if ((Kind_Solver != MAIN_SOLVER::FEM_ELASTICITY) && (Kind_Solver != MAIN_SOLVER::DISC_ADJ_FEM)) {
+    if ((Kind_Solver != MAIN_SOLVER::FEM_ELASTICITY)) {
 
       if (!CFL_Adapt) cout << "No CFL adaptation." << endl;
       else cout << "CFL adaptation. Factor down: "<< CFL_AdaptParam[0] <<", factor up: "<< CFL_AdaptParam[1]
@@ -7009,7 +6786,6 @@ void CConfig::SetKind_ConvNumScheme(unsigned short val_kind_convnumscheme,
   Kind_ConvNumScheme = val_kind_convnumscheme;
   Kind_Centered = val_kind_centered;
   Kind_Upwind = val_kind_upwind;
-  Kind_FEM = val_kind_fem;
   Kind_SlopeLimit = val_kind_slopelimit;
   MUSCL = val_muscl;
 
@@ -7069,16 +6845,6 @@ void CConfig::SetGlobalParam(MAIN_SOLVER val_solver,
                               Kind_Upwind_Turb, Kind_SlopeLimit_Turb,
                               MUSCL_Turb, NONE);
         SetKind_TimeIntScheme(Kind_TimeIntScheme_Turb);
-      }
-      break;
-    case MAIN_SOLVER::FEM_EULER:
-    case MAIN_SOLVER::FEM_NAVIER_STOKES:
-    case MAIN_SOLVER::FEM_LES:
-      if (val_system == RUNTIME_FLOW_SYS) {
-        SetKind_ConvNumScheme(Kind_ConvNumScheme_FEM_Flow, Kind_Centered_Flow,
-                              Kind_Upwind_Flow, Kind_SlopeLimit_Flow,
-                              MUSCL_Flow, Kind_FEM_Flow);
-        SetKind_TimeIntScheme(Kind_TimeIntScheme_FEM_Flow);
       }
       break;
     case MAIN_SOLVER::ADJ_EULER:

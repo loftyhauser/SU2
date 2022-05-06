@@ -63,7 +63,6 @@ enum class INTEGRATION_TYPE{
   NEWTON,
   SINGLEGRID,
   DEFAULT,
-  FEM_DG,
   STRUCTURAL,
   NONE
 };
@@ -105,16 +104,6 @@ private:
    * \return                  - A pointer to the allocated mesh solver
    */
   static CSolver* CreateMeshSolver(CSolver **solver, CGeometry *geometry, CConfig *config, int iMGLevel, bool adjoint);
-
-  /*!
-   * \brief Create a DG solver
-   * \param[in] kindTurbModel - Kind of DG solver
-   * \param[in] geometry      - The geometry definition
-   * \param[in] config        - The configuration
-   * \param[in] iMGLevel      - The multigrid level
-   * \return                  - A pointer to the allocated DG solver
-   */
-  static CSolver* CreateDGSolver(SUB_SOLVER_TYPE kindDGSolver, CGeometry *geometry, CConfig *config, int iMGLevel);
 
   /*!
    * \brief Create a flow solver

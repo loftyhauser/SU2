@@ -43,12 +43,6 @@ CBaselineSolver_FEM::CBaselineSolver_FEM(CGeometry *geometry, CConfig *config) {
    the computation of the external faces may be more efficient when
    using multiple threads. ---*/
 
-  CMeshFEM_DG *DGGeometry = dynamic_cast<CMeshFEM_DG *>(geometry);
-
-  nVolElemTot   = DGGeometry->GetNVolElemTot();
-  nVolElemOwned = DGGeometry->GetNVolElemOwned();
-  volElem       = DGGeometry->GetVolElem();
-
   /*--- Routines to access the number of variables and string names. ---*/
 
   SetOutputVariables(geometry, config);

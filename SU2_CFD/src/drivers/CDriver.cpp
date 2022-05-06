@@ -33,7 +33,6 @@
 #include "../../../Common/include/geometry/CMultiGridGeometry.hpp"
 
 #include "../../include/solvers/CSolverFactory.hpp"
-#include "../../include/solvers/CFEM_DG_EulerSolver.hpp"
 
 #include "../../include/output/COutputFactory.hpp"
 #include "../../include/output/COutput.hpp"
@@ -576,8 +575,6 @@ void CDriver::Input_Preprocessing(CConfig **&config, CConfig *&driver_config) {
   /*--- Determine whether or not the FEM solver is used, which decides the type of
    *    geometry classes that are instantiated. Only adapted for single-zone problems ---*/
 
-  fem_solver = config_container[ZONE_0]->GetFEMSolver();
-
   fsi = config_container[ZONE_0]->GetFSI_Simulation();
 }
 
@@ -587,17 +584,7 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, 
     if (rank == MASTER_NODE)
       cout << endl <<"------------------- Geometry Preprocessing ( Zone " << config->GetiZone() <<" ) -------------------" << endl;
 
-    if( fem_solver ) {
-      switch( config->GetKind_FEM_Flow() ) {
-        case DG: {
-            Geometrical_Preprocessing_DGFEM(config, geometry);
-            break;
-          }
-      }
-    }
-    else {
-      Geometrical_Preprocessing_FVM(config, geometry);
-    }
+    Geometrical_Preprocessing_FVM(config, geometry);
   } else {
     if (rank == MASTER_NODE)
       cout << endl <<"-------------------------- Using Dummy Geometry -------------------------" << endl;
@@ -606,13 +593,9 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, 
 
     geometry = new CGeometry*[config->GetnMGLevels()+1] ();
 
-    if (!fem_solver){
       for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
         geometry[iMGlevel] = new CDummyGeometry(config);
       }
-    } else {
-      geometry[MESH_0] = new CDummyMeshFEM_DG(config);
-    }
 
     nDim = geometry[MESH_0]->GetnDim();
   }
@@ -634,7 +617,7 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, 
        periodic points on the pair of periodic faces after the translation
        or rotation is taken into account. ---*/
 
-  if ((config->GetnMarker_Periodic() != 0) && !fem_solver) {
+  if ((config->GetnMarker_Periodic() != 0)) {
     for (iMesh = 0; iMesh <= config->GetnMGLevels(); iMesh++) {
 
       /*--- Note that we loop over pairs of periodic markers individually
@@ -658,7 +641,6 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, 
   /*--- If activated by the compile directive, perform a partition analysis. ---*/
 #if PARTITION
   if (!dummy){
-    if( fem_solver ) Partition_Analysis_FEM(geometry[MESH_0], config);
     else Partition_Analysis(geometry[MESH_0], config);
   }
 #endif
@@ -666,8 +648,7 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, 
   /*--- Check if Euler & Symmetry markers are straight/plane. This information
         is used in the Euler & Symmetry boundary routines. ---*/
   if((config_container[iZone]->GetnMarker_Euler() != 0 ||
-     config_container[iZone]->GetnMarker_SymWall() != 0) &&
-     !fem_solver) {
+     config_container[iZone]->GetnMarker_SymWall() != 0)) {
 
     if (rank == MASTER_NODE)
       cout << "Checking if Euler & Symmetry markers are straight/plane:" << endl;
@@ -899,98 +880,6 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
 
 }
 
-void CDriver::Geometrical_Preprocessing_DGFEM(CConfig* config, CGeometry **&geometry) {
-
-  /*--- Definition of the geometry class to store the primal grid in the partitioning process. ---*/
-  /*--- All ranks process the grid and call ParMETIS for partitioning ---*/
-
-  CGeometry *geometry_aux = new CPhysicalGeometry(config, iZone, nZone);
-
-  /*--- Set the dimension --- */
-
-  nDim = geometry_aux->GetnDim();
-
-  /*--- For the FEM solver with time-accurate local time-stepping, use
-       a dummy solver class to retrieve the initial flow state. ---*/
-
-  CSolver *solver_aux = new CFEM_DG_EulerSolver(config, nDim, MESH_0);
-
-  /*--- Color the initial grid and set the send-receive domains (ParMETIS) ---*/
-
-  geometry_aux->SetColorFEMGrid_Parallel(config);
-
-  /*--- Allocate the memory of the current domain, and divide the grid
-     between the ranks. ---*/
-
-  geometry = new CGeometry *[config->GetnMGLevels()+1] ();
-
-  geometry[MESH_0] = new CMeshFEM_DG(geometry_aux, config);
-
-  /*--- Deallocate the memory of geometry_aux and solver_aux ---*/
-
-  delete geometry_aux;
-  delete solver_aux;
-
-  /*--- Add the Send/Receive boundaries ---*/
-  geometry[MESH_0]->SetSendReceive(config);
-
-  /*--- Add the Send/Receive boundaries ---*/
-  geometry[MESH_0]->SetBoundaries(config);
-
-  /*--- Carry out a dynamic cast to CMeshFEM_DG, such that it is not needed to
-       define all virtual functions in the base class CGeometry. ---*/
-  CMeshFEM_DG *DGMesh = dynamic_cast<CMeshFEM_DG *>(geometry[MESH_0]);
-
-  /*--- Determine the standard elements for the volume elements. ---*/
-  if (rank == MASTER_NODE) cout << "Creating standard volume elements." << endl;
-  DGMesh->CreateStandardVolumeElements(config);
-
-  /*--- Create the face information needed to compute the contour integral
-       for the elements in the Discontinuous Galerkin formulation. ---*/
-  if (rank == MASTER_NODE) cout << "Creating face information." << endl;
-  DGMesh->CreateFaces(config);
-
-  /*--- Compute the metric terms of the volume elements. ---*/
-  if (rank == MASTER_NODE) cout << "Computing metric terms volume elements." << endl;
-  DGMesh->MetricTermsVolumeElements(config);
-
-  /*--- Compute the metric terms of the surface elements. ---*/
-  if (rank == MASTER_NODE) cout << "Computing metric terms surface elements." << endl;
-  DGMesh->MetricTermsSurfaceElements(config);
-
-  /*--- Compute a length scale of the volume elements. ---*/
-  if (rank == MASTER_NODE) cout << "Computing length scale volume elements." << endl;
-  DGMesh->LengthScaleVolumeElements();
-
-  /*--- Compute the coordinates of the integration points. ---*/
-  if (rank == MASTER_NODE) cout << "Computing coordinates of the integration points." << endl;
-  DGMesh->CoordinatesIntegrationPoints();
-
-  /*--- Compute the coordinates of the location of the solution DOFs. This is different
-            from the grid points when a different polynomial degree is used to represent the
-            geometry and solution. ---*/
-  if (rank == MASTER_NODE) cout << "Computing coordinates of the solution DOFs." << endl;
-  DGMesh->CoordinatesSolDOFs();
-
-  /*--- Perform the preprocessing tasks when wall functions are used. ---*/
-  if (rank == MASTER_NODE) cout << "Preprocessing for the wall functions. " << endl;
-  DGMesh->WallFunctionPreprocessing(config);
-
-  /*--- Store the global to local mapping. ---*/
-  if (rank == MASTER_NODE) cout << "Storing a mapping from global to local DOF index." << endl;
-  geometry[MESH_0]->SetGlobal_to_Local_Point();
-
-
-  /*--- Loop to create the coarser grid levels. ---*/
-
-  for(unsigned short iMGlevel=1; iMGlevel<=config->GetnMGLevels(); iMGlevel++) {
-
-    SU2_MPI::Error("Geometrical_Preprocessing_DGFEM: Coarse grid levels not implemented yet.",
-                   CURRENT_FUNCTION);
-  }
-
-}
-
 void CDriver::Solver_Preprocessing(CConfig* config, CGeometry** geometry, CSolver ***&solver) {
 
   MAIN_SOLVER kindSolver = config->GetKind_Solver();
@@ -1077,7 +966,7 @@ void CDriver::Solver_Restart(CSolver ***solver, CGeometry **geometry,
   const bool adjoint = (config->GetDiscrete_Adjoint() || config->GetContinuous_Adjoint());
   const bool time_domain = config->GetTime_Domain();
   const bool dt_step_2nd = (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND) &&
-                           !config->GetStructuralProblem() && !config->GetFEMSolver() &&
+                           !config->GetStructuralProblem() &&
                            !adjoint && time_domain;
 
   if (time_domain) {
@@ -1292,10 +1181,10 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   bool roe_low_dissipation = (config->GetKind_RoeLowDiss() != NO_ROELOWDISS);
 
   /*--- Initialize some useful booleans ---*/
-  bool euler, ns, turbulent, adj_euler, adj_ns, adj_turb, fem_euler, fem_ns;
+  bool euler, ns, turbulent, adj_euler, adj_ns, adj_turb;
   bool fem, transition, template_solver;
 
-  euler = ns = turbulent = adj_euler = adj_ns = adj_turb = fem_euler = fem_ns = false;
+  euler = ns = turbulent = adj_euler = adj_ns = adj_turb = false;
   fem = transition = template_solver = false;
 
   /*--- Assign booleans ---*/
@@ -1316,23 +1205,7 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
       ns = compressible = turbulent = true;
       transition = (config->GetKind_Trans_Model() == TURB_TRANS_MODEL::LM); break;
 
-    case MAIN_SOLVER::FEM_EULER:
-    case MAIN_SOLVER::DISC_ADJ_FEM_EULER:
-      fem_euler = compressible = true; break;
-
-    case MAIN_SOLVER::FEM_NAVIER_STOKES:
-    case MAIN_SOLVER::DISC_ADJ_FEM_NS:
-      fem_ns = compressible = true; break;
-
-    case MAIN_SOLVER::FEM_RANS:
-    case MAIN_SOLVER::DISC_ADJ_FEM_RANS:
-      fem_ns = compressible = true; break;
-
-    case MAIN_SOLVER::FEM_LES:
-      fem_ns = compressible = true; break;
-
     case MAIN_SOLVER::FEM_ELASTICITY:
-    case MAIN_SOLVER::DISC_ADJ_FEM:
       fem = true; break;
 
     case MAIN_SOLVER::ADJ_EULER:
@@ -1361,9 +1234,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   if (ns)           nVar_Flow = solver[MESH_0][FLOW_SOL]->GetnVar();
   if (turbulent)    nVar_Turb = solver[MESH_0][TURB_SOL]->GetnVar();
   if (transition)   nVar_Trans = solver[MESH_0][TRANS_SOL]->GetnVar();
-
-  if (fem_euler)    nVar_Flow = solver[MESH_0][FLOW_SOL]->GetnVar();
-  if (fem_ns)       nVar_Flow = solver[MESH_0][FLOW_SOL]->GetnVar();
 
   if (fem)          nVar_FEM = solver[MESH_0][FEA_SOL]->GetnVar();
 
@@ -1615,58 +1485,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
 
       /*--- At the moment it is necessary to have the RHT equation in order to have a volumetric heat source. ---*/
         numerics[iMGlevel][FLOW_SOL][source_second_term] = new CSourceNothing(nDim, nVar_Flow, config);
-    }
-
-  }
-
-  /*--- Riemann solver definition for the Euler, Navier-Stokes problems for the FEM discretization. ---*/
-  if ((fem_euler) || (fem_ns)) {
-
-    switch (config->GetRiemann_Solver_FEM()) {
-      case ROE:
-      case LAX_FRIEDRICH:
-        /* Hard coded optimized implementation is used in the DG solver. No need to allocate the
-           corresponding entry in numerics. */
-        break;
-
-      case AUSM:
-        for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-          numerics[iMGlevel][FLOW_SOL][conv_term] = new CUpwAUSM_Flow(nDim, nVar_Flow, config);
-          numerics[iMGlevel][FLOW_SOL][conv_bound_term] = new CUpwAUSM_Flow(nDim, nVar_Flow, config);
-        }
-        break;
-
-      case TURKEL:
-        for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-          numerics[iMGlevel][FLOW_SOL][conv_term] = new CUpwTurkel_Flow(nDim, nVar_Flow, config);
-          numerics[iMGlevel][FLOW_SOL][conv_bound_term] = new CUpwTurkel_Flow(nDim, nVar_Flow, config);
-        }
-        break;
-
-      case HLLC:
-          for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-            numerics[iMGlevel][FLOW_SOL][conv_term] = new CUpwHLLC_Flow(nDim, nVar_Flow, config);
-            numerics[iMGlevel][FLOW_SOL][conv_bound_term] = new CUpwHLLC_Flow(nDim, nVar_Flow, config);
-          }
-        break;
-
-      case MSW:
-        for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-          numerics[iMGlevel][FLOW_SOL][conv_term] = new CUpwMSW_Flow(nDim, nVar_Flow, config);
-          numerics[iMGlevel][FLOW_SOL][conv_bound_term] = new CUpwMSW_Flow(nDim, nVar_Flow, config);
-        }
-        break;
-
-      case CUSP:
-        for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-          numerics[iMGlevel][FLOW_SOL][conv_term] = new CUpwCUSP_Flow(nDim, nVar_Flow, config);
-          numerics[iMGlevel][FLOW_SOL][conv_bound_term] = new CUpwCUSP_Flow(nDim, nVar_Flow, config);
-        }
-        break;
-
-      default:
-        SU2_MPI::Error("Riemann solver not implemented.", CURRENT_FUNCTION);
-        break;
     }
 
   }
@@ -1977,7 +1795,7 @@ void CDriver::DynamicMesh_Preprocessing(CConfig *config, CGeometry **geometry, C
    flows on dynamic meshes, including rigid mesh transformations, dynamically
    deforming meshes. ---*/
 
-  if (!fem_solver && (config->GetGrid_Movement() || (config->GetDirectDiff() == D_DESIGN))) {
+  if ((config->GetGrid_Movement() || (config->GetDirectDiff() == D_DESIGN))) {
     if (rank == MASTER_NODE)
       cout << "Setting dynamic mesh structure for zone "<< iZone + 1<<"." << endl;
     grid_movement = new CVolumetricMovement(geometry[MESH_0], config);
@@ -2107,8 +1925,6 @@ void CDriver::StaticMesh_Preprocessing(const CConfig *config, CGeometry** geomet
 
   Kind_Grid_Movement = config->GetKind_GridMovement();
 
-  if (!fem_solver) {
-
     switch (Kind_Grid_Movement) {
 
       case ROTATING_FRAME:
@@ -2167,24 +1983,6 @@ void CDriver::StaticMesh_Preprocessing(const CConfig *config, CGeometry** geomet
         geometry[iMGlevel]->SetRestricted_GridVelocity(geometry[iMGfine]);
       }
     }
-  } else {
-
-    /*--- Carry out a dynamic cast to CMeshFEM_DG, such that it is not needed to
-         define all virtual functions in the base class CGeometry. ---*/
-    CMeshFEM_DG *DGMesh = dynamic_cast<CMeshFEM_DG *>(geometry[MESH_0]);
-
-    /*--- Initialize the static mesh movement, if necessary. ---*/
-    const unsigned short Kind_Grid_Movement = config->GetKind_GridMovement();
-    const bool initStaticMovement = (config->GetGrid_Movement() &&
-                                     (Kind_Grid_Movement == MOVING_WALL    ||
-                                      Kind_Grid_Movement == ROTATING_FRAME ||
-                                      Kind_Grid_Movement == STEADY_TRANSLATION));
-
-    if(initStaticMovement){
-      if (rank == MASTER_NODE) cout << "Initialize Static Mesh Movement" << endl;
-      DGMesh->InitStaticMeshMovement(config, Kind_Grid_Movement, iZone);
-    }
-  }
 
 }
 
@@ -2260,7 +2058,7 @@ void CDriver::Print_DirectResidual(RECORDING kind_recording) {
       auto configs = config_container[iZone];
 
       /*--- Note: the FEM-Flow solvers are availalbe for disc. adjoint runs only for SingleZone. ---*/
-      if (configs->GetFluidProblem() || configs->GetFEMSolver()) {
+      if (configs->GetFluidProblem()) {
 
         for (unsigned short iVar = 0; iVar < solvers[FLOW_SOL]->GetnVar(); iVar++) {
           if (!addVals)
@@ -2347,8 +2145,7 @@ void CFluidDriver::StartSolver(){
     /*--- Perform a dynamic mesh update if required. ---*/
     /*--- For the Disc.Adj. of a case with (rigidly) moving grid, the appropriate
           mesh cordinates are read from the restart files. ---*/
-    if (!fem_solver &&
-        !(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint())) {
+    if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint())) {
       DynamicMeshUpdate(Iter);
     }
 
@@ -2537,7 +2334,6 @@ bool CFluidDriver::Monitor(unsigned long ExtIter) {
       StopCalc = integration_container[ZONE_0][INST_0][FEA_SOL]->GetConvergence(); break;
     case MAIN_SOLVER::ADJ_EULER: case MAIN_SOLVER::ADJ_NAVIER_STOKES: case MAIN_SOLVER::ADJ_RANS:
     case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
-    case MAIN_SOLVER::DISC_ADJ_FEM_EULER: case MAIN_SOLVER::DISC_ADJ_FEM_NS: case MAIN_SOLVER::DISC_ADJ_FEM_RANS:
       StopCalc = integration_container[ZONE_0][INST_0][ADJFLOW_SOL]->GetConvergence(); break;
     default:
       break;

@@ -469,8 +469,6 @@ private:
   Kind_DiscAdj_Linear_Prec,              /*!< \brief Preconditioner of the discrete adjoint linear solver. */
   Kind_TimeNumScheme,           /*!< \brief Global explicit or implicit time integration. */
   Kind_TimeIntScheme_Flow,      /*!< \brief Time integration for the flow equations. */
-  Kind_TimeIntScheme_FEM_Flow,  /*!< \brief Time integration for the flow equations. */
-  Kind_ADER_Predictor,          /*!< \brief Predictor step of the ADER-DG time integration scheme. */
   Kind_TimeIntScheme_AdjFlow,   /*!< \brief Time integration for the adjoint flow equations. */
   Kind_TimeIntScheme_Turb,      /*!< \brief Time integration for the turbulence model. */
   Kind_TimeIntScheme_AdjTurb,   /*!< \brief Time integration for the adjoint turbulence model. */
@@ -481,7 +479,6 @@ private:
   unsigned short
   Kind_ConvNumScheme,           /*!< \brief Global definition of the convective term. */
   Kind_ConvNumScheme_Flow,      /*!< \brief Centered or upwind scheme for the flow equations. */
-  Kind_ConvNumScheme_FEM_Flow,  /*!< \brief Finite element scheme for the flow equations. */
   Kind_ConvNumScheme_Heat,      /*!< \brief Centered or upwind scheme for the flow equations. */
   Kind_ConvNumScheme_AdjFlow,   /*!< \brief Centered or upwind scheme for the adjoint flow equations. */
   Kind_ConvNumScheme_Turb,      /*!< \brief Centered or upwind scheme for the turbulence model. */
@@ -499,10 +496,7 @@ private:
   Kind_Upwind_Turb,             /*!< \brief Upwind scheme for the turbulence model. */
   Kind_Upwind_AdjTurb,          /*!< \brief Upwind scheme for the adjoint turbulence model. */
   Kind_Upwind_Template,         /*!< \brief Upwind scheme for the template model. */
-  Kind_FEM,                     /*!< \brief Finite element scheme for the flow equations. */
-  Kind_FEM_Flow,                /*!< \brief Finite element scheme for the flow equations. */
   Kind_Matrix_Coloring;         /*!< \brief Type of matrix coloring for sparse Jacobian computation. */
-  FEM_SHOCK_CAPTURING_DG Kind_FEM_Shock_Capturing_DG; /*!< \brief Shock capturing method for the FEM DG solver. */
   BGS_RELAXATION Kind_BGS_RelaxMethod; /*!< \brief Kind of relaxation method for Block Gauss Seidel method in FSI problems. */
   bool ReconstructionGradientRequired; /*!< \brief Enable or disable a second gradient calculation for upwind reconstruction only. */
   bool LeastSquaresRequired;    /*!< \brief Enable or disable memory allocation for least-squares gradient methods. */
@@ -528,7 +522,6 @@ private:
 
   unsigned short nTurbVar;          /*!< \brief Number of Turbulence variables, i.e. 1 for SA-types, 2 for SST. */
   TURB_MODEL Kind_Turb_Model;       /*!< \brief Turbulent model definition. */
-  TURB_SGS_MODEL Kind_SGS_Model;    /*!< \brief LES SGS model definition. */
   TURB_TRANS_MODEL Kind_Trans_Model;  /*!< \brief Transition model definition. */
   unsigned short Kind_ActDisk, Kind_Engine_Inflow,
   *Kind_Data_Riemann;
@@ -972,15 +965,12 @@ private:
   hs_axes[3],            /*!< \brief principal axes (x, y, z) of the ellipsoid containing the heat source. */
   hs_center[3];          /*!< \brief position of the center of the heat source. */
 
-  unsigned short Riemann_Solver_FEM;         /*!< \brief Riemann solver chosen for the DG method. */
   su2double Quadrature_Factor_Straight;      /*!< \brief Factor applied during quadrature of elements with a constant Jacobian. */
   su2double Quadrature_Factor_Curved;        /*!< \brief Factor applied during quadrature of elements with a non-constant Jacobian. */
   su2double Quadrature_Factor_Time_ADER_DG;  /*!< \brief Factor applied during quadrature in time for ADER-DG. */
-  su2double Theta_Interior_Penalty_DGFEM;    /*!< \brief Factor for the symmetrizing terms in the DG discretization of the viscous fluxes. */
   unsigned short byteAlignmentMatMul;        /*!< \brief Number of bytes in the vectorization direction for the matrix multiplication. Multipe of 64. */
   unsigned short sizeMatMulPadding;          /*!< \brief The matrix size in the vectorization direction padded to a multiple of 8. Computed from byteAlignmentMatMul. */
   bool Compute_Entropy;                      /*!< \brief Whether or not to compute the entropy in the fluid model. */
-  bool Use_Lumped_MassMatrix_DGFEM;          /*!< \brief Whether or not to use the lumped mass matrix for DGFEM. */
   bool Jacobian_Spatial_Discretization_Only; /*!< \brief Flag to know if only the exact Jacobian of the spatial discretization must be computed. */
   bool Compute_Average;                      /*!< \brief Whether or not to compute averages for unsteady simulations in FV or DG solver. */
   unsigned short Comm_Level;                 /*!< \brief Level of MPI communications to be performed. */
@@ -3340,20 +3330,7 @@ public:
    * \brief Return true if a structural solver is in use.
    */
   bool GetStructuralProblem(void) const {
-    return (Kind_Solver == MAIN_SOLVER::FEM_ELASTICITY) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_FEM);
-  }
-
-  /*!
-   * \brief Return true if a high order FEM solver is in use.
-   */
-  bool GetFEMSolver(void) const {
-    switch (Kind_Solver) {
-      case MAIN_SOLVER::FEM_EULER: case MAIN_SOLVER::FEM_NAVIER_STOKES: case MAIN_SOLVER::FEM_RANS: case MAIN_SOLVER::FEM_LES:
-      case MAIN_SOLVER::DISC_ADJ_FEM_EULER: case MAIN_SOLVER::DISC_ADJ_FEM_NS: case MAIN_SOLVER::DISC_ADJ_FEM_RANS:
-        return true;
-      default:
-        return false;
-    }
+    return (Kind_Solver == MAIN_SOLVER::FEM_ELASTICITY);
   }
 
    /*!
@@ -3901,12 +3878,6 @@ public:
   TURB_TRANS_MODEL GetKind_Trans_Model(void) const { return Kind_Trans_Model; }
 
   /*!
-   * \brief Get the kind of the subgrid scale model.
-   * \return Kind of the subgrid scale model.
-   */
-  TURB_SGS_MODEL GetKind_SGS_Model(void) const { return Kind_SGS_Model; }
-
-  /*!
    * \brief Get the kind of time integration method.
    * \note This is the information that the code will use, the method will
    *       change in runtime depending of the specific equation (direct, adjoint,
@@ -4012,13 +3983,6 @@ public:
   unsigned short GetKind_TimeIntScheme_Flow(void) const { return Kind_TimeIntScheme_Flow; }
 
   /*!
-   * \brief Get the kind of scheme (aliased or non-aliased) to be used in the
-   *        predictor step of ADER-DG.
-   * \return Kind of scheme used in the predictor step of ADER-DG.
-   */
-  unsigned short GetKind_ADER_Predictor(void) const { return Kind_ADER_Predictor; }
-
-  /*!
    * \brief Get the kind of integration scheme (explicit or implicit)
    *        for the flow equations.
    * \note This value is obtained from the config file, and it is constant
@@ -4073,15 +4037,6 @@ public:
   unsigned short GetKind_ConvNumScheme_Flow(void) const { return Kind_ConvNumScheme_Flow; }
 
   /*!
-   * \brief Get the kind of convective numerical scheme for the flow
-   *        equations (finite element).
-   * \note This value is obtained from the config file, and it is constant
-   *       during the computation.
-   * \return Kind of convective numerical scheme for the flow equations.
-   */
-  unsigned short GetKind_ConvNumScheme_FEM_Flow(void) const { return Kind_ConvNumScheme_FEM_Flow; }
-
-  /*!
    * \brief Get the kind of convective numerical scheme for the template
    *        equations (centered or upwind).
    * \note This value is obtained from the config file, and it is constant
@@ -4113,22 +4068,6 @@ public:
    * \return Kind of upwind convective numerical scheme for the flow equations.
    */
   unsigned short GetKind_Upwind_Flow(void) const { return Kind_Upwind_Flow; }
-
-  /*!
-   * \brief Get the kind of finite element convective numerical scheme for the flow equations.
-   * \note This value is obtained from the config file, and it is constant
-   *       during the computation.
-   * \return Kind of finite element convective numerical scheme for the flow equations.
-   */
-  unsigned short GetKind_FEM_Flow(void) const { return Kind_FEM_Flow; }
-
-  /*!
-   * \brief Get the kind of shock capturing method in FEM DG solver.
-   * \note This value is obtained from the config file, and it is constant
-   *       during the computation.
-   * \return Kind of shock capturing method in FEM DG solver.
-   */
-  FEM_SHOCK_CAPTURING_DG GetKind_FEM_DG_Shock(void) const { return Kind_FEM_Shock_Capturing_DG; }
 
   /*!
    * \brief Get the kind of matrix coloring used for the sparse Jacobian computation.
@@ -7695,18 +7634,6 @@ public:
   unsigned short GetPredictorOrder(void) const { return Pred_Order; }
 
   /*!
-   * \brief Get boolean for using Persson's shock capturing method in Euler flow DG-FEM
-   * \return Boolean for using Persson's shock capturing method in Euler flow DG-FEM
-   */
-  bool GetEulerPersson(void) const { return EulerPersson; }
-
-  /*!
-   * \brief Set boolean for using Persson's shock capturing method in Euler flow DG-FEM
-   * \param[in] val_EulerPersson - Boolean for using Persson's shock capturing method in Euler flow DG-FEM
-   */
-  void SetEulerPersson(bool val_EulerPersson) { EulerPersson = val_EulerPersson; }
-
-  /*!
    * \brief Get whether a relaxation parameter is used for FSI applications.
    * \return Bool: determines if relaxation parameter  is used or not
    */
@@ -7761,13 +7688,6 @@ public:
   BGS_RELAXATION GetRelaxation_Method_BGS(void) const { return Kind_BGS_RelaxMethod; }
 
   /*!
-   * \brief Get the kind of Riemann solver for the DG method (FEM flow solver).
-   * \note This value is obtained from the config file, and it is constant during the computation.
-   * \return Kind of Riemann solver for the DG method (FEM flow solver).
-   */
-  unsigned short GetRiemann_Solver_FEM(void) const { return Riemann_Solver_FEM; }
-
-  /*!
    * \brief Get the factor applied during quadrature of straight elements.
    * \return The specified straight element quadrature factor.
    */
@@ -7786,13 +7706,6 @@ public:
   su2double GetQuadrature_Factor_Time_ADER_DG(void) const { return Quadrature_Factor_Time_ADER_DG; }
 
   /*!
-   * \brief Function to make available the multiplication factor theta of the
-   *        symmetrizing terms in the DG discretization of the viscous terms.
-   * \return The specified factor for the DG discretization.
-   */
-  su2double GetTheta_Interior_Penalty_DGFEM(void) const { return Theta_Interior_Penalty_DGFEM; }
-
-  /*!
    * \brief Function to make available the matrix size in vectorization in
             order to optimize the gemm performance.
    * \return The matrix size in this direction.
@@ -7804,13 +7717,6 @@ public:
    * \return The boolean whether or not the entropy must be computed.
    */
   bool GetCompute_Entropy(void) const { return Compute_Entropy; }
-
-  /*!
-   * \brief Function to make available whether or not the lumped mass matrix
-            must be used for steady computations.
-   * \return The boolean whether or not to use the lumped mass matrix.
-   */
-  bool GetUse_Lumped_MassMatrix_DGFEM(void) const { return Use_Lumped_MassMatrix_DGFEM; }
 
   /*!
    * \brief Function to make available whether or not only the exact Jacobian

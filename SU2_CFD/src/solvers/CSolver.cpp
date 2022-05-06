@@ -30,15 +30,6 @@
 #include "../../include/gradients/computeGradientsGreenGauss.hpp"
 #include "../../include/gradients/computeGradientsLeastSquares.hpp"
 #include "../../include/limiters/computeLimiters.hpp"
-#include "../../../Common/include/toolboxes/MMS/CInviscidVortexSolution.hpp"
-#include "../../../Common/include/toolboxes/MMS/CMMSNSTwoHalfCirclesSolution.hpp"
-#include "../../../Common/include/toolboxes/MMS/CMMSNSTwoHalfSpheresSolution.hpp"
-#include "../../../Common/include/toolboxes/MMS/CMMSNSUnitQuadSolution.hpp"
-#include "../../../Common/include/toolboxes/MMS/CMMSNSUnitQuadSolutionWallBC.hpp"
-#include "../../../Common/include/toolboxes/MMS/CNSUnitQuadSolution.hpp"
-#include "../../../Common/include/toolboxes/MMS/CRinglebSolution.hpp"
-#include "../../../Common/include/toolboxes/MMS/CTGVSolution.hpp"
-#include "../../../Common/include/toolboxes/MMS/CUserDefinedSolution.hpp"
 #include "../../../Common/include/toolboxes/printing_toolbox.hpp"
 #include "../../../Common/include/toolboxes/C1DInterpolation.hpp"
 #include "../../../Common/include/toolboxes/geometry_toolbox.hpp"
@@ -92,9 +83,6 @@ CSolver::CSolver(LINEAR_SOLVER_MODE linear_solver_mode) : System(linear_solver_m
   /*--- Variable initialization to avoid valgrid warnings when not used. ---*/
 
   IterLinSolver = 0;
-
-  /*--- Initialize pointer for any verification solution. ---*/
-  VerificationSolution  = nullptr;
 
   /*--- Flags for the periodic BC communications. ---*/
 
@@ -183,7 +171,6 @@ CSolver::~CSolver(void) {
   delete [] Restart_Vars;
   delete [] Restart_Data;
 
-  delete VerificationSolution;
 }
 
 void CSolver::GetPeriodicCommCountAndType(const CConfig* config,
@@ -2852,9 +2839,6 @@ void CSolver::InterpolateRestartData(const CGeometry *geometry, const CConfig *c
   if (size != SINGLE_NODE && size % 2)
     SU2_MPI::Error("Number of ranks must be multiple of 2.", CURRENT_FUNCTION);
 
-  if (config->GetFEMSolver())
-    SU2_MPI::Error("Cannot interpolate the restart file for FEM problems.", CURRENT_FUNCTION);
-
   /* Challenges:
    *  - Do not use too much memory by gathering the restart data in all ranks.
    *  - Do not repeat too many computations in all ranks.
@@ -3388,37 +3372,6 @@ void CSolver::SetVertexTractionsAdjoint(CGeometry *geometry, const CConfig *conf
     END_SU2_OMP_FOR
   }
 
-}
-
-void CSolver::SetVerificationSolution(unsigned short nDim,
-                                      unsigned short nVar,
-                                      CConfig        *config) {
-
-  /*--- Determine the verification solution to be set and
-        allocate memory for the corresponding class. ---*/
-  switch( config->GetVerification_Solution() ) {
-
-    case VERIFICATION_SOLUTION::NONE:
-      VerificationSolution = nullptr; break;
-    case VERIFICATION_SOLUTION::INVISCID_VORTEX:
-      VerificationSolution = new CInviscidVortexSolution(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::RINGLEB:
-      VerificationSolution = new CRinglebSolution(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::NS_UNIT_QUAD:
-      VerificationSolution = new CNSUnitQuadSolution(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::TAYLOR_GREEN_VORTEX:
-      VerificationSolution = new CTGVSolution(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::MMS_NS_UNIT_QUAD:
-      VerificationSolution = new CMMSNSUnitQuadSolution(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::MMS_NS_UNIT_QUAD_WALL_BC:
-      VerificationSolution = new CMMSNSUnitQuadSolutionWallBC(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::MMS_NS_TWO_HALF_CIRCLES:
-      VerificationSolution = new CMMSNSTwoHalfCirclesSolution(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::MMS_NS_TWO_HALF_SPHERES:
-      VerificationSolution = new CMMSNSTwoHalfSpheresSolution(nDim, nVar, MGLevel, config); break;
-    case VERIFICATION_SOLUTION::USER_DEFINED_SOLUTION:
-      VerificationSolution = new CUserDefinedSolution(nDim, nVar, MGLevel, config); break;
-  }
 }
 
 void CSolver::ComputeResidual_Multizone(const CGeometry *geometry, const CConfig *config){

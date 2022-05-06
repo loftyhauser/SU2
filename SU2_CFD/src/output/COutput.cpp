@@ -30,10 +30,8 @@
 
 #include "../../include/output/COutput.hpp"
 #include "../../include/output/filewriter/CFVMDataSorter.hpp"
-#include "../../include/output/filewriter/CFEMDataSorter.hpp"
 #include "../../include/output/filewriter/CCGNSFileWriter.hpp"
 #include "../../include/output/filewriter/CSurfaceFVMDataSorter.hpp"
-#include "../../include/output/filewriter/CSurfaceFEMDataSorter.hpp"
 #include "../../include/output/filewriter/CParaviewFileWriter.hpp"
 #include "../../include/output/filewriter/CSTLFileWriter.hpp"
 #include "../../include/output/filewriter/CParaviewBinaryFileWriter.hpp"
@@ -316,25 +314,12 @@ void COutput::AllocateDataSorters(CConfig *config, CGeometry *geometry){
   /*---- Construct a data sorter object to partition and distribute
    *  the local data into linear chunks across the processors ---*/
 
-  if (femOutput){
-
-    if (volumeDataSorter == nullptr)
-      volumeDataSorter = new CFEMDataSorter(config, geometry, volumeFieldNames);
-
-    if (surfaceDataSorter == nullptr)
-      surfaceDataSorter = new CSurfaceFEMDataSorter(config, geometry,
-                                                  dynamic_cast<CFEMDataSorter*>(volumeDataSorter));
-
-  }  else {
-
     if (volumeDataSorter == nullptr)
       volumeDataSorter = new CFVMDataSorter(config, geometry, volumeFieldNames);
 
     if (surfaceDataSorter == nullptr)
       surfaceDataSorter = new CSurfaceFVMDataSorter(config, geometry,
                                                   dynamic_cast<CFVMDataSorter*>(volumeDataSorter));
-
-  }
 
 }
 
@@ -1714,34 +1699,6 @@ void COutput::LoadDataIntoSorter(CConfig* config, CGeometry* geometry, CSolver**
   curGetFieldIndex = 0;
   fieldGetIndexCache.clear();
 
-  if (femOutput){
-
-    /*--- Create an object of the class CMeshFEM_DG and retrieve the necessary
-     geometrical information for the FEM DG solver. ---*/
-
-    CMeshFEM_DG *DGGeometry = dynamic_cast<CMeshFEM_DG *>(geometry);
-
-    unsigned long nVolElemOwned = DGGeometry->GetNVolElemOwned();
-
-    CVolumeElementFEM *volElem  = DGGeometry->GetVolElem();
-
-    /*--- Access the solution by looping over the owned volume elements. ---*/
-
-    for(unsigned long l=0; l<nVolElemOwned; ++l) {
-
-      for(unsigned short j=0; j<volElem[l].nDOFsSol; ++j) {
-
-        buildFieldIndexCache = fieldIndexCache.empty();
-
-        LoadVolumeDataFEM(config, geometry, solver, l, jPoint, j);
-
-        jPoint++;
-
-      }
-    }
-
-  } else {
-
     for (iPoint = 0; iPoint < geometry->GetnPointDomain(); iPoint++) {
 
       /*--- Load the volume data into the data sorter. --- */
@@ -1779,7 +1736,6 @@ void COutput::LoadDataIntoSorter(CConfig* config, CGeometry* geometry, CSolver**
         }
       }
     }
-  }
 }
 
 void COutput::SetVolumeOutputValue(string name, unsigned long iPoint, su2double value){
@@ -2209,7 +2165,6 @@ void COutput::LoadCommonHistoryData(const CConfig *config) {
 
   SetHistoryOutputValue("NONPHYSICAL_POINTS", config->GetNonphysical_Points());
 }
-
 
 void COutput::PrintHistoryFields() const {
 

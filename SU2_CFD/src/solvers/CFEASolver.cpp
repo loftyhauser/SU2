@@ -557,7 +557,6 @@ void CFEASolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, 
                                unsigned short iMesh, unsigned long Iteration, unsigned short RunTime_EqSystem, bool Output) {
 
   const bool dynamic = config->GetTime_Domain();
-  const bool disc_adj_fem = (config->GetKind_Solver() == MAIN_SOLVER::DISC_ADJ_FEM);
   const bool body_forces = config->GetDeadLoad();
   const bool topology_mode = config->GetTopology_Optimization();
 
@@ -581,7 +580,7 @@ void CFEASolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, 
    *
    * The same with the integration constants, as for now we consider the time step to be constant.
    */
-  if (dynamic && (initial_calc || disc_adj_fem)) {
+  if (dynamic && (initial_calc)) {
     Compute_IntegrationConstants(config);
     Compute_MassMatrix(geometry, numerics, config);
   }
@@ -592,7 +591,7 @@ void CFEASolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, 
    *
    * Only initialized once, at the first iteration of the first time step.
    */
-  if (body_forces && (initial_calc || disc_adj_fem))
+  if (body_forces && (initial_calc))
     Compute_DeadLoad(geometry, numerics, config);
 
   /*--- Clear the linear system solution. ---*/

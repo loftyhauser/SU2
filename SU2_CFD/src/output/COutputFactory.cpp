@@ -32,7 +32,6 @@
 #include "../../include/output/CAdjElasticityOutput.hpp"
 #include "../../include/output/CFlowCompOutput.hpp"
 #include "../../include/output/CAdjFlowCompOutput.hpp"
-#include "../../include/output/CFlowCompFEMOutput.hpp"
 
 COutput* COutputFactory::CreateOutput(MAIN_SOLVER kindSolver, CConfig* config, int nDim){
 
@@ -48,12 +47,6 @@ COutput* COutputFactory::CreateOutput(MAIN_SOLVER kindSolver, CConfig* config, i
     case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
     case MAIN_SOLVER::ADJ_EULER: case MAIN_SOLVER::ADJ_NAVIER_STOKES: case MAIN_SOLVER::ADJ_RANS:
       output = new CAdjFlowCompOutput(config, nDim);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_FEM:
-      output = new CAdjElasticityOutput(config, nDim);
-      break;
-    case MAIN_SOLVER::FEM_EULER: case MAIN_SOLVER::FEM_LES: case MAIN_SOLVER::FEM_RANS: case MAIN_SOLVER::FEM_NAVIER_STOKES:
-      output = new CFlowCompFEMOutput(config, nDim);
       break;
     default:
       output = new COutput(config, nDim, false);

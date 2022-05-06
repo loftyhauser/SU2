@@ -75,27 +75,6 @@ CPhysicalGeometry::CPhysicalGeometry(CConfig *config, unsigned short val_iZone, 
 
   /*--- Determine whether or not a FEM discretization is used ---*/
 
-  const bool fem_solver = config->GetFEMSolver();
-
-  /*--- Initialize counters for local/global points & elements ---*/
-
-  if( fem_solver ) {
-    switch (val_format) {
-      case SU2:
-        Read_SU2_Format_Parallel_FEM(config, val_mesh_filename, val_iZone, val_nZone);
-        break;
-
-      case CGNS_GRID:
-        Read_CGNS_Format_Parallel_FEM(config, val_mesh_filename, val_iZone, val_nZone);
-        break;
-
-      default:
-        SU2_MPI::Error("Unrecognized mesh format specified for the FEM solver!", CURRENT_FUNCTION);
-        break;
-    }
-  }
-  else {
-
     switch (val_format) {
       case SU2: case CGNS_GRID: case RECTANGLE: case BOX:
         Read_Mesh_FVM(config, val_mesh_filename, val_iZone, val_nZone);
@@ -104,7 +83,6 @@ CPhysicalGeometry::CPhysicalGeometry(CConfig *config, unsigned short val_iZone, 
         SU2_MPI::Error("Unrecognized mesh format specified!", CURRENT_FUNCTION);
         break;
     }
-  }
 
   /*--- After reading the mesh, assert that the dimension is equal to 2 or 3. ---*/
 

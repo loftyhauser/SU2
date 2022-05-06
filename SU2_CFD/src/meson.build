@@ -1,6 +1,5 @@
 su2_cfd_include = include_directories('./')
-su2_cfd_src = files(['definition_structure.cpp',
-                     'python_wrapper_structure.cpp',
+su2_cfd_src = files(['python_wrapper_structure.cpp',
                      'CMarkerProfileReaderFVM.cpp'])
 
 su2_cfd_src += files(['fluid/CFluidModel.cpp',
@@ -16,15 +15,12 @@ su2_cfd_src += files(['output/COutputFactory.cpp',
                       'output/CMultizoneOutput.cpp',
                       'output/CElasticityOutput.cpp',
                       'output/CFlowCompOutput.cpp',
-                      'output/CFlowCompFEMOutput.cpp',
                       'output/CFVMOutput.cpp',
                       'output/CFlowOutput.cpp',
                       'output/CMeshOutput.cpp',
                       'output/COutput.cpp',
                       'output/filewriter/CParallelDataSorter.cpp',
                       'output/filewriter/CFVMDataSorter.cpp',
-                      'output/filewriter/CFEMDataSorter.cpp',
-                      'output/filewriter/CSurfaceFEMDataSorter.cpp',
                       'output/filewriter/CSurfaceFVMDataSorter.cpp',
                       'output/filewriter/CParallelFileWriter.cpp',
                       'output/filewriter/CParaviewFileWriter.cpp',
@@ -75,8 +71,6 @@ su2_cfd_src += files(['solvers/CSolverFactory.cpp',
                       'solvers/CDiscAdjSolver.cpp',
                       'solvers/CEulerSolver.cpp',
                       'solvers/CFEASolver.cpp',
-                      'solvers/CFEM_DG_EulerSolver.cpp',
-                      'solvers/CFEM_DG_NSSolver.cpp',
                       'solvers/CMeshSolver.cpp',
                       'solvers/CNSSolver.cpp',
                       'solvers/CSolver.cpp',
@@ -129,8 +123,7 @@ su2_cfd_src += files(['integration/CIntegration.cpp',
                       'integration/CSingleGridIntegration.cpp',
                       'integration/CMultiGridIntegration.cpp',
                       'integration/CNewtonIntegration.cpp',
-                      'integration/CStructuralIntegration.cpp',
-                      'integration/CFEM_DG_Integration.cpp'])
+                      'integration/CStructuralIntegration.cpp'])
 
 su2_cfd_src += files(['iteration/CIteration.cpp',
                       'iteration/CIterationFactory.cpp',
@@ -138,7 +131,6 @@ su2_cfd_src += files(['iteration/CIteration.cpp',
                       'iteration/CDiscAdjFluidIteration.cpp',
                       'iteration/CDiscAdjFEAIteration.cpp',
                       'iteration/CFEAIteration.cpp',
-                      'iteration/CFEMFluidIteration.cpp',
                       'iteration/CFluidIteration.cpp'])
 
 su2_cfd_src += files(['limiters/CLimiterDetails.cpp'])

@@ -137,10 +137,6 @@ int main(int argc, char *argv[]) {
 
   for (iZone = 0; iZone < nZone; iZone++) {
 
-    /*--- Determine whether or not the FEM solver is used, which decides the
-     type of geometry classes that are instantiated. ---*/
-    const bool fem_solver = config_container[iZone]->GetFEMSolver();
-
     /*--- Read the number of instances for each zone ---*/
 
     nInst[iZone] = 1;
@@ -159,22 +155,11 @@ int main(int argc, char *argv[]) {
 
       /*--- Color the initial grid and set the send-receive domains (ParMETIS) ---*/
 
-      if ( fem_solver ) geometry_aux->SetColorFEMGrid_Parallel(config_container[iZone]);
-      else              geometry_aux->SetColorGrid_Parallel(config_container[iZone]);
+      geometry_aux->SetColorGrid_Parallel(config_container[iZone]);
 
       /*--- Build the grid data structures using the ParMETIS coloring. ---*/
 
-      if( fem_solver ) {
-        switch( config_container[iZone]->GetKind_FEM_Flow() ) {
-          case DG: {
-            geometry_container[iZone][iInst] = new CMeshFEM_DG(geometry_aux, config_container[iZone]);
-            break;
-          }
-        }
-      }
-      else {
-        geometry_container[iZone][iInst] = new CPhysicalGeometry(geometry_aux, config_container[iZone]);
-      }
+      geometry_container[iZone][iInst] = new CPhysicalGeometry(geometry_aux, config_container[iZone]);
 
       /*--- Deallocate the memory of geometry_aux ---*/
 
@@ -198,23 +183,6 @@ int main(int argc, char *argv[]) {
       if (rank == MASTER_NODE) cout << "Storing a mapping from global to local point index." << endl;
       geometry_container[iZone][iInst]->SetGlobal_to_Local_Point();
 
-      /* Test for a fem solver, because some more work must be done. */
-
-      if (fem_solver) {
-
-        /*--- Carry out a dynamic cast to CMeshFEM_DG, such that it is not needed to
-         define all virtual functions in the base class CGeometry. ---*/
-        CMeshFEM_DG *DGMesh = dynamic_cast<CMeshFEM_DG *>(geometry_container[iZone][iInst]);
-
-        /*--- Determine the standard elements for the volume elements. ---*/
-        if (rank == MASTER_NODE) cout << "Creating standard volume elements." << endl;
-        DGMesh->CreateStandardVolumeElements(config_container[iZone]);
-
-        /*--- Create the face information needed to compute the contour integral
-         for the elements in the Discontinuous Galerkin formulation. ---*/
-        if (rank == MASTER_NODE) cout << "Creating face information." << endl;
-        DGMesh->CreateFaces(config_container[iZone]);
-      }
     }
   }
 

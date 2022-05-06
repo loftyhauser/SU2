@@ -75,26 +75,6 @@ CDiscAdjSinglezoneDriver::CDiscAdjSinglezoneDriver(char* confFile,
     MainSolver = ADJFLOW_SOL;
     break;
 
-  case MAIN_SOLVER::DISC_ADJ_FEM_EULER : case MAIN_SOLVER::DISC_ADJ_FEM_NS : case MAIN_SOLVER::DISC_ADJ_FEM_RANS :
-    if (rank == MASTER_NODE)
-      cout << "Direct iteration: Euler/Navier-Stokes/RANS equation." << endl;
-    direct_iteration = CIterationFactory::CreateIteration(MAIN_SOLVER::FEM_EULER, config);
-    direct_output = COutputFactory::CreateOutput(MAIN_SOLVER::FEM_EULER, config, nDim);
-    MainVariables = RECORDING::SOLUTION_VARIABLES;
-    SecondaryVariables = RECORDING::MESH_COORDS;
-    MainSolver = ADJFLOW_SOL;
-    break;
-
-  case MAIN_SOLVER::DISC_ADJ_FEM:
-    if (rank == MASTER_NODE)
-      cout << "Direct iteration: elasticity equation." << endl;
-    direct_iteration =  CIterationFactory::CreateIteration(MAIN_SOLVER::FEM_ELASTICITY, config);
-    direct_output = COutputFactory::CreateOutput(MAIN_SOLVER::FEM_ELASTICITY, config, nDim);
-    MainVariables = RECORDING::SOLUTION_VARIABLES;
-    SecondaryVariables = RECORDING::MESH_COORDS;
-    MainSolver = ADJFEA_SOL;
-    break;
-
   default:
     break;
 
@@ -204,16 +184,6 @@ void CDiscAdjSinglezoneDriver::Postprocess() {
 
       /*--- Compute the geometrical sensitivities ---*/
       SecondaryRecording();
-      break;
-
-    case MAIN_SOLVER::DISC_ADJ_FEM :
-
-      /*--- Compute the geometrical sensitivities ---*/
-      SecondaryRecording();
-
-      iteration->Postprocess(output_container[ZONE_0], integration_container, geometry_container,
-                             solver_container, numerics_container, config_container,
-                             surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
       break;
 
     default:
@@ -332,7 +302,6 @@ void CDiscAdjSinglezoneDriver::SetObjFunction(){
 
   switch (config->GetKind_Solver()) {
   case MAIN_SOLVER::DISC_ADJ_EULER:           case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:          case MAIN_SOLVER::DISC_ADJ_RANS:
-  case MAIN_SOLVER::DISC_ADJ_FEM_EULER:       case MAIN_SOLVER::DISC_ADJ_FEM_NS:                 case MAIN_SOLVER::DISC_ADJ_FEM_RANS:
 
     /*--- Surface based obj. function ---*/
 
@@ -340,14 +309,6 @@ void CDiscAdjSinglezoneDriver::SetObjFunction(){
                                      config->GetOuterIter(), config->GetInnerIter());
     ObjFunc += solver[FLOW_SOL]->GetTotal_ComboObj();
 
-    break;
-
-  case MAIN_SOLVER::DISC_ADJ_FEM:
-    solver[FEA_SOL]->Postprocessing(geometry, config, numerics_container[ZONE_0][INST_0][MESH_0][FEA_SOL], true);
-
-    direct_output->SetHistory_Output(geometry, solver, config, config->GetTimeIter(),
-                                   config->GetOuterIter(), config->GetInnerIter());
-    ObjFunc = solver[FEA_SOL]->GetTotal_ComboObj();
     break;
 
   default:

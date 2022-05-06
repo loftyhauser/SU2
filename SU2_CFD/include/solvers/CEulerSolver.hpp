@@ -934,12 +934,6 @@ public:
   void SetFreeStream_Solution(const CConfig *config) final;
 
   /*!
-   * \brief Print verification error to screen.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void PrintVerificationError(const CConfig* config) const final;
-
-  /*!
    * \brief The Euler and NS solvers support MPI+OpenMP.
    */
   inline bool GetHasHybridParallel() const final { return true; }
