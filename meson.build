@@ -158,14 +158,6 @@ endforeach
 subdir('Common/src')
 # compile SU2_CFD executable
 subdir('SU2_CFD/src')
-# compile SU2_SOL executable
-subdir('SU2_SOL/src')
-# install python scripts
-subdir('SU2_PY')
-
-if get_option('enable-pywrapper')
-  subdir('SU2_PY/pySU2')
-endif
 
 message('''-------------------------------------------------------------------------
          |    ___ _   _ ___                                                      |
@@ -179,11 +171,10 @@ message('''---------------------------------------------------------------------
          ---------------------
          TecIO:          @2@
          CGNS:           @3@
-         Python Wrapper: @4@
-         Intel-MKL:      @5@
-         OpenBlas:       @6@
-         PaStiX:         @7@
-         Mixed Float:    @8@
+         Intel-MKL:      @4@
+         OpenBlas:       @5@
+         PaStiX:         @6@
+         Mixed Float:    @7@
 
          Please be sure to add the $SU2_HOME and $SU2_RUN environment variables,
          and update your $PATH (and $PYTHONPATH if applicable) with $SU2_RUN
@@ -195,7 +186,7 @@ message('''---------------------------------------------------------------------
          export PATH=$PATH:$SU2_RUN
          export PYTHONPATH=$PYTHONPATH:$SU2_RUN
 
-         Use './ninja -C @9@ install' to compile and install SU2
+         Use './ninja -C @8@ install' to compile and install SU2
 '''.format(get_option('prefix')+'/bin', meson.source_root(), get_option('enable-tecio'), get_option('enable-cgns'),
-           get_option('enable-pywrapper'), get_option('enable-mkl'),
+           get_option('enable-mkl'),
            get_option('enable-openblas'), get_option('enable-pastix'), get_option('enable-mixedprec'),  meson.build_root().split('/')[-1]))
