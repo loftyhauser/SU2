@@ -88,10 +88,6 @@ if omp
 
 endif
 
-if get_option('enable-tecio')
-  subdir('externals/tecio')
-endif
-
 # PaStiX
 if get_option('enable-pastix')
   assert(mpi,
@@ -162,11 +158,10 @@ message('''---------------------------------------------------------------------
          
          Option          Value
          ---------------------
-         TecIO:          @2@
-         Intel-MKL:      @3@
-         OpenBlas:       @4@
-         PaStiX:         @5@
-         Mixed Float:    @6@
+         Intel-MKL:      @2@
+         OpenBlas:       @3@
+         PaStiX:         @4@
+         Mixed Float:    @5@
 
          Please be sure to add the $SU2_HOME and $SU2_RUN environment variables,
          and update your $PATH (and $PYTHONPATH if applicable) with $SU2_RUN
@@ -178,7 +173,7 @@ message('''---------------------------------------------------------------------
          export PATH=$PATH:$SU2_RUN
          export PYTHONPATH=$PYTHONPATH:$SU2_RUN
 
-         Use './ninja -C @7@ install' to compile and install SU2
-'''.format(get_option('prefix')+'/bin', meson.source_root(), get_option('enable-tecio'),
+         Use './ninja -C @6@ install' to compile and install SU2
+'''.format(get_option('prefix')+'/bin', meson.source_root(),
            get_option('enable-mkl'),
            get_option('enable-openblas'), get_option('enable-pastix'), get_option('enable-mixedprec'),  meson.build_root().split('/')[-1]))

@@ -37,7 +37,6 @@
 #include "../../include/output/filewriter/CParaviewXMLFileWriter.hpp"
 #include "../../include/output/filewriter/CParaviewVTMFileWriter.hpp"
 #include "../../include/output/filewriter/CTecplotFileWriter.hpp"
-#include "../../include/output/filewriter/CTecplotBinaryFileWriter.hpp"
 #include "../../include/output/filewriter/CCSVFileWriter.hpp"
 #include "../../include/output/filewriter/CSU2FileWriter.hpp"
 #include "../../include/output/filewriter/CSU2BinaryFileWriter.hpp"
@@ -401,33 +400,6 @@ void COutput::WriteToFile(CConfig *config, CGeometry *geometry, OUTPUT_TYPE form
 
       break;
 
-    case OUTPUT_TYPE::TECPLOT_BINARY:
-
-      extension = CTecplotBinaryFileWriter::fileExt;
-
-      if (fileName.empty())
-        fileName = config->GetFilename(volumeFilename, "", curTimeIter);
-
-      if (!config->GetWrt_Volume_Overwrite())
-        filename_iter = config->GetFilename_Iter(fileName,curInnerIter, curOuterIter);
-
-      /*--- Load and sort the output data and connectivity. ---*/
-
-      volumeDataSorter->SortConnectivity(config, geometry, false);
-
-      /*--- Write tecplot binary ---*/
-      if (rank == MASTER_NODE) {
-        (*fileWritingTable) << "Tecplot binary" << fileName + extension;
-
-        if (!config->GetWrt_Volume_Overwrite())
-          (*fileWritingTable) << "Tecplot binary + iter" << filename_iter + extension;
-      }
-
-      fileWriter = new CTecplotBinaryFileWriter(volumeDataSorter,
-                                                curTimeIter, GetHistoryFieldValue("TIME_STEP"));
-
-      break;
-
     case OUTPUT_TYPE::TECPLOT_ASCII:
 
       extension = CTecplotFileWriter::fileExt;
@@ -688,36 +660,6 @@ void COutput::WriteToFile(CConfig *config, CGeometry *geometry, OUTPUT_TYPE form
 
       fileWriter = new CTecplotFileWriter(surfaceDataSorter,
                                           curTimeIter, GetHistoryFieldValue("TIME_STEP"));
-
-      break;
-
-    case OUTPUT_TYPE::SURFACE_TECPLOT_BINARY:
-
-      extension = CTecplotBinaryFileWriter::fileExt;
-
-      if (fileName.empty())
-        fileName = config->GetFilename(surfaceFilename, "", curTimeIter);
-
-      if (!config->GetWrt_Surface_Overwrite())
-        filename_iter = config->GetFilename_Iter(fileName,curInnerIter, curOuterIter);
-
-
-      /*--- Load and sort the output data and connectivity. ---*/
-
-      surfaceDataSorter->SortConnectivity(config, geometry);
-      surfaceDataSorter->SortOutputData();
-
-      /*--- Write surface tecplot binary ---*/
-      if (rank == MASTER_NODE) {
-        (*fileWritingTable) << "Tecplot binary surface" << fileName + extension;
-
-        if (!config->GetWrt_Surface_Overwrite())
-          (*fileWritingTable) << "Tecplot binary surface + iter" << filename_iter + extension;
-
-      }
-
-      fileWriter = new CTecplotBinaryFileWriter(surfaceDataSorter,
-                                                curTimeIter, GetHistoryFieldValue("TIME_STEP"));
 
       break;
 

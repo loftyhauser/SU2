@@ -1,6 +1,5 @@
 option('with-mpi',   type : 'feature', value : 'auto', description: 'enable MPI support')
 option('with-omp',   type : 'boolean', value : false, description: 'enable OpenMP support')
-option('enable-tecio', type : 'boolean', value : true, description: 'enable TECIO support')
 option('enable-normal',  type : 'boolean', value : true, description: 'enable normal build')
 option('enable-mkl', type : 'boolean', value : false, description: 'enable Intel-MKL support')
 option('mkl_root', type : 'string', value : '/opt/intel/mkl', description: 'root of Intel-MKL installation (only for non-intel compilers)')
