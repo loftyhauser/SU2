@@ -30,7 +30,6 @@
 
 #include "../../include/output/COutput.hpp"
 #include "../../include/output/filewriter/CFVMDataSorter.hpp"
-#include "../../include/output/filewriter/CCGNSFileWriter.hpp"
 #include "../../include/output/filewriter/CSurfaceFVMDataSorter.hpp"
 #include "../../include/output/filewriter/CParaviewFileWriter.hpp"
 #include "../../include/output/filewriter/CSTLFileWriter.hpp"
@@ -748,61 +747,6 @@ void COutput::WriteToFile(CConfig *config, CGeometry *geometry, OUTPUT_TYPE form
       }
 
       fileWriter = new CSTLFileWriter(surfaceDataSorter);
-
-      break;
-
-    case OUTPUT_TYPE::CGNS:
-
-      extension = CCGNSFileWriter::fileExt;
-
-      if (fileName.empty())
-        fileName = config->GetFilename(volumeFilename, "", curTimeIter);
-
-      if (!config->GetWrt_Volume_Overwrite())
-        filename_iter = config->GetFilename_Iter(fileName,curInnerIter, curOuterIter);
-
-
-      /*--- Load and sort the output data and connectivity. ---*/
-      volumeDataSorter->SortConnectivity(config, geometry, true);
-
-      /*--- Write CGNS ---*/
-      if (rank == MASTER_NODE) {
-        (*fileWritingTable) << "CGNS" << fileName + extension;
-
-        if (!config->GetWrt_Volume_Overwrite())
-          (*fileWritingTable) << "CGNS + iter" << filename_iter + extension;
-
-      }
-
-      fileWriter = new CCGNSFileWriter(volumeDataSorter);
-
-      break;
-
-    case OUTPUT_TYPE::SURFACE_CGNS:
-
-      extension = CCGNSFileWriter::fileExt;
-
-      if (fileName.empty())
-        fileName = config->GetFilename(surfaceFilename, "", curTimeIter);
-
-      if (!config->GetWrt_Surface_Overwrite())
-        filename_iter = config->GetFilename_Iter(fileName,curInnerIter, curOuterIter);
-
-
-      /*--- Load and sort the output data and connectivity. ---*/
-      surfaceDataSorter->SortConnectivity(config, geometry);
-      surfaceDataSorter->SortOutputData();
-
-      /*--- Write SURFACE_CGNS ---*/
-      if (rank == MASTER_NODE) {
-        (*fileWritingTable) << "CGNS surface" << fileName + extension;
-
-        if (!config->GetWrt_Surface_Overwrite())
-          (*fileWritingTable) << "CGNS surface + iter" << filename_iter + extension;
-
-      }
-
-      fileWriter = new CCGNSFileWriter(surfaceDataSorter, true);
 
       break;
 

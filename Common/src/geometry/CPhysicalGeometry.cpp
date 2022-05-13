@@ -32,7 +32,6 @@
 #include "../../include/toolboxes/C1DInterpolation.hpp"
 #include "../../include/toolboxes/geometry_toolbox.hpp"
 #include "../../include/geometry/meshreader/CSU2ASCIIMeshReaderFVM.hpp"
-#include "../../include/geometry/meshreader/CCGNSMeshReaderFVM.hpp"
 #include "../../include/geometry/meshreader/CRectangularMeshReaderFVM.hpp"
 #include "../../include/geometry/meshreader/CBoxMeshReaderFVM.hpp"
 
@@ -3498,9 +3497,6 @@ void CPhysicalGeometry::Read_Mesh_FVM(CConfig        *config,
   switch (val_format) {
     case SU2:
       MeshFVM = new CSU2ASCIIMeshReaderFVM(config, val_iZone, val_nZone);
-      break;
-    case CGNS_GRID:
-      MeshFVM = new CCGNSMeshReaderFVM(config, val_iZone, val_nZone);
       break;
     case RECTANGLE:
       MeshFVM = new CRectangularMeshReaderFVM(config, val_iZone, val_nZone);
