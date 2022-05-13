@@ -75,7 +75,6 @@ const unsigned int EXIT_DIVERGENCE = 2;   /*!< \brief Exit code (divergence). */
 const unsigned int MAX_PARAMETERS = 10;       /*!< \brief Maximum number of parameters for a design variable definition. */
 const unsigned int MAX_NUMBER_PERIODIC = 10;  /*!< \brief Maximum number of periodic boundary conditions. */
 const unsigned int MAX_STRING_SIZE = 200;     /*!< \brief Maximum number of domains. */
-const unsigned int MAX_NUMBER_FFD = 15;       /*!< \brief Maximum number of FFDBoxes for the FFD. */
 enum: unsigned int{MAX_SOLS = 13};            /*!< \brief Maximum number of solutions at the same time (dimension of solution container array). */
 const unsigned int MAX_TERMS = 7;             /*!< \brief Maximum number of terms in the numerical equations (dimension of solver container array). */
 const unsigned int MAX_ZONES = 3;             /*!< \brief Maximum number of zones. */
@@ -230,7 +229,6 @@ enum class MAIN_SOLVER {
   EULER,                       /*!< \brief Definition of the Euler's solver. */
   NAVIER_STOKES,               /*!< \brief Definition of the Navier-Stokes' solver. */
   RANS,                        /*!< \brief Definition of the Reynolds-averaged Navier-Stokes' (RANS) solver. */
-  FEM_ELASTICITY,              /*!< \brief Definition of a FEM solver. */
   ADJ_EULER,                   /*!< \brief Definition of the continuous adjoint Euler's solver. */
   ADJ_NAVIER_STOKES,           /*!< \brief Definition of the continuous adjoint Navier-Stokes' solver. */
   ADJ_RANS,                    /*!< \brief Definition of the continuous adjoint Reynolds-averaged Navier-Stokes' (RANS) solver. */
@@ -248,7 +246,6 @@ static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
   MakePair("ADJ_EULER", MAIN_SOLVER::ADJ_EULER)
   MakePair("ADJ_NAVIER_STOKES", MAIN_SOLVER::ADJ_NAVIER_STOKES)
   MakePair("ADJ_RANS", MAIN_SOLVER::ADJ_RANS )
-  MakePair("ELASTICITY", MAIN_SOLVER::FEM_ELASTICITY)
   MakePair("DISC_ADJ_EULER", MAIN_SOLVER::DISC_ADJ_EULER)
   MakePair("DISC_ADJ_RANS", MAIN_SOLVER::DISC_ADJ_RANS)
   MakePair("DISC_ADJ_NAVIERSTOKES", MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES)
@@ -405,8 +402,6 @@ enum RUNTIME_TYPE {
   RUNTIME_ADJFLOW_SYS = 6,    /*!< \brief One-physics case, the code is solving the adjoint equations is being solved (Euler and Navier-Stokes). */
   RUNTIME_ADJTURB_SYS = 7,    /*!< \brief One-physics case, the code is solving the adjoint turbulence model. */
   RUNTIME_MULTIGRID_SYS = 14, /*!< \brief Full Approximation Storage Multigrid system of equations. */
-  RUNTIME_FEA_SYS = 20,       /*!< \brief One-physics case, the code is solving the FEA equation. */
-  RUNTIME_ADJFEA_SYS = 30,    /*!< \brief One-physics case, the code is solving the adjoint FEA equation. */
   RUNTIME_TRANS_SYS = 22,     /*!< \brief One-physics case, the code is solving the turbulence model. */
 };
 
@@ -421,8 +416,6 @@ const int TRANS_SOL = 4;    /*!< \brief Position of the transition model solutio
 const int MESH_SOL = 9;      /*!< \brief Position of the mesh solver. */
 const int ADJMESH_SOL = 10;   /*!< \brief Position of the adjoint of the mesh solver. */
 
-const int FEA_SOL = 0;      /*!< \brief Position of the FEA equation in the solution solver array. */
-const int ADJFEA_SOL = 1;   /*!< \brief Position of the FEA adjoint equation in the solution solver array. */
 
 const int TEMPLATE_SOL = 0; /*!< \brief Position of the template solution. */
 
@@ -433,9 +426,6 @@ const int SOURCE_SECOND_TERM = 3;  /*!< \brief Position of the second source ter
 const int CONV_BOUND_TERM = 4;     /*!< \brief Position of the convective boundary terms in the numerics container array. */
 const int VISC_BOUND_TERM = 5;     /*!< \brief Position of the viscous boundary terms in the numerics container array. */
 const int GRAD_TERM = 6;           /*!< \brief Position of the gradient smoothing terms in the numerics container array. */
-
-const int FEA_TERM = 0;      /*!< \brief Position of the finite element analysis terms in the numerics container array. */
-const int DE_TERM = 1;       /*!< \brief Position of the dielectric terms in the numerics container array. */
 
 const int MAT_NHCOMP  = 2;   /*!< \brief Position of the Neo-Hookean compressible material model. */
 const int MAT_IDEALDE = 3;   /*!< \brief Position of the Ideal-DE material model. */
@@ -553,31 +543,6 @@ static const MapType<std::string, CONDUCTIVITYMODEL_TURB> TurbConductivityModel_
   MakePair("CONSTANT_PRANDTL_TURB", CONDUCTIVITYMODEL_TURB::CONSTANT_PRANDTL)
 };
 
-/*!
- * \brief Types of unsteady mesh motion
- */
-enum ENUM_GRIDMOVEMENT {
-  NO_MOVEMENT = 0,          /*!< \brief Simulation on a static mesh. */
-  RIGID_MOTION = 2,         /*!< \brief Simulation with rigid mesh motion (plunging/pitching/rotation). */
-  ROTATING_FRAME = 8,       /*!< \brief Simulation in a rotating frame. */
-  STEADY_TRANSLATION = 11,  /*!< \brief Simulation in a steadily translating frame. */
-};
-static const MapType<std::string, ENUM_GRIDMOVEMENT> GridMovement_Map = {
-  MakePair("NONE", NO_MOVEMENT)
-  MakePair("RIGID_MOTION", RIGID_MOTION)
-  MakePair("ROTATING_FRAME", ROTATING_FRAME)
-  MakePair("STEADY_TRANSLATION", STEADY_TRANSLATION)
-};
-
-enum ENUM_SURFACEMOVEMENT {
-  DEFORMING = 1,                 /*!< \brief Simulation with deformation. */
-  MOVING_WALL = 2,               /*!< \brief Simulation with moving wall. */
-};
-static const MapType<std::string, ENUM_SURFACEMOVEMENT> SurfaceMovement_Map = {
-  MakePair("DEFORMING", DEFORMING)
-  MakePair("MOVING_WALL", MOVING_WALL)
-};
-
 // If you add to ENUM_CENTERED, you must also add the option to ENUM_CONVECTIVE
 /*!
  * \brief Types of centered spatial discretizations
@@ -643,30 +608,6 @@ static const MapType<std::string, ENUM_UPWIND> Upwind_Map = {
   MakePair("SLAU2", SLAU2)
   MakePair("FDS", FDS)
   MakePair("LAX-FRIEDRICH", LAX_FRIEDRICH)
-};
-
-/*!
- * \brief Types of FEM spatial discretizations
- */
-enum ENUM_FEM {
-  NO_FEM = 0,  /*!< \brief No finite element scheme is used. */
-  DG = 1       /*!< \brief Discontinuous Galerkin numerical method. */
-};
-static const MapType<std::string, ENUM_FEM> FEM_Map = {
-  MakePair("NONE", NO_FEM)
-  MakePair("DG", DG)
-};
-
-/*!
- * \brief Types of shock capturing method in Discontinuous Galerkin numerical method.
- */
-enum class FEM_SHOCK_CAPTURING_DG {
-  NONE,     /*!< \brief Shock capturing is not used. */
-  PERSSON   /*!< \brief Per-Olof Persson's sub-cell shock capturing method. */
-};
-static const MapType<std::string, FEM_SHOCK_CAPTURING_DG> ShockCapturingDG_Map = {
-  MakePair("NONE", FEM_SHOCK_CAPTURING_DG::NONE)
-  MakePair("PERSSON", FEM_SHOCK_CAPTURING_DG::PERSSON)
 };
 
 /*!
@@ -891,32 +832,6 @@ static const MapType<std::string, ENUM_ADER_PREDICTOR> Ader_Predictor_Map = {
 };
 
 /*!
- * \brief Type of time integration schemes
- */
-enum class STRUCT_TIME_INT {
-  CD_EXPLICIT,       /*!< \brief Support for implementing an explicit method. */
-  NEWMARK_IMPLICIT,  /*!< \brief Implicit Newmark integration definition. */
-  GENERALIZED_ALPHA, /*!< \brief Support for implementing another implicit method. */
-};
-static const MapType<std::string, STRUCT_TIME_INT> Time_Int_Map_FEA = {
-  MakePair("CD_EXPLICIT", STRUCT_TIME_INT::CD_EXPLICIT)
-  MakePair("NEWMARK_IMPLICIT", STRUCT_TIME_INT::NEWMARK_IMPLICIT)
-  MakePair("GENERALIZED_ALPHA", STRUCT_TIME_INT::GENERALIZED_ALPHA)
-};
-
-/*!
- * \brief Type of time integration schemes
- */
-enum class STRUCT_SPACE_ITE {
-  NEWTON,       /*!< \brief Full Newton-Rapshon method. */
-  MOD_NEWTON,   /*!< \brief Modified Newton-Raphson method. */
-};
-static const MapType<std::string, STRUCT_SPACE_ITE> Space_Ite_Map_FEA = {
-  MakePair("NEWTON_RAPHSON", STRUCT_SPACE_ITE::NEWTON)
-  MakePair("MODIFIED_NEWTON_RAPHSON", STRUCT_SPACE_ITE::MOD_NEWTON)
-};
-
-/*!
  * \brief Types of schemes to compute the flow gradient
  */
 enum ENUM_FLOW_GRADIENT {
@@ -990,18 +905,6 @@ enum BC_TYPE {
 };
 
 /*!
- * \brief 2D Formulation for structural problems
- */
-enum class STRUCT_2DFORM {
-  PLANE_STRESS,     /*!< \brief Definition of plane stress solver. */
-  PLANE_STRAIN      /*!< \brief Definition of plane strain solver. */
-};
-static const MapType<std::string, STRUCT_2DFORM> ElasForm_2D = {
-  MakePair("PLANE_STRESS", STRUCT_2DFORM::PLANE_STRESS)
-  MakePair("PLANE_STRAIN", STRUCT_2DFORM::PLANE_STRAIN)
-};
-
-/*!
  * \brief Kinds of relaxation for multizone problems
  */
 enum class BGS_RELAXATION {
@@ -1033,26 +936,6 @@ static const MapType<std::string, ENUM_DYN_TRANSFER_METHOD> Dyn_Transfer_Method_
   MakePair("QUINTIC", POL_ORDER_5)
   MakePair("SIGMOID_10", SIGMOID_10)
   MakePair("SIGMOID_20", SIGMOID_20)
-};
-
-/*!
- * \brief Kinds of Design Variables for FEA problems
- */
-enum ENUM_DVFEA {
-  NODV_FEA = 0,         /*!< \brief No design variable for FEA problems. */
-  YOUNG_MODULUS = 1,    /*!< \brief Young modulus (E) as design variable. */
-  POISSON_RATIO = 2,    /*!< \brief Poisson ratio (Nu) as design variable. */
-  DENSITY_VAL = 3,      /*!< \brief Density (Rho) as design variable. */
-  DEAD_WEIGHT = 4,      /*!< \brief Dead Weight (Rho_DL) as design variable. */
-  ELECTRIC_FIELD = 5    /*!< \brief Electric field (E) as design variable. */
-};
-static const MapType<std::string, ENUM_DVFEA> DVFEA_Map = {
-  MakePair("NONE", NODV_FEA)
-  MakePair("YOUNG_MODULUS", YOUNG_MODULUS)
-  MakePair("POISSON_RATIO", POISSON_RATIO)
-  MakePair("DENSITY", DENSITY_VAL)
-  MakePair("DEAD_WEIGHT", DEAD_WEIGHT)
-  MakePair("ELECTRIC_FIELD", ELECTRIC_FIELD)
 };
 
 /*!
@@ -1620,20 +1503,6 @@ static const MapType<std::string, TIME_MARCHING> TimeMarching_Map = {
 };
 
 /*!
- * \brief Types of element stiffnesses imposed for FEA mesh deformation
- */
-enum ENUM_DEFORM_STIFFNESS {
-  CONSTANT_STIFFNESS = 0,     /*!< \brief Impose a constant stiffness for each element (steel). */
-  INVERSE_VOLUME = 1,         /*!< \brief Impose a stiffness for each element that is inversely proportional to cell volume. */
-  SOLID_WALL_DISTANCE = 2     /*!< \brief Impose a stiffness for each element that is proportional to the distance from the solid surface. */
-};
-static const MapType<std::string, ENUM_DEFORM_STIFFNESS> Deform_Stiffness_Map = {
-  MakePair("CONSTANT_STIFFNESS", CONSTANT_STIFFNESS)
-  MakePair("INVERSE_VOLUME", INVERSE_VOLUME)
-  MakePair("WALL_DISTANCE", SOLID_WALL_DISTANCE)
-};
-
-/*!
  * \brief The direct differentation variables.
  */
 enum ENUM_DIRECTDIFF_VAR {
@@ -1761,7 +1630,6 @@ enum MPI_QUANTITIES {
   SOLUTION_MATRIX      ,  /*!< \brief Matrix solution communication. */
   SOLUTION_MATRIXTRANS ,  /*!< \brief Matrix transposed solution communication. */
   NEIGHBORS            ,  /*!< \brief Neighbor point count communication (for JST). */
-  SOLUTION_FEA         ,  /*!< \brief FEA solution communication. */
   MESH_DISPLACEMENTS   ,  /*!< \brief Mesh displacements at the interface. */
   SOLUTION_TIME_N      ,  /*!< \brief Solution at time n. */
   SOLUTION_TIME_N1     ,  /*!< \brief Solution at time n-1. */

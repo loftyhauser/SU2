@@ -33,7 +33,6 @@ CUpwRoeBase_Flow::CUpwRoeBase_Flow(unsigned short val_nDim, unsigned short val_n
 
   implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
   /* A grid is defined as dynamic if there's rigid grid movement or grid deformation AND the problem is time domain */
-  dynamic_grid = config->GetDynamic_Grid();
   kappa = config->GetRoe_Kappa(); // 1 is unstable
 
   Gamma = config->GetGamma();
@@ -101,9 +100,6 @@ CNumerics::ResidualType<> CUpwRoeBase_Flow::ComputeResidual(const CConfig* confi
 
   AD::StartPreacc();
   AD::SetPreaccIn(V_i, nDim+4); AD::SetPreaccIn(V_j, nDim+4); AD::SetPreaccIn(Normal, nDim);
-  if (dynamic_grid) {
-    AD::SetPreaccIn(GridVel_i, nDim); AD::SetPreaccIn(GridVel_j, nDim);
-  }
   if (roe_low_dissipation){
     AD::SetPreaccIn(Sensor_i); AD::SetPreaccIn(Sensor_j);
     AD::SetPreaccIn(Dissipation_i); AD::SetPreaccIn(Dissipation_j);
@@ -178,12 +174,6 @@ CNumerics::ResidualType<> CUpwRoeBase_Flow::ComputeResidual(const CConfig* confi
   for (iDim = 0; iDim < nDim; iDim++)
     ProjVelocity += RoeVelocity[iDim]*UnitNormal[iDim];
 
-  if (dynamic_grid) {
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*UnitNormal[iDim];
-    ProjVelocity -= ProjGridVel;
-  }
-
   /*--- Flow eigenvalues ---*/
 
   for (iDim = 0; iDim < nDim; iDim++)
@@ -229,19 +219,6 @@ CNumerics::ResidualType<> CUpwRoeBase_Flow::ComputeResidual(const CConfig* confi
   /*--- Finalize in children class ---*/
 
   FinalizeResidual(Flux, Jacobian_i, Jacobian_j, config);
-
-  /*--- Correct for grid motion ---*/
-
-  if (dynamic_grid) {
-    for (iVar = 0; iVar < nVar; iVar++) {
-      Flux[iVar] -= ProjGridVel*Area * 0.5*(Conservatives_i[iVar]+Conservatives_j[iVar]);
-
-      if (implicit) {
-        Jacobian_i[iVar][iVar] -= 0.5*ProjGridVel*Area;
-        Jacobian_j[iVar][iVar] -= 0.5*ProjGridVel*Area;
-      }
-    }
-  }
 
   AD::SetPreaccOut(Flux, nVar);
   AD::EndPreacc();
@@ -442,7 +419,6 @@ CUpwTurkel_Flow::CUpwTurkel_Flow(unsigned short val_nDim, unsigned short val_nVa
 
   implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
   /* A grid is defined as dynamic if there's rigid grid movement or grid deformation AND the problem is time domain */
-  dynamic_grid = config->GetDynamic_Grid();
 
   Gamma = config->GetGamma();
   Gamma_Minus_One = Gamma - 1.0;
@@ -576,17 +552,6 @@ CNumerics::ResidualType<> CUpwTurkel_Flow::ComputeResidual(const CConfig* config
     ProjVelocity_j += Velocity_j[iDim]*UnitNormal[iDim];
   }
 
-  /*--- Projected velocity adjustment due to mesh motion ---*/
-  if (dynamic_grid) {
-    su2double ProjGridVel = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++) {
-      ProjGridVel   += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*UnitNormal[iDim];
-    }
-    ProjVelocity   -= ProjGridVel;
-    ProjVelocity_i -= ProjGridVel;
-    ProjVelocity_j -= ProjGridVel;
-  }
-
   /*--- First few flow eigenvalues of A.Normal with the normal---*/
   for (iDim = 0; iDim < nDim; iDim++)
     Lambda[iDim] = ProjVelocity;
@@ -659,21 +624,6 @@ CNumerics::ResidualType<> CUpwTurkel_Flow::ComputeResidual(const CConfig* config
     }
   }
 
-  /*--- Contributions due to mesh motion---*/
-  if (dynamic_grid) {
-    ProjVelocity = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*UnitNormal[iDim];
-    for (iVar = 0; iVar < nVar; iVar++) {
-      Flux[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
-      /*--- Implicit terms ---*/
-      if (implicit) {
-        Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
-        Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
-      }
-    }
-  }
-
   return ResidualType<>(Flux, Jacobian_i, Jacobian_j);
 
 }
@@ -682,7 +632,6 @@ CUpwGeneralRoe_Flow::CUpwGeneralRoe_Flow(unsigned short val_nDim, unsigned short
 
   implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
   /* A grid is defined as dynamic if there's rigid grid movement or grid deformation AND the problem is time domain */
-  dynamic_grid = config->GetDynamic_Grid();
   kappa = config->GetRoe_Kappa(); // 1 is unstable
 
 
@@ -740,9 +689,6 @@ CNumerics::ResidualType<> CUpwGeneralRoe_Flow::ComputeResidual(const CConfig* co
   AD::StartPreacc();
   AD::SetPreaccIn(V_i, nDim+4); AD::SetPreaccIn(V_j, nDim+4); AD::SetPreaccIn(Normal, nDim);
   AD::SetPreaccIn(S_i, 2); AD::SetPreaccIn(S_j, 2);
-  if (dynamic_grid) {
-    AD::SetPreaccIn(GridVel_i, nDim); AD::SetPreaccIn(GridVel_j, nDim);
-  }
   su2double U_i[5] = {0.0,0.0,0.0,0.0,0.0}, U_j[5] = {0.0,0.0,0.0,0.0,0.0};
 
   /*--- Face area (norm or the normal vector) ---*/
@@ -838,17 +784,6 @@ CNumerics::ResidualType<> CUpwGeneralRoe_Flow::ComputeResidual(const CConfig* co
     ProjVelocity_j += Velocity_j[iDim]*UnitNormal[iDim];
   }
 
-  /*--- Projected velocity adjustment due to mesh motion ---*/
-  if (dynamic_grid) {
-    su2double ProjGridVel = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++) {
-      ProjGridVel   += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*UnitNormal[iDim];
-    }
-    ProjVelocity   -= ProjGridVel;
-    ProjVelocity_i -= ProjGridVel;
-    ProjVelocity_j -= ProjGridVel;
-  }
-
   /*--- Flow eigenvalues and entropy correctors ---*/
   for (iDim = 0; iDim < nDim; iDim++)
     Lambda[iDim] = ProjVelocity;
@@ -913,15 +848,6 @@ CNumerics::ResidualType<> CUpwGeneralRoe_Flow::ComputeResidual(const CConfig* co
         Flux[iVar] -= 0.5*Lambda[jVar]*delta_wave[jVar]*P_Tensor[iVar][jVar]*Area;
     }
 
-    /*--- Flux contribution due to grid motion ---*/
-    if (dynamic_grid) {
-      ProjVelocity = 0.0;
-      for (iDim = 0; iDim < nDim; iDim++)
-        ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-      for (iVar = 0; iVar < nVar; iVar++) {
-        Flux[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
-      }
-    }
   }
   else {
 
@@ -955,19 +881,6 @@ CNumerics::ResidualType<> CUpwGeneralRoe_Flow::ComputeResidual(const CConfig* co
         Flux[iVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Diff_U[jVar]*Area;
         Jacobian_i[iVar][jVar] += (1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
         Jacobian_j[iVar][jVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
-      }
-    }
-
-    /*--- Jacobian contributions due to grid motion ---*/
-    if (dynamic_grid) {
-      ProjVelocity = 0.0;
-      for (iDim = 0; iDim < nDim; iDim++)
-        ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-      for (iVar = 0; iVar < nVar; iVar++) {
-        Flux[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
-        /*--- Implicit terms ---*/
-        Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
-        Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
       }
     }
 

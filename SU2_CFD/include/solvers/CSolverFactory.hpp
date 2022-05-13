@@ -38,23 +38,15 @@ enum class SUB_SOLVER_TYPE {
   CONT_ADJ_TURB,           /*!< \brief Continuous Adjoint Turbulent solver  */
   BASELINE,                /*!< \brief Baseline solver  */
   TEMPLATE,                /*!< \brief Template solver  */
-  BASELINE_FEM,            /*!< \brief Baseline FEM solver */
-  DISC_ADJ_FEA,            /*!< \brief Discrete adjoint FEA solver  */
-  DISC_ADJ_MESH,           /*!< \brief Discrete adjoint mesh solver */
   DISC_ADJ_FLOW,           /*!< \brief Discrete adjoint flow solver */
   DISC_ADJ_TURB,           /*!< \brief Discrete adjoint turbulence solver */
   DISC_ADJ_HEAT,           /*!< \brief Discrete adjoint heat solver */
   EULER,                   /*!< \brief Compressible Euler solver */
   NAVIER_STOKES,           /*!< \brief Compressible Navier-Stokes solver */
-  FEA,                     /*!< \brief Structural Finite-Element solver */
-  DG_EULER,                /*!< \brief Higher-order DG Euler solver*/
-  DG_NAVIER_STOKES,        /*!< \brief Higher-order DG Navier-Stokes solver*/
-  HEAT,                    /*!< \brief Heat solver */
   TRANSITION,              /*!< \brief Transition model solver*/
   TURB_SA,                 /*!< \brief SA turbulence model solver */
   TURB_SST,                /*!< \brief SST turbulence model solver */
   TURB,                    /*!< \brief Turbulence model solver */
-  MESH,                    /*!< \brief Mesh solver */
   NONE
 };
 
@@ -63,7 +55,6 @@ enum class INTEGRATION_TYPE{
   NEWTON,
   SINGLEGRID,
   DEFAULT,
-  STRUCTURAL,
   NONE
 };
 
@@ -93,17 +84,6 @@ private:
    * \return                  - A pointer to the allocated turbulent solver
    */
   static CSolver* CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **solver, CGeometry *geometry, CConfig *config, int iMGLevel, int adjoint);
-
-  /*!
-   * \brief Create a mesh solver
-   * \param[in] solver        - The solver container
-   * \param[in] geometry      - The geometry definition
-   * \param[in] config        - The configuration
-   * \param[in] iMGLevel      - The multigrid level
-   * \param[in] adjoint       - Boolean indicating whether a primal or adjoint solver should be allocated
-   * \return                  - A pointer to the allocated mesh solver
-   */
-  static CSolver* CreateMeshSolver(CSolver **solver, CGeometry *geometry, CConfig *config, int iMGLevel, bool adjoint);
 
   /*!
    * \brief Create a flow solver

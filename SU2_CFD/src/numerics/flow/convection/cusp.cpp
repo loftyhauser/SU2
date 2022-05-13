@@ -35,9 +35,6 @@ CUpwCUSP_Flow::CUpwCUSP_Flow(unsigned short val_nDim, unsigned short val_nVar, c
   Gamma = config->GetGamma();
   Gamma_Minus_One = Gamma - 1.0;
 
-  if (config->GetDynamic_Grid() && (SU2_MPI::GetRank() == MASTER_NODE))
-    cout << "WARNING: Grid velocities are NOT yet considered by the CUSP scheme." << endl;
-
   /*--- Allocate some structures ---*/
   Flux = new su2double [nVar];
   ProjFlux_i = new su2double [nVar];

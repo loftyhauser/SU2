@@ -196,11 +196,6 @@ void CIntegration::SetDualTime_Geometry(CGeometry *geometry, CSolver *mesh_solve
   geometry->nodes->SetVolume_nM1();
   geometry->nodes->SetVolume_n();
 
-  if (config->GetGrid_Movement()) {
-    geometry->nodes->SetCoord_n1();
-    geometry->nodes->SetCoord_n();
-  }
-
   if ((iMesh==MESH_0) && config->GetDeform_Mesh()) mesh_solver->SetDualTime_Mesh();
 
   }

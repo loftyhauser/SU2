@@ -83,7 +83,7 @@ class CUpwScalar : public CNumerics {
     : CNumerics(ndim, nvar, config),
       idx(ndim, 1),
       implicit(config->GetKind_TimeIntScheme_Turb() == EULER_IMPLICIT),
-      dynamic_grid(config->GetDynamic_Grid()) {
+      dynamic_grid(false) {
     if (nVar > MAXNVAR) {
       SU2_MPI::Error("Static arrays are too small.", CURRENT_FUNCTION);
     }
@@ -108,27 +108,15 @@ class CUpwScalar : public CNumerics {
     AD::SetPreaccIn(Normal, nDim);
     AD::SetPreaccIn(ScalarVar_i, nVar);
     AD::SetPreaccIn(ScalarVar_j, nVar);
-    if (dynamic_grid) {
-      AD::SetPreaccIn(GridVel_i, nDim);
-      AD::SetPreaccIn(GridVel_j, nDim);
-    }
     AD::SetPreaccIn(&V_i[idx.Velocity()], nDim);
     AD::SetPreaccIn(&V_j[idx.Velocity()], nDim);
 
     ExtraADPreaccIn();
 
     su2double q_ij = 0.0;
-    if (dynamic_grid) {
-      for (unsigned short iDim = 0; iDim < nDim; iDim++) {
-        su2double Velocity_i = V_i[iDim + idx.Velocity()] - GridVel_i[iDim];
-        su2double Velocity_j = V_j[iDim + idx.Velocity()] - GridVel_j[iDim];
-        q_ij += 0.5 * (Velocity_i + Velocity_j) * Normal[iDim];
-      }
-    } else {
       for (unsigned short iDim = 0; iDim < nDim; iDim++) {
         q_ij += 0.5 * (V_i[iDim + idx.Velocity()] + V_j[iDim + idx.Velocity()]) * Normal[iDim];
       }
-    }
 
     a0 = 0.5 * (q_ij + fabs(q_ij));
     a1 = 0.5 * (q_ij - fabs(q_ij));

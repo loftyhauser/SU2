@@ -40,17 +40,12 @@
 #include <stdio.h>
 
 #include "../fluid/CFluidModel.hpp"
-#include "../task_definition.hpp"
 #include "../numerics/CNumerics.hpp"
-#include "../sgs_model.hpp"
-#include "../../../Common/include/fem/fem_geometry_structure.hpp"
 #include "../../../Common/include/geometry/CGeometry.hpp"
 #include "../../../Common/include/CConfig.hpp"
 #include "../../../Common/include/linear_algebra/CSysMatrix.hpp"
 #include "../../../Common/include/linear_algebra/CSysVector.hpp"
 #include "../../../Common/include/linear_algebra/CSysSolve.hpp"
-#include "../../../Common/include/grid_movement/CSurfaceMovement.hpp"
-#include "../../../Common/include/grid_movement/CVolumetricMovement.hpp"
 #include "../../../Common/include/linear_algebra/blas_structure.hpp"
 #include "../../../Common/include/graph_coloring_structure.hpp"
 #include "../variables/CVariable.hpp"
@@ -137,8 +132,6 @@ protected:
 
   bool rotate_periodic;    /*!< \brief Flag that controls whether the periodic solution needs to be rotated for the solver. */
   bool implicit_periodic;  /*!< \brief Flag that controls whether the implicit system should be treated by the periodic BC comms. */
-
-  bool dynamic_grid;       /*!< \brief Flag that determines whether the grid is dynamic (moving or deforming + grid velocities). */
 
   vector<su2activematrix> VertexTraction;          /*- Temporary, this will be moved to a new postprocessing structure once in place -*/
   vector<su2activematrix> VertexTractionAdjoint;   /*- Also temporary -*/
@@ -3674,8 +3667,6 @@ public:
    */
   virtual void ApplyGradientSmoothingDV(CGeometry *geometry,
                                         CNumerics *numerics,
-                                        CSurfaceMovement *surface_movement,
-                                        CVolumetricMovement *grid_movement,
                                         CConfig *config,
                                         su2double** Gradient) { }
 
@@ -3685,8 +3676,6 @@ public:
    * \param[in] config - Definition of the particular problem.
    */
   virtual void RecordTapeAndCalculateOriginalGradient(CGeometry *geometry,
-                                                     CSurfaceMovement *surface_movement,
-                                                     CVolumetricMovement *grid_movement,
                                                      CConfig *config,
                                                      su2double** Gradient) { }
 

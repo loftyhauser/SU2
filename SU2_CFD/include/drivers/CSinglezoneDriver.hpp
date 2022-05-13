@@ -88,11 +88,6 @@ public:
   void Output(unsigned long TimeIter) override;
 
   /*!
-   * \brief Perform a dynamic mesh deformation, included grid velocity computation and the update of the multigrid structure.
-   */
-  void DynamicMeshUpdate(unsigned long TimeIter) override;
-
-  /*!
    * \brief Perform a mesh deformation as initial condition.
    */
   void SetInitialMesh() override;

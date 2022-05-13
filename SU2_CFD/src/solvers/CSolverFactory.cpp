@@ -35,14 +35,9 @@
 #include "../../include/solvers/CAdjEulerSolver.hpp"
 #include "../../include/solvers/CAdjNSSolver.hpp"
 #include "../../include/solvers/CAdjTurbSolver.hpp"
-#include "../../include/solvers/CFEASolver.hpp"
 #include "../../include/solvers/CTemplateSolver.hpp"
 #include "../../include/solvers/CDiscAdjSolver.hpp"
-#include "../../include/solvers/CDiscAdjFEASolver.hpp"
-#include "../../include/solvers/CMeshSolver.hpp"
-#include "../../include/solvers/CDiscAdjMeshSolver.hpp"
 #include "../../include/solvers/CBaselineSolver.hpp"
-#include "../../include/solvers/CBaselineSolver_FEM.hpp"
 
 map<const CSolver*, SolverMetaData> CSolverFactory::allocatedSolvers;
 
@@ -94,15 +89,9 @@ CSolver** CSolverFactory::CreateSolverContainer(MAIN_SOLVER kindMainSolver, CCon
       solver[TURB_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
       solver[ADJTURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_TURB, solver, geometry, config, iMGLevel);
       break;
-    case MAIN_SOLVER::FEM_ELASTICITY:
-      solver[FEA_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::FEA, solver, geometry, config, iMGLevel);
-      break;
      default:
       solver = nullptr;
   }
-
-  solver[MESH_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::MESH, solver, geometry, config, iMGLevel);
-  solver[ADJMESH_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_MESH, solver, geometry, config, iMGLevel);
 
   return solver;
 
@@ -139,18 +128,6 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
       genericSolver = new CBaselineSolver(geometry, config);
       metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
       break;
-    case SUB_SOLVER_TYPE::BASELINE_FEM:
-      genericSolver = new CBaselineSolver_FEM(geometry, config);
-      metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
-      break;
-    case SUB_SOLVER_TYPE::DISC_ADJ_FEA:
-      genericSolver = new CDiscAdjFEASolver(geometry, config, solver[FEA_SOL], RUNTIME_FEA_SYS, iMGLevel);
-      metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
-      break;
-    case SUB_SOLVER_TYPE::DISC_ADJ_MESH:
-      genericSolver = CreateMeshSolver(solver, geometry, config, iMGLevel, true);
-      metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
-      break;
     case SUB_SOLVER_TYPE::DISC_ADJ_FLOW:
       genericSolver = new CDiscAdjSolver(geometry, config, solver[FLOW_SOL], RUNTIME_FLOW_SYS, iMGLevel);
       metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
@@ -162,14 +139,6 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
         metaData.integrationType = INTEGRATION_TYPE::MULTIGRID;
       else
         metaData.integrationType = INTEGRATION_TYPE::NEWTON;
-      break;
-    case SUB_SOLVER_TYPE::FEA:
-      genericSolver = new CFEASolver(geometry, config);
-      metaData.integrationType = INTEGRATION_TYPE::STRUCTURAL;
-      break;
-    case SUB_SOLVER_TYPE::MESH:
-      genericSolver = CreateMeshSolver(solver, geometry, config, iMGLevel, false);
-      metaData.integrationType = INTEGRATION_TYPE::NONE;
       break;
     case SUB_SOLVER_TYPE::TRANSITION:
       genericSolver = new CTransLMSolver(geometry, config, iMGLevel);
@@ -230,22 +199,6 @@ CSolver* CSolverFactory::CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **so
   }
 
   return turbSolver;
-}
-
-CSolver* CSolverFactory::CreateMeshSolver(CSolver **solver, CGeometry *geometry, CConfig *config, int iMGLevel, bool adjoint){
-
-  CSolver *meshSolver = nullptr;
-
-  if (config->GetDeform_Mesh() && iMGLevel == MESH_0){
-    if (!adjoint){
-      meshSolver = new CMeshSolver(geometry, config);
-    }
-    if (adjoint && config->GetDiscrete_Adjoint()){
-      meshSolver = new CDiscAdjMeshSolver(geometry, config, solver[MESH_SOL]);
-    }
-  }
-  return meshSolver;
-
 }
 
 CSolver* CSolverFactory::CreateFlowSolver(SUB_SOLVER_TYPE kindFlowSolver, CSolver **solver,  CGeometry *geometry, CConfig *config, int iMGLevel){

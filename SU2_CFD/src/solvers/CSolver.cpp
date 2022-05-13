@@ -92,9 +92,6 @@ CSolver::CSolver(LINEAR_SOLVER_MODE linear_solver_mode) : System(linear_solver_m
   /*--- Containers to store the markers. ---*/
   nMarker = 0;
 
-  /*--- Flags for the dynamic grid (rigid movement or unsteady deformation). ---*/
-  dynamic_grid = false;
-
   /*--- Auxiliary data needed for CFL adaption. ---*/
 
   Old_Func = 0;
@@ -1333,13 +1330,6 @@ void CSolver::GetCommCountAndType(const CConfig* config,
       COUNT_PER_POINT  = nVar+1;
       MPI_TYPE         = COMM_TYPE_DOUBLE;
       break;
-    case SOLUTION_FEA:
-      if (config->GetTime_Domain())
-        COUNT_PER_POINT  = nVar*3;
-      else
-        COUNT_PER_POINT  = nVar;
-      MPI_TYPE         = COMM_TYPE_DOUBLE;
-      break;
     case AUXVAR_GRADIENT:
       COUNT_PER_POINT  = nDim*base_nodes->GetnAuxVar();
       MPI_TYPE         = COMM_TYPE_DOUBLE;
@@ -1484,15 +1474,6 @@ void CSolver::InitiateComms(CGeometry *geometry,
               for (iDim = 0; iDim < nDim; iDim++)
                 bufDSend[buf_offset+iVar*nDim+iDim] = gradient(iPoint, iVar, iDim);
             break;
-          case SOLUTION_FEA:
-            for (iVar = 0; iVar < nVar; iVar++) {
-              bufDSend[buf_offset+iVar] = base_nodes->GetSolution(iPoint, iVar);
-              if (config->GetTime_Domain()) {
-                bufDSend[buf_offset+nVar+iVar]   = base_nodes->GetSolution_Vel(iPoint, iVar);
-                bufDSend[buf_offset+nVar*2+iVar] = base_nodes->GetSolution_Accel(iPoint, iVar);
-              }
-            }
-            break;
           case MESH_DISPLACEMENTS:
             for (iDim = 0; iDim < nDim; iDim++)
               bufDSend[buf_offset+iDim] = base_nodes->GetBound_Disp(iPoint, iDim);
@@ -1634,15 +1615,6 @@ void CSolver::CompleteComms(CGeometry *geometry,
             for (iVar = 0; iVar < nVarGrad; iVar++)
               for (iDim = 0; iDim < nDim; iDim++)
                 gradient(iPoint,iVar,iDim) = bufDRecv[buf_offset+iVar*nDim+iDim];
-            break;
-          case SOLUTION_FEA:
-            for (iVar = 0; iVar < nVar; iVar++) {
-              base_nodes->SetSolution(iPoint, iVar, bufDRecv[buf_offset+iVar]);
-              if (config->GetTime_Domain()) {
-                base_nodes->SetSolution_Vel(iPoint, iVar, bufDRecv[buf_offset+nVar+iVar]);
-                base_nodes->SetSolution_Accel(iPoint, iVar, bufDRecv[buf_offset+nVar*2+iVar]);
-              }
-            }
             break;
           case MESH_DISPLACEMENTS:
             for (iDim = 0; iDim < nDim; iDim++)

@@ -743,14 +743,6 @@ void CFVMFlowSolverBase<V, R>::LoadRestart_impl(CGeometry **geometry, CSolver **
     }
 
     bool steady_restart = config->GetSteadyRestart();
-    if (update_geo && dynamic_grid) {
-      auto notFound = fields.end();
-      if (find(fields.begin(), notFound, string("\"Grid_Velocity_x\"")) == notFound) {
-        if (rank == MASTER_NODE)
-          cout << "\nWARNING: The restart file does not contain grid velocities, these will be set to zero.\n" << endl;
-        steady_restart = true;
-      }
-    }
 
     /*--- Load data from the restart into correct containers. ---*/
 
@@ -780,45 +772,6 @@ void CFVMFlowSolverBase<V, R>::LoadRestart_impl(CGeometry **geometry, CSolver **
           nodes->SetSolution(iPoint_Local, SolutionRestart);
         }
 
-        /*--- For dynamic meshes, read in and store the
-        grid coordinates and grid velocities for each node. ---*/
-
-        if (dynamic_grid && update_geo) {
-
-          /*--- Read in the next 2 or 3 variables which are the grid velocities ---*/
-          /*--- If we are restarting the solution from a previously computed static calculation (no grid movement) ---*/
-          /*--- the grid velocities are set to 0. This is useful for FSI computations ---*/
-
-          /*--- Rewind the index to retrieve the Coords. ---*/
-          index = counter * Restart_Vars[1];
-          const auto* Coord = &Restart_Data[index];
-
-          su2double GridVel[MAXNDIM] = {0.0};
-          if (!steady_restart) {
-            /*--- Move the index forward to get the grid velocities. ---*/
-            index += skipVars + nVar_Restart + config->GetnTurbVar();
-            for (auto iDim = 0u; iDim < nDim; iDim++) { GridVel[iDim] = Restart_Data[index+iDim]; }
-          }
-
-          for (auto iDim = 0u; iDim < nDim; iDim++) {
-            geometry[MESH_0]->nodes->SetCoord(iPoint_Local, iDim, Coord[iDim]);
-            geometry[MESH_0]->nodes->SetGridVel(iPoint_Local, iDim, GridVel[iDim]);
-          }
-        }
-
-        /*--- For static FSI problems, grid_movement is 0 but we need to read in and store the
-        grid coordinates for each node (but not the grid velocities, as there are none). ---*/
-
-        if (static_fsi && update_geo) {
-        /*--- Rewind the index to retrieve the Coords. ---*/
-          index = counter*Restart_Vars[1];
-          const auto* Coord = &Restart_Data[index];
-
-          for (auto iDim = 0u; iDim < nDim; iDim++) {
-            geometry[MESH_0]->nodes->SetCoord(iPoint_Local, iDim, Coord[iDim]);
-          }
-        }
-
         /*--- Increment the overall counter for how many points have been loaded. ---*/
         counter++;
       }
@@ -833,25 +786,6 @@ void CFVMFlowSolverBase<V, R>::LoadRestart_impl(CGeometry **geometry, CSolver **
   }
   END_SU2_OMP_MASTER
   SU2_OMP_BARRIER
-
-  /*--- Update the geometry for flows on deforming meshes. ---*/
-
-  if ((dynamic_grid || static_fsi) && update_geo) {
-
-    CGeometry::UpdateGeometry(geometry, config);
-
-    if (dynamic_grid) {
-      for (auto iMesh = 0u; iMesh <= config->GetnMGLevels(); iMesh++) {
-
-        /*--- Compute the grid velocities on the coarser levels. ---*/
-        if (iMesh) geometry[iMesh]->SetRestricted_GridVelocity(geometry[iMesh - 1]);
-        else {
-          geometry[MESH_0]->InitiateComms(geometry[MESH_0], config, GRID_VELOCITY);
-          geometry[MESH_0]->CompleteComms(geometry[MESH_0], config, GRID_VELOCITY);
-        }
-      }
-    }
-  }
 
   /*--- Communicate the loaded solution on the fine grid before we transfer
    it down to the coarse levels. We also call the preprocessing routine
@@ -900,10 +834,6 @@ void CFVMFlowSolverBase<V, R>::LoadRestart_impl(CGeometry **geometry, CSolver **
   /*--- Update the old geometry (coordinates n and n-1) in dual time-stepping strategy. ---*/
   const bool dual_time = ((config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST) ||
                           (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND));
-  if (dual_time && config->GetGrid_Movement() && !config->GetDeform_Mesh() &&
-      (config->GetKind_GridMovement() != RIGID_MOTION)) {
-    Restart_OldGeometry(geometry[MESH_0], config);
-  }
 
   /*--- Go back to single threaded execution. ---*/
   SU2_OMP_MASTER
@@ -967,15 +897,6 @@ void CFVMFlowSolverBase<V, R>::PushSolutionBackInTime(unsigned long TimeIter, bo
       solver_container[iMesh][TURB_SOL]->GetNodes()->Set_Solution_time_n1();
     }
 
-    if (dynamic_grid) {
-      geometry[iMesh]->nodes->SetVolume_n();
-      geometry[iMesh]->nodes->SetVolume_nM1();
-    }
-
-    if (config->GetGrid_Movement()) {
-      geometry[iMesh]->nodes->SetCoord_n();
-      geometry[iMesh]->nodes->SetCoord_n1();
-    }
   }
 
   if (restart && (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND)) {
@@ -995,7 +916,6 @@ void CFVMFlowSolverBase<V, R>::PushSolutionBackInTime(unsigned long TimeIter, bo
       if (rans) solver_container[iMesh][TURB_SOL]->GetNodes()->Set_Solution_time_n();
 
       geometry[iMesh]->nodes->SetVolume_n();
-      if (config->GetGrid_Movement()) geometry[iMesh]->nodes->SetCoord_n();
     }
   }
 }
@@ -1098,9 +1018,6 @@ void CFVMFlowSolverBase<V, R>::BC_Sym_Plane(CGeometry* geometry, CSolver** solve
       V_reflected = GetCharacPrimVar(val_marker, iVertex);
 
       /*--- Grid movement ---*/
-      if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
-
       /*--- Normal vector for this vertex (negate for outward convention). ---*/
       geometry->vertex[val_marker][iVertex]->GetNormal(Normal);
       for (iDim = 0; iDim < nDim; iDim++) Normal[iDim] = -Normal[iDim];
@@ -1117,11 +1034,6 @@ void CFVMFlowSolverBase<V, R>::BC_Sym_Plane(CGeometry* geometry, CSolver** solve
       /*--- Compute velocity in normal direction (ProjVelcity_i=(v*n)) und substract twice from
             velocity in normal direction: v_r = v - 2 (v*n)n ---*/
       ProjVelocity_i = nodes->GetProjVel(iPoint, UnitNormal);
-
-      /*--- Adjustment to v.n due to grid movement. ---*/
-      if (dynamic_grid) {
-        ProjVelocity_i -= GeometryToolbox::DotProduct(nDim, geometry->nodes->GetGridVel(iPoint), UnitNormal);
-      }
 
       for (iDim = 0; iDim < nDim; iDim++)
         V_reflected[iDim + 1] = nodes->GetVelocity(iPoint, iDim) - 2.0 * ProjVelocity_i * UnitNormal[iDim];
@@ -1338,9 +1250,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::BC_Fluid_Interface(CGeometry* geometry, 
 
             conv_numerics->SetNormal(Normal);
 
-            if (dynamic_grid)
-              conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
-
             /*--- Compute the convective residual using an upwind scheme ---*/
 
             auto residual = conv_numerics->ComputeResidual(config);
@@ -1524,7 +1433,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::SetResidual_DualTime(CGeometry *geometry
 
   /*--- Compute the dual time-stepping source term for static meshes ---*/
 
-  if (!dynamic_grid) {
 
     /*--- Loop over all nodes (excluding halos) ---*/
 
@@ -1566,127 +1474,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::SetResidual_DualTime(CGeometry *geometry
     END_SU2_OMP_FOR
 
     AD::EndNoSharedReading();
-
-  }
-
-  else {
-
-    /*--- For unsteady flows on dynamic meshes (rigidly transforming or
-     dynamically deforming), the Geometric Conservation Law (GCL) should be
-     satisfied in conjunction with the ALE formulation of the governing
-     equations. The GCL prevents accuracy issues caused by grid motion, i.e.
-     a uniform free-stream should be preserved through a moving grid. First,
-     we will loop over the edges and boundaries to compute the GCL component
-     of the dual time source term that depends on grid velocities. ---*/
-
-    SU2_OMP_FOR_STAT(omp_chunk_size)
-    for (iPoint = 0; iPoint < nPointDomain; ++iPoint) {
-
-      GridVel_i = geometry->nodes->GetGridVel(iPoint);
-      U_time_n = nodes->GetSolution_time_n(iPoint);
-
-      for (iNeigh = 0; iNeigh < geometry->nodes->GetnPoint(iPoint); iNeigh++) {
-
-        iEdge = geometry->nodes->GetEdge(iPoint, iNeigh);
-        Normal = geometry->edges->GetNormal(iEdge);
-
-        jPoint = geometry->nodes->GetPoint(iPoint, iNeigh);
-        GridVel_j = geometry->nodes->GetGridVel(jPoint);
-
-        /*--- Determine whether to consider the normal outward or inward. ---*/
-        su2double dir = (iPoint < jPoint)? 0.5 : -0.5;
-
-        Residual_GCL = 0.0;
-        for (iDim = 0; iDim < nDim; iDim++)
-          Residual_GCL += dir*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-
-        for (iVar = 0; iVar < nVar; iVar++)
-          LinSysRes(iPoint,iVar) += U_time_n[iVar]*Residual_GCL;
-      }
-    }
-    END_SU2_OMP_FOR
-
-    /*--- Loop over the boundary edges ---*/
-
-    for (iMarker = 0; iMarker < geometry->GetnMarker(); iMarker++) {
-      if ((config->GetMarker_All_KindBC(iMarker) != INTERNAL_BOUNDARY) &&
-          (config->GetMarker_All_KindBC(iMarker) != NEARFIELD_BOUNDARY) &&
-          (config->GetMarker_All_KindBC(iMarker) != PERIODIC_BOUNDARY)) {
-
-        SU2_OMP_FOR_STAT(OMP_MIN_SIZE)
-        for (iVertex = 0; iVertex < geometry->GetnVertex(iMarker); iVertex++) {
-
-          /*--- Get the index for node i plus the boundary face normal ---*/
-
-          iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-          Normal = geometry->vertex[iMarker][iVertex]->GetNormal();
-
-          /*--- Grid velocities stored at boundary node i ---*/
-
-          GridVel_i = geometry->nodes->GetGridVel(iPoint);
-
-          /*--- Compute the GCL term by dotting the grid velocity with the face
-           normal. The normal is negated to match the boundary convention. ---*/
-
-          Residual_GCL = 0.0;
-          for (iDim = 0; iDim < nDim; iDim++)
-            Residual_GCL -= 0.5*(GridVel_i[iDim]+GridVel_i[iDim])*Normal[iDim];
-
-          /*--- Compute the GCL component of the source term for node i ---*/
-
-          U_time_n = nodes->GetSolution_time_n(iPoint);
-          for (iVar = 0; iVar < nVar; iVar++)
-            LinSysRes(iPoint,iVar) += U_time_n[iVar]*Residual_GCL;
-        }
-        END_SU2_OMP_FOR
-      }
-    }
-
-    /*--- Loop over all nodes (excluding halos) to compute the remainder
-     of the dual time-stepping source term. ---*/
-
-    AD::StartNoSharedReading();
-
-    SU2_OMP_FOR_STAT(omp_chunk_size)
-    for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
-
-      /*--- Retrieve the solution at time levels n-1, n, and n+1. Note that
-       we are currently iterating on U^n+1 and that U^n & U^n-1 are fixed,
-       previous solutions that are stored in memory. ---*/
-
-      U_time_nM1 = nodes->GetSolution_time_n1(iPoint);
-      U_time_n   = nodes->GetSolution_time_n(iPoint);
-      U_time_nP1 = nodes->GetSolution(iPoint);
-
-      /*--- CV volume at time n-1 and n+1. In the case of dynamically deforming
-       grids, the volumes will change. On rigidly transforming grids, the
-       volumes will remain constant. ---*/
-
-      Volume_nM1 = geometry->nodes->GetVolume_nM1(iPoint);
-      Volume_nP1 = geometry->nodes->GetVolume(iPoint);
-
-      /*--- Compute the dual time-stepping source residual. Due to the
-       introduction of the GCL term above, the remainder of the source residual
-       due to the time discretization has a new form.---*/
-
-      for (iVar = 0; iVar < nVar; iVar++) {
-        if (first_order)
-          LinSysRes(iPoint,iVar) += (U_time_nP1[iVar] - U_time_n[iVar])*(Volume_nP1/TimeStep);
-        if (second_order)
-          LinSysRes(iPoint,iVar) += (U_time_nP1[iVar] - U_time_n[iVar])*(3.0*Volume_nP1/(2.0*TimeStep))
-                                     + (U_time_nM1[iVar] - U_time_n[iVar])*(Volume_nM1/(2.0*TimeStep));
-      }
-
-      /*--- Compute the Jacobian contribution due to the dual time source term. ---*/
-      if (implicit) {
-        if (first_order) Jacobian.AddVal2Diag(iPoint, Volume_nP1/TimeStep);
-        if (second_order) Jacobian.AddVal2Diag(iPoint, (Volume_nP1*3.0)/(2.0*TimeStep));
-      }
-    }
-    END_SU2_OMP_FOR
-
-    AD::EndNoSharedReading();
-  }
 
 }
 

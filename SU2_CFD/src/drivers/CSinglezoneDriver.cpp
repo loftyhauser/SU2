@@ -135,13 +135,7 @@ void CSinglezoneDriver::Preprocess(unsigned long TimeIter) {
   /*--- Run a predictor step ---*/
   if (config_container[ZONE_0]->GetPredictor())
     iteration_container[ZONE_0][INST_0]->Predictor(output_container[ZONE_0], integration_container, geometry_container, solver_container,
-        numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
-
-  /*--- Perform a dynamic mesh update if required. ---*/
-  /*--- For the Disc.Adj. of a case with (rigidly) moving grid, the appropriate
-          mesh cordinates are read from the restart files. ---*/
-  if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
-    DynamicMeshUpdate(TimeIter);
+        numerics_container, config_container, ZONE_0, INST_0);
 
 }
 
@@ -152,20 +146,20 @@ void CSinglezoneDriver::Run() {
 
   /*--- Iterate the zone as a block, either to convergence or to a max number of iterations ---*/
   iteration_container[ZONE_0][INST_0]->Solve(output_container[ZONE_0], integration_container, geometry_container, solver_container,
-        numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
+        numerics_container, config_container, ZONE_0, INST_0);
 
 }
 
 void CSinglezoneDriver::Postprocess() {
 
   iteration_container[ZONE_0][INST_0]->Postprocess(output_container[ZONE_0], integration_container, geometry_container, solver_container,
-      numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
+      numerics_container, config_container, ZONE_0, INST_0);
 
   /*--- A corrector step can help preventing numerical instabilities ---*/
 
   if (config_container[ZONE_0]->GetRelaxation())
     iteration_container[ZONE_0][INST_0]->Relaxation(output_container[ZONE_0], integration_container, geometry_container, solver_container,
-        numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
+        numerics_container, config_container, ZONE_0, INST_0);
 
 }
 
@@ -173,7 +167,7 @@ void CSinglezoneDriver::Update() {
 
   iteration_container[ZONE_0][INST_0]->Update(output_container[ZONE_0], integration_container, geometry_container,
         solver_container, numerics_container, config_container,
-        surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
+        ZONE_0, INST_0);
 
 }
 
@@ -204,31 +198,6 @@ void CSinglezoneDriver::Output(unsigned long TimeIter) {
   }
 
   config_container[ZONE_0]->Set_StartTime(StartTime);
-}
-
-void CSinglezoneDriver::DynamicMeshUpdate(unsigned long TimeIter) {
-
-  auto iteration = iteration_container[ZONE_0][INST_0];
-
-  /*--- Legacy dynamic mesh update - Only if GRID_MOVEMENT = YES ---*/
-  if (config_container[ZONE_0]->GetGrid_Movement()) {
-    iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
-                                grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
-                                config_container[ZONE_0], 0, TimeIter);
-  }
-
-  /*--- New solver - all the other routines in SetGrid_Movement should be adapted to this one ---*/
-  /*--- Works if DEFORM_MESH = YES ---*/
-  iteration->SetMesh_Deformation(geometry_container[ZONE_0][INST_0],
-                                 solver_container[ZONE_0][INST_0][MESH_0],
-                                 numerics_container[ZONE_0][INST_0][MESH_0],
-                                 config_container[ZONE_0], RECORDING::CLEAR_INDICES);
-
-  /*--- Update the wall distances if the mesh was deformed. ---*/
-  if (config_container[ZONE_0]->GetGrid_Movement() ||
-      config_container[ZONE_0]->GetDeform_Mesh()) {
-    CGeometry::ComputeWallDistance(config_container, geometry_container);
-  }
 }
 
 bool CSinglezoneDriver::Monitor(unsigned long TimeIter){

@@ -51,7 +51,6 @@ CBaselineSolver::CBaselineSolver(CGeometry *geometry, CConfig *config) {
   nodes = new CBaselineVariable(nPoint, nVar, config);
   SetBaseClassPointerToNodes();
 
-  dynamic_grid = config->GetDynamic_Grid();
 }
 
 CBaselineSolver::CBaselineSolver(CGeometry *geometry, CConfig *config, unsigned short val_nvar, vector<string> field_names) {
@@ -68,7 +67,6 @@ CBaselineSolver::CBaselineSolver(CGeometry *geometry, CConfig *config, unsigned 
   nodes = new CBaselineVariable(nPoint, nVar, config);
   SetBaseClassPointerToNodes();
 
-  dynamic_grid = config->GetDynamic_Grid();
 
 }
 
@@ -413,41 +411,6 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
       for (iVar = 0; iVar < nVar; iVar++) Solution[iVar] = Restart_Data[index+iVar];
       nodes->SetSolution(iPoint_Local,Solution);
 
-      /*--- For dynamic meshes, read in and store the
-       grid coordinates and grid velocities for each node. ---*/
-
-      if (dynamic_grid && val_update_geo) {
-
-        /*--- First, remove any variables for the turbulence model that
-         appear in the restart file before the grid velocities. ---*/
-
-        if (turb_model == TURB_MODEL::SA || turb_model == TURB_MODEL::SA_NEG) {
-          index++;
-        } else if (turb_model == TURB_MODEL::SST) {
-          index+=2;
-        }
-
-        /*--- Read in the next 2 or 3 variables which are the grid velocities ---*/
-        /*--- If we are restarting the solution from a previously computed static calculation (no grid movement) ---*/
-        /*--- the grid velocities are set to 0. This is useful for FSI computations ---*/
-
-        su2double GridVel[3] = {0.0,0.0,0.0};
-        if (!steady_restart) {
-
-          /*--- Rewind the index to retrieve the Coords. ---*/
-          index = counter*Restart_Vars[1];
-          for (iDim = 0; iDim < nDim; iDim++) { Coord[iDim] = Restart_Data[index+iDim]; }
-
-          /*--- Move the index forward to get the grid velocities. ---*/
-          index = counter*Restart_Vars[1] + skipVars + nVar;
-          for (iDim = 0; iDim < nDim; iDim++) { GridVel[iDim] = Restart_Data[index+iDim]; }
-        }
-
-        for (iDim = 0; iDim < nDim; iDim++) {
-          geometry[iInst]->nodes->SetCoord(iPoint_Local, iDim, Coord[iDim]);
-          geometry[iInst]->nodes->SetGridVel(iPoint_Local, iDim, GridVel[iDim]);
-        }
-      }
 
       /*--- Increment the overall counter for how many points have been loaded. ---*/
       counter++;
@@ -460,19 +423,6 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
   InitiateComms(geometry[iInst], config, SOLUTION);
   CompleteComms(geometry[iInst], config, SOLUTION);
 
-  /*--- Update the geometry for flows on dynamic meshes ---*/
-
-  if (dynamic_grid && val_update_geo) {
-
-    /*--- Communicate the new coordinates and grid velocities at the halos ---*/
-
-    geometry[iInst]->InitiateComms(geometry[iInst], config, COORDINATES);
-    geometry[iInst]->CompleteComms(geometry[iInst], config, COORDINATES);
-
-    geometry[iInst]->InitiateComms(geometry[iInst], config, GRID_VELOCITY);
-    geometry[iInst]->CompleteComms(geometry[iInst], config, GRID_VELOCITY);
-
-  }
 
   delete [] Coord;
 

@@ -58,7 +58,6 @@ extern "C" {
 #include "dual_grid/CVertex.hpp"
 
 #include "../CConfig.hpp"
-#include "../fem/geometry_structure_fem_part.hpp"
 #include "../toolboxes/graph_toolbox.hpp"
 #include "../adt/CADTElemClass.hpp"
 

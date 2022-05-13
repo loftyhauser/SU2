@@ -189,12 +189,6 @@ endif
 subdir('Common/src')
 # compile SU2_CFD executable
 subdir('SU2_CFD/src')
-# compile SU2_DOT executable
-subdir('SU2_DOT/src')
-# compile SU2_DEF executable
-subdir('SU2_DEF/src')
-# compile SU2_GEO executable
-subdir('SU2_GEO/src')
 # compile SU2_SOL executable
 subdir('SU2_SOL/src')
 # install python scripts

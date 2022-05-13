@@ -57,7 +57,6 @@ protected:
   const su2double gamma;
   const su2double entropyFix;
   const bool finestGrid;
-  const bool dynamicGrid;
   const bool muscl;
   const LIMITER typeLimiter;
 
@@ -70,7 +69,6 @@ protected:
     gamma(config.GetGamma()),
     entropyFix(config.GetEntropyFix_Coeff()),
     finestGrid(iMesh == MESH_0),
-    dynamicGrid(config.GetDynamic_Grid()),
     muscl(finestGrid && config.GetMUSCL_Flow()),
     typeLimiter(config.GetKind_SlopeLimit_Flow()) {
   }
@@ -136,12 +134,6 @@ public:
     /*--- Grid motion. ---*/
 
     Double projGridVel = 0.0, projVel = roeAvg.projVel;
-    if (dynamicGrid) {
-      const auto& gridVel = geometry.nodes->GetGridVel();
-      projGridVel = 0.5*(dot(gatherVariables<nDim>(iPoint,gridVel), unitNormal)+
-                         dot(gatherVariables<nDim>(jPoint,gridVel), unitNormal));
-      projVel -= projGridVel;
-    }
 
     /*--- Convective eigenvalues. ---*/
 
@@ -174,20 +166,6 @@ public:
     if (implicit) {
       jac_i = inviscidProjJac(gamma, V.i.velocity(), U.i.energy(), normal, kappa);
       jac_j = inviscidProjJac(gamma, V.j.velocity(), U.j.energy(), normal, kappa);
-    }
-
-    /*--- Correct for grid motion. ---*/
-
-    if (dynamicGrid) {
-      for (size_t iVar = 0; iVar < nVar; ++iVar) {
-        Double dFdU = projGridVel * area * 0.5;
-        flux(iVar) -= dFdU * (U.i.all(iVar) + U.j.all(iVar));
-
-        if (implicit) {
-          jac_i(iVar,iVar) -= dFdU;
-          jac_j(iVar,iVar) -= dFdU;
-        }
-      }
     }
 
     /*--- Finalize in derived class (static polymorphism). ---*/

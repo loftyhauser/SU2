@@ -30,8 +30,7 @@
 
 void CFluidIteration::Preprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry,
                                  CSolver***** solver, CNumerics****** numerics, CConfig** config,
-                                 CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
-                                 CFreeFormDefBox*** FFDBox, unsigned short val_iZone, unsigned short val_iInst) {
+                                 unsigned short val_iZone, unsigned short val_iInst) {
   unsigned long TimeIter = config[val_iZone]->GetTimeIter();
 
   bool fsi = config[val_iZone]->GetFSI_Simulation();
@@ -49,8 +48,7 @@ void CFluidIteration::Preprocess(COutput* output, CIntegration**** integration, 
 
 void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGeometry**** geometry,
                               CSolver***** solver, CNumerics****** numerics, CConfig** config,
-                              CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
-                              CFreeFormDefBox*** FFDBox, unsigned short val_iZone, unsigned short val_iInst) {
+                              unsigned short val_iZone, unsigned short val_iInst) {
 
   const bool frozen_visc = (config[val_iZone]->GetContinuous_Adjoint() && config[val_iZone]->GetFrozen_Visc_Cont()) ||
                            (config[val_iZone]->GetDiscrete_Adjoint() && config[val_iZone]->GetFrozen_Visc_Disc());
@@ -119,8 +117,7 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
 }
 
 void CFluidIteration::Update(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-                             CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-                             CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+                             CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
                              unsigned short val_iInst) {
   unsigned short iMesh;
 
@@ -165,8 +162,7 @@ void CFluidIteration::Update(COutput* output, CIntegration**** integration, CGeo
 
 bool CFluidIteration::Monitor(COutput* output, CIntegration**** integration, CGeometry**** geometry,
                               CSolver***** solver, CNumerics****** numerics, CConfig** config,
-                              CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
-                              CFreeFormDefBox*** FFDBox, unsigned short val_iZone, unsigned short val_iInst) {
+                              unsigned short val_iZone, unsigned short val_iInst) {
   bool StopCalc = false;
 
   StopTime = SU2_MPI::Wtime();
@@ -194,8 +190,7 @@ bool CFluidIteration::Monitor(COutput* output, CIntegration**** integration, CGe
 
 void CFluidIteration::Postprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry,
                                   CSolver***** solver, CNumerics****** numerics, CConfig** config,
-                                  CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
-                                  CFreeFormDefBox*** FFDBox, unsigned short val_iZone, unsigned short val_iInst) {
+                                  unsigned short val_iZone, unsigned short val_iInst) {
 
   /*--- Temporary: enable only for single-zone driver. This should be removed eventually when generalized. ---*/
   if (config[val_iZone]->GetSinglezone_Driver()) {
@@ -207,8 +202,7 @@ void CFluidIteration::Postprocess(COutput* output, CIntegration**** integration,
 }
 
 void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-                            CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-                            CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+                            CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
                             unsigned short val_iInst) {
   /*--- Boolean to determine if we are running a static or dynamic case ---*/
   bool steady = !config[val_iZone]->GetTime_Domain();
@@ -222,8 +216,7 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
   StartTime = SU2_MPI::Wtime();
 
   /*--- Preprocess the solver ---*/
-  Preprocess(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
-             val_iZone, INST_0);
+  Preprocess(output, integration, geometry, solver, numerics, config, val_iZone, INST_0);
 
   /*--- For steady-state flow simulations, we need to loop over ExtIter for the number of time steps ---*/
   /*--- However, ExtIter is the number of FSI iterations, so nIntIter is used in this case ---*/
@@ -232,12 +225,10 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
     config[val_iZone]->SetInnerIter(Inner_Iter);
 
     /*--- Run a single iteration of the solver ---*/
-    Iterate(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox, val_iZone,
-            INST_0);
+    Iterate(output, integration, geometry, solver, numerics, config, val_iZone, INST_0);
 
     /*--- Monitor the pseudo-time ---*/
-    StopCalc = Monitor(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
-                       val_iZone, INST_0);
+    StopCalc = Monitor(output, integration, geometry, solver, numerics, config, val_iZone, INST_0);
 
     /*--- Output files at intermediate iterations if the problem is single zone ---*/
 

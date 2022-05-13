@@ -48,8 +48,7 @@ class CFluidIteration : public CIteration {
    * \param[in] ??? - Description here.
    */
   void Preprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-                  CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-                  CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+                  CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
                   unsigned short val_iInst) override;
 
   /*!
@@ -60,15 +59,11 @@ class CFluidIteration : public CIteration {
    * \param[in] solver - Container vector with all the solutions.
    * \param[in] numerics - Description of the numerical method (the way in which the equations are solved).
    * \param[in] config - Definition of the particular problem.
-   * \param[in] surface_movement - Surface movement classes of the problem.
-   * \param[in] grid_movement - Volume grid movement classes of the problem.
-   * \param[in] FFDBox - FFD FFDBoxes of the problem.
    * \param[in] val_iZone - Index of the zone.
    * \param[in] val_iInst - Index of the instance layer.
    */
   void Iterate(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-               CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-               CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+               CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
                unsigned short val_iInst) override;
 
   /*!
@@ -79,13 +74,9 @@ class CFluidIteration : public CIteration {
    * \param[in] solver - Container vector with all the solutions.
    * \param[in] numerics - Description of the numerical method (the way in which the equations are solved).
    * \param[in] config - Definition of the particular problem.
-   * \param[in] surface_movement - Surface movement classes of the problem.
-   * \param[in] grid_movement - Volume grid movement classes of the problem.
-   * \param[in] FFDBox - FFD FFDBoxes of the problem.
    */
   void Solve(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-             CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-             CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+             CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
              unsigned short val_iInst) override;
 
   /*!
@@ -93,8 +84,7 @@ class CFluidIteration : public CIteration {
    * \param[in] ??? - Description here.
    */
   void Update(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-              CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-              CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+              CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
               unsigned short val_iInst) override;
 
   /*!
@@ -102,8 +92,7 @@ class CFluidIteration : public CIteration {
    * \param[in] ??? - Description here.
    */
   bool Monitor(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-               CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-               CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+               CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
                unsigned short val_iInst) override;
 
   /*!
@@ -113,8 +102,7 @@ class CFluidIteration : public CIteration {
    * \param[in] config - Definition of the particular problem.
    */
   void Postprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-                   CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-                   CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+                   CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
                    unsigned short val_iInst) override;
 
  private:

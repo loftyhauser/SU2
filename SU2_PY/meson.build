@@ -3,7 +3,6 @@ install_data(['continuous_adjoint.py',
 	     'finite_differences.py',
 	     'mesh_deformation.py',
 	     'parallel_computation.py',
-	     'parallel_computation_fsi.py',
 	     'package_tests.py',
 	     'shape_optimization.py',
 	     'merge_solution.py',
@@ -12,7 +11,6 @@ install_data(['continuous_adjoint.py',
 	     'compute_multipoint.py',
 	     'discrete_adjoint.py',
 	     'direct_differentiation.py',
-	     'fsi_computation.py',
 	     'SU2_CFD.py'],
 	     install_dir: join_paths(get_option('bindir')))
 
@@ -63,12 +61,3 @@ install_data(['SU2/util/bunch.py',
               'SU2/util/switch.py',
               'SU2/util/__init__.py'],
 	      install_dir: join_paths(get_option('bindir'), 'SU2/util'))
-
-install_data(['FSI_tools/__init__.py',
-              'FSI_tools/FSIInterface.py',
-              'FSI_tools/FSI_config.py'],
-	      install_dir: join_paths(get_option('bindir'), 'FSI_tools'))
-
-install_data(['SU2_Nastran/__init__.py',
-              'SU2_Nastran/pysu2_nastran.py'],
-        install_dir: join_paths(get_option('bindir'), 'SU2_Nastran'))

@@ -45,7 +45,7 @@ private:
   su2double Residual, ProjVelocity_i, ProjVelocity_j, ProjPhi, ProjPhi_Vel, sq_vel, phis1, phis2,
   MeanPsiRho, MeanPsiE, Param_p, Param_Kappa_0, Local_Lambda_i, Local_Lambda_j, MeanLambda,
   Phi_i, Phi_j, sc2, StretchingFactor, Epsilon_0;
-  bool implicit, grid_movement;
+  bool implicit;
 
 public:
   /*!
@@ -95,7 +95,7 @@ private:
   su2double Residual, ProjVelocity_i, ProjVelocity_j, ProjPhi, ProjPhi_Vel, sq_vel, phis1, phis2;
   su2double MeanPsiRho, MeanPsiE, Param_p, Param_Kappa_4, Param_Kappa_2, Local_Lambda_i, Local_Lambda_j, MeanLambda;
   su2double Phi_i, Phi_j, sc4, StretchingFactor, Epsilon_4, Epsilon_2;
-  bool implicit, grid_movement;
+  bool implicit;
 
 public:
   /*!
@@ -149,7 +149,7 @@ private:
   su2double RoeDensity, RoeSoundSpeed, *RoeVelocity, *Lambda, *Velocity_i, *Velocity_j, **ProjFlux_i, **ProjFlux_j,
   Proj_ModJac_Tensor_ij, **Proj_ModJac_Tensor, Energy_i, Energy_j, **P_Tensor, **invP_Tensor;
   unsigned short iDim, iVar, jVar, kVar;
-  bool implicit, grid_movement;
+  bool implicit;
 
 public:
   /*!

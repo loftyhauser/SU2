@@ -99,7 +99,7 @@ void CDiscAdjSinglezoneDriver::Preprocess(unsigned long TimeIter) {
 
   iteration->Preprocess(output_container[ZONE_0], integration_container, geometry_container,
                         solver_container, numerics_container, config_container,
-                        surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
+                        ZONE_0, INST_0);
 
   /*--- For the adjoint iteration we need the derivatives of the iteration function with
    *--- respect to the conservative variables. Since these derivatives do not change in the steady state case
@@ -150,7 +150,7 @@ void CDiscAdjSinglezoneDriver::Run() {
 
     StopCalc = iteration->Monitor(output_container[ZONE_0], integration_container, geometry_container,
                                   solver_container, numerics_container, config_container,
-                                  surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
+                                  ZONE_0, INST_0);
 
     /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
 
@@ -323,21 +323,17 @@ void CDiscAdjSinglezoneDriver::SetObjFunction(){
 
 void CDiscAdjSinglezoneDriver::DirectRun(RECORDING kind_recording){
 
-  /*--- Mesh movement ---*/
-
-  direct_iteration->SetMesh_Deformation(geometry_container[ZONE_0][INST_0], solver, numerics, config, kind_recording);
-
   /*--- Zone preprocessing ---*/
 
-  direct_iteration->Preprocess(direct_output, integration_container, geometry_container, solver_container, numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
+  direct_iteration->Preprocess(direct_output, integration_container, geometry_container, solver_container, numerics_container, config_container, ZONE_0, INST_0);
 
   /*--- Iterate the direct solver ---*/
 
-  direct_iteration->Iterate(direct_output, integration_container, geometry_container, solver_container, numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
+  direct_iteration->Iterate(direct_output, integration_container, geometry_container, solver_container, numerics_container, config_container, ZONE_0, INST_0);
 
   /*--- Postprocess the direct solver ---*/
 
-  direct_iteration->Postprocess(direct_output, integration_container, geometry_container, solver_container, numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
+  direct_iteration->Postprocess(direct_output, integration_container, geometry_container, solver_container, numerics_container, config_container, ZONE_0, INST_0);
 
   /*--- Print the direct residual to screen ---*/
 

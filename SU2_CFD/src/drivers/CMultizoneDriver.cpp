@@ -61,48 +61,6 @@ CMultizoneDriver::CMultizoneDriver(char* confFile, unsigned short val_nZone, SU2
     }
   }
 
-  /*----------------------------------------------------*/
-  /*------ Determine the properties of the problem -----*/
-  /*----------------------------------------------------*/
-
-  bool structural_zone = false;
-  bool fluid_zone = false;
-
-  /*--- If there is at least a fluid and a structural zone ---*/
-  for (iZone = 0; iZone < nZone; iZone++){
-    switch (config_container[iZone]->GetKind_Solver()) {
-    case MAIN_SOLVER::EULER: case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::RANS:
-      fluid_zone = true;
-      break;
-    case MAIN_SOLVER::FEM_ELASTICITY:
-      structural_zone = true;
-      break;
-    default:
-      break;
-    }
-  }
-
-  fsi = false;
-  /*--- If the problem has FSI properties ---*/
-  if (fluid_zone && structural_zone) fsi = true;
-
-  /*----------------------------------------------------*/
-  /*- Define if a prefixed motion is imposed in a zone -*/
-  /*----------------------------------------------------*/
-
-  prefixed_motion = new bool[nZone];
-  for (iZone = 0; iZone < nZone; iZone++){
-    switch (config_container[iZone]->GetKind_GridMovement()){
-      case RIGID_MOTION:
-        prefixed_motion[iZone] = true; break;
-      default:
-        prefixed_motion[iZone] = false; break;
-    }
-    if (config_container[iZone]->GetSurface_Movement(DEFORMING)) {
-      prefixed_motion[iZone] = true;
-    }
-  }
-
 }
 
 CMultizoneDriver::~CMultizoneDriver(void) {
@@ -222,7 +180,7 @@ void CMultizoneDriver::Preprocess(unsigned long TimeIter) {
 
     /*--- Set the initial condition for EULER/N-S/RANS ---------------------------------------------*/
     /*--- For FSI, the initial conditions are set, after the mesh has been moved. --------------------------------------*/
-    if (!fsi && config_container[iZone]->GetFluidProblem()) {
+    if (config_container[iZone]->GetFluidProblem()) {
       solver_container[iZone][INST_0][MESH_0][FLOW_SOL]->SetInitialCondition(geometry_container[iZone][INST_0],
                                                                              solver_container[iZone][INST_0],
                                                                              config_container[iZone], TimeIter);
@@ -235,13 +193,8 @@ void CMultizoneDriver::Preprocess(unsigned long TimeIter) {
   for (iZone = 0; iZone < nZone; iZone++) {
     if (config_container[iZone]->GetPredictor())
       iteration_container[iZone][INST_0]->Predictor(output_container[iZone], integration_container, geometry_container,
-                                                    solver_container, numerics_container, config_container, surface_movement,
-                                                    grid_movement, FFDBox, iZone, INST_0);
+                                                    solver_container, numerics_container, config_container, iZone, INST_0);
   }
-
-  /*--- Perform a dynamic mesh update if required. ---*/
-
-  DynamicMeshUpdate(TimeIter);
 
   /*--- Updating zone interface communication patterns for unsteady problems with pre-fixed motion in the config file ---*/
   if (driver_config->GetTime_Domain()) {
@@ -286,13 +239,11 @@ void CMultizoneDriver::Run_GaussSeidel() {
           if (DeformMesh) UpdateMesh+=1;
         }
       }
-      /*--- If a mesh update is required due to the transfer of data ---*/
-      if (UpdateMesh > 0) DynamicMeshUpdate(iZone, TimeIter);
 
       /*--- Iterate the zone as a block, either to convergence or to a max number of iterations ---*/
       iteration_container[iZone][INST_0]->Solve(output_container[iZone], integration_container, geometry_container,
                                                 solver_container, numerics_container, config_container,
-                                                surface_movement, grid_movement, FFDBox, iZone, INST_0);
+                                                iZone, INST_0);
 
       /*--- A corrector step can help preventing numerical instabilities ---*/
       Corrector(iZone);
@@ -335,8 +286,6 @@ void CMultizoneDriver::Run_Jacobi() {
           if (DeformMesh) UpdateMesh+=1;
         }
       }
-      /*--- If a mesh update is required due to the transfer of data ---*/
-      if (UpdateMesh > 0) DynamicMeshUpdate(iZone, TimeIter);
 
     }
 
@@ -351,7 +300,7 @@ void CMultizoneDriver::Run_Jacobi() {
       /*--- Iterate the zone as a block, either to convergence or to a max number of iterations ---*/
       iteration_container[iZone][INST_0]->Solve(output_container[iZone], integration_container, geometry_container,
                                                 solver_container, numerics_container, config_container,
-                                                surface_movement, grid_movement, FFDBox, iZone, INST_0);
+                                                iZone, INST_0);
 
       /*--- A corrector step can help preventing numerical instabilities ---*/
       Corrector(iZone);
@@ -369,7 +318,7 @@ void CMultizoneDriver::Corrector(unsigned short val_iZone) {
   if (config_container[val_iZone]->GetRelaxation())
     iteration_container[val_iZone][INST_0]->Relaxation(output_container[ZONE_0], integration_container,
                                             geometry_container, solver_container, numerics_container, config_container,
-                                            surface_movement, grid_movement, FFDBox, val_iZone, INST_0);
+                                            val_iZone, INST_0);
 }
 
 bool CMultizoneDriver::OuterConvergence(unsigned long OuterIter) {
@@ -419,19 +368,11 @@ void CMultizoneDriver::Update() {
         UpdateMesh += Transfer_Data(jZone, iZone);
       }
     }
-    /*--- If a mesh update is required due to the transfer of data ---*/
-    if (UpdateMesh > 0) DynamicMeshUpdate(iZone, TimeIter);
 
     iteration_container[iZone][INST_0]->Update(output_container[iZone], integration_container, geometry_container,
         solver_container, numerics_container, config_container,
-        surface_movement, grid_movement, FFDBox, iZone, INST_0);
+        iZone, INST_0);
 
-    /*--- Set the Convergence_FSI boolean to false for the next time step ---*/
-    for (unsigned short iSol = 0; iSol < MAX_SOLS-1; iSol++){
-      if (integration_container[iZone][INST_0][iSol] != nullptr){
-        integration_container[iZone][INST_0][iSol]->SetConvergence_FSI(false);
-      }
-    }
   }
 
 }
@@ -469,50 +410,6 @@ void CMultizoneDriver::Output(unsigned long TimeIter) {
 
 }
 
-void CMultizoneDriver::DynamicMeshUpdate(unsigned long TimeIter) {
-
-  bool AnyDeformMesh = false;
-
-  for (iZone = 0; iZone < nZone; iZone++) {
-    /*--- Dynamic mesh update ---*/
-    if ((config_container[iZone]->GetGrid_Movement()) && (!fsi)) {
-      iteration_container[iZone][INST_0]->SetGrid_Movement(geometry_container[iZone][INST_0],surface_movement[iZone],
-                                                           grid_movement[iZone][INST_0], solver_container[iZone][INST_0],
-                                                           config_container[iZone], 0, TimeIter);
-      AnyDeformMesh = true;
-    }
-  }
-  /*--- Update the wall distances if the mesh was deformed. ---*/
-  if (AnyDeformMesh) {
-    CGeometry::ComputeWallDistance(config_container, geometry_container);
-  }
-}
-
-void CMultizoneDriver::DynamicMeshUpdate(unsigned short val_iZone, unsigned long TimeIter) {
-
-  auto iteration = iteration_container[val_iZone][INST_0];
-
-  /*--- Legacy dynamic mesh update - Only if GRID_MOVEMENT = YES ---*/
-  if (config_container[val_iZone]->GetGrid_Movement()) {
-    iteration->SetGrid_Movement(geometry_container[val_iZone][INST_0],surface_movement[val_iZone],
-                                grid_movement[val_iZone][INST_0], solver_container[val_iZone][INST_0],
-                                config_container[val_iZone], 0, TimeIter);
-  }
-
-  /*--- New solver - all the other routines in SetGrid_Movement should be adapted to this one ---*/
-  /*--- Works if DEFORM_MESH = YES ---*/
-  iteration->SetMesh_Deformation(geometry_container[val_iZone][INST_0],
-                                 solver_container[val_iZone][INST_0][MESH_0],
-                                 numerics_container[val_iZone][INST_0][MESH_0],
-                                 config_container[val_iZone], RECORDING::CLEAR_INDICES);
-
-  /*--- Update the wall distances if the mesh was deformed. ---*/
-  if (config_container[val_iZone]->GetGrid_Movement() ||
-      config_container[val_iZone]->GetDeform_Mesh()) {
-    CGeometry::ComputeWallDistance(config_container, geometry_container);
-  }
-}
-
 bool CMultizoneDriver::Transfer_Data(unsigned short donorZone, unsigned short targetZone) {
 
   bool UpdateMesh = false;
@@ -540,19 +437,6 @@ bool CMultizoneDriver::Transfer_Data(unsigned short donorZone, unsigned short ta
           config_container[donorZone],
           config_container[targetZone]);
       }
-      break;
-    }
-    case BOUNDARY_DISPLACEMENTS:
-    {
-      donorSolver  = FEA_SOL;
-      targetSolver = MESH_SOL;
-      UpdateMesh = true;
-      break;
-    }
-    case FLOW_TRACTION:
-    {
-      donorSolver  = FLOW_SOL;
-      targetSolver = FEA_SOL;
       break;
     }
     case NO_TRANSFER:

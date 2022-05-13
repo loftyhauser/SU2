@@ -116,9 +116,6 @@ void CTurbSolver::BC_Fluid_Interface(CGeometry *geometry, CSolver **solver_conta
 
         conv_numerics->SetNormal(Normal);
 
-        if (dynamic_grid)
-          conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
-
         auto residual = conv_numerics->ComputeResidual(config);
 
         /*--- Accumulate the residuals to compute the average ---*/

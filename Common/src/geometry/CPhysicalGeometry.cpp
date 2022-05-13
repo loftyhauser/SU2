@@ -4372,7 +4372,6 @@ void CPhysicalGeometry::SetPositive_ZArea(CConfig *config) {
   su2double TotalPositiveXArea = 0.0, TotalPositiveYArea = 0.0, TotalPositiveZArea = 0.0, TotalWettedArea = 0.0, AxiFactor;
 
   const bool axisymmetric = config->GetAxisymmetric();
-  const bool fea = config->GetStructuralProblem();
 
   PositiveXArea = 0.0;
   PositiveYArea = 0.0;
@@ -4384,7 +4383,7 @@ void CPhysicalGeometry::SetPositive_ZArea(CConfig *config) {
     Monitoring = config->GetMarker_All_Monitoring(iMarker);
 
     if (((config->GetSolid_Wall(iMarker) || Boundary == LOAD_BOUNDARY ||
-          Boundary == DISPLACEMENT_BOUNDARY) && Monitoring == YES) || fea) {
+          Boundary == DISPLACEMENT_BOUNDARY) && Monitoring == YES) ) {
 
       for (iVertex = 0; iVertex < nVertex[iMarker]; iVertex++) {
         iPoint = vertex[iMarker][iVertex]->GetNode();
@@ -4464,8 +4463,7 @@ void CPhysicalGeometry::SetPositive_ZArea(CConfig *config) {
 
   if (rank == MASTER_NODE) {
 
-    if (fea) cout << "Surface area = "<< TotalWettedArea;
-    else cout << "Wetted area = "<< TotalWettedArea;
+    cout << "Wetted area = "<< TotalWettedArea;
     if (D3 || axisymmetric) cout << A << ".\n";
     else cout << L << ".\n";
 

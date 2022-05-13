@@ -30,15 +30,13 @@
 
 void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry,
                                         CSolver***** solver, CNumerics****** numerics, CConfig** config,
-                                        CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
-                                        CFreeFormDefBox*** FFDBox, unsigned short iZone, unsigned short iInst) {
+                                        unsigned short iZone, unsigned short iInst) {
   StartTime = SU2_MPI::Wtime();
 
   const auto TimeIter = config[iZone]->GetTimeIter();
   const bool dual_time_1st = (config[iZone]->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST);
   const bool dual_time_2nd = (config[iZone]->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND);
   const bool dual_time = (dual_time_1st || dual_time_2nd);
-  const bool grid_IsMoving = config[iZone]->GetGrid_Movement();
 
   auto solvers0 = solver[iZone][iInst][MESH_0];
   auto geometries = geometry[iZone][iInst];
@@ -66,14 +64,6 @@ void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integr
             solvers[TURB_SOL]->GetNodes()->Set_Solution_time_n();
             solvers[TURB_SOL]->GetNodes()->Set_Solution_time_n1();
           }
-          if (grid_IsMoving) {
-            geometries[iMesh]->nodes->SetCoord_n();
-            geometries[iMesh]->nodes->SetCoord_n1();
-          }
-          if (config[iZone]->GetDynamic_Grid()) {
-            geometries[iMesh]->nodes->SetVolume_n();
-            geometries[iMesh]->nodes->SetVolume_nM1();
-          }
         }
       }
       if (dual_time) {
@@ -88,12 +78,6 @@ void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integr
           solvers[FLOW_SOL]->GetNodes()->Set_Solution_time_n();
           if (turbulent) {
             solvers[TURB_SOL]->GetNodes()->Set_Solution_time_n();
-          }
-          if (grid_IsMoving) {
-            geometries[iMesh]->nodes->SetCoord_n();
-          }
-          if (config[iZone]->GetDynamic_Grid()) {
-            geometries[iMesh]->nodes->SetVolume_n();
           }
         }
       }
@@ -115,45 +99,12 @@ void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integr
       Afterwards the GridVelocity is computed based on the Coordinates.
       ---*/
 
-      /*--- Temporarily store the loaded volumes into old containers ---*/
-      if (config[iZone]->GetDynamic_Grid()) {
-        for (auto iMesh=0; iMesh<=config[iZone]->GetnMGLevels();iMesh++) {
-          geometries[iMesh]->nodes->SetVolume_Old();
-          geometries[iMesh]->nodes->SetVolume_n_Old();
-          geometries[iMesh]->nodes->SetVolume_nM1_Old();
-        }
-      }
-
-      /*-- Load mesh solver ---*/
-      if (config[iZone]->GetDeform_Mesh()) {
-        solvers0[MESH_SOL]->LoadRestart(geometries, solver[iZone][iInst], config[iZone], Direct_Iter, true);
-      }
-
       /*--- Load solution timestep n-1 | n-2 for DualTimestepping 1st | 2nd order ---*/
       if (dual_time_1st) {
         LoadUnsteady_Solution(geometry, solver, config, iInst, iZone, Direct_Iter - 1);
       } else {
         LoadUnsteady_Solution(geometry, solver, config, iInst, iZone, Direct_Iter - 2);
 
-        /*--- Set volumes into correct containers ---*/
-        if (config[iZone]->GetDynamic_Grid()) {
-          for (auto iMesh=0; iMesh<=config[iZone]->GetnMGLevels();iMesh++) {
-            /*--- If negative iteration number, set default ---*/
-            if (Direct_Iter - 2 < 0) {
-              for(auto iPoint=0ul; iPoint<geometries[iMesh]->GetnPoint();iPoint++) {
-                geometries[iMesh]->nodes->SetVolume(iPoint,0.0);
-              }
-            }
-
-            /*--- Set currently loaded volume to Volume_nM1 ---*/
-            geometries[iMesh]->nodes->SetVolume_n();
-            geometries[iMesh]->nodes->SetVolume_nM1();
-
-            /*--- Set Volume_n and Volume from old containers ---*/
-            geometries[iMesh]->nodes->SetVolume_n_from_OldnM1();
-            geometries[iMesh]->nodes->SetVolume_from_Oldn();
-          }
-        }
       }
 
       /*--- Temporarily store the loaded solution in the Solution_Old array ---*/
@@ -165,9 +116,6 @@ void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integr
         if (turbulent) {
           solvers[TURB_SOL]->Set_OldSolution();
         }
-        if (grid_IsMoving) {
-          geometries[iMesh]->nodes->SetCoord_Old();
-        }
       }
 
       /*--- Set Solution at timestep n to solution at n-1 ---*/
@@ -178,9 +126,6 @@ void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integr
         for (auto iPoint = 0ul; iPoint < geometries[iMesh]->GetnPoint(); iPoint++) {
           solvers[FLOW_SOL]->GetNodes()->SetSolution(iPoint, solvers[FLOW_SOL]->GetNodes()->GetSolution_time_n(iPoint));
 
-          if (grid_IsMoving) {
-            geometries[iMesh]->nodes->SetCoord(iPoint, geometries[iMesh]->nodes->GetCoord_n(iPoint));
-          }
           if (turbulent) {
             solvers[TURB_SOL]->GetNodes()->SetSolution(iPoint, solvers[TURB_SOL]->GetNodes()->GetSolution_time_n(iPoint));
           }
@@ -195,9 +140,6 @@ void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integr
             solvers[FLOW_SOL]->GetNodes()->Set_Solution_time_n(
                 iPoint, solvers[FLOW_SOL]->GetNodes()->GetSolution_Old(iPoint));
 
-            if (grid_IsMoving) {
-              geometries[iMesh]->nodes->SetCoord_n(iPoint, geometries[iMesh]->nodes->GetCoord_Old(iPoint));
-            }
             if (turbulent) {
               solvers[TURB_SOL]->GetNodes()->Set_Solution_time_n(
                   iPoint, solvers[TURB_SOL]->GetNodes()->GetSolution_Old(iPoint));
@@ -214,9 +156,6 @@ void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integr
             solvers[FLOW_SOL]->GetNodes()->Set_Solution_time_n(
                 iPoint, solvers[FLOW_SOL]->GetNodes()->GetSolution_time_n1(iPoint));
 
-            if (grid_IsMoving) {
-              geometries[iMesh]->nodes->SetCoord_n(iPoint, geometries[iMesh]->nodes->GetCoord_n1(iPoint));
-            }
             if (turbulent) {
               solvers[TURB_SOL]->GetNodes()->Set_Solution_time_n(
                   iPoint, solvers[TURB_SOL]->GetNodes()->GetSolution_time_n1(iPoint));
@@ -231,9 +170,6 @@ void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integr
             solvers[FLOW_SOL]->GetNodes()->Set_Solution_time_n1(
                 iPoint, solvers[FLOW_SOL]->GetNodes()->GetSolution_Old(iPoint));
 
-            if (grid_IsMoving) {
-              geometries[iMesh]->nodes->SetCoord_n1(iPoint, geometries[iMesh]->nodes->GetCoord_Old(iPoint));
-            }
             if (turbulent) {
               solvers[TURB_SOL]->GetNodes()->Set_Solution_time_n1(
                   iPoint, solvers[TURB_SOL]->GetNodes()->GetSolution_Old(iPoint));
@@ -243,11 +179,6 @@ void CDiscAdjFluidIteration::Preprocess(COutput* output, CIntegration**** integr
       }
 
     }  // else if TimeIter > 0
-
-    /*--- Compute & set Grid Velocity via finite differences of the Coordinates. ---*/
-    if (grid_IsMoving)
-      for (auto iMesh = 0u; iMesh <= config[iZone]->GetnMGLevels(); iMesh++)
-        geometries[iMesh]->SetGridVelocity(config[iZone]);
 
   }  // if unsteady
 
@@ -451,8 +382,7 @@ void CDiscAdjFluidIteration::RegisterOutput(CSolver***** solver, CGeometry**** g
 
 void CDiscAdjFluidIteration::Update(COutput* output, CIntegration**** integration, CGeometry**** geometry,
                                     CSolver***** solver, CNumerics****** numerics, CConfig** config,
-                                    CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
-                                    CFreeFormDefBox*** FFDBox, unsigned short iZone, unsigned short iInst) {
+                                    unsigned short iZone, unsigned short iInst) {
   /*--- Dual time stepping strategy ---*/
 
   if ((config[iZone]->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST) ||
@@ -465,8 +395,7 @@ void CDiscAdjFluidIteration::Update(COutput* output, CIntegration**** integratio
 
 bool CDiscAdjFluidIteration::Monitor(COutput* output, CIntegration**** integration, CGeometry**** geometry,
                                      CSolver***** solver, CNumerics****** numerics, CConfig** config,
-                                     CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
-                                     CFreeFormDefBox*** FFDBox, unsigned short iZone, unsigned short iInst) {
+                                     unsigned short iZone, unsigned short iInst) {
   StopTime = SU2_MPI::Wtime();
 
   UsedTime = StopTime - StartTime;

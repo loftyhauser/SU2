@@ -70,7 +70,6 @@ CAdjEulerSolver::CAdjEulerSolver(CGeometry *geometry, CConfig *config, unsigned 
   su2double *Velocity_Inf;
   string Marker_Tag, Monitoring_Tag;
   unsigned short iMarker_Monitoring, ObjFunc;
-  bool grid_movement  = config->GetGrid_Movement();
 
   /*--- Array initialization ---*/
 
@@ -315,16 +314,10 @@ CAdjEulerSolver::CAdjEulerSolver(CGeometry *geometry, CConfig *config, unsigned 
 #endif
 
   if (config->GetnObj() > 1 && iMesh==MESH_0) {
-    if (grid_movement) {
-      Mach2Vel = sqrt(Gamma*Gas_Constant*config->GetTemperature_FreeStreamND());
-      RefVel2 = (Mach_Motion*Mach2Vel)*(Mach_Motion*Mach2Vel);
-    }
-    else {
       Velocity_Inf = config->GetVelocity_FreeStreamND();
       RefVel2 = 0.0;
       for (iDim = 0; iDim < nDim; iDim++)
         RefVel2  += Velocity_Inf[iDim]*Velocity_Inf[iDim];
-    }
 
     /*--- Objective scaling: a factor must be applied to certain objectives ---*/
     for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++) {
@@ -1035,7 +1028,6 @@ void CAdjEulerSolver::Centered_Residual(CGeometry *geometry, CSolver **solver_co
 
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
   bool jst_scheme = ((config->GetKind_Centered_AdjFlow() == JST) && (iMesh == MESH_0));
-  bool grid_movement  = config->GetGrid_Movement();
 
   for (iEdge = 0; iEdge < geometry->GetnEdge(); iEdge++) {
 
@@ -1067,12 +1059,6 @@ void CAdjEulerSolver::Centered_Residual(CGeometry *geometry, CSolver **solver_co
     if (jst_scheme) {
       numerics->SetUndivided_Laplacian(nodes->GetUndivided_Laplacian(iPoint), nodes->GetUndivided_Laplacian(jPoint));
       numerics->SetSensor(nodes->GetSensor(iPoint), nodes->GetSensor(jPoint));
-    }
-
-    /*--- Mesh motion ---*/
-
-    if (grid_movement) {
-      numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(jPoint));
     }
 
     /*--- Compute residuals ---*/
@@ -1113,7 +1099,6 @@ void CAdjEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_cont
   bool implicit         = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
   bool muscl            = (config->GetMUSCL_AdjFlow() && (iMesh == MESH_0));
   bool limiter          = (config->GetKind_SlopeLimit_AdjFlow() != LIMITER::NONE);
-  bool grid_movement    = config->GetGrid_Movement();
 
   for (iEdge = 0; iEdge < geometry->GetnEdge(); iEdge++) {
 
@@ -1134,12 +1119,6 @@ void CAdjEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_cont
     V_i = solver_container[FLOW_SOL]->GetNodes()->GetPrimitive(iPoint);
     V_j = solver_container[FLOW_SOL]->GetNodes()->GetPrimitive(jPoint);
     numerics->SetPrimitive(V_i, V_j);
-
-    /*--- Grid velocities for dynamic meshes ---*/
-
-    if (grid_movement) {
-      numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(jPoint));
-    }
 
     /*--- High order reconstruction using MUSCL strategy ---*/
 
@@ -1529,7 +1508,6 @@ void CAdjEulerSolver::Inviscid_Sensitivity(CGeometry *geometry, CSolver **solver
   Velocity = new su2double[nDim];
 
   su2double Gas_Constant    = config->GetGas_ConstantND();
-  bool grid_movement     = config->GetGrid_Movement();
   su2double RefArea    = config->GetRefArea();
   su2double Mach_Motion     = config->GetMach_Motion();
   unsigned short ObjFunc = config->GetKind_ObjFunc();
@@ -1542,16 +1520,10 @@ void CAdjEulerSolver::Inviscid_Sensitivity(CGeometry *geometry, CSolver **solver
    Otherwise, use the freestream values,
    which is the standard convention. ---*/
 
-  if (grid_movement) {
-    Mach2Vel = sqrt(Gamma*Gas_Constant*config->GetTemperature_FreeStreamND());
-    RefVel2 = (Mach_Motion*Mach2Vel)*(Mach_Motion*Mach2Vel);
-  }
-  else {
     Velocity_Inf = config->GetVelocity_FreeStreamND();
     RefVel2 = 0.0;
     for (iDim = 0; iDim < nDim; iDim++)
       RefVel2  += Velocity_Inf[iDim]*Velocity_Inf[iDim];
-  }
 
   RefDensity  = config->GetDensity_FreeStreamND();
 
@@ -1649,10 +1621,6 @@ void CAdjEulerSolver::Inviscid_Sensitivity(CGeometry *geometry, CSolver **solver
 
             /*--- Additional sensitivity term for grid movement ---*/
 
-            if (grid_movement) {
-              GridVel = geometry->nodes->GetGridVel(iPoint);
-              v_gradconspsi -= GridVel[iDim] * ConsPsi_Grad[iDim];
-            }
 
           }
 
@@ -1695,7 +1663,6 @@ void CAdjEulerSolver::Inviscid_Sensitivity(CGeometry *geometry, CSolver **solver
           Normal = geometry->vertex[iMarker][iVertex]->GetNormal();
 
           Mach_Inf   = config->GetMach();
-          if (grid_movement) Mach_Inf = config->GetMach_Motion();
 
           Area = GeometryToolbox::Norm(nDim, Normal);
 
@@ -1741,7 +1708,6 @@ void CAdjEulerSolver::Inviscid_Sensitivity(CGeometry *geometry, CSolver **solver
           Normal = geometry->vertex[iMarker][iVertex]->GetNormal();
 
           Mach_Inf   = config->GetMach();
-          if (grid_movement) Mach_Inf = config->GetMach_Motion();
 
           r = U[0]; ru = U[1]; rv = U[2];
           if (nDim == 2) { rw = 0.0; rE = U[3]; }
@@ -1891,7 +1857,6 @@ void CAdjEulerSolver::Inviscid_Sensitivity(CGeometry *geometry, CSolver **solver
           p = solver_container[FLOW_SOL]->GetNodes()->GetPressure(iPoint);
 
           Mach_Inf   = config->GetMach();
-          if (grid_movement) Mach_Inf = config->GetMach_Motion();
 
           d = nodes->GetForceProj_Vector(iPoint);
           Area = GeometryToolbox::Norm(nDim, Normal);
@@ -2231,7 +2196,6 @@ void CAdjEulerSolver::BC_Euler_Wall(CGeometry      *geometry,
   unsigned short iDim, iVar, jDim;
 
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool grid_movement = config->GetGrid_Movement();
 
   UnitNormal = new su2double[nDim];
   Velocity = new su2double[nDim];
@@ -2272,14 +2236,6 @@ void CAdjEulerSolver::BC_Euler_Wall(CGeometry      *geometry,
         phin    += Psi[iDim+1]*UnitNormal[iDim];
       }
 
-      /*--- Extra boundary term for grid movement ---*/
-      if (grid_movement) {
-        su2double ProjGridVel = 0.0;
-        su2double *GridVel = geometry->nodes->GetGridVel(iPoint);
-        for (iDim = 0; iDim < nDim; iDim++)
-          ProjGridVel += GridVel[iDim]*UnitNormal[iDim];
-        phin -= Psi[nVar-1]*ProjGridVel;
-      }
 
       /*--- Introduce the boundary condition ---*/
       for (iDim = 0; iDim < nDim; iDim++)
@@ -2298,17 +2254,6 @@ void CAdjEulerSolver::BC_Euler_Wall(CGeometry      *geometry,
         Residual[iDim+1] = ProjVel * Psi[iDim+1] - phis2 * Normal[iDim] - phis1 * Gamma_Minus_One * Velocity[iDim];
       Residual[nVar-1] = ProjVel * Psi[nVar-1] + phis1 * Gamma_Minus_One;
 
-      /*--- Flux adjustment for grid movement ---*/
-      if (grid_movement) {
-        su2double ProjGridVel = 0.0;
-        su2double *GridVel = geometry->nodes->GetGridVel(iPoint);
-        for (iDim = 0; iDim < nDim; iDim++)
-          ProjGridVel -= GridVel[iDim]*Normal[iDim];
-        Residual[0] -= ProjGridVel*Psi[0];
-        for (iDim = 0; iDim < nDim; iDim++)
-          Residual[iDim+1] -= ProjGridVel*Psi[iDim+1];
-        Residual[nVar-1] -= ProjGridVel*Psi[nVar-1];
-      }
 
       if (implicit) {
 
@@ -2333,17 +2278,6 @@ void CAdjEulerSolver::BC_Euler_Wall(CGeometry      *geometry,
           Jacobian_ii[nVar-1][iDim+1] = 0.0;
         Jacobian_ii[nVar-1][nVar-1] = ProjVel;
 
-        /*--- Jacobian contribution due to grid movement ---*/
-        if (grid_movement) {
-          su2double ProjGridVel = 0.0;
-          su2double *GridVel = geometry->nodes->GetGridVel(iPoint);
-          for (iDim = 0; iDim < nDim; iDim++)
-            ProjGridVel -= GridVel[iDim]*Normal[iDim];
-          Jacobian_ii[0][0] -= ProjGridVel;
-          for (iDim = 0; iDim < nDim; iDim++)
-            Jacobian_ii[iDim+1][iDim+1] -= ProjGridVel;
-          Jacobian_ii[nVar-1][nVar-1] -= ProjGridVel;
-        }
 
         Jacobian.SubtractBlock2Diag(iPoint, Jacobian_ii);
 
@@ -2371,7 +2305,6 @@ void CAdjEulerSolver::BC_Sym_Plane(CGeometry *geometry, CSolver **solver_contain
   unsigned short iDim, iVar, jDim;
 
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool grid_movement = config->GetGrid_Movement();
 
   Normal = new su2double[nDim];
   UnitNormal = new su2double[nDim];
@@ -2413,16 +2346,6 @@ void CAdjEulerSolver::BC_Sym_Plane(CGeometry *geometry, CSolver **solver_contain
         phin    += Psi_domain[iDim+1]*UnitNormal[iDim];
       }
 
-      /*--- Grid Movement ---*/
-
-      if (grid_movement) {
-        su2double ProjGridVel = 0.0;
-        su2double *GridVel = geometry->nodes->GetGridVel(iPoint);
-        for (iDim = 0; iDim < nDim; iDim++) {
-          ProjGridVel += GridVel[iDim]*UnitNormal[iDim];
-        }
-        phin -= Psi_domain[nVar-1]*ProjGridVel;
-      }
 
       /*--- Introduce the boundary condition ---*/
 
@@ -2444,18 +2367,6 @@ void CAdjEulerSolver::BC_Sym_Plane(CGeometry *geometry, CSolver **solver_contain
         Residual_i[iDim+1] = ProjVel * Psi_domain[iDim+1] - phis2 * Normal[iDim] - phis1 * Gamma_Minus_One * Velocity[iDim];
       Residual_i[nVar-1] = ProjVel * Psi_domain[nVar-1] + phis1 * Gamma_Minus_One;
 
-      /*--- Grid Movement ---*/
-
-      if (grid_movement) {
-        su2double ProjGridVel = 0.0;
-        su2double *GridVel = geometry->nodes->GetGridVel(iPoint);
-        for (iDim = 0; iDim < nDim; iDim++)
-          ProjGridVel -= GridVel[iDim]*Normal[iDim];
-        Residual_i[0] -= ProjGridVel*Psi_domain[0];
-        for (iDim = 0; iDim < nDim; iDim++)
-          Residual_i[iDim+1] -= ProjGridVel*Psi_domain[iDim+1];
-        Residual_i[nVar-1] -= ProjGridVel*Psi_domain[nVar-1];
-      }
 
       /*--- Update residual ---*/
 
@@ -2489,18 +2400,6 @@ void CAdjEulerSolver::BC_Sym_Plane(CGeometry *geometry, CSolver **solver_contain
           Jacobian_ii[nVar-1][iDim+1] = 0.0;
         Jacobian_ii[nVar-1][nVar-1] = ProjVel;
 
-        /*--- Contribution from grid movement ---*/
-
-        if (grid_movement) {
-          su2double ProjGridVel = 0.0;
-          su2double *GridVel = geometry->nodes->GetGridVel(iPoint);
-          for (iDim = 0; iDim < nDim; iDim++)
-            ProjGridVel -= GridVel[iDim]*Normal[iDim];
-          Jacobian_ii[0][0] -= ProjGridVel;
-          for (iDim = 0; iDim < nDim; iDim++)
-            Jacobian_ii[iDim+1][iDim+1] -= ProjGridVel;
-          Jacobian_ii[nVar-1][nVar-1] -= ProjGridVel;
-        }
 
          /*--- Update jacobian ---*/
 
@@ -2526,7 +2425,6 @@ void CAdjEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_contain
   su2double *Normal, *V_domain, *V_infty, *Psi_domain, *Psi_infty;
 
   bool implicit       = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool grid_movement  = config->GetGrid_Movement();
 
   Normal = new su2double[nDim];
   Psi_domain = new su2double[nVar]; Psi_infty = new su2double[nVar];
@@ -2568,10 +2466,6 @@ void CAdjEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_contain
       }
       conv_numerics->SetAdjointVar(Psi_domain, Psi_infty);
 
-      /*--- Grid Movement ---*/
-
-      if (grid_movement)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the upwind flux ---*/
 
@@ -2633,7 +2527,6 @@ void CAdjEulerSolver::BC_Supersonic_Inlet(CGeometry *geometry, CSolver **solver_
   su2double *V_inlet, *V_domain, *Normal, *Psi_domain, *Psi_inlet;
 
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool grid_movement = config->GetGrid_Movement();
   string Marker_Tag = config->GetMarker_All_TagBound(val_marker);
 
   Normal = new su2double[nDim];
@@ -2676,12 +2569,6 @@ void CAdjEulerSolver::BC_Supersonic_Inlet(CGeometry *geometry, CSolver **solver_
 
       conv_numerics->SetPrimitive(V_domain, V_inlet);
       conv_numerics->SetAdjointVar(Psi_domain, Psi_inlet);
-
-      /*--- Grid Movement ---*/
-
-      if (grid_movement)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
-                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -2751,7 +2638,6 @@ void CAdjEulerSolver::BC_Supersonic_Outlet(CGeometry *geometry, CSolver **solver
   su2double *V_outlet, *V_domain, *Normal, *Psi_domain, *Psi_outlet;
 
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool grid_movement = config->GetGrid_Movement();
   string Marker_Tag = config->GetMarker_All_TagBound(val_marker);
 
   Normal = new su2double[nDim];
@@ -2795,11 +2681,6 @@ void CAdjEulerSolver::BC_Supersonic_Outlet(CGeometry *geometry, CSolver **solver
       conv_numerics->SetPrimitive(V_domain, V_outlet);
       conv_numerics->SetAdjointVar(Psi_domain, Psi_outlet);
 
-      /*--- Grid Movement ---*/
-
-      if (grid_movement)
-      conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
-                                geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -2872,7 +2753,6 @@ void CAdjEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container, 
 
   INLET_TYPE Kind_Inlet = config->GetKind_Inlet();
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool grid_movement = config->GetGrid_Movement();
   string Marker_Tag = config->GetMarker_All_TagBound(val_marker);
 
   Normal = new su2double[nDim];
@@ -2950,15 +2830,6 @@ void CAdjEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container, 
           phin += Psi_domain[iDim+1]*UnitNormal[iDim];
         }
 
-        /*--- Extra boundary term for grid movement ---*/
-        if (grid_movement) {
-          ProjGridVel = 0.0;
-          GridVel = geometry->nodes->GetGridVel(iPoint);
-          for (iDim = 0; iDim < nDim; iDim++)
-            ProjGridVel += GridVel[iDim]*UnitNormal[iDim];
-          bcn -= (1.0/Gamma_Minus_One)*ProjGridVel;
-        }
-
         /*--- Impose value for PsiE based on hand-derived expression. ---*/
         Psi_inlet[nVar-1] = -phin*(1.0/bcn);
 
@@ -2974,12 +2845,6 @@ void CAdjEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container, 
 
       conv_numerics->SetPrimitive(V_domain, V_inlet);
       conv_numerics->SetAdjointVar(Psi_domain, Psi_inlet);
-
-      /*--- Grid Movement ---*/
-
-      if (grid_movement)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
-                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -3055,7 +2920,6 @@ void CAdjEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container,
   su2double density_gradient=0.0, pressure_gradient=0.0, velocity_gradient=0.0;
 
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool grid_movement  = config->GetGrid_Movement();
   su2double Weight_ObjFunc = 1.0;
   string Marker_Tag = config->GetMarker_All_TagBound(val_marker);
   string Monitoring_Tag;
@@ -3132,12 +2996,6 @@ void CAdjEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container,
         Velocity2 += Velocity[iDim]*Velocity[iDim];
         Vn += Velocity[iDim]*UnitNormal[iDim];
       }
-      /*--- Extra boundary term for grid movement ---*/
-      if (grid_movement) {
-        su2double *GridVel = geometry->nodes->GetGridVel(iPoint);
-        for (iDim = 0; iDim < nDim; iDim++)
-          ProjGridVel += GridVel[iDim]*UnitNormal[iDim];
-      }
 
       Pressure = V_domain[nDim+1];
       SoundSpeed = sqrt(Pressure*Gamma/Density);
@@ -3199,15 +3057,6 @@ void CAdjEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container,
           Velocity2 += Velocity[iDim]*Velocity[iDim];
         }
 
-        /*--- Extra boundary term for grid movement ---*/
-
-        if (grid_movement) {
-          ProjGridVel = 0.0;
-          su2double *GridVel = geometry->nodes->GetGridVel(iPoint);
-          for (iDim = 0; iDim < nDim; iDim++)
-            ProjGridVel += GridVel[iDim]*UnitNormal[iDim];
-        }
-
         /*--- Impose values for PsiRho & Phi using PsiE from domain. ---*/
 
         Psi_outlet[nVar-1] = Psi_domain[nVar-1];
@@ -3261,12 +3110,6 @@ void CAdjEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container,
 
       conv_numerics->SetPrimitive(V_domain, V_outlet);
       conv_numerics->SetAdjointVar(Psi_domain, Psi_outlet);
-
-      /*--- Grid Movement ---*/
-
-      if (grid_movement)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
-            geometry->nodes->GetGridVel(iPoint));
 
       conv_numerics->ComputeResidual(Residual_i, Residual_j, Jacobian_ii, Jacobian_ij,
           Jacobian_ji, Jacobian_jj, config);
@@ -3761,7 +3604,6 @@ void CAdjEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver
   su2double *U_time_nM1, *U_time_n, *U_time_nP1, Volume_nM1, Volume_n, Volume_nP1, TimeStep;
 
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool Grid_Movement = config->GetGrid_Movement();
 
   /*--- loop over points ---*/
   for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
@@ -3772,16 +3614,9 @@ void CAdjEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver
     U_time_nP1 = nodes->GetSolution(iPoint);
 
     /*--- Volume at time n-1 and n ---*/
-    if (Grid_Movement) {
-      Volume_nM1 = geometry->nodes->GetVolume_nM1(iPoint);
-      Volume_n = geometry->nodes->GetVolume_n(iPoint);
-      Volume_nP1 = geometry->nodes->GetVolume(iPoint);
-    }
-    else {
       Volume_nM1 = geometry->nodes->GetVolume(iPoint);
       Volume_n = geometry->nodes->GetVolume(iPoint);
       Volume_nP1 = geometry->nodes->GetVolume(iPoint);
-    }
 
     /*--- Time Step ---*/
     TimeStep = config->GetDelta_UnstTimeND();

@@ -70,15 +70,11 @@ class CDiscAdjFluidIteration final : public CIteration {
    * \param[in] solver - Container vector with all the solutions.
    * \param[in] numerics - Description of the numerical method (the way in which the equations are solved).
    * \param[in] config - Definition of the particular problem.
-   * \param[in] surface_movement - Surface movement classes of the problem.
-   * \param[in] grid_movement - Volume grid movement classes of the problem.
-   * \param[in] FFDBox - FFD FFDBoxes of the problem.
    * \param[in] val_iZone - Index of the zone.
    * \param[in] val_iInst - Index of the instance
    */
   void Preprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-                  CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-                  CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+                  CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
                   unsigned short val_iInst) override;
 
   /*!
@@ -101,15 +97,11 @@ class CDiscAdjFluidIteration final : public CIteration {
    * \param[in] solver - Container vector with all the solutions.
    * \param[in] numerics - Description of the numerical method (the way in which the equations are solved).
    * \param[in] config - Definition of the particular problem.
-   * \param[in] surface_movement - Surface movement classes of the problem.
-   * \param[in] grid_movement - Volume grid movement classes of the problem.
-   * \param[in] FFDBox - FFD FFDBoxes of the problem.
    * \param[in] val_iZone - Index of the zone.
    * \param[in] val_iInst - Index of the instance
    */
   void Update(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-              CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-              CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+              CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
               unsigned short val_iInst) override;
 
   /*!
@@ -120,15 +112,11 @@ class CDiscAdjFluidIteration final : public CIteration {
    * \param[in] solver - Container vector with all the solutions.
    * \param[in] numerics - Description of the numerical method (the way in which the equations are solved).
    * \param[in] config - Definition of the particular problem.
-   * \param[in] surface_movement - Surface movement classes of the problem.
-   * \param[in] grid_movement - Volume grid movement classes of the problem.
-   * \param[in] FFDBox - FFD FFDBoxes of the problem.
    * \param[in] val_iZone - Index of the zone.
    * \param[in] val_iInst - Index of the instance
    */
   bool Monitor(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-               CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-               CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+               CNumerics****** numerics, CConfig** config, unsigned short val_iZone,
                unsigned short val_iInst) override;
 
   /*!

@@ -180,8 +180,6 @@ int main(int argc, char *argv[]) {
 
       geometry_container[iZone][iInst]->PreprocessP2PComms(geometry_container[iZone][iInst], config_container[iZone]);
 
-      /* Test for a fem solver, because some more work must be done. */
-
     }
 
   }
@@ -285,108 +283,6 @@ int main(int argc, char *argv[]) {
     }
 
   }
-  else if (fsi){
-
-    if (nZone < 2){
-      SU2_MPI::Error("For multizone computations, please add the number of zones as a second argument for SU2_SOL.", CURRENT_FUNCTION);
-    }
-
-    su2double Physical_dt, Physical_t;
-    unsigned long TimeIter = 0, TimeIterFlow = 0, TimeIterFEM = 0;
-    bool StopCalc = false;
-    bool SolutionInstantiatedFlow = false, SolutionInstantiatedFEM = false;
-
-    /*--- Check for an unsteady restart. Update ExtIter if necessary. ---*/
-    if (config_container[ZONE_0]->GetRestart()){
-      TimeIterFlow = config_container[ZONE_0]->GetRestart_Iter();
-      TimeIterFEM = config_container[ZONE_1]->GetRestart_Iter();
-      if (TimeIterFlow != TimeIterFEM) {
-        SU2_MPI::Error("For multizone computations, please add the number of zones as a second argument for SU2_SOL.", CURRENT_FUNCTION);
-      }
-      else {
-        TimeIter = TimeIterFlow;
-      }
-    }
-
-
-    while (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) {
-
-      /*--- Check several conditions in order to merge the correct time step files. ---*/
-
-      Physical_dt = config_container[ZONE_0]->GetDelta_UnstTime();
-      Physical_t  = (TimeIter+1)*Physical_dt;
-      if (Physical_t >=  config_container[ZONE_0]->GetTotal_UnstTime())
-        StopCalc = true;
-
-      if (
-          ((TimeIter+1 == config_container[ZONE_0]->GetnTime_Iter()) ||
-           ((TimeIter % config_container[ZONE_0]->GetVolumeOutputFrequency(0) == 0) && (TimeIter != 0) &&
-            !((config_container[ZONE_0]->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST) ||
-              (config_container[ZONE_0]->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND))) ||
-           (StopCalc) ||
-           (((config_container[ZONE_0]->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST) ||
-             (config_container[ZONE_0]->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND)) &&
-            ((TimeIter == 0) || (TimeIter % config_container[ZONE_0]->GetVolumeOutputFrequency(0) == 0))))
-
-          &&
-
-          ((TimeIter+1 == config_container[ZONE_1]->GetnTime_Iter()) ||
-           (StopCalc) ||
-           ((config_container[ZONE_1]->GetTime_Domain()) &&
-            ((TimeIter == 0) || (TimeIter % config_container[ZONE_1]->GetVolumeOutputFrequency(0) == 0))))
-
-          ){
-
-        /*--- Set the current iteration number in the config class. ---*/
-        config_container[ZONE_0]->SetTimeIter(TimeIter);
-        config_container[ZONE_1]->SetTimeIter(TimeIter);
-
-        /*--- Read in the restart file for this time step ---*/
-
-        /*--- For the fluid zone (ZONE_0) ---*/
-        /*--- Either instantiate the solution class or load a restart file. ---*/
-        if (SolutionInstantiatedFlow == false &&
-            (TimeIter == 0 || ((config_container[ZONE_0]->GetRestart() && (SU2_TYPE::Int(TimeIter) == SU2_TYPE::Int(config_container[ZONE_0]->GetRestart_Iter()))) ||
-                               TimeIter % config_container[ZONE_0]->GetVolumeOutputFrequency(0) == 0 ||
-                               TimeIter+1 == config_container[ZONE_0]->GetnTime_Iter()))) {
-          solver_container[ZONE_0][INST_0] = new CBaselineSolver(geometry_container[ZONE_0][INST_0], config_container[ZONE_0]);
-          output[ZONE_0] = new CBaselineOutput(config_container[ZONE_0], geometry_container[ZONE_0][INST_0]->GetnDim(), solver_container[ZONE_0][INST_0]);
-          output[ZONE_0]->PreprocessVolumeOutput(config_container[ZONE_0]);
-          output[ZONE_0]->PreprocessHistoryOutput(config_container[ZONE_0], false);
-
-          SolutionInstantiatedFlow = true;
-        }
-          solver_container[ZONE_0][INST_0]->LoadRestart_FSI(geometry_container[ZONE_0][INST_0], config_container[ZONE_0], TimeIter);
-
-
-        /*--- For the structural zone (ZONE_1) ---*/
-        /*--- Either instantiate the solution class or load a restart file. ---*/
-        /*--- Either instantiate the solution class or load a restart file. ---*/
-        if (SolutionInstantiatedFEM == false &&
-            (TimeIter == 0 || ((config_container[ZONE_1]->GetRestart() && (SU2_TYPE::Int(TimeIter) == SU2_TYPE::Int(config_container[ZONE_1]->GetRestart_Iter()))) ||
-                               TimeIter % config_container[ZONE_1]->GetVolumeOutputFrequency(0) == 0 ||
-                               TimeIter+1 == config_container[ZONE_1]->GetnTime_Iter()))) {
-          solver_container[ZONE_1][INST_0] = new CBaselineSolver(geometry_container[ZONE_1][INST_0], config_container[ZONE_1]);
-          output[ZONE_1] = new CBaselineOutput(config_container[ZONE_1], geometry_container[ZONE_1][INST_0]->GetnDim(), solver_container[ZONE_1][INST_0]);
-          output[ZONE_1]->PreprocessVolumeOutput(config_container[ZONE_1]);
-          SolutionInstantiatedFEM = true;
-        }
-          solver_container[ZONE_1][INST_0]->LoadRestart_FSI(geometry_container[ZONE_1][INST_0], config_container[ZONE_1], TimeIter);
-
-        if (rank == MASTER_NODE) cout << "Writing the volume solution for time step " << TimeIter << "." << endl;
-        for (iZone = 0; iZone < nZone; iZone++){
-
-          WriteFiles(config_container[iZone], geometry_container[iZone][INST_0], &solver_container[iZone][INST_0], output[iZone], TimeIter);
-
-        }
-      }
-
-      TimeIter++;
-      if (StopCalc) break;
-    }
-
-  }
-  else {
 
     if (config_container[ZONE_0]->GetTime_Domain()) {
 
@@ -475,10 +371,6 @@ int main(int argc, char *argv[]) {
       bool SolutionInstantiated = false;
 
 
-      /*--- Check for an dynamic restart (structural analysis). Update ExtIter if necessary. ---*/
-      if (config_container[ZONE_0]->GetKind_Solver() == MAIN_SOLVER::FEM_ELASTICITY && config_container[ZONE_0]->GetRestart())
-        TimeIter = config_container[ZONE_0]->GetRestart_Iter();
-
       while (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) {
 
         /*--- Check several conditions in order to merge the correct time step files. ---*/
@@ -552,7 +444,6 @@ int main(int argc, char *argv[]) {
       }
     }
 
-  }
 
   delete config;
   config = nullptr;

@@ -1577,7 +1577,6 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
   const bool compressible = (config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE);
   const bool unsteady = config->GetTime_Domain();
   const bool viscous = config->GetViscous();
-  const bool dynamic_grid = config->GetDynamic_Grid();
   const bool gravity = config->GetGravityForce();
   const TURB_MODEL Kind_Turb_Model = config->GetKind_Turb_Model();
   const bool turbulent = Kind_Turb_Model != TURB_MODEL::NONE;
@@ -1882,9 +1881,6 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
       file << "temperature and pressure using the ideal gas law.\n";
     }
 
-    if (dynamic_grid)
-      file << "Force coefficients computed using MACH_MOTION.\n";
-    else
       file << "Force coefficients computed using free-stream values.\n";
 
     file << "-- Input conditions:\n";

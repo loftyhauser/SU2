@@ -48,8 +48,8 @@ class CAdjFluidIteration : public CFluidIteration {
    * \param[in] ??? - Description here.
    */
   void Preprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-                  CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-                  CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+                  CNumerics****** numerics, CConfig** config,
+                  unsigned short val_iZone,
                   unsigned short val_iInst) override;
 
   /*!
@@ -60,13 +60,10 @@ class CAdjFluidIteration : public CFluidIteration {
    * \param[in] solver - Container vector with all the solutions.
    * \param[in] numerics - Description of the numerical method (the way in which the equations are solved).
    * \param[in] config - Definition of the particular problem.
-   * \param[in] surface_movement - Surface movement classes of the problem.
-   * \param[in] grid_movement - Volume grid movement classes of the problem.
-   * \param[in] FFDBox - FFD FFDBoxes of the problem.
    */
   void Iterate(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-               CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-               CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+               CNumerics****** numerics, CConfig** config,
+               unsigned short val_iZone,
                unsigned short val_iInst) override;
 
   /*!
@@ -74,8 +71,8 @@ class CAdjFluidIteration : public CFluidIteration {
    * \param[in] ??? - Description here.
    */
   void Update(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
-              CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
-              CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+              CNumerics****** numerics, CConfig** config,
+              unsigned short val_iZone,
               unsigned short val_iInst) override;
 };
 

@@ -446,42 +446,6 @@ public:
   }
 };
 
-class COptionFEMConvect : public COptionBase{
-  string name; // identifier for the option
-  unsigned short & space;
-  unsigned short & fem;
-
-public:
-  COptionFEMConvect(string option_field_name, unsigned short & space_field, unsigned short & fem_field) : space(space_field), fem(fem_field) {
-    this->name = option_field_name;
-  }
-
-  ~COptionFEMConvect() override {};
-  string SetValue(const vector<string>& option_value) override {
-    COptionBase::SetValue(option_value);
-
-    string out = optionCheckMultipleValues(option_value, "unsigned short", this->name);
-    if (out.compare("") != 0) {
-      return out;
-    }
-
-    if (FEM_Map.count(option_value[0])) {
-      this->space = Space_Map.find("FINITE_ELEMENT")->second;
-      this->fem = FEM_Map.find(option_value[0])->second;
-      return "";
-    }
-
-    // Make them defined in case something weird happens
-    this->fem = NO_FEM;
-    return badValue("convect", this->name);
-
-  }
-
-  void SetDefault() override {
-    this->fem = NO_FEM;
-  }
-};
-
 class COptionMathProblem : public COptionBase {
   string name; // identifier for the option
   bool & cont_adjoint;

@@ -30,8 +30,6 @@
 
 CUpwMSW_Flow::CUpwMSW_Flow(unsigned short val_nDim, unsigned short val_nVar, const CConfig* config) : CNumerics(val_nDim, val_nVar, config) {
 
-  if (config->GetDynamic_Grid() && (SU2_MPI::GetRank() == MASTER_NODE))
-    cout << "WARNING: Grid velocities are NOT yet considered in the MSW scheme." << endl;
 
   /*--- Set booleans from CConfig settings ---*/
   implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);

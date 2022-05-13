@@ -38,8 +38,6 @@ CCentLax_AdjFlow::CCentLax_AdjFlow(unsigned short val_nDim, unsigned short val_n
 
   implicit = (config->GetKind_TimeIntScheme_AdjFlow() == EULER_IMPLICIT);
 
-  grid_movement = config->GetGrid_Movement();
-
   Param_p = 0.3;
   Param_Kappa_0 = config->GetKappa_1st_AdjFlow();
 
@@ -82,17 +80,6 @@ void CCentLax_AdjFlow::ComputeResidual (su2double *val_resconv_i, su2double *val
     val_resconv_i[iDim+1] = ProjVelocity_i*MeanPhi[iDim] + phis2*Normal[iDim] - Gamma_Minus_One*phis1*Velocity_i[iDim];
   val_resconv_i[nVar-1] = ProjVelocity_i*MeanPsiE + Gamma_Minus_One*phis1;
 
-  /*--- Flux contributions due to grid motion at point i ---*/
-  if (grid_movement) {
-    su2double ProjGridVel = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-    val_resconv_i[0] -= ProjGridVel*MeanPsiRho;
-    for (iDim = 0; iDim < nDim; iDim++)
-      val_resconv_i[iDim+1] -= ProjGridVel*MeanPhi[iDim];
-    val_resconv_i[nVar-1] -= ProjGridVel*MeanPsiE;
-  }
-
   /*--- Inviscid contribution to the implicit part ---*/
   if (implicit) {
     val_Jacobian_ii[0][0] = 0.0;
@@ -115,16 +102,6 @@ void CCentLax_AdjFlow::ComputeResidual (su2double *val_resconv_i, su2double *val
       for (jVar = 0; jVar < nVar; jVar++)
         val_Jacobian_ij[iVar][jVar] = val_Jacobian_ii[iVar][jVar];
 
-    /*--- Jacobian contributions due to grid motion at point i ---*/
-    if (grid_movement) {
-      su2double ProjGridVel = 0.0;
-      for (iDim = 0; iDim < nDim; iDim++)
-        ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-      for (iVar = 0; iVar < nVar; iVar++) {
-        val_Jacobian_ii[iVar][iVar] -= 0.5*ProjGridVel;
-        val_Jacobian_ij[iVar][iVar] -= 0.5*ProjGridVel;
-      }
-    }
   }
 
   /*--- Evaluation at point j ---*/
@@ -145,16 +122,6 @@ void CCentLax_AdjFlow::ComputeResidual (su2double *val_resconv_i, su2double *val
     val_resconv_j[iDim+1] = -(ProjVelocity_j*MeanPhi[iDim] + phis2*Normal[iDim] - Gamma_Minus_One*phis1*Velocity_j[iDim]);
   val_resconv_j[nVar-1] = -(ProjVelocity_j*MeanPsiE + Gamma_Minus_One*phis1);
 
-  /*--- Flux contributions due to grid movement at point j ---*/
-  if (grid_movement) {
-    su2double ProjGridVel = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-    val_resconv_j[0] += ProjGridVel*MeanPsiRho;
-    for (iDim = 0; iDim < nDim; iDim++)
-      val_resconv_j[iDim+1] += ProjGridVel*MeanPhi[iDim];
-    val_resconv_j[nVar-1] += ProjGridVel*MeanPsiE;
-  }
 
   /*--- Inviscid contribution to the implicit part ---*/
   if (implicit) {
@@ -178,30 +145,12 @@ void CCentLax_AdjFlow::ComputeResidual (su2double *val_resconv_i, su2double *val
       for (jVar = 0; jVar < nVar; jVar++)
         val_Jacobian_ji[iVar][jVar] = val_Jacobian_jj[iVar][jVar];
 
-    /*--- Jacobian contributions due to grid movement at point j ---*/
-    if (grid_movement) {
-      su2double ProjGridVel = 0.0;
-      for (iDim = 0; iDim < nDim; iDim++)
-        ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-      for (iVar = 0; iVar < nVar; iVar++) {
-        val_Jacobian_jj[iVar][iVar] += 0.5*ProjGridVel;
-        val_Jacobian_ji[iVar][iVar] += 0.5*ProjGridVel;
-      }
-    }
   }
 
   /*--- Computes differences btw. variables ---*/
   for (iVar = 0; iVar < nVar; iVar++)
     Diff_Psi[iVar] = Psi_i[iVar]-Psi_j[iVar];
 
-  /*--- Adjustment to projected velocity due to grid motion ---*/
-  if (grid_movement) {
-    su2double ProjGridVel = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-    ProjVelocity_i -= ProjGridVel;
-    ProjVelocity_j += ProjGridVel;
-  }
 
   /*--- Compute spectral radius ---*/
   Local_Lambda_i = (fabs(ProjVelocity_i)+SoundSpeed_i*Area);
@@ -239,8 +188,6 @@ CCentJST_AdjFlow::CCentJST_AdjFlow(unsigned short val_nDim, unsigned short val_n
 
   Gamma = config->GetGamma();
   Gamma_Minus_One = Gamma - 1.0;
-
-  grid_movement = config->GetGrid_Movement();
 
   Diff_Psi = new su2double [nVar]; Diff_Lapl = new su2double [nVar];
   Velocity_i = new su2double [nDim]; Velocity_j = new su2double [nDim];
@@ -290,17 +237,6 @@ void CCentJST_AdjFlow::ComputeResidual (su2double *val_resconv_i, su2double *val
     val_resconv_i[iDim+1] = ProjVelocity_i*MeanPhi[iDim] + phis2*Normal[iDim] - Gamma_Minus_One*phis1*Velocity_i[iDim];
   val_resconv_i[nVar-1] = ProjVelocity_i*MeanPsiE + Gamma_Minus_One*phis1;
 
-  /*--- Flux contributions due to grid movement at point i ---*/
-
-  if (grid_movement) {
-    su2double ProjGridVel = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-    val_resconv_i[0] -= ProjGridVel*MeanPsiRho;
-    for (iDim = 0; iDim < nDim; iDim++)
-      val_resconv_i[iDim+1] -= ProjGridVel*MeanPhi[iDim];
-    val_resconv_i[nVar-1] -= ProjGridVel*MeanPsiE;
-  }
 
   /*--- Jacobians of the inviscid flux ---*/
 
@@ -325,17 +261,6 @@ void CCentJST_AdjFlow::ComputeResidual (su2double *val_resconv_i, su2double *val
       for (jVar = 0; jVar < nVar; jVar++)
         val_Jacobian_ij[iVar][jVar] = val_Jacobian_ii[iVar][jVar];
 
-    /*--- Jacobian contributions due to grid movement at point i ---*/
-
-    if (grid_movement) {
-      su2double ProjGridVel = 0.0;
-      for (iDim = 0; iDim < nDim; iDim++)
-        ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-      for (iVar = 0; iVar < nVar; iVar++) {
-        val_Jacobian_ii[iVar][iVar] -= 0.5*ProjGridVel;
-        val_Jacobian_ij[iVar][iVar] -= 0.5*ProjGridVel;
-      }
-    }
   }
 
 
@@ -357,17 +282,6 @@ void CCentJST_AdjFlow::ComputeResidual (su2double *val_resconv_i, su2double *val
     val_resconv_j[iDim+1] = -(ProjVelocity_j*MeanPhi[iDim] + phis2*Normal[iDim] - Gamma_Minus_One*phis1*Velocity_j[iDim]);
   val_resconv_j[nVar-1] = -(ProjVelocity_j*MeanPsiE + Gamma_Minus_One*phis1);
 
-  /*--- Flux contributions due to grid motion at point j ---*/
-
-  if (grid_movement) {
-    su2double ProjGridVel = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-    val_resconv_j[0] += ProjGridVel*MeanPsiRho;
-    for (iDim = 0; iDim < nDim; iDim++)
-      val_resconv_j[iDim+1] += ProjGridVel*MeanPhi[iDim];
-    val_resconv_j[nVar-1] += ProjGridVel*MeanPsiE;
-  }
 
   /*--- Jacobians of the inviscid flux ---*/
 
@@ -392,17 +306,6 @@ void CCentJST_AdjFlow::ComputeResidual (su2double *val_resconv_i, su2double *val
       for (jVar = 0; jVar < nVar; jVar++)
         val_Jacobian_ji[iVar][jVar] = val_Jacobian_jj[iVar][jVar];
 
-    /*--- Jacobian contributions due to grid motion at point j ---*/
-
-    if (grid_movement) {
-      su2double ProjGridVel = 0.0;
-      for (iDim = 0; iDim < nDim; iDim++)
-        ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-      for (iVar = 0; iVar < nVar; iVar++) {
-        val_Jacobian_jj[iVar][iVar] += 0.5*ProjGridVel;
-        val_Jacobian_ji[iVar][iVar] += 0.5*ProjGridVel;
-      }
-    }
   }
 
   /*--- Computes differences btw. variables and Laplacians ---*/
@@ -412,16 +315,6 @@ void CCentJST_AdjFlow::ComputeResidual (su2double *val_resconv_i, su2double *val
     Diff_Psi[iVar]  = Psi_i[iVar]-Psi_j[iVar];
   }
 
-  /*--- Adjustment to projected velocity due to grid motion ---*/
-
-  if (grid_movement) {
-    su2double ProjGridVel = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++) {
-      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-    }
-    ProjVelocity_i -= ProjGridVel;
-    ProjVelocity_j += ProjGridVel;
-  }
 
   /*--- Compute the spectral radius and stretching factor ---*/
 
@@ -458,7 +351,6 @@ void CCentJST_AdjFlow::ComputeResidual (su2double *val_resconv_i, su2double *val
 CUpwRoe_AdjFlow::CUpwRoe_AdjFlow(unsigned short val_nDim, unsigned short val_nVar, CConfig *config) : CNumerics(val_nDim, val_nVar, config) {
 
   implicit = (config->GetKind_TimeIntScheme_AdjFlow() == EULER_IMPLICIT);
-  grid_movement = config->GetGrid_Movement();
 
   Gamma = config->GetGamma();
   Gamma_Minus_One = Gamma - 1.0;
@@ -611,14 +503,6 @@ void CUpwRoe_AdjFlow::ComputeResidual (su2double *val_residual_i, su2double *val
   cc = Gamma_Minus_One * h - 0.5 * Gamma_Minus_One * q2;
   c  = sqrt(cc);
 
-  /*--- Contribution to velocity projection due to grid movement ---*/
-
-  if (grid_movement) {
-    su2double ProjGridVel = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-    Q -= ProjGridVel;
-  }
 
   /*--- Eigenvalues from the primal solution ---*/
 
@@ -662,17 +546,6 @@ void CUpwRoe_AdjFlow::ComputeResidual (su2double *val_residual_i, su2double *val
     val_residual_j[iVar]   -= Residual_Roe[iVar];
   }
 
-  /*--- Flux contribution due to grid movement ---*/
-
-  if (grid_movement) {
-    su2double ProjGridVel = 0.0;
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-    for (iVar = 0; iVar < nVar; iVar++) {
-      val_residual_i[iVar] -= ProjGridVel * 0.5*(Psi_i[iVar]+Psi_j[iVar]);
-      val_residual_j[iVar] += ProjGridVel * 0.5*(Psi_i[iVar]+Psi_j[iVar]);
-    }
-  }
 
   /*--- Implicit Contributions ---*/
 
@@ -741,22 +614,6 @@ void CUpwRoe_AdjFlow::ComputeResidual (su2double *val_residual_i, su2double *val
       }
     }
 
-    /*--- Jacobian contribution due to grid movement ---*/
-
-    if (grid_movement) {
-      su2double ProjGridVel = 0.0;
-      for (iDim = 0; iDim < nDim; iDim++)
-        ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-      for (iVar = 0; iVar < nVar; iVar++) {
-
-        /*--- Adjust Jacobian main diagonal ---*/
-
-        val_Jacobian_ii[iVar][iVar] -= 0.5*ProjGridVel;
-        val_Jacobian_ij[iVar][iVar] -= 0.5*ProjGridVel;
-        val_Jacobian_ji[iVar][iVar] += 0.5*ProjGridVel;
-        val_Jacobian_jj[iVar][iVar] += 0.5*ProjGridVel;
-      }
-    }
 
   }
 }

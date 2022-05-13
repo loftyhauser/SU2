@@ -26,7 +26,6 @@
  */
 
 #include "../../include/drivers/CDiscAdjMultizoneDriver.hpp"
-#include "../../include/solvers/CFEASolver.hpp"
 #include "../../include/output/COutputFactory.hpp"
 #include "../../include/output/COutput.hpp"
 #include "../../include/iteration/CIterationFactory.hpp"
@@ -122,8 +121,8 @@ void CDiscAdjMultizoneDriver::Preprocess(unsigned long TimeIter) {
     /*--- Preprocess the iteration of each zone. ---*/
 
     iteration_container[iZone][INST_0]->Preprocess(output_container[iZone], integration_container, geometry_container,
-                                                   solver_container, numerics_container, config_container, surface_movement,
-                                                   grid_movement, FFDBox, iZone, INST_0);
+                                                   solver_container, numerics_container, config_container,
+                                                   iZone, INST_0);
   }
 
   if (TimeIter) {
@@ -232,7 +231,7 @@ bool CDiscAdjMultizoneDriver::Iterate(unsigned short iZone, unsigned long iInner
 
   return iteration_container[iZone][INST_0]->Monitor(output_container[iZone], integration_container, geometry_container,
                                                      solver_container, numerics_container, config_container,
-                                                     surface_movement, grid_movement, FFDBox, iZone, INST_0);
+                                                     iZone, INST_0);
 }
 
 void CDiscAdjMultizoneDriver::KrylovInnerIters(unsigned short iZone) {
@@ -517,7 +516,6 @@ void CDiscAdjMultizoneDriver::EvaluateSensitivities(unsigned long Iter, bool for
 
     int IDX_SOL = -1;
     if (config->GetFluidProblem()) IDX_SOL = ADJFLOW_SOL;
-    else if (config->GetStructuralProblem()) IDX_SOL = ADJFEA_SOL;
     else {
       if (rank == MASTER_NODE)
         cout << "WARNING: Sensitivities not set for one of the specified discrete adjoint solvers!" << endl;
@@ -531,7 +529,7 @@ void CDiscAdjMultizoneDriver::EvaluateSensitivities(unsigned long Iter, bool for
 
     iteration_container[iZone][INST_0]->Postprocess(output_container[iZone], integration_container, geometry_container,
                                                     solver_container, numerics_container, config_container,
-                                                    surface_movement, grid_movement, FFDBox, iZone, INST_0);
+                                                    iZone, INST_0);
   }
 
   /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
@@ -675,12 +673,12 @@ void CDiscAdjMultizoneDriver::DirectIteration(unsigned short iZone, RECORDING ki
   /*--- Do one iteration of the direct solver ---*/
   direct_iteration[iZone][INST_0]->Preprocess(output_container[iZone], integration_container, geometry_container,
                                               solver_container, numerics_container, config_container,
-                                              surface_movement, grid_movement, FFDBox, iZone, INST_0);
+                                              iZone, INST_0);
 
   /*--- Iterate the zone as a block a single time ---*/
   direct_iteration[iZone][INST_0]->Iterate(output_container[iZone], integration_container, geometry_container,
                                            solver_container, numerics_container, config_container,
-                                           surface_movement, grid_movement, FFDBox, iZone, INST_0);
+                                           iZone, INST_0);
 
 }
 
@@ -773,7 +771,7 @@ void CDiscAdjMultizoneDriver::ComputeAdjoints(unsigned short iZone, bool eval_tr
    *    on the last inner iteration. Structural problems have some minor issue and we
    *    need to evaluate this section on every iteration. ---*/
 
-  if (eval_transfer || config_container[iZone]->GetStructuralProblem())
+  if (eval_transfer)
     AD::ComputeAdjoint(TRANSFER, OBJECTIVE_FUNCTION);
 
   /*--- Adjoints of dependencies, needed if derivatives of variables
@@ -828,11 +826,6 @@ void CDiscAdjMultizoneDriver::HandleDataTransfer() {
       }
     }
 
-    /*--- If a mesh update is required due to the transfer of data ---*/
-    const unsigned long ExtIter = 0;
-    if (DeformMesh) DynamicMeshUpdate(iZone, ExtIter);
-
-    Has_Deformation(iZone) = DeformMesh;
   }
 }
 

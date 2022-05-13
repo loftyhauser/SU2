@@ -58,10 +58,6 @@ CInterpolator* CreateInterpolator(CGeometry ****geometry_container,
     if (verbose) cout << "using a sliding mesh approach." << endl;
     interpolator = new CSlidingMesh(geometry_container, config, iZone, jZone);
   }
-  else if (config[jZone]->GetConservativeInterpolation()) {
-    if (verbose) cout << "using the mirror approach, \"transposing\" coefficients from opposite mesh." << endl;
-    interpolator = new CMirror(geometry_container, config, transpInterpolator, iZone, jZone);
-  }
   else {
     switch(type) {
     case INTERFACE_INTERPOLATOR::ISOPARAMETRIC:

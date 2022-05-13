@@ -961,83 +961,6 @@ def main():
     # test_list.append(slinc_unsteady)
 
     ##########################
-    ### FEA - FSI          ###
-    ##########################
-
-    # Static beam, 3d
-    statbeam3d           = TestCase('statbeam3d')
-    statbeam3d.cfg_dir   = "fea_fsi/StatBeam_3d"
-    statbeam3d.cfg_file  = "configBeam_3d.cfg"
-    statbeam3d.test_iter = 0
-    statbeam3d.test_vals = [-8.396797, -8.162206, -8.156102, 64095.0] #last 4 columns
-    statbeam3d.su2_exec  = "parallel_computation_fsi.py -f"
-    statbeam3d.timeout   = 1600
-    statbeam3d.tol       = 0.00001
-    test_list.append(statbeam3d)
-
-    # Dynamic beam, 2d
-    dynbeam2d           = TestCase('dynbeam2d')
-    dynbeam2d.cfg_dir   = "fea_fsi/DynBeam_2d"
-    dynbeam2d.cfg_file  = "configBeam_2d.cfg"
-    dynbeam2d.test_iter = 6
-    dynbeam2d.test_vals = [-3.240015, 2.895057, -0.353146, 6.6127e+04] #last 4 columns
-    dynbeam2d.su2_exec  = "parallel_computation.py -f"
-    dynbeam2d.timeout   = 1600
-    dynbeam2d.unsteady  = True
-    dynbeam2d.tol       = 0.00001
-    test_list.append(dynbeam2d)
-
-    # FSI, 2d
-    fsi2d           = TestCase('fsi2d')
-    fsi2d.cfg_dir   = "fea_fsi/WallChannel_2d"
-    fsi2d.cfg_file  = "configFSI.cfg"
-    fsi2d.test_iter = 4
-    fsi2d.test_vals = [4, 0, -3.743210, -4.133483] #last 4 columns
-    fsi2d.su2_exec  = "parallel_computation_fsi.py -f"
-    fsi2d.timeout   = 1600
-    fsi2d.multizone= True
-    fsi2d.unsteady = True
-    fsi2d.tol       = 0.00001
-    test_list.append(fsi2d)
-
-    # FSI, Static, 2D, new mesh solver
-    stat_fsi           = TestCase('stat_fsi')
-    stat_fsi.cfg_dir   = "fea_fsi/stat_fsi"
-    stat_fsi.cfg_file  = "config.cfg"
-    stat_fsi.test_iter = 7
-    stat_fsi.test_vals = [-3.296605, -4.934646, 0.000000, 7.000000] #last 4 columns
-    stat_fsi.su2_exec  = "mpirun -n 2 SU2_CFD"
-    stat_fsi.multizone = True
-    stat_fsi.timeout   = 1600
-    stat_fsi.tol       = 0.00001
-    test_list.append(stat_fsi)
-
-    # FSI, Dynamic, 2D, new mesh solver
-    dyn_fsi           = TestCase('dyn_fsi')
-    dyn_fsi.cfg_dir   = "fea_fsi/dyn_fsi"
-    dyn_fsi.cfg_file  = "config.cfg"
-    dyn_fsi.test_iter = 4
-    dyn_fsi.test_vals = [-4.355829, -4.060587, 5.3837e-08, 98]
-    dyn_fsi.multizone = True
-    dyn_fsi.unsteady  = True
-    dyn_fsi.su2_exec  = "mpirun -n 2 SU2_CFD"
-    dyn_fsi.timeout   = 1600
-    dyn_fsi.tol       = 0.00001
-    test_list.append(dyn_fsi)
-
-    # FSI, Static, 2D, new mesh solver, restart
-    stat_fsi_restart           = TestCase('stat_fsi_restart')
-    stat_fsi_restart.cfg_dir   = "fea_fsi/stat_fsi"
-    stat_fsi_restart.cfg_file  = "config_restart.cfg"
-    stat_fsi_restart.test_iter = 1
-    stat_fsi_restart.test_vals = [-3.435926, -4.264912, 0.000000, 28.000000] #last 4 columns
-    stat_fsi_restart.su2_exec  = "mpirun -n 2 SU2_CFD"
-    stat_fsi_restart.multizone = True
-    stat_fsi_restart.timeout   = 1600
-    stat_fsi_restart.tol       = 0.00001
-    test_list.append(stat_fsi_restart)
-
-    ##########################
     ###   Python wrapper   ###
     ##########################
 
@@ -1075,31 +998,6 @@ def main():
     pywrapper_square_cylinder.unsteady  = True
     test_list.append(pywrapper_square_cylinder)
 
-    # FSI, 2d
-    pywrapper_fsi2d           = TestCase('pywrapper_fsi2d')
-    pywrapper_fsi2d.cfg_dir   = "fea_fsi/WallChannel_2d"
-    pywrapper_fsi2d.cfg_file  = "configFSI.cfg"
-    pywrapper_fsi2d.test_iter = 4
-    pywrapper_fsi2d.test_vals = [4, 0, -3.743210, -4.133483] #last 4 columns
-    pywrapper_fsi2d.su2_exec  = "mpirun -np 2 SU2_CFD.py --nZone 2 --fsi True --parallel -f"
-    pywrapper_fsi2d.timeout   = 1600
-    pywrapper_fsi2d.unsteady  = True
-    pywrapper_fsi2d.multizone = True
-    pywrapper_fsi2d.tol       = 0.00001
-    test_list.append(pywrapper_fsi2d)
-
-    # Rigid motion
-    pywrapper_rigidMotion               = TestCase('pywrapper_rigidMotion')
-    pywrapper_rigidMotion.cfg_dir       = "py_wrapper/flatPlate_rigidMotion"
-    pywrapper_rigidMotion.cfg_file      = "flatPlate_rigidMotion_Conf.cfg"
-    pywrapper_rigidMotion.test_iter     = 5
-    pywrapper_rigidMotion.test_vals     = [-1.614170, 2.242953, 0.350036, 0.093137]
-    pywrapper_rigidMotion.su2_exec      = "mpirun -np 2 python launch_flatPlate_rigidMotion.py --parallel -f"
-    pywrapper_rigidMotion.timeout       = 1600
-    pywrapper_rigidMotion.tol           = 0.00001
-    pywrapper_rigidMotion.unsteady      = True
-    test_list.append(pywrapper_rigidMotion)
-
     ##############################################
     ### Method of Manufactured Solutions (MMS) ###
     ##############################################
@@ -1115,28 +1013,6 @@ def main():
     mms_fvm_ns.tol       = 0.0001
     test_list.append(mms_fvm_ns)
 
-    # FVM, incompressible, euler
-    mms_fvm_inc_euler           = TestCase('mms_fvm_inc_euler')
-    mms_fvm_inc_euler.cfg_dir   = "mms/fvm_incomp_euler"
-    mms_fvm_inc_euler.cfg_file  = "inv_mms_jst.cfg"
-    mms_fvm_inc_euler.test_iter = 20
-    mms_fvm_inc_euler.test_vals = [-9.128660, -9.441806, 0.000000, 0.000000] #last 4 columns
-    mms_fvm_inc_euler.su2_exec  = "mpirun -np 2 SU2_CFD"
-    mms_fvm_inc_euler.timeout   = 1600
-    mms_fvm_inc_euler.tol       = 0.0001
-    test_list.append(mms_fvm_inc_euler)
-
-    # FVM, incompressible, laminar N-S
-    mms_fvm_inc_ns           = TestCase('mms_fvm_inc_ns')
-    mms_fvm_inc_ns.cfg_dir   = "mms/fvm_incomp_navierstokes"
-    mms_fvm_inc_ns.cfg_file  = "lam_mms_fds.cfg"
-    mms_fvm_inc_ns.test_iter = 20
-    mms_fvm_inc_ns.test_vals = [-7.414944, -7.631546, 0.000000, 0.000000] #last 4 columns
-    mms_fvm_inc_ns.su2_exec  = "mpirun -np 2 SU2_CFD"
-    mms_fvm_inc_ns.timeout   = 1600
-    mms_fvm_inc_ns.tol       = 0.0001
-    test_list.append(mms_fvm_inc_ns)
-
     # DG, compressible, euler
     ringleb_dg_euler           = TestCase('ringleb_dg_euler')
     ringleb_dg_euler.cfg_dir   = "mms/dg_ringleb"
@@ -1147,28 +1023,6 @@ def main():
     ringleb_dg_euler.timeout   = 1600
     ringleb_dg_euler.tol       = 0.0001
     test_list.append(ringleb_dg_euler)
-
-    # DG, compressible, laminar N-S
-    mms_dg_ns           = TestCase('mms_dg_ns')
-    mms_dg_ns.cfg_dir   = "mms/dg_navierstokes"
-    mms_dg_ns.cfg_file  = "lam_mms_dg.cfg"
-    mms_dg_ns.test_iter = 100
-    mms_dg_ns.test_vals = [-1.845393, 3.520699, 0.000000, 0.000000] #last 4 columns
-    mms_dg_ns.su2_exec  = "SU2_CFD"
-    mms_dg_ns.timeout   = 1600
-    mms_dg_ns.tol       = 0.0001
-    test_list.append(mms_dg_ns)
-
-    # DG, compressible, laminar N-S 3D
-    mms_dg_ns_3d           = TestCase('mms_dg_ns_3d')
-    mms_dg_ns_3d.cfg_dir   = "mms/dg_navierstokes_3d"
-    mms_dg_ns_3d.cfg_file  = "lam_mms_dg_3d.cfg"
-    mms_dg_ns_3d.test_iter = 100
-    mms_dg_ns_3d.test_vals = [-0.146826, 5.356413, 0.000000, 0.000000] #last 4 columns
-    mms_dg_ns_3d.su2_exec  = "SU2_CFD"
-    mms_dg_ns_3d.timeout   = 1600
-    mms_dg_ns_3d.tol       = 0.0001
-    test_list.append(mms_dg_ns_3d)
 
     ######################################
     ### RUN TESTS                      ###

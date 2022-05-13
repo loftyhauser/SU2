@@ -28,10 +28,8 @@
 #include "../../include/iteration/CIterationFactory.hpp"
 #include "../../include/iteration/CIteration.hpp"
 #include "../../include/iteration/CAdjFluidIteration.hpp"
-#include "../../include/iteration/CDiscAdjFEAIteration.hpp"
 #include "../../include/iteration/CDiscAdjFluidIteration.hpp"
 #include "../../include/iteration/CFluidIteration.hpp"
-#include "../../include/iteration/CFEAIteration.hpp"
 
 CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CConfig* config){
 
@@ -47,12 +45,6 @@ CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CCo
         if (rank == MASTER_NODE)
           cout << "Euler/Navier-Stokes/RANS fluid iteration." << endl;
         iteration = new CFluidIteration(config);
-      break;
-
-    case MAIN_SOLVER::FEM_ELASTICITY:
-      if (rank == MASTER_NODE)
-        cout << "FEM iteration." << endl;
-      iteration = new CFEAIteration(config);
       break;
 
     case MAIN_SOLVER::ADJ_EULER: case MAIN_SOLVER::ADJ_NAVIER_STOKES: case MAIN_SOLVER::ADJ_RANS:

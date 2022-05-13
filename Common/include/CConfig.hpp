@@ -414,7 +414,6 @@ private:
   unsigned short nDV,                  /*!< \brief Number of design variables. */
   nObj, nObjW;                         /*! \brief Number of objective functions. */
   unsigned short* nDV_Value;           /*!< \brief Number of values for each design variable (might be different than 1 if we allow arbitrary movement). */
-  unsigned short nFFDBox;              /*!< \brief Number of ffd boxes. */
   unsigned short nParamDV;             /*!< \brief Number of parameters of the design variable. */
   string DV_Filename;                  /*!< \brief Filename for providing surface positions from an external parameterization. */
   string DV_Unordered_Sens_Filename;   /*!< \brief Filename of volume sensitivities in an unordered ASCII format. */
@@ -422,10 +421,6 @@ private:
   unsigned short
   Sensitivity_FileFormat;             /*!< \brief Format of the input volume sensitivity files (SU2_DOT). */
   su2double **ParamDV;                /*!< \brief Parameters of the design variable. */
-  su2double **CoordFFDBox;            /*!< \brief Coordinates of the FFD boxes. */
-  unsigned short **DegreeFFDBox;      /*!< \brief Degree of the FFD boxes. */
-  string *FFDTag;                     /*!< \brief Parameters of the design variable. */
-  string *TagFFDBox;                  /*!< \brief Tag of the FFD box. */
   unsigned short GeometryMode;        /*!< \brief Gemoetry mode (analysis or gradient computation). */
   unsigned short MGCycle;             /*!< \brief Kind of multigrid cycle. */
   unsigned short FinestMesh;          /*!< \brief Finest mesh for the full multigrid approach. */
@@ -454,9 +449,6 @@ private:
   Kind_SlopeLimit_AdjFlow;      /*!< \brief Slope limiter for the adjoint equation.*/
   unsigned short Kind_FluidModel,  /*!< \brief Kind of the Fluid Model: Ideal, van der Waals, etc. */
   Kind_InitOption,                 /*!< \brief Kind of Init option to choose if initializing with Reynolds number or with thermodynamic conditions   */
-  Kind_GridMovement,               /*!< \brief Kind of the static mesh movement. */
-  *Kind_SurfaceMovement,           /*!< \brief Kind of the static mesh movement. */
-  nKind_SurfaceMovement,           /*!< \brief Kind of the dynamic mesh movement. */
   Kind_Gradient_Method,            /*!< \brief Numerical method for computation of spatial gradients. */
   Kind_Gradient_Method_Recon,      /*!< \brief Numerical method for computation of spatial gradients used for upwind reconstruction. */
   Kind_Deform_Linear_Solver,             /*!< Numerical method to deform the grid */
@@ -474,8 +466,6 @@ private:
   Kind_TimeIntScheme_AdjTurb,   /*!< \brief Time integration for the adjoint turbulence model. */
   Kind_TimeIntScheme_Heat,      /*!< \brief Time integration for the wave equations. */
   Kind_TimeStep_Heat;           /*!< \brief Time stepping method for the (fvm) heat equation. */
-  STRUCT_TIME_INT Kind_TimeIntScheme_FEA;    /*!< \brief Time integration for the FEA equations. */
-  STRUCT_SPACE_ITE Kind_SpaceIteScheme_FEA;  /*!< \brief Iterative scheme for nonlinear structural analysis. */
   unsigned short
   Kind_ConvNumScheme,           /*!< \brief Global definition of the convective term. */
   Kind_ConvNumScheme_Flow,      /*!< \brief Centered or upwind scheme for the flow equations. */
@@ -806,7 +796,6 @@ private:
   unsigned long refNodeID;              /*!< \brief Global ID for the reference node (optimization). */
   string RefGeom_FEMFileName;           /*!< \brief File name for reference geometry. */
   unsigned short RefGeom_FileFormat;    /*!< \brief Mesh input format. */
-  STRUCT_2DFORM Kind_2DElasForm;        /*!< \brief Kind of bidimensional elasticity solver. */
   unsigned short nIterFSI_Ramp;         /*!< \brief Number of FSI subiterations during which a ramp is applied. */
   unsigned short iInst;                 /*!< \brief Current instance value */
   su2double AitkenStatRelax;      /*!< \brief Aitken's relaxation factor (if set as static) */
@@ -1895,12 +1884,6 @@ public:
   unsigned short GetRefGeom_FileFormat(void) const { return RefGeom_FileFormat; }
 
   /*!
-   * \brief Formulation for 2D elasticity (plane stress - strain)
-   * \return Flag to 2D elasticity model.
-   */
-  STRUCT_2DFORM GetElas2D_Formulation() const { return Kind_2DElasForm; }
-
-  /*!
    * \brief Decide whether it's necessary to read a reference geometry.
    * \return <code>TRUE</code> if it's necessary to read a reference geometry, <code>FALSE</code> otherwise.
    */
@@ -2490,36 +2473,6 @@ public:
   su2double GetParamDV(unsigned short val_dv, unsigned short val_param) const { return ParamDV[val_dv][val_param]; }
 
   /*!
-   * \brief Get the coordinates of the FFD corner points.
-   * \param[in] val_ffd - Index of the FFD box.
-   * \param[in] val_coord - Index of the coordinate that we want to read.
-   * \return Value of the coordinate.
-   */
-  su2double GetCoordFFDBox(unsigned short val_ffd, unsigned short val_index) const { return CoordFFDBox[val_ffd][val_index]; }
-
-  /*!
-   * \brief Get the degree of the FFD corner points.
-   * \param[in] val_ffd - Index of the FFD box.
-   * \param[in] val_degree - Index (I,J,K) to obtain the degree.
-   * \return Value of the degree in a particular direction.
-   */
-  unsigned short GetDegreeFFDBox(unsigned short val_ffd, unsigned short val_index) const { return DegreeFFDBox[val_ffd][val_index]; }
-
-  /*!
-   * \brief Get the FFD Tag of a particular design variable.
-   * \param[in] val_dv - Number of the design variable that we want to read.
-   * \return Name of the FFD box.
-   */
-  string GetFFDTag(unsigned short val_dv) const { return FFDTag[val_dv]; }
-
-  /*!
-   * \brief Get the FFD Tag of a particular FFD box.
-   * \param[in] val_ffd - Number of the FFD box that we want to read.
-   * \return Name of the FFD box.
-   */
-  string GetTagFFDBox(unsigned short val_ffd) const { return TagFFDBox[val_ffd]; }
-
-  /*!
    * \brief Get the number of design variables.
    * \return Number of the design variables.
    */
@@ -2542,12 +2495,6 @@ public:
     }
     return sum;
   }
-
-  /*!
-   * \brief Get the number of FFD boxes.
-   * \return Number of FFD boxes.
-   */
-  unsigned short GetnFFDBox(void) const { return nFFDBox; }
 
   /*!
    * \brief Get the required continuity level at the surface intersection with the FFD
@@ -3326,13 +3273,6 @@ public:
     }
   }
 
-  /*!
-   * \brief Return true if a structural solver is in use.
-   */
-  bool GetStructuralProblem(void) const {
-    return (Kind_Solver == MAIN_SOLVER::FEM_ELASTICITY);
-  }
-
    /*!
    * \brief Return true if an AUSM method is in use.
    */
@@ -4002,30 +3942,12 @@ public:
 
   /*!
    * \brief Get the kind of integration scheme (explicit or implicit)
-   *        for the flow equations.
-   * \note This value is obtained from the config file, and it is constant
-   *       during the computation.
-   * \return Kind of integration scheme for the plasma equations.
-   */
-  STRUCT_TIME_INT GetKind_TimeIntScheme_FEA(void) const { return Kind_TimeIntScheme_FEA; }
-
-  /*!
-   * \brief Get the kind of integration scheme (explicit or implicit)
    *        for the template equations.
    * \note This value is obtained from the config file, and it is constant
    *       during the computation.
    * \return Kind of integration scheme for the plasma equations.
    */
   unsigned short GetKind_TimeIntScheme_Template(void);
-
-  /*!
-   * \brief Get the kind of integration scheme (explicit or implicit)
-   *        for the flow equations.
-   * \note This value is obtained from the config file, and it is constant
-   *       during the computation.
-   * \return Kind of integration scheme for the plasma equations.
-   */
-  STRUCT_SPACE_ITE GetKind_SpaceIteScheme_FEA(void) const { return Kind_SpaceIteScheme_FEA; }
 
   /*!
    * \brief Get the kind of convective numerical scheme for the flow
@@ -4861,60 +4783,6 @@ public:
   void SetDV_Value(unsigned short val_dv, unsigned short val_ind, su2double val) { DV_Value[val_dv][val_ind] = val; }
 
   /*!
-   * \brief Get information about the grid movement.
-   * \return <code>TRUE</code> if there is a grid movement; otherwise <code>FALSE</code>.
-   */
-  bool GetGrid_Movement(void) const {
-    return (Kind_GridMovement != NO_MOVEMENT) || (nKind_SurfaceMovement > 0);
-  }
-
-  /*!
-   * \brief Get information about dynamic grids.
-   * \return <code>TRUE</code> if there is a grid movement; otherwise <code>FALSE</code>.
-   */
-  bool GetDynamic_Grid(void) const { return GetGrid_Movement() || (Deform_Mesh && Time_Domain); }
-
-  /*!
-   * \brief Get information about the volumetric movement.
-   * \return <code>TRUE</code> if there is a volumetric movement is required; otherwise <code>FALSE</code>.
-   */
-  bool GetVolumetric_Movement(void) const;
-
-  /*!
-   * \brief Get information about deforming markers.
-   * \param[in] kind_movement - Kind of surface movement.
-   * \return <code>TRUE</code> at least one surface of kind_movement moving; otherwise <code>FALSE</code>.
-   */
-  bool GetSurface_Movement(unsigned short kind_movement) const;
-
-  /*!
-   * \brief Set a surface movement marker.
-   * \param[in] iMarker - Moving marker.
-   * \param[in] kind_movement - Kind of surface movement.
-   * \return <code>TRUE</code> at least one surface of kind_movement moving; otherwise <code>FALSE</code>.
-   */
-  void SetSurface_Movement(unsigned short iMarker, unsigned short kind_movement);
-
-  /*!
-   * \brief Get the type of dynamic mesh motion. Each zone gets a config file.
-   * \return Type of dynamic mesh motion.
-   */
-  unsigned short GetKind_GridMovement() const { return Kind_GridMovement; }
-
-  /*!
-   * \brief Set the type of dynamic mesh motion.
-   * \param[in] motion_Type - Specify motion type.
-   */
-  void SetKind_GridMovement(unsigned short motion_Type) { Kind_GridMovement = motion_Type; }
-
-  /*!
-   * \brief Get the type of surface motion.
-   * \param[in] iMarkerMoving -  Index of the moving marker (as specified in Marker_Moving).
-   * \return Type of surface motion.
-   */
-  unsigned short GetKind_SurfaceMovement(unsigned short iMarkerMoving) const { return Kind_SurfaceMovement[iMarkerMoving];}
-
-  /*!
    * \brief Get the mach number based on the mesh velocity and freestream quantities.
    * \return Mach number based on the mesh velocity and freestream quantities.
    */
@@ -5590,19 +5458,6 @@ public:
    * \return Actuator Disk Outlet from the config information for the marker <i>val_marker</i>.
    */
   unsigned short GetMarker_CfgFile_EngineExhaust(string val_marker) const;
-
-  /*!
-   * \brief Get the internal index for a moving boundary <i>val_marker</i>.
-   * \return Internal index for a moving boundary <i>val_marker</i>.
-   */
-  unsigned short GetMarker_Moving(string val_marker) const;
-
-  /*!
-   * \brief Get bool if marker is moving. <i>val_marker</i>.
-   * \param[in] val_marker - String of the marker to test.
-   * \return Bool if the marker is a moving boundary <i>val_marker</i>.
-   */
-  bool GetMarker_Moving_Bool(string val_marker) const;
 
   /*!
    * \brief Get the internal index for a DEFORM_MESH boundary <i>val_marker</i>.
@@ -7729,11 +7584,6 @@ public:
    * \brief Get the interpolation method used for matching between zones.
    */
   INTERFACE_INTERPOLATOR GetKindInterpolation(void) const { return Kind_Interpolation; }
-
-  /*!
-   * \brief Get option of whether to use conservative interpolation between zones.
-   */
-  bool GetConservativeInterpolation(void) const { return ConservativeInterpolation && GetStructuralProblem(); }
 
   /*!
    * \brief Get the basis function to use for radial basis function interpolation for FSI.

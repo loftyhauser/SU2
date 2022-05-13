@@ -59,7 +59,7 @@ protected:
   CCenteredBase(const CConfig& config, Ts&... args) : Base(config, args...),
     gamma(config.GetGamma()),
     fixFactor(config.GetCent_Jac_Fix_Factor()),
-    dynamicGrid(config.GetDynamic_Grid()) {
+    dynamicGrid(false) {
   }
 
   /*!
@@ -142,24 +142,7 @@ public:
       jac_j = inviscidProjJac(gamma, V.j.velocity(), U.j.energy(), normal, 0.5);
     }
 
-    /*--- Grid motion. ---*/
-
-    Double projGridVel = 0.0;
-    if (dynamicGrid) {
-      const auto& gridVel = geometry.nodes->GetGridVel();
-      projGridVel = 0.5*(dot(gatherVariables<nDim>(iPoint,gridVel), normal)+
-                         dot(gatherVariables<nDim>(jPoint,gridVel), normal));
-
-      for (size_t iVar = 0; iVar < nVar; ++iVar) {
-        flux(iVar) -= projGridVel * avgU.all(iVar);
-        if (implicit) {
-          jac_i(iVar,iVar) -= 0.5 * projGridVel;
-          jac_j(iVar,iVar) -= 0.5 * projGridVel;
-        }
-      }
-    }
-
-    const Double projVel = dot(avgV.velocity(), normal) - projGridVel;
+    const Double projVel = dot(avgV.velocity(), normal);
 
     /*--- Finalize in derived class (static polymorphism). ---*/
 

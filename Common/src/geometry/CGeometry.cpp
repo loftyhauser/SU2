@@ -2596,8 +2596,7 @@ void CGeometry::ComputeSurf_Straightness(CConfig *config,
           moving surface and Grid Movement Elasticity is forbidden as well. All
           other GridMovements are rigid. ---*/
     if ((config->GetMarker_All_KindBC(iMarker) == SYMMETRY_PLANE ||
-         config->GetMarker_All_KindBC(iMarker) == EULER_WALL) &&
-         !config->GetMarker_Moving_Bool(Local_TagBound)) {
+         config->GetMarker_All_KindBC(iMarker) == EULER_WALL)) {
 
       /*--- Loop over all global markers, and find the local-global pair via
             matching unique string tags. ---*/
@@ -3615,15 +3614,8 @@ void CGeometry::SetWallVelocity(const CConfig *config, bool print) {
      Get prescribed wall speed from config for this marker. ---*/
 
     const auto Marker_Tag = config->GetMarker_All_TagBound(iMarker);
-    const auto jMarker = config->GetMarker_Moving(Marker_Tag);
 
     su2double xDot[MAXNDIM], Center[MAXNDIM], Omega[MAXNDIM];
-
-    for (auto iDim = 0u; iDim < MAXNDIM; iDim++){
-      Center[iDim] = config->GetMarkerMotion_Origin(jMarker, iDim);
-      Omega[iDim] = config->GetMarkerRotationRate(jMarker, iDim) / Omega_Ref;
-      xDot[iDim] = config->GetMarkerTranslationRate(jMarker, iDim) / Vel_Ref;
-    }
 
     if (rank == MASTER_NODE && print) {
       cout << " Storing grid velocity for marker: ";

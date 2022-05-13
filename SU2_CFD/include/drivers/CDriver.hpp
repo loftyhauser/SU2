@@ -90,9 +90,6 @@ protected:
   CConfig **config_container;                   /*!< \brief Definition of the particular problem. */
   CConfig *driver_config;                       /*!< \brief Definition of the driver configuration. */
   COutput *driver_output;                       /*!< \brief Definition of the driver output. */
-  CSurfaceMovement **surface_movement;          /*!< \brief Surface movement classes of the problem. */
-  CVolumetricMovement ***grid_movement;         /*!< \brief Volume grid movement classes of the problem. */
-  CFreeFormDefBox*** FFDBox;                    /*!< \brief FFD FFDBoxes of the problem. */
   vector<vector<unique_ptr<CInterpolator> > >
   interpolator_container;                       /*!< \brief Definition of the interpolation method between non-matching discretizations of the interface. */
   CInterface ***interface_container;            /*!< \brief Definition of the interface of information and physics. */
@@ -229,17 +226,6 @@ protected:
   void Numerics_Postprocessing(CNumerics *****numerics, CSolver ***solver, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
 
   /*!
-   * \brief GridMovement_Preprocessing
-   * \param config
-   * \param geometry
-   * \param solver
-   * \param iteration
-   * \param grid_movement
-   * \param surface_movement
-   */
-  void DynamicMesh_Preprocessing(CConfig *config, CGeometry **geometry, CSolver ***solver, CIteration *iteration, CVolumetricMovement *&grid_movement, CSurfaceMovement *&surface_movement) const;
-
-  /*!
    * \brief Initialize Python interface functionalities
    */
   void PythonInterface_Preprocessing(CConfig** config, CGeometry**** geometry, CSolver***** solver);
@@ -350,16 +336,6 @@ public:
    * \brief Output the solution in solution file.
    */
   virtual void Output(unsigned long TimeIter){ }
-
-  /*!
-   * \brief Perform a dynamic mesh deformation, including grid velocity computation and update of the multigrid structure.
-   */
-  virtual void DynamicMeshUpdate(unsigned long TimeIter) { }
-
-  /*!
-   * \brief Perform a dynamic mesh deformation, including grid velocity computation and update of the multigrid structure.
-   */
-  virtual void DynamicMeshUpdate(unsigned short val_iZone, unsigned long TimeIter) { }
 
   /*!
    * \brief Perform a mesh deformation as initial condition.
@@ -818,11 +794,6 @@ public:
    * \brief Perform some pre-processing before an iteration of the physics.
    */
   void Preprocess(unsigned long Iter) override;
-
-  /*!
-   * \brief Perform a dynamic mesh deformation, included grid velocity computation and the update of the multigrid structure (multiple zone).
-   */
-  void DynamicMeshUpdate(unsigned long TimeIter) override;
 
   /*!
    * \brief Transfer data among different zones (multiple zone).

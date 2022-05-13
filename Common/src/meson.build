@@ -14,8 +14,6 @@ subdir('geometry/dual_grid')
 subdir('geometry/primal_grid')
 subdir('geometry/meshreader')
 subdir('interface_interpolation')
-subdir('fem')
-subdir('grid_movement')
 subdir('adt')
 
 if get_option('enable-normal')

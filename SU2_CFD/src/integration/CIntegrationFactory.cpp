@@ -29,7 +29,6 @@
 #include "../../include/integration/CSingleGridIntegration.hpp"
 #include "../../include/integration/CMultiGridIntegration.hpp"
 #include "../../include/integration/CNewtonIntegration.hpp"
-#include "../../include/integration/CStructuralIntegration.hpp"
 
 CIntegration** CIntegrationFactory::CreateIntegrationContainer(MAIN_SOLVER kindMainSolver,
                                                                const CSolver* const* solver_container){
@@ -62,9 +61,6 @@ CIntegration* CIntegrationFactory::CreateIntegration(INTEGRATION_TYPE integratio
       break;
     case INTEGRATION_TYPE::NEWTON:
       integration = new CNewtonIntegration();
-      break;
-    case INTEGRATION_TYPE::STRUCTURAL:
-      integration = new CStructuralIntegration();
       break;
     case INTEGRATION_TYPE::NONE:
       integration = nullptr;

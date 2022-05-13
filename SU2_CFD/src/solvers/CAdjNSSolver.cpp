@@ -51,7 +51,6 @@ CAdjNSSolver::CAdjNSSolver(CGeometry *geometry, CConfig *config, unsigned short 
 
   string Marker_Tag, Monitoring_Tag;
   unsigned short iMarker_Monitoring, jMarker, ObjFunc;
-  bool grid_movement  = config->GetGrid_Movement();
   bool restart = config->GetRestart();
 
   /*--- Norm heat flux objective test ---*/
@@ -259,16 +258,10 @@ CAdjNSSolver::CAdjNSSolver(CGeometry *geometry, CConfig *config, unsigned short 
  #endif
 
    if (config->GetnObj() > 1 && iMesh == MESH_0) {
-     if (grid_movement) {
-       Mach2Vel = sqrt(Gamma*Gas_Constant*config->GetTemperature_FreeStreamND());
-       RefVel2 = (Mach_Motion*Mach2Vel)*(Mach_Motion*Mach2Vel);
-     }
-     else {
        Velocity_Inf = config->GetVelocity_FreeStreamND();
        RefVel2 = 0.0;
        for (iDim = 0; iDim < nDim; iDim++)
          RefVel2  += Velocity_Inf[iDim]*Velocity_Inf[iDim];
-     }
 
      /*--- Objective scaling: a factor must be applied to certain objectives ---*/
      for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++) {
@@ -626,7 +619,6 @@ void CAdjNSSolver::Viscous_Sensitivity(CGeometry *geometry, CSolver **solver_con
   su2double *Velocity = new su2double[nDim];
 
   bool rotating_frame    = config->GetRotating_Frame();
-  bool grid_movement     = config->GetGrid_Movement();
   su2double RefArea    = config->GetRefArea();
   su2double Mach_Motion     = config->GetMach_Motion();
   unsigned short ObjFunc = config->GetKind_ObjFunc();
@@ -642,16 +634,10 @@ void CAdjNSSolver::Viscous_Sensitivity(CGeometry *geometry, CSolver **solver_con
    Otherwise, use the freestream values,
    which is the standard convention. ---*/
 
-  if (grid_movement) {
-    Mach2Vel = sqrt(Gamma*Gas_Constant*config->GetTemperature_FreeStreamND());
-    RefVel2 = (Mach_Motion*Mach2Vel)*(Mach_Motion*Mach2Vel);
-  }
-  else {
     Velocity_Inf = config->GetVelocity_FreeStreamND();
     RefVel2 = 0.0;
     for (iDim = 0; iDim < nDim; iDim++)
       RefVel2  += Velocity_Inf[iDim]*Velocity_Inf[iDim];
-  }
 
   RefDensity  = config->GetDensity_FreeStreamND();
 
@@ -670,11 +656,6 @@ void CAdjNSSolver::Viscous_Sensitivity(CGeometry *geometry, CSolver **solver_con
 
   }
 
-
-  /*--- Compute gradient of the grid velocity, if applicable ---*/
-
-  if (grid_movement)
-    SetGridVel_Gradient(geometry, config);
 
   Total_Sens_Geo = 0.0;
   Total_Sens_Mach = 0.0;
@@ -761,124 +742,6 @@ void CAdjNSSolver::Viscous_Sensitivity(CGeometry *geometry, CSolver **solver_con
             for (jDim = 0; jDim < nDim; jDim++)
               sigma_partial += UnitNormal[iDim]*Sigma[iDim][jDim]*normal_grad_vel[jDim];
 
-          /*--- Compute additional terms in the surface sensitivity for
-           moving walls in a rotating frame or dynamic mesh problem. ---*/
-
-          if (grid_movement) {
-
-            Psi = nodes->GetSolution(iPoint);
-            U = solver_container[FLOW_SOL]->GetNodes()->GetSolution(iPoint);
-            Density = U[0];
-            Pressure = solver_container[FLOW_SOL]->GetNodes()->GetPressure(iPoint);
-            Enthalpy = solver_container[FLOW_SOL]->GetNodes()->GetEnthalpy(iPoint);
-
-            /*--- Turbulent kinetic energy ---*/
-
-            if ((config->GetKind_Turb_Model() == TURB_MODEL::SST) || (config->GetKind_Turb_Model() == TURB_MODEL::SST_SUST))
-              val_turb_ke = solver_container[TURB_SOL]->GetNodes()->GetSolution(iPoint,0);
-            else
-              val_turb_ke = 0.0;
-
-            CNumerics::ComputeStressTensor(nDim, tau, PrimVar_Grad+1, Laminar_Viscosity, Density, val_turb_ke);
-
-            /*--- Form normal_grad_gridvel = \partial_n (u_omega) ---*/
-
-            const auto GridVel_Grad = geometry->nodes->GetGridVel_Grad(iPoint);
-            for (iDim = 0; iDim < nDim; iDim++) {
-              normal_grad_gridvel[iDim] = 0.0;
-              for (jDim = 0; jDim < nDim; jDim++)
-                normal_grad_gridvel[iDim] += GridVel_Grad[iDim][jDim]*UnitNormal[jDim];
-            }
-
-            /*--- Form normal_grad_v_ux = \partial_n (v - u_omega) ---*/
-
-            for (iDim = 0; iDim < nDim; iDim++)
-              normal_grad_v_ux[iDim] = normal_grad_vel[iDim] - normal_grad_gridvel[iDim];
-
-            /*--- Form Sigma_Psi5v ---*/
-
-            div_vel = 0.0;
-            for (iDim = 0 ; iDim < nDim; iDim++) {
-              Velocity[iDim] = U[iDim+1]/Density;
-              div_vel += PrimVar_Grad[iDim+1][iDim];
-            }
-
-            gradPsi5_v = 0.0;
-            for (iDim = 0; iDim < nDim; iDim++) {
-              gradPsi5_v += PsiVar_Grad[nDim+1][iDim]*Velocity[iDim];
-              for (jDim = 0; jDim < nDim; jDim++)
-                Sigma_Psi5v[iDim][jDim] = Laminar_Viscosity * (PsiVar_Grad[nDim+1][iDim]*Velocity[jDim]+PsiVar_Grad[nDim+1][jDim]*Velocity[iDim]);
-            }
-            for (iDim = 0; iDim < nDim; iDim++)
-              Sigma_Psi5v[iDim][iDim] -= TWO3*Laminar_Viscosity * gradPsi5_v;
-
-
-            /*--- Now compute terms of the surface sensitivity ---*/
-
-            /*--- Form vartheta_partial = \vartheta * \partial_n (v - u_x) . n ---*/
-            vartheta = Density*Psi[0] + Density*Enthalpy*Psi[nDim+1];
-            for (iDim = 0; iDim < nDim; iDim++) {
-              vartheta += U[iDim+1]*Psi[iDim+1];
-            }
-            vartheta_partial = 0.0;
-            for (iDim = 0; iDim < nDim; iDim++)
-              vartheta_partial += vartheta * normal_grad_v_ux[iDim] * UnitNormal[iDim];
-
-            /*--- Form sigma_partial = n_i ( \Sigma_Phi_{ij} + \Sigma_Psi5v_{ij} ) \partial_n (v - u_x)_j ---*/
-
-            sigma_partial = 0.0;
-            for (iDim = 0; iDim < nDim; iDim++)
-              for (jDim = 0; jDim < nDim; jDim++)
-                sigma_partial += UnitNormal[iDim]*(Sigma[iDim][jDim]+Sigma_Psi5v[iDim][jDim])*normal_grad_v_ux[jDim];
-
-            /*--- Form psi5_tau_partial = \Psi_5 * \partial_n (v - u_x)_i * tau_{ij} * n_j ---*/
-
-            psi5_tau_partial = 0.0;
-            for (iDim = 0; iDim < nDim; iDim++)
-              for (jDim = 0; jDim < nDim; jDim++)
-                psi5_tau_partial -= Psi[nDim+1]*normal_grad_v_ux[iDim]*tau[iDim][jDim]*UnitNormal[jDim];
-
-            /*--- Form psi5_p_div_vel = ---*/
-
-            psi5_p_div_vel = -Psi[nDim+1]*Pressure*div_vel;
-
-            /*--- Form psi5_tau_grad_vel = \Psi_5 * tau_{ij} : \nabla( v ) ---*/
-
-            psi5_tau_grad_vel = 0.0;
-            for (iDim = 0; iDim < nDim; iDim++)
-              for (jDim = 0; jDim < nDim; jDim++)
-                psi5_tau_grad_vel += Psi[nDim+1]*tau[iDim][jDim]*PrimVar_Grad[iDim+1][jDim];
-
-            /*--- Retrieve the angular velocity vector ---*/
-
-            source_v_1 = 0.0;
-            if (rotating_frame) {
-
-              for (iDim = 0; iDim < 3; iDim++){
-                Omega[iDim] = config->GetRotation_Rate(iDim)/config->GetOmega_Ref();
-              }
-
-              /*--- Calculate momentum source terms as: rho * ( Omega X V ) ---*/
-
-              for (iDim = 0; iDim < nDim; iDim++)
-                rho_v[iDim] = U[iDim+1];
-              if (nDim == 2) rho_v[2] = 0.0;
-
-              CrossProduct[0] = Omega[1]*rho_v[2] - Omega[2]*rho_v[1];
-              CrossProduct[1] = Omega[2]*rho_v[0] - Omega[0]*rho_v[2];
-              CrossProduct[2] = Omega[0]*rho_v[1] - Omega[1]*rho_v[0];
-
-
-              for (iDim = 0; iDim < nDim; iDim++) {
-                source_v_1 += Psi[iDim+1]*CrossProduct[iDim];
-              }
-            }
-
-            /*--- For simplicity, store all additional terms within sigma_partial ---*/
-
-            sigma_partial = sigma_partial + vartheta_partial + psi5_tau_partial + psi5_p_div_vel + psi5_tau_grad_vel + source_v_1;
-
-          }
 
           /*--- Compute sensitivity for each surface point ---*/
 
@@ -925,7 +788,6 @@ void CAdjNSSolver::Viscous_Sensitivity(CGeometry *geometry, CSolver **solver_con
           Normal = geometry->vertex[iMarker][iVertex]->GetNormal();
 
           Mach_Inf   = config->GetMach();
-          if (grid_movement) Mach_Inf = config->GetMach_Motion();
 
           r = U[0]; ru = U[1]; rv = U[2];
           if (nDim == 2) { rw = 0.0; rE = U[3]; }
@@ -1078,7 +940,6 @@ void CAdjNSSolver::Viscous_Sensitivity(CGeometry *geometry, CSolver **solver_con
           p = solver_container[FLOW_SOL]->GetNodes()->GetPressure(iPoint);
 
           Mach_Inf   = config->GetMach();
-          if (grid_movement) Mach_Inf = config->GetMach_Motion();
 
           d = nodes->GetForceProj_Vector(iPoint);
           Area = GeometryToolbox::Norm(nDim, Normal);
@@ -1200,7 +1061,6 @@ void CAdjNSSolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_contai
   su2double dSigma5_psi5;
 
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool grid_movement  = config->GetGrid_Movement();
 
   su2double Prandtl_Lam  = config->GetPrandtl_Lam();
   su2double Prandtl_Turb = config->GetPrandtl_Turb();
@@ -1252,13 +1112,6 @@ void CAdjNSSolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_contai
 
       for (iDim = 0; iDim < nDim; iDim++) { phi[iDim] = d[iDim]; }
 
-      /*--- Correct the adjoint velocity BC for dynamic meshes ---*/
-
-      if (grid_movement) {
-        GridVel = geometry->nodes->GetGridVel(iPoint);
-        for (iDim = 0; iDim < nDim; iDim++)
-          phi[iDim] -= Psi[nDim+1]*GridVel[iDim];
-      }
 
       /*--- Impose the value of the adjoint velocity as a strong boundary
        condition (Dirichlet). Fix the adjoint velocity and remove any addtional
@@ -1281,229 +1134,6 @@ void CAdjNSSolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_contai
         l1psi += Normal[iDim]*d[iDim];
       Res_Conv_i[nDim+1] = l1psi*Gamma_Minus_One;
 
-      /*--- Flux contribution and Jacobian contributions for moving
-         walls. Note that these are only for the adjoint density and
-         adjoint energy equations (the adjoint vel. uses a strong BC). ---*/
-
-      if (grid_movement) {
-
-        /*--- Get the grid velocity at this node and impose v = u_wall ---*/
-
-        GridVel = geometry->nodes->GetGridVel(iPoint);
-        for (iDim = 0; iDim < nDim; iDim++) Velocity[iDim] = GridVel[iDim];
-
-        /*--- Get some additional quantities from the flow solution ---*/
-
-        Density = solver_container[FLOW_SOL]->GetNodes()->GetDensity(iPoint);
-        Pressure = solver_container[FLOW_SOL]->GetNodes()->GetPressure(iPoint);
-        Enthalpy = solver_container[FLOW_SOL]->GetNodes()->GetEnthalpy(iPoint);
-        Laminar_Viscosity = solver_container[FLOW_SOL]->GetNodes()->GetLaminarViscosity(iPoint);
-        Eddy_Viscosity = solver_container[FLOW_SOL]->GetNodes()->GetEddyViscosity(iPoint); // Should be zero at the wall
-
-        ViscDens = (Laminar_Viscosity + Eddy_Viscosity) / Density;
-        XiDens = Gamma * (Laminar_Viscosity/Prandtl_Lam + Eddy_Viscosity/Prandtl_Turb) / Density;
-
-        /*--- Compute projections, velocity squared divided by two, and
-           other inner products. Note that we are imposing v = u_wall from
-           the direct problem and that phi = d - \psi_5 * v ---*/
-
-        ProjGridVel = 0.0; sq_vel = 0.0;
-        vartheta = Psi[0] + Psi[nDim+1]*Enthalpy;
-        for (iDim = 0; iDim < nDim; iDim++) {
-          ProjGridVel += GridVel[iDim]*Normal[iDim];
-          sq_vel      += 0.5*GridVel[iDim]*GridVel[iDim];
-          vartheta    += GridVel[iDim]*phi[iDim];
-        }
-
-        /*--- Convective flux at the wall node (adjoint density) ---*/
-
-        Res_Conv_i[0] = -vartheta*ProjGridVel + l1psi*Gamma_Minus_One*sq_vel;
-
-        /*--- Implicit contributions from convective part ---*/
-
-        if (implicit) {
-          Jacobian_ii[0][0] += -ProjGridVel;
-          Jacobian_ii[0][nVar-1] += -ProjGridVel * Enthalpy;
-        }
-
-        /*--- Viscous flux contributions at the wall node. Impose dPhiE_dn = 0
-           (adiabatic walls with frozen viscosity). ---*/
-
-        dPhiE_dn = 0.0;
-
-        /*--- Store the adjoint velocity and energy gradients for clarity ---*/
-
-        const auto PsiVar_Grad = nodes->GetGradient(iPoint);
-        for (iDim = 0; iDim < nDim; iDim++) {
-          GradPsiE[iDim] =  PsiVar_Grad[nVar-1][iDim];
-          for (jDim = 0; jDim < nDim; jDim++)
-            GradPhi[iDim][jDim] =  PsiVar_Grad[iDim+1][jDim];
-        }
-
-        if (nDim == 2) {
-
-          /*--- Compute the adjoint stress tensor ---*/
-
-          Sigma_xx  = ViscDens * (FOUR3 * GradPhi[0][0] -  TWO3 * GradPhi[1][1]);
-          Sigma_yy  = ViscDens * (-TWO3 * GradPhi[0][0] + FOUR3 * GradPhi[1][1]);
-          Sigma_xy  = ViscDens * (GradPhi[1][0] + GradPhi[0][1]);
-          Sigma_xx5 = ViscDens * ( FOUR3 * Velocity[0] * GradPsiE[0] -  TWO3 * Velocity[1] * GradPsiE[1]);
-          Sigma_yy5 = ViscDens * (- TWO3 * Velocity[0] * GradPsiE[0] + FOUR3 * Velocity[1] * GradPsiE[1]);
-          Sigma_xy5 = ViscDens * (Velocity[0] * GradPsiE[1] + Velocity[1] * GradPsiE[0]);
-          Sigma_5   = XiDens * dPhiE_dn;
-          eta_xx    = Sigma_xx + Sigma_xx5;
-          eta_yy    = Sigma_yy + Sigma_yy5;
-          eta_xy    = Sigma_xy + Sigma_xy5;
-
-          /*--- Viscous flux at the wall node (adjoint density & energy only) ---*/
-
-          Res_Visc_i[0] = - (Velocity[0] * Normal[0] * eta_xx  + Velocity[1] * Normal[1] * eta_yy
-              + (Velocity[0] * Normal[1] + Velocity[1] * Normal[0]) * eta_xy
-              - (sq_vel - Pressure/(Density*Gamma_Minus_One)) * Sigma_5);
-          Res_Visc_i[nDim+1] = Sigma_5;
-
-          /*--- Computation of the Jacobians at Point i---*/
-
-          if (implicit) {
-
-            /*--- Compute closest normal neighbor ---*/
-
-            Point_Normal = geometry->vertex[val_marker][iVertex]->GetNormal_Neighbor();
-
-            /*--- Get coordinates of i & nearest normal and compute distance ---*/
-
-            Coord_i = geometry->nodes->GetCoord(iPoint);
-            Coord_j = geometry->nodes->GetCoord(Point_Normal);
-            dist_ij_2 = 0.0;
-            for (iDim = 0; iDim < nDim; iDim++) {
-              Edge_Vector[iDim] = Coord_j[iDim]-Coord_i[iDim];
-              dist_ij_2 += Edge_Vector[iDim]*Edge_Vector[iDim];
-            }
-
-            dSigmaxx_phi1 = -FOUR3 * ViscDens * Edge_Vector[0]/dist_ij_2;
-            dSigmaxx_phi2 =   TWO3 * ViscDens * Edge_Vector[1]/dist_ij_2;
-            dSigmayy_phi1 =   TWO3 * ViscDens * Edge_Vector[0]/dist_ij_2;
-            dSigmayy_phi2 = -FOUR3 * ViscDens * Edge_Vector[1]/dist_ij_2;
-            dSigmaxy_phi1 = -ViscDens * Edge_Vector[1]/dist_ij_2;
-            dSigmaxy_phi2 = -ViscDens * Edge_Vector[0]/dist_ij_2;
-
-            //              dSigmaxx5_psi5 = -ViscDens * ( FOUR3*Velocity[0]*Edge_Vector[0] -  TWO3*Velocity[1]*Edge_Vector[1] )/dist_ij_2;
-            //              dSigmayy5_psi5 = -ViscDens * (- TWO3*Velocity[0]*Edge_Vector[0] + FOUR3*Velocity[1]*Edge_Vector[1] )/dist_ij_2;
-            //              dSigmaxy5_psi5 = -ViscDens * ( Velocity[0]*Edge_Vector[1] + Velocity[1]*Edge_Vector[0] )/dist_ij_2;
-            dSigma5_psi5   = -XiDens * ( Edge_Vector[0]*Normal[0] + Edge_Vector[1]*Normal[1] )/dist_ij_2;
-
-            Jacobian_ii[0][0] += 0.0;
-            Jacobian_ii[0][1] += -( Velocity[0]*Normal[0]*dSigmaxx_phi1 + Velocity[1]*Normal[1]*dSigmayy_phi1
-                + (Velocity[0]*Normal[1] + Velocity[1]*Normal[0])*dSigmaxy_phi1 );
-            Jacobian_ii[0][2] += -( Velocity[0]*Normal[0]*dSigmaxx_phi2 + Velocity[1]*Normal[1]*dSigmayy_phi2
-                + (Velocity[0]*Normal[1] + Velocity[1]*Normal[0])*dSigmaxy_phi2 );
-            Jacobian_ii[0][3] += (sq_vel - Pressure/(Density*Gamma_Minus_One)) * dSigma5_psi5;
-
-            Jacobian_ii[3][0] += 0.0;
-            Jacobian_ii[3][1] += 0.0;
-            Jacobian_ii[3][2] += 0.0;
-            Jacobian_ii[3][3] += dSigma5_psi5;
-
-          }
-
-
-        } else if (nDim == 3) {
-
-          /*--- Compute the adjoint stress tensor ---*/
-          Sigma_xx  = ViscDens * (FOUR3 * GradPhi[0][0] -  TWO3 * GradPhi[1][1] - TWO3  * GradPhi[2][2]);
-          Sigma_yy  = ViscDens * (-TWO3 * GradPhi[0][0] + FOUR3 * GradPhi[1][1] - TWO3  * GradPhi[2][2]);
-          Sigma_zz  = ViscDens * (-TWO3 * GradPhi[0][0] -  TWO3 * GradPhi[1][1] + FOUR3 * GradPhi[2][2]);
-          Sigma_xy  = ViscDens * (GradPhi[1][0] + GradPhi[0][1]);
-          Sigma_xz  = ViscDens * (GradPhi[2][0] + GradPhi[0][2]);
-          Sigma_yz  = ViscDens * (GradPhi[2][1] + GradPhi[1][2]);
-          Sigma_xx5 = ViscDens * ( FOUR3 * Velocity[0] * GradPsiE[0] -  TWO3 * Velocity[1] * GradPsiE[1] -  TWO3 * Velocity[2] * GradPsiE[2]);
-          Sigma_yy5 = ViscDens * (- TWO3 * Velocity[0] * GradPsiE[0] + FOUR3 * Velocity[1] * GradPsiE[1] -  TWO3 * Velocity[2] * GradPsiE[2]);
-          Sigma_zz5 = ViscDens * (- TWO3 * Velocity[0] * GradPsiE[0] -  TWO3 * Velocity[1] * GradPsiE[1] + FOUR3 * Velocity[2] * GradPsiE[2]);
-          Sigma_xy5 = ViscDens * (Velocity[0] * GradPsiE[1] + Velocity[1] * GradPsiE[0]);
-          Sigma_xz5 = ViscDens * (Velocity[0] * GradPsiE[2] + Velocity[2] * GradPsiE[0]);
-          Sigma_yz5 = ViscDens * (Velocity[1] * GradPsiE[2] + Velocity[2] * GradPsiE[1]);
-          Sigma_5   = XiDens * dPhiE_dn;
-          eta_xx    = Sigma_xx + Sigma_xx5; eta_yy = Sigma_yy + Sigma_yy5; eta_zz = Sigma_zz + Sigma_zz5;
-          eta_xy    = Sigma_xy + Sigma_xy5; eta_xz = Sigma_xz + Sigma_xz5; eta_yz = Sigma_yz + Sigma_yz5;
-
-          /*--- Viscous flux at the wall node (adjoint density & energy only) ---*/
-
-          Res_Visc_i[0] = - (Velocity[0] * Normal[0] * eta_xx  + Velocity[1] * Normal[1] * eta_yy + Velocity[2] * Normal[2] * eta_zz
-              + (Velocity[0] * Normal[1] + Velocity[1] * Normal[0]) * eta_xy
-              + (Velocity[0] * Normal[2] + Velocity[2] * Normal[0]) * eta_xz
-              + (Velocity[2] * Normal[1] + Velocity[1] * Normal[2]) * eta_yz
-              - (sq_vel - Pressure/(Density*Gamma_Minus_One)) * Sigma_5);
-          Res_Visc_i[nDim+1] = Sigma_5;
-
-          /*--- Computation of the Jacobians at Point i---*/
-
-          if (implicit) {
-
-            /*--- Compute closest normal neighbor ---*/
-
-            Point_Normal = geometry->vertex[val_marker][iVertex]->GetNormal_Neighbor();
-
-            /*--- Get coordinates of i & nearest normal and compute distance ---*/
-
-            Coord_i = geometry->nodes->GetCoord(iPoint);
-            Coord_j = geometry->nodes->GetCoord(Point_Normal);
-            dist_ij_2 = 0.0;
-            for (iDim = 0; iDim < nDim; iDim++) {
-              Edge_Vector[iDim] = Coord_j[iDim]-Coord_i[iDim];
-              dist_ij_2 += Edge_Vector[iDim]*Edge_Vector[iDim];
-            }
-
-            dSigmaxx_phi1 = -FOUR3 * ViscDens * Edge_Vector[0]/dist_ij_2;
-            dSigmaxx_phi2 =   TWO3 * ViscDens * Edge_Vector[1]/dist_ij_2;
-            dSigmaxx_phi3 =   TWO3 * ViscDens * Edge_Vector[2]/dist_ij_2;
-            dSigmayy_phi1 =   TWO3 * ViscDens * Edge_Vector[0]/dist_ij_2;
-            dSigmayy_phi2 = -FOUR3 * ViscDens * Edge_Vector[1]/dist_ij_2;
-            dSigmayy_phi3 =   TWO3 * ViscDens * Edge_Vector[2]/dist_ij_2;
-            dSigmazz_phi1 =   TWO3 * ViscDens * Edge_Vector[0]/dist_ij_2;
-            dSigmazz_phi2 =   TWO3 * ViscDens * Edge_Vector[1]/dist_ij_2;
-            dSigmazz_phi3 = -FOUR3 * ViscDens * Edge_Vector[2]/dist_ij_2;
-            dSigmaxy_phi1 = -ViscDens * Edge_Vector[1]/dist_ij_2;
-            dSigmaxy_phi2 = -ViscDens * Edge_Vector[0]/dist_ij_2;
-            dSigmaxy_phi3 = 0;
-            dSigmaxz_phi1 = -ViscDens * Edge_Vector[2]/dist_ij_2;
-            dSigmaxz_phi2 = 0;
-            dSigmaxz_phi3 = -ViscDens * Edge_Vector[0]/dist_ij_2;
-            dSigmayz_phi1 = 0;
-            dSigmayz_phi2 = -ViscDens * Edge_Vector[2]/dist_ij_2;
-            dSigmayz_phi3 = -ViscDens * Edge_Vector[1]/dist_ij_2;
-
-            //              dSigmaxx5_psi5 = -ViscDens * ( FOUR3*Velocity[0]*Edge_Vector[0] -  TWO3*Velocity[1]*Edge_Vector[1] -  TWO3*Velocity[2]*Edge_Vector[2])/dist_ij_2;
-            //              dSigmayy5_psi5 = -ViscDens * (- TWO3*Velocity[0]*Edge_Vector[0] + FOUR3*Velocity[1]*Edge_Vector[1] -  TWO3*Velocity[2]*Edge_Vector[2])/dist_ij_2;
-            //              dSigmazz5_psi5 = -ViscDens * (- TWO3*Velocity[0]*Edge_Vector[0] -  TWO3*Velocity[1]*Edge_Vector[1] + FOUR3*Velocity[2]*Edge_Vector[2])/dist_ij_2;
-            //              dSigmaxy5_psi5 = -ViscDens * ( Velocity[0]*Edge_Vector[1] + Velocity[1]*Edge_Vector[0] )/dist_ij_2;
-            //              dSigmaxz5_psi5 = -ViscDens * ( Velocity[0]*Edge_Vector[2] + Velocity[2]*Edge_Vector[0] )/dist_ij_2;
-            //              dSigmayz5_psi5 = -ViscDens * ( Velocity[1]*Edge_Vector[2] + Velocity[2]*Edge_Vector[1] )/dist_ij_2;
-            dSigma5_psi5   = -XiDens * ( Edge_Vector[0]*Normal[0] + Edge_Vector[1]*Normal[1] + Edge_Vector[2]*Normal[2] )/dist_ij_2;
-
-            Jacobian_ii[0][0] += 0.0;
-            Jacobian_ii[0][1] += -( Velocity[0]*Normal[0]*dSigmaxx_phi1 + Velocity[1]*Normal[1]*dSigmayy_phi1 + Velocity[2]*Normal[2]*dSigmazz_phi1
-                + (Velocity[0]*Normal[1] + Velocity[1]*Normal[0])*dSigmaxy_phi1
-                + (Velocity[0]*Normal[2] + Velocity[2]*Normal[0])*dSigmaxz_phi1
-                + (Velocity[2]*Normal[1] + Velocity[1]*Normal[2])*dSigmayz_phi1 );
-            Jacobian_ii[0][2] += -( Velocity[0]*Normal[0]*dSigmaxx_phi2 + Velocity[1]*Normal[1]*dSigmayy_phi2 + Velocity[2]*Normal[2]*dSigmazz_phi2
-                + (Velocity[0]*Normal[1] + Velocity[1]*Normal[0])*dSigmaxy_phi2
-                + (Velocity[0]*Normal[2] + Velocity[2]*Normal[0])*dSigmaxz_phi2
-                + (Velocity[2]*Normal[1] + Velocity[1]*Normal[2])*dSigmayz_phi2 );
-            Jacobian_ii[0][3] += -( Velocity[0]*Normal[0]*dSigmaxx_phi3 + Velocity[1]*Normal[1]*dSigmayy_phi3 + Velocity[2]*Normal[2]*dSigmazz_phi3
-                + (Velocity[0]*Normal[1] + Velocity[1]*Normal[0])*dSigmaxy_phi3
-                + (Velocity[0]*Normal[2] + Velocity[2]*Normal[0])*dSigmaxz_phi3
-                + (Velocity[2]*Normal[1] + Velocity[1]*Normal[2])*dSigmayz_phi3 );
-            Jacobian_ii[0][4] += (sq_vel - Pressure/(Density*Gamma_Minus_One)) * dSigma5_psi5;
-
-            Jacobian_ii[4][0] += 0.0;
-            Jacobian_ii[4][1] += 0.0;
-            Jacobian_ii[4][2] += 0.0;
-            Jacobian_ii[4][3] += 0.0;
-            Jacobian_ii[4][4] += dSigma5_psi5;
-
-          }
-        }
-      }
 
       /*--- Convective contribution to the residual at the wall ---*/
 
@@ -1573,7 +1203,6 @@ void CAdjNSSolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_cont
   su2double *dPoRho2 = new su2double[nDim];
 
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool grid_movement  = config->GetGrid_Movement();
   bool heat_flux_obj;
 
   su2double Prandtl_Lam  = config->GetPrandtl_Lam();
@@ -1632,17 +1261,9 @@ void CAdjNSSolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_cont
       /*--- Get the force projection vector (based on the objective function) ---*/
       d = nodes->GetForceProj_Vector(iPoint);
 
-      /*--- Adjustments to strong boundary condition for dynamic meshes ---*/
-      if ( grid_movement) {
-        GridVel = geometry->nodes->GetGridVel(iPoint);
-        for (iDim = 0; iDim < nDim; iDim++) {
-          phi[iDim] = d[iDim] - Psi[nVar-1]*GridVel[iDim];
-        }
-      } else {
         for (iDim = 0; iDim < nDim; iDim++) {
           phi[iDim] = d[iDim];
         }
-      }
 
       /*--- Strong BC imposition for the adjoint velocity equations ---*/
       for (iDim = 0; iDim < nDim; iDim++)
@@ -1755,123 +1376,6 @@ void CAdjNSSolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_cont
       pressure = solver_container[FLOW_SOL]->GetNodes()->GetPressure(iPoint);
       Res_Conv_i[0] = pressure*Sigma_5/(Gamma_Minus_One*rho*rho);
 
-      /*--- Flux contribution and Jacobian contributions for moving
-         walls. Note that these are only for the adjoint density and
-         adjoint energy equations (the adjoint vel. uses a strong BC). ---*/
-      if (grid_movement) {
-
-        /*--- Get the appropriate grid velocity at this node ---*/
-        GridVel = geometry->nodes->GetGridVel(iPoint);
-
-        /*--- Get the enthalpy from the direct solution ---*/
-        Enthalpy = solver_container[FLOW_SOL]->GetNodes()->GetEnthalpy(iPoint);
-
-        /*--- Compute projections, velocity squared divided by two, and
-           other inner products. Note that we are imposing v = u_wall from
-           the direct problem and that phi = d - \psi_5 * v ---*/
-        ProjVel = 0.0; sq_vel = 0.0; phi_u = 0.0; d_n = 0.0;
-        phis1 = 0.0; phis2 = Psi[0] + Enthalpy * Psi[nVar-1];
-        for (iDim = 0; iDim < nDim; iDim++) {
-          ProjVel += GridVel[iDim]*Normal[iDim];
-          sq_vel  += 0.5*GridVel[iDim]*GridVel[iDim];
-          phis1   += Normal[iDim]*phi[iDim];
-          phis2   += GridVel[iDim]*phi[iDim];
-          phi_u   += GridVel[iDim]*phi[iDim];
-          d_n     += d[iDim]*Normal[iDim];
-        }
-        //          phis1 += ProjVel * Psi[nVar-1];
-
-        /*--- Convective flux at the wall node (adjoint density & energy only) ---*/
-
-        /*--- Version 1 (full) ---*/
-        //Res_Conv_i[0] = ProjVel * Psi[0] - phis2 * ProjVel + phis1 * Gamma_Minus_One * sq_vel - ProjVel*Psi[0];
-        //Res_Conv_i[nVar-1] = ProjVel * Psi[nVar-1] + phis1 * Gamma_Minus_One - ProjVel*Psi[nVar-1];
-
-        /*--- Simplified version ---*/
-        Res_Conv_i[0] = -(Psi[0] + phi_u + Psi[nVar-1]*Enthalpy)*ProjVel + d_n*Gamma_Minus_One*sq_vel;
-
-        /*--- TO DO: Implicit contributions for convective part ---*/
-
-
-        /*--- Viscous flux contributions at the wall node ---*/
-        U = solver_container[FLOW_SOL]->GetNodes()->GetSolution(iPoint);
-        Laminar_Viscosity = solver_container[FLOW_SOL]->GetNodes()->GetLaminarViscosity(iPoint);
-        Eddy_Viscosity = solver_container[FLOW_SOL]->GetNodes()->GetEddyViscosity(iPoint); // Should be zero at the wall
-        Density = U[0];
-        for (iDim = 0; iDim < nDim; iDim++) {
-          Velocity[iDim] = GridVel[iDim];
-        }
-        Energy = U[nDim+1] / Density;
-        SoundSpeed = sqrt(Gamma*Gamma_Minus_One*(Energy-sq_vel));
-        Pressure = (SoundSpeed * SoundSpeed * Density) / Gamma;
-        ViscDens = (Laminar_Viscosity + Eddy_Viscosity) / Density;
-        XiDens = Gamma * (Laminar_Viscosity/Prandtl_Lam + Eddy_Viscosity/Prandtl_Turb) / Density;
-
-        /*--- Average of the derivatives of the adjoint variables ---*/
-        PsiVar_Grad = nodes->GetGradient(iPoint);
-
-        for (iDim = 0; iDim < nDim; iDim++) {
-          GradPsiE[iDim] =  PsiVar_Grad[nVar-1][iDim];
-          for (jDim = 0; jDim < nDim; jDim++)
-            GradPhi[iDim][jDim] =  PsiVar_Grad[iDim+1][jDim];
-        }
-
-        /*--- Impose dPhiE_dn = 0 (adiabatic walls with frozen viscosity). Note
-           that this is where a different adjoint boundary condition for temperature
-           could be imposed. ---*/
-        dPhiE_dn = 0.0;
-
-        if (nDim ==2) {
-
-          /*--- Compute the adjoint stress tensor ---*/
-          Sigma_xx  = ViscDens * (FOUR3 * GradPhi[0][0] -  TWO3 * GradPhi[1][1]);
-          Sigma_yy  = ViscDens * (-TWO3 * GradPhi[0][0] + FOUR3 * GradPhi[1][1]);
-          Sigma_xy  = ViscDens * (GradPhi[1][0] + GradPhi[0][1]);
-          Sigma_xx5 = ViscDens * ( FOUR3 * Velocity[0] * GradPsiE[0] -  TWO3 * Velocity[1] * GradPsiE[1]);
-          Sigma_yy5 = ViscDens * (- TWO3 * Velocity[0] * GradPsiE[0] + FOUR3 * Velocity[1] * GradPsiE[1]);
-          Sigma_xy5 = ViscDens * (Velocity[0] * GradPsiE[1] + Velocity[1] * GradPsiE[0]);
-          Sigma_5   = XiDens * dPhiE_dn;
-          eta_xx    = Sigma_xx + Sigma_xx5;
-          eta_yy    = Sigma_yy + Sigma_yy5;
-          eta_xy    = Sigma_xy + Sigma_xy5;
-
-          /*--- Viscous flux at the wall node (adjoint density & energy only) ---*/
-          Res_Visc_i[0] = - (Velocity[0] * Normal[0] * eta_xx  + Velocity[1] * Normal[1] * eta_yy
-              + (Velocity[0] * Normal[1] + Velocity[1] * Normal[0]) * eta_xy
-              - (sq_vel - Pressure/(Density*Gamma_Minus_One)) * Sigma_5);
-          Res_Visc_i[1] = 0.0;
-          Res_Visc_i[2] = 0.0;
-
-        } else if (nDim == 3) {
-
-          /*--- Compute the adjoint stress tensor ---*/
-          Sigma_xx  = ViscDens * (FOUR3 * GradPhi[0][0] -  TWO3 * GradPhi[1][1] - TWO3  * GradPhi[2][2]);
-          Sigma_yy  = ViscDens * (-TWO3 * GradPhi[0][0] + FOUR3 * GradPhi[1][1] - TWO3  * GradPhi[2][2]);
-          Sigma_zz  = ViscDens * (-TWO3 * GradPhi[0][0] -  TWO3 * GradPhi[1][1] + FOUR3 * GradPhi[2][2]);
-          Sigma_xy  = ViscDens * (GradPhi[1][0] + GradPhi[0][1]);
-          Sigma_xz  = ViscDens * (GradPhi[2][0] + GradPhi[0][2]);
-          Sigma_yz  = ViscDens * (GradPhi[2][1] + GradPhi[1][2]);
-          Sigma_xx5 = ViscDens * ( FOUR3 * Velocity[0] * GradPsiE[0] -  TWO3 * Velocity[1] * GradPsiE[1] -  TWO3 * Velocity[2] * GradPsiE[2]);
-          Sigma_yy5 = ViscDens * (- TWO3 * Velocity[0] * GradPsiE[0] + FOUR3 * Velocity[1] * GradPsiE[1] -  TWO3 * Velocity[2] * GradPsiE[2]);
-          Sigma_zz5 = ViscDens * (- TWO3 * Velocity[0] * GradPsiE[0] -  TWO3 * Velocity[1] * GradPsiE[1] + FOUR3 * Velocity[2] * GradPsiE[2]);
-          Sigma_xy5 = ViscDens * (Velocity[0] * GradPsiE[1] + Velocity[1] * GradPsiE[0]);
-          Sigma_xz5 = ViscDens * (Velocity[0] * GradPsiE[2] + Velocity[2] * GradPsiE[0]);
-          Sigma_yz5 = ViscDens * (Velocity[1] * GradPsiE[2] + Velocity[2] * GradPsiE[1]);
-          Sigma_5   = XiDens * dPhiE_dn;
-          eta_xx    = Sigma_xx + Sigma_xx5; eta_yy = Sigma_yy + Sigma_yy5; eta_zz = Sigma_zz + Sigma_zz5;
-          eta_xy    = Sigma_xy + Sigma_xy5; eta_xz = Sigma_xz + Sigma_xz5; eta_yz = Sigma_yz + Sigma_yz5;
-
-          /*--- Viscous flux at the wall node (adjoint density & energy only) ---*/
-          Res_Visc_i[0] = - (Velocity[0] * Normal[0] * eta_xx  + Velocity[1] * Normal[1] * eta_yy + Velocity[2] * Normal[2] * eta_zz
-              + (Velocity[0] * Normal[1] + Velocity[1] * Normal[0]) * eta_xy
-              + (Velocity[0] * Normal[2] + Velocity[2] * Normal[0]) * eta_xz
-              + (Velocity[2] * Normal[1] + Velocity[1] * Normal[2]) * eta_yz
-              - (sq_vel - Pressure/(Density*Gamma_Minus_One)) * Sigma_5);
-          Res_Visc_i[1] = 0.0;
-          Res_Visc_i[2] = 0.0;
-          Res_Visc_i[3] = 0.0;
-        }
-      }
 
       /*--- Update convective and viscous residuals ---*/
       LinSysRes.AddBlock(iPoint, Res_Conv_i);

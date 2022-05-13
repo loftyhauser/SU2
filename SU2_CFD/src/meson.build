@@ -8,12 +8,10 @@ su2_cfd_src += files(['fluid/CFluidModel.cpp',
                       'fluid/CVanDerWaalsGas.cpp'])
 
 su2_cfd_src += files(['output/COutputFactory.cpp',
-                      'output/CAdjElasticityOutput.cpp',
                       'output/CAdjFlowOutput.cpp',
                       'output/CAdjFlowCompOutput.cpp',
                       'output/CBaselineOutput.cpp',
                       'output/CMultizoneOutput.cpp',
-                      'output/CElasticityOutput.cpp',
                       'output/CFlowCompOutput.cpp',
                       'output/CFVMOutput.cpp',
                       'output/CFlowOutput.cpp',
@@ -43,12 +41,9 @@ su2_cfd_src += files(['variables/CTransLMVariable.cpp',
                       'variables/CScalarVariable.cpp',
                       'variables/CAdjNSVariable.cpp',
                       'variables/CBaselineVariable.cpp',
-                      'variables/CDiscAdjFEABoundVariable.cpp',
                       'variables/CDiscAdjMeshBoundVariable.cpp',
-                      'variables/CFEABoundVariable.cpp',
                       'variables/CDiscAdjVariable.cpp',
                       'variables/CTurbSAVariable.cpp',
-                      'variables/CFEAVariable.cpp',
                       'variables/CMeshVariable.cpp',
                       'variables/CMeshBoundVariable.cpp',
                       'variables/CMeshElement.cpp',
@@ -65,22 +60,15 @@ su2_cfd_src += files(['solvers/CSolverFactory.cpp',
                       'solvers/CAdjNSSolver.cpp',
                       'solvers/CAdjTurbSolver.cpp',
                       'solvers/CBaselineSolver.cpp',
-                      'solvers/CBaselineSolver_FEM.cpp',
-                      'solvers/CDiscAdjFEASolver.cpp',
-                      'solvers/CDiscAdjMeshSolver.cpp',
                       'solvers/CDiscAdjSolver.cpp',
                       'solvers/CEulerSolver.cpp',
-                      'solvers/CFEASolver.cpp',
-                      'solvers/CMeshSolver.cpp',
                       'solvers/CNSSolver.cpp',
                       'solvers/CSolver.cpp',
                       'solvers/CTemplateSolver.cpp',
                       'solvers/CTransLMSolver.cpp',
                       'solvers/CTurbSolver.cpp',
                       'solvers/CTurbSASolver.cpp',
-                      'solvers/CTurbSSTSolver.cpp',
-                      'solvers/CFEASolverBase.cpp',
-                      'solvers/CGradientSmoothingSolver.cpp'])
+                      'solvers/CTurbSSTSolver.cpp'])
 
 su2_cfd_src += files(['numerics/CNumerics.cpp',
                       'numerics/template.cpp',
@@ -96,20 +84,13 @@ su2_cfd_src += files(['numerics/CNumerics.cpp',
                       'numerics/continuous_adjoint/adj_diffusion.cpp',
                       'numerics/continuous_adjoint/adj_sources.cpp',
                       'numerics/scalar/scalar_sources.cpp',
-                      'numerics/elasticity/CFEAElasticity.cpp',
-                      'numerics/elasticity/CFEALinearElasticity.cpp',
-                      'numerics/elasticity/CFEANonlinearElasticity.cpp',
-                      'numerics/elasticity/nonlinear_models.cpp',
                       'numerics/CGradSmoothing.cpp'])
 
 su2_cfd_src += files(['../include/numerics_simd/CNumericsSIMD.cpp'])
 
 su2_cfd_src += files(['interfaces/CInterface.cpp',
                       'interfaces/cfd/CConservativeVarsInterface.cpp',
-                      'interfaces/cfd/CSlidingInterface.cpp',
-                      'interfaces/fsi/CDisplacementsInterface.cpp',
-                      'interfaces/fsi/CFlowTractionInterface.cpp',
-                      'interfaces/fsi/CDiscAdjFlowTractionInterface.cpp'])
+                      'interfaces/cfd/CSlidingInterface.cpp'])
 
 su2_cfd_src += files(['drivers/CDriver.cpp',
                       'drivers/CMultizoneDriver.cpp',
@@ -122,15 +103,12 @@ su2_cfd_src += files(['integration/CIntegration.cpp',
                       'integration/CIntegrationFactory.cpp',
                       'integration/CSingleGridIntegration.cpp',
                       'integration/CMultiGridIntegration.cpp',
-                      'integration/CNewtonIntegration.cpp',
-                      'integration/CStructuralIntegration.cpp'])
+                      'integration/CNewtonIntegration.cpp'])
 
 su2_cfd_src += files(['iteration/CIteration.cpp',
                       'iteration/CIterationFactory.cpp',
                       'iteration/CAdjFluidIteration.cpp',
                       'iteration/CDiscAdjFluidIteration.cpp',
-                      'iteration/CDiscAdjFEAIteration.cpp',
-                      'iteration/CFEAIteration.cpp',
                       'iteration/CFluidIteration.cpp'])
 
 su2_cfd_src += files(['limiters/CLimiterDetails.cpp'])

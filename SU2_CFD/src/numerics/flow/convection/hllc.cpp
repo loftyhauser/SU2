@@ -33,7 +33,6 @@ CUpwHLLC_Flow::CUpwHLLC_Flow(unsigned short val_nDim, unsigned short val_nVar, c
   implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
   kappa = config->GetRoe_Kappa();
   /* A grid is defined as dynamic if there's rigid grid movement or grid deformation AND the problem is time domain */
-  dynamic_grid = config->GetDynamic_Grid();
 
   Gamma = config->GetGamma();
 
@@ -142,18 +141,6 @@ CNumerics::ResidualType<> CUpwHLLC_Flow::ComputeResidual(const CConfig* config) 
   /*--- Projected Grid Velocity ---*/
 
   ProjInterfaceVel = 0;
-
-  if (dynamic_grid) {
-
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjInterfaceVel += 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] )*UnitNormal[iDim];
-
-    SoundSpeed_i -= ProjInterfaceVel;
-    SoundSpeed_j += ProjInterfaceVel;
-
-    ProjVelocity_i -= ProjInterfaceVel;
-    ProjVelocity_j -= ProjInterfaceVel;
-  }
 
   /*--- Roe's averaging ---*/
 
@@ -559,7 +546,6 @@ CUpwGeneralHLLC_Flow::CUpwGeneralHLLC_Flow(unsigned short val_nDim, unsigned sho
   implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
   kappa = config->GetRoe_Kappa();
   /* A grid is defined as dynamic if there's rigid grid movement or grid deformation AND the problem is time domain */
-  dynamic_grid = config->GetDynamic_Grid();
 
   Gamma = config->GetGamma();
 
@@ -679,17 +665,6 @@ CNumerics::ResidualType<> CUpwGeneralHLLC_Flow::ComputeResidual(const CConfig* c
 
   ProjInterfaceVel = 0;
 
-  if (dynamic_grid) {
-
-    for (iDim = 0; iDim < nDim; iDim++)
-      ProjInterfaceVel += 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] )*UnitNormal[iDim];
-
-    SoundSpeed_i -= ProjInterfaceVel;
-    SoundSpeed_j += ProjInterfaceVel;
-
-    ProjVelocity_i -= ProjInterfaceVel;
-    ProjVelocity_j -= ProjInterfaceVel;
-  }
 
   /*--- Roe's averaging ---*/
 

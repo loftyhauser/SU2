@@ -385,16 +385,6 @@ class CFVMFlowSolverBase : public CSolver {
         su2double Mean_ProjVel = 0.5 * (nodes->GetProjVel(iPoint,Normal) + nodes->GetProjVel(jPoint,Normal));
         su2double Mean_SoundSpeed = soundSpeed(*nodes, iPoint, jPoint) * sqrt(Area2);
 
-        /*--- Adjustment for grid movement ---*/
-
-        if (dynamic_grid) {
-          const su2double *GridVel_i = geometry->nodes->GetGridVel(iPoint);
-          const su2double *GridVel_j = geometry->nodes->GetGridVel(jPoint);
-
-          for (unsigned short iDim = 0; iDim < nDim; iDim++)
-            Mean_ProjVel -= 0.5 * (GridVel_i[iDim] + GridVel_j[iDim]) * Normal[iDim];
-        }
-
         /*--- Inviscid contribution ---*/
 
         su2double Lambda = fabs(Mean_ProjVel) + Mean_SoundSpeed;
@@ -434,12 +424,6 @@ class CFVMFlowSolverBase : public CSolver {
 
           su2double ProjVel = nodes->GetProjVel(iPoint,Normal);
           su2double SoundSpeed = soundSpeed(*nodes, iPoint) * sqrt(Area2);
-
-          /*--- Adjustment for grid movement ---*/
-
-          if (dynamic_grid) {
-            ProjVel -= GeometryToolbox::DotProduct(nDim, Normal, geometry->nodes->GetGridVel(iPoint));
-          }
 
           /*--- Inviscid contribution ---*/
 
@@ -614,16 +598,6 @@ class CFVMFlowSolverBase : public CSolver {
         su2double Mean_ProjVel = 0.5 * (nodes->GetProjVel(iPoint,Normal) + nodes->GetProjVel(jPoint,Normal));
         su2double Mean_SoundSpeed = soundSpeed(*nodes, iPoint, jPoint) * Area;
 
-        /*--- Adjustment for grid movement ---*/
-
-        if (dynamic_grid) {
-          const su2double *GridVel_i = geometry->nodes->GetGridVel(iPoint);
-          const su2double *GridVel_j = geometry->nodes->GetGridVel(jPoint);
-
-          for (unsigned short iDim = 0; iDim < nDim; iDim++)
-            Mean_ProjVel -= 0.5 * (GridVel_i[iDim] + GridVel_j[iDim]) * Normal[iDim];
-        }
-
         /*--- Inviscid contribution ---*/
 
         nodes->AddLambda(iPoint, fabs(Mean_ProjVel) + Mean_SoundSpeed);
@@ -655,11 +629,6 @@ class CFVMFlowSolverBase : public CSolver {
           su2double Mean_ProjVel = nodes->GetProjVel(iPoint,Normal);
           su2double Mean_SoundSpeed = soundSpeed(*nodes, iPoint) * Area;
 
-          /*--- Adjustment for grid movement ---*/
-
-          if (dynamic_grid) {
-            Mean_ProjVel -= GeometryToolbox::DotProduct(nDim, Normal, geometry->nodes->GetGridVel(iPoint));
-          }
 
           /*--- Inviscid contribution ---*/
 

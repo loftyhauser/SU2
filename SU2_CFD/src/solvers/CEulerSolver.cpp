@@ -67,9 +67,6 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config,
   unsigned short iDim, nLineLets;
   su2double StaticEnergy, Density, Velocity2, Pressure, Temperature;
 
-  /*--- A grid is defined as dynamic if there's rigid grid movement or grid deformation AND the problem is time domain ---*/
-  dynamic_grid = config->GetDynamic_Grid();
-
   /*--- Store the multigrid level. ---*/
   MGLevel = iMesh;
 
@@ -803,8 +800,7 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
     /*--- Check if there is mesh motion. If yes, use the Mach
        number relative to the body to initialize the flow. ---*/
 
-    if (dynamic_grid) Velocity_Reynolds = config->GetMach_Motion()*Mach2Vel_FreeStream;
-    else Velocity_Reynolds = ModVel_FreeStream;
+    Velocity_Reynolds = ModVel_FreeStream;
 
     /*--- Reynolds based initialization ---*/
 
@@ -1020,8 +1016,7 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
       cout << "temperature and pressure using the ideal gas law." << endl;
     }
 
-    if (dynamic_grid) cout << "Force coefficients computed using MACH_MOTION." << endl;
-    else cout << "Force coefficients computed using free-stream values." << endl;
+    cout << "Force coefficients computed using free-stream values." << endl;
 
     stringstream NonDimTableOut, ModelTableOut;
     stringstream Unit;
@@ -1229,15 +1224,7 @@ void CEulerSolver::SetReferenceValues(const CConfig& config) {
 
   su2double RefVel2;
 
-  if (dynamic_grid && !config.GetFSI_Simulation()) {
-    su2double Gas_Constant = config.GetGas_ConstantND();
-    su2double Mach2Vel = sqrt(Gamma * Gas_Constant * Temperature_Inf);
-    su2double Mach_Motion = config.GetMach_Motion();
-    RefVel2 = pow(Mach_Motion * Mach2Vel, 2);
-  }
-  else {
-    RefVel2 = GeometryToolbox::SquaredNorm(nDim, Velocity_Inf);
-  }
+  RefVel2 = GeometryToolbox::SquaredNorm(nDim, Velocity_Inf);
 
   DynamicPressureRef = 0.5 * Density_Inf * RefVel2;
   AeroCoeffForceRef =  DynamicPressureRef * config.GetRefArea();
@@ -1635,13 +1622,6 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
 
     if (roe_turkel) {
       numerics->SetVelocity2_Inf(GeometryToolbox::SquaredNorm(nDim, config->GetVelocity_FreeStream()));
-    }
-
-    /*--- Grid movement ---*/
-
-    if (dynamic_grid) {
-      numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
-                           geometry->nodes->GetGridVel(jPoint));
     }
 
     /*--- Get primitive and secondary variables ---*/
@@ -4179,11 +4159,6 @@ void CEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_container,
       /*--- Adjust the normal freestream velocity for grid movement ---*/
 
       Qn_Infty = Vn_Infty;
-      if (dynamic_grid) {
-        GridVel = geometry->nodes->GetGridVel(iPoint);
-        for (iDim = 0; iDim < nDim; iDim++)
-          Qn_Infty -= GridVel[iDim]*UnitNormal[iDim];
-      }
 
       /*--- Compute acoustic Riemann invariants: R = u.n +/- 2c/(gamma-1).
          These correspond with the eigenvalues (u+c) and (u-c), respectively,
@@ -4267,11 +4242,6 @@ void CEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_container,
       /*--- Set various quantities in the numerics class ---*/
 
       conv_numerics->SetPrimitive(V_domain, V_infty);
-
-      if (dynamic_grid) {
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
-                                  geometry->nodes->GetGridVel(iPoint));
-      }
 
       /*--- Compute the convective residual using an upwind scheme ---*/
 
@@ -4580,16 +4550,6 @@ void CEulerSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container,
       /*--- Compute inverse P (matrix of left eigenvectors)---*/
       conv_numerics->GetPMatrix_inv(invP_Tensor, &Density_i, Velocity_i, &SoundSpeed_i, &Chi_i, &Kappa_i, UnitNormal);
 
-      /*--- eigenvalues contribution due to grid motion ---*/
-      if (dynamic_grid) {
-        gridVel = geometry->nodes->GetGridVel(iPoint);
-
-        su2double ProjGridVel = 0.0;
-        for (iDim = 0; iDim < nDim; iDim++)
-          ProjGridVel   += gridVel[iDim]*UnitNormal[iDim];
-        ProjVelocity_i -= ProjGridVel;
-      }
-
       /*--- Flow eigenvalues ---*/
       for (iDim = 0; iDim < nDim; iDim++)
         Lambda_i[iDim] = ProjVelocity_i;
@@ -4653,17 +4613,6 @@ void CEulerSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container,
       /*--- Compute the residuals ---*/
       conv_numerics->GetInviscidProjFlux(&Density_b, Velocity_b, &Pressure_b, &Enthalpy_b, Normal, Residual);
 
-      /*--- Residual contribution due to grid motion ---*/
-      if (dynamic_grid) {
-        gridVel = geometry->nodes->GetGridVel(iPoint);
-        su2double projVelocity = 0.0;
-
-        for (iDim = 0; iDim < nDim; iDim++)
-          projVelocity +=  gridVel[iDim]*Normal[iDim];
-        for (iVar = 0; iVar < nVar; iVar++)
-          Residual[iVar] -= projVelocity *(u_b[iVar]);
-      }
-
       if (implicit) {
 
         Jacobian_b = new su2double*[nVar];
@@ -4700,18 +4649,6 @@ void CEulerSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container,
         /*--- Compute flux Jacobian in state b ---*/
         conv_numerics->GetInviscidProjJac(Velocity_b, &Enthalpy_b, &Chi_b, &Kappa_b, Normal, 1.0, Jacobian_b);
 
-        /*--- Jacobian contribution due to grid motion ---*/
-        if (dynamic_grid)
-        {
-          gridVel = geometry->nodes->GetGridVel(iPoint);
-          su2double projVelocity = 0.0;
-          for (iDim = 0; iDim < nDim; iDim++)
-            projVelocity +=  gridVel[iDim]*Normal[iDim];
-          for (iVar = 0; iVar < nVar; iVar++) {
-            Jacobian_b[iVar][iVar] -= projVelocity;
-          }
-
-        }
 
         /*--- initiate Jacobian_i to zero matrix ---*/
         for (iVar=0; iVar<nVar; iVar++)
@@ -5080,8 +5017,6 @@ void CEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container,
 
       conv_numerics->SetPrimitive(V_domain, V_inlet);
 
-      if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -5257,8 +5192,6 @@ void CEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container,
       /*--- Set various quantities in the solver class ---*/
       conv_numerics->SetPrimitive(V_domain, V_outlet);
 
-      if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -5400,9 +5333,6 @@ void CEulerSolver::BC_Supersonic_Inlet(CGeometry *geometry, CSolver **solver_con
       conv_numerics->SetNormal(Normal);
       conv_numerics->SetPrimitive(V_domain, V_inlet);
 
-      if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
-                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -5522,9 +5452,6 @@ void CEulerSolver::BC_Supersonic_Outlet(CGeometry *geometry, CSolver **solver_co
       conv_numerics->SetNormal(Normal);
       conv_numerics->SetPrimitive(V_domain, V_outlet);
 
-      if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
-                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -5743,8 +5670,6 @@ void CEulerSolver::BC_Engine_Inflow(CGeometry *geometry, CSolver **solver_contai
 
       /*--- Set grid movement ---*/
 
-      if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -5994,8 +5919,6 @@ void CEulerSolver::BC_Engine_Exhaust(CGeometry *geometry, CSolver **solver_conta
 
       /*--- Set grid movement ---*/
 
-      if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -6419,11 +6342,6 @@ void CEulerSolver::BC_ActDisk(CGeometry *geometry, CSolver **solver_container, C
 
       }
 
-      /*--- Grid Movement ---*/
-
-      if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
-
       /*--- Compute the residual using an upwind scheme ---*/
 
       auto residual = conv_numerics->ComputeResidual(config);
@@ -6705,11 +6623,6 @@ void CEulerSolver::BC_ActDisk_VariableLoad(CGeometry *geometry, CSolver **solver
         V_outlet[nDim+4] = SoS_out;
         conv_numerics->SetPrimitive(V_domain, V_outlet);
       }
-
-      /*--- Grid Movement (NOT TESTED!)---*/
-
-      if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 

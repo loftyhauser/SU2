@@ -350,11 +350,6 @@ void CNSSolver::BC_HeatFlux_Wall_Generic(const CGeometry* geometry, const CConfi
 
   /*--- Jacobian, initialized to zero if needed. ---*/
   su2double **Jacobian_i = nullptr;
-  if ((dynamic_grid || (kind_boundary == HEAT_TRANSFER)) && implicit) {
-    Jacobian_i = new su2double* [nVar];
-    for (auto iVar = 0u; iVar < nVar; iVar++)
-      Jacobian_i[iVar] = new su2double [nVar] ();
-  }
 
   /*--- Loop over all of the vertices on this boundary marker ---*/
 
@@ -397,33 +392,12 @@ void CNSSolver::BC_HeatFlux_Wall_Generic(const CGeometry* geometry, const CConfi
      condition (Dirichlet). Fix the velocity and remove any
      contribution to the residual at this node. ---*/
 
-    if (dynamic_grid) {
-      nodes->SetVelocity_Old(iPoint, geometry->nodes->GetGridVel(iPoint));
-    }
-    else {
       su2double zero[MAXNDIM] = {0.0};
       nodes->SetVelocity_Old(iPoint, zero);
-    }
 
     for (auto iDim = 0u; iDim < nDim; iDim++)
       LinSysRes(iPoint, iDim+1) = 0.0;
     nodes->SetVel_ResTruncError_Zero(iPoint);
-
-    /*--- If the wall is moving, there are additional residual contributions
-     due to pressure (p v_wall.n) and shear stress (tau.v_wall.n). ---*/
-
-    if (dynamic_grid) {
-      if (implicit) {
-        for (auto iVar = 0u; iVar < nVar; ++iVar)
-          Jacobian_i[nDim+1][iVar] = 0.0;
-      }
-
-      const auto Point_Normal = geometry->vertex[val_marker][iVertex]->GetNormal_Neighbor();
-
-      AddDynamicGridResidualContribution(iPoint, Point_Normal, geometry, UnitNormal,
-                                         Area, geometry->nodes->GetGridVel(iPoint),
-                                         Jacobian_i, Res_Conv, Res_Visc);
-    }
 
     /*--- Convective and viscous contributions to the residual at the wall ---*/
 
@@ -437,7 +411,6 @@ void CNSSolver::BC_HeatFlux_Wall_Generic(const CGeometry* geometry, const CConfi
       if (kind_boundary == HEAT_TRANSFER){
 
         /*--- It is necessary to zero the jacobian entries of the energy equation. ---*/
-        if (!dynamic_grid)
           for (auto iVar = 0u; iVar < nVar; ++iVar)
             Jacobian_i[nDim+1][iVar] = 0.0;
 
@@ -456,9 +429,6 @@ void CNSSolver::BC_HeatFlux_Wall_Generic(const CGeometry* geometry, const CConfi
 
         Jacobian_i[nDim+1][nDim+1] += Transfer_Coefficient * dTdrhoe * Area;
 
-      }
-      if (dynamic_grid || (kind_boundary == HEAT_TRANSFER)) {
-        Jacobian.AddBlock2Diag(iPoint, Jacobian_i);
       }
 
       for (auto iVar = 1u; iVar <= nDim; iVar++) {
@@ -541,13 +511,8 @@ void CNSSolver::BC_Isothermal_Wall_Generic(CGeometry *geometry, CSolver **solver
     /*--- Store the corrected velocity at the wall which will
      be zero (v = 0), unless there is grid motion (v = u_wall)---*/
 
-    if (dynamic_grid) {
-      nodes->SetVelocity_Old(iPoint, geometry->nodes->GetGridVel(iPoint));
-    }
-    else {
       su2double zero[MAXNDIM] = {0.0};
       nodes->SetVelocity_Old(iPoint, zero);
-    }
 
     for (auto iDim = 0u; iDim < nDim; iDim++)
       LinSysRes(iPoint, iDim+1) = 0.0;
@@ -598,15 +563,6 @@ void CNSSolver::BC_Isothermal_Wall_Generic(CGeometry *geometry, CSolver **solver
         Jacobian_i[nDim+1][jDim+1] = 0.0;
 
       Jacobian_i[nDim+1][nDim+1] = thermal_conductivity/dist_ij * (Gamma-1.0)/(Gas_Constant*Density) * Area;
-    }
-
-    /*--- If the wall is moving, there are additional residual contributions
-     due to pressure (p v_wall.n) and shear stress (tau.v_wall.n). ---*/
-
-    if (dynamic_grid) {
-      AddDynamicGridResidualContribution(iPoint, Point_Normal, geometry, UnitNormal,
-                                         Area, geometry->nodes->GetGridVel(iPoint),
-                                         Jacobian_i, Res_Conv, Res_Visc);
     }
 
     /*--- Convective and viscous contributions to the residual at the wall ---*/
