@@ -48,13 +48,4 @@ public:
    */
   static COutput* CreateOutput(MAIN_SOLVER kindSolver, CConfig *config, int nDim);
 
-  /*!
-   * \brief Create a multizone output
-   * \param driverConfig        - Pointer to the driver config
-   * \param config_container    - Pointer to the config container
-   * \param nDim                - Number of physical dimensions
-   * \return                    - Pointer to the allocated multizone output
-   */
-  static COutput* CreateMultizoneOutput(CConfig *driverConfig, CConfig** config_container, int nDim);
-
 };

@@ -11,7 +11,6 @@ su2_cfd_src += files(['output/COutputFactory.cpp',
                       'output/CAdjFlowOutput.cpp',
                       'output/CAdjFlowCompOutput.cpp',
                       'output/CBaselineOutput.cpp',
-                      'output/CMultizoneOutput.cpp',
                       'output/CFlowCompOutput.cpp',
                       'output/CFVMOutput.cpp',
                       'output/CFlowOutput.cpp',
@@ -88,14 +87,8 @@ su2_cfd_src += files(['numerics/CNumerics.cpp',
 
 su2_cfd_src += files(['../include/numerics_simd/CNumericsSIMD.cpp'])
 
-su2_cfd_src += files(['interfaces/CInterface.cpp',
-                      'interfaces/cfd/CConservativeVarsInterface.cpp',
-                      'interfaces/cfd/CSlidingInterface.cpp'])
-
 su2_cfd_src += files(['drivers/CDriver.cpp',
-                      'drivers/CMultizoneDriver.cpp',
                       'drivers/CSinglezoneDriver.cpp',
-                      'drivers/CDiscAdjMultizoneDriver.cpp',
                       'drivers/CDiscAdjSinglezoneDriver.cpp',
                       'drivers/CDummyDriver.cpp'])
 

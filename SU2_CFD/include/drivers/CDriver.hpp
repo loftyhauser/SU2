@@ -32,13 +32,11 @@
 
 #include "../integration/CIntegration.hpp"
 #include "../solvers/CSolver.hpp"
-#include "../interfaces/CInterface.hpp"
 
 #include "../../../Common/include/geometry/CGeometry.hpp"
 
 using namespace std;
 
-class CInterpolator;
 class CIteration;
 class COutput;
 
@@ -90,9 +88,6 @@ protected:
   CConfig **config_container;                   /*!< \brief Definition of the particular problem. */
   CConfig *driver_config;                       /*!< \brief Definition of the driver configuration. */
   COutput *driver_output;                       /*!< \brief Definition of the driver output. */
-  vector<vector<unique_ptr<CInterpolator> > >
-  interpolator_container;                       /*!< \brief Definition of the interpolation method between non-matching discretizations of the interface. */
-  CInterface ***interface_container;            /*!< \brief Definition of the interface of information and physics. */
   bool dry_run;                                 /*!< \brief Flag if SU2_CFD was started as dry-run via "SU2_CFD -d <config>.cfg" */
 
 public:
@@ -192,13 +187,6 @@ protected:
    * \param[in] config - Definition of the particular problem.
    */
   void Integration_Postprocessing(CIntegration ***integration, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
-
-  /*!
-   * \brief Definition and allocation of all interface classes.
-   */
-  void Interface_Preprocessing(CConfig **config, CSolver *****solver, CGeometry ****geometry,
-                               unsigned short **interface_types, CInterface ***interface,
-                               vector<vector<unique_ptr<CInterpolator> > > &interpolation);
 
   /*!
    * \brief Definition and allocation of all solver classes.

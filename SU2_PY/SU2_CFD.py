@@ -79,8 +79,6 @@ def main():
   try:
     if (options.nZone == 1) and ( options.fem or options.poisson_equation or options.wave_equation or options.heat_equation ):
       SU2Driver = pysu2.CSinglezoneDriver(options.filename, options.nZone, comm);
-    elif (options.nZone >= 2):
-      SU2Driver = pysu2.CMultizoneDriver(options.filename, options.nZone, comm);
     else:
       SU2Driver = pysu2.CSinglezoneDriver(options.filename, options.nZone, comm);
   except TypeError as exception:

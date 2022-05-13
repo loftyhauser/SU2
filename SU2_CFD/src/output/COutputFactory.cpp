@@ -27,7 +27,6 @@
 
 #include "../../include/output/COutputFactory.hpp"
 #include "../../include/output/COutput.hpp"
-#include "../../include/output/CMultizoneOutput.hpp"
 #include "../../include/output/CFlowCompOutput.hpp"
 #include "../../include/output/CAdjFlowCompOutput.hpp"
 
@@ -47,13 +46,6 @@ COutput* COutputFactory::CreateOutput(MAIN_SOLVER kindSolver, CConfig* config, i
       output = new COutput(config, nDim, false);
       break;
   }
-
-  return output;
-}
-
-COutput* COutputFactory::CreateMultizoneOutput(CConfig *driverConfig, CConfig** config_container, int nDim){
-
-  COutput* output = new CMultizoneOutput(driverConfig, config_container, nDim);
 
   return output;
 }

@@ -40,7 +40,6 @@ threads="1"
 
 #include "../../SU2_CFD/include/drivers/CDriver.hpp"
 #include "../../SU2_CFD/include/drivers/CSinglezoneDriver.hpp"
-#include "../../SU2_CFD/include/drivers/CMultizoneDriver.hpp"
 #include "../../SU2_CFD/include/drivers/CDiscAdjSinglezoneDriver.hpp"
 
 %}
@@ -89,5 +88,4 @@ const unsigned int ZONE_1 = 1; /*!< \brief Definition of the first grid domain. 
 // CDriver class
 %include "../../SU2_CFD/include/drivers/CDriver.hpp"
 %include "../../SU2_CFD/include/drivers/CSinglezoneDriver.hpp"
-%include "../../SU2_CFD/include/drivers/CMultizoneDriver.hpp"
 %include "../../SU2_CFD/include/drivers/CDiscAdjSinglezoneDriver.hpp"

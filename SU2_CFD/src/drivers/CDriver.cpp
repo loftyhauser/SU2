@@ -37,12 +37,6 @@
 #include "../../include/output/COutputFactory.hpp"
 #include "../../include/output/COutput.hpp"
 
-#include "../../../Common/include/interface_interpolation/CInterpolator.hpp"
-#include "../../../Common/include/interface_interpolation/CInterpolatorFactory.hpp"
-
-#include "../../include/interfaces/cfd/CConservativeVarsInterface.hpp"
-#include "../../include/interfaces/cfd/CSlidingInterface.hpp"
-
 #include "../../include/variables/CEulerVariable.hpp"
 
 #include "../../include/numerics/template.hpp"
@@ -127,11 +121,6 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
     integration_container[iZone] = new CIntegration** [nInst[iZone]] ();
     numerics_container[iZone]    = new CNumerics****  [nInst[iZone]] ();
 
-    /*--- Allocate transfer and interpolation container --- */
-
-    interface_container[iZone]    = new CInterface*[nZone] ();
-    interpolator_container[iZone].resize(nZone);
-
     for (iInst = 0; iInst < nInst[iZone]; iInst++) {
 
       config_container[iZone]->SetiInst(iInst);
@@ -201,25 +190,6 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
     CGeometry::ComputeWallDistance(config_container, geometry_container);
   }
 
-  /*--- Definition of the interface and transfer conditions between different zones. ---*/
-
-  if (nZone > 1) {
-    if (rank == MASTER_NODE)
-      cout << endl <<"------------------- Multizone Interface Preprocessing -------------------" << endl;
-
-    Interface_Preprocessing(config_container, solver_container, geometry_container,
-                            interface_types, interface_container, interpolator_container);
-  }
-
-  if (fsi) {
-    for (iZone = 0; iZone < nZone; iZone++) {
-      for (iInst = 0; iInst < nInst[iZone]; iInst++){
-        Solver_Restart(solver_container[iZone][iInst], geometry_container[iZone][iInst],
-                       config_container[iZone], true);
-      }
-    }
-  }
-
   PythonInterface_Preprocessing(config_container, geometry_container, solver_container);
 
 
@@ -276,7 +246,6 @@ void CDriver::SetContainers_Null(){
   solver_container               = nullptr;
   numerics_container             = nullptr;
   config_container               = nullptr;
-  interface_container            = nullptr;
   interface_types                = nullptr;
   nInst                          = nullptr;
 
@@ -288,8 +257,6 @@ void CDriver::SetContainers_Null(){
   numerics_container             = new CNumerics*****[nZone] ();
   config_container               = new CConfig*[nZone] ();
   geometry_container             = new CGeometry***[nZone] ();
-  interpolator_container.resize(nZone);
-  interface_container            = new CInterface**[nZone] ();
   interface_types                = new unsigned short*[nZone] ();
   output_container               = new COutput*[nZone] ();
   nInst                          = new unsigned short[nZone] ();
@@ -366,18 +333,6 @@ void CDriver::Postprocessing() {
   }
   delete [] iteration_container;
   if (rank == MASTER_NODE) cout << "Deleted CIteration container." << endl;
-
-  if (interface_container != nullptr) {
-    for (iZone = 0; iZone < nZone; iZone++) {
-      if (interface_container[iZone] != nullptr) {
-        for (unsigned short jZone = 0; jZone < nZone; jZone++)
-          delete interface_container[iZone][jZone];
-        delete [] interface_container[iZone];
-      }
-    }
-    delete [] interface_container;
-    if (rank == MASTER_NODE) cout << "Deleted CInterface container." << endl;
-  }
 
   if (interface_types != nullptr) {
     for (iZone = 0; iZone < nZone; iZone++)
@@ -1636,74 +1591,6 @@ void CDriver::Iteration_Preprocessing(CConfig* config, CIteration *&iteration) c
 
 }
 
-void CDriver::Interface_Preprocessing(CConfig **config, CSolver***** solver, CGeometry**** geometry,
-                                      unsigned short** interface_types, CInterface ***interface,
-                                      vector<vector<unique_ptr<CInterpolator> > >& interpolation) {
-
-  /*--- Setup interpolation and transfer for all possible donor/target pairs. ---*/
-
-  for (auto target = 0u; target < nZone; target++) {
-
-    for (auto donor = 0u; donor < nZone; donor++) {
-
-      /*--- Aliases to make code less verbose. ---*/
-      auto& interface_type = interface_types[donor][target];
-
-      if (donor == target) {
-        interface_type = ZONES_ARE_EQUAL;
-        continue;
-      }
-      interface_type = NO_TRANSFER;
-
-      /*--- If there is a common interface setup the interpolation and transfer. ---*/
-
-      if (!CInterpolator::CheckZonesInterface(config[donor], config[target])) {
-        interface_type = NO_COMMON_INTERFACE;
-      }
-      else {
-        /*--- Begin the creation of the communication pattern among zones. ---*/
-
-        if (rank == MASTER_NODE) cout << "From zone " << donor << " to zone " << target << ":" << endl;
-
-        /*--- Setup the interpolation. ---*/
-
-        interpolation[donor][target] = unique_ptr<CInterpolator>(CInterpolatorFactory::CreateInterpolator(
-                                       geometry, config, interpolation[target][donor].get(), donor, target));
-
-        /*--- The type of variables transferred depends on the donor/target physics. ---*/
-
-        const bool fluid_target = config[target]->GetFluidProblem();
-
-        const bool fluid_donor = config[donor]->GetFluidProblem();
-
-        /*--- Initialize the appropriate transfer strategy. ---*/
-
-        if (rank == MASTER_NODE) cout << " Transferring ";
-
-        if (fluid_donor && fluid_target) {
-          interface_type = SLIDING_INTERFACE;
-          auto nVar = solver[donor][INST_0][MESH_0][FLOW_SOL]->GetnPrimVar();
-          interface[donor][target] = new CSlidingInterface(nVar, 0);
-          if (rank == MASTER_NODE) cout << "sliding interface." << endl;
-        }
-        else {
-          if (solver[donor][INST_0][MESH_0][FLOW_SOL] == nullptr)
-            SU2_MPI::Error("Could not determine the number of variables for transfer.", CURRENT_FUNCTION);
-
-          auto nVar = solver[donor][INST_0][MESH_0][FLOW_SOL]->GetnVar();
-          interface_type = CONSERVATIVE_VARIABLES;
-          interface[donor][target] = new CConservativeVarsInterface(nVar, 0);
-          if (rank == MASTER_NODE) cout << "generic conservative variables." << endl;
-        }
-      }
-
-
-    }
-
-  }
-
-}
-
 void CDriver::Output_Preprocessing(CConfig **config, CConfig *driver_config, COutput **&output, COutput *&driver_output){
 
   /*--- Definition of the output class (one for each zone). The output class
@@ -1725,15 +1612,6 @@ void CDriver::Output_Preprocessing(CConfig **config, CConfig *driver_config, COu
 
     output[iZone]->PreprocessVolumeOutput(config[iZone]);
 
-  }
-
-  if (driver_config->GetMultizone_Problem()){
-    if (rank == MASTER_NODE)
-      cout << endl <<"------------------- Output Preprocessing ( Multizone ) ------------------" << endl;
-
-    driver_output = COutputFactory::CreateMultizoneOutput(driver_config, config, nDim);
-
-    driver_output->PreprocessMultizoneHistoryOutput(output, config, driver_config, !dry_run);
   }
 
   /*--- Check for an unsteady restart. Update ExtIter if necessary. ---*/
@@ -1907,19 +1785,6 @@ void CFluidDriver::Run() {
   for (iZone = 0; iZone < nZone; iZone++)
     iteration_container[iZone][INST_0]->Preprocess(output_container[iZone], integration_container, geometry_container, solver_container, numerics_container, config_container, iZone, INST_0);
 
-  /*--- Updating zone interface communication patterns,
-   needed only for unsteady simulation since for steady problems
-   this is done once in the interpolator_container constructor
-   at the beginning of the computation ---*/
-
-  if ( unsteady ) {
-    for (iZone = 0; iZone < nZone; iZone++) {
-      for (jZone = 0; jZone < nZone; jZone++)
-        if(jZone != iZone && interpolator_container[iZone][jZone] != nullptr)
-        interpolator_container[iZone][jZone]->SetTransferCoeff(config_container);
-    }
-  }
-
   /*--- Begin Unsteady pseudo-time stepping internal loop, if not unsteady it does only one step --*/
 
   if (unsteady)
@@ -1928,12 +1793,6 @@ void CFluidDriver::Run() {
     nIntIter = 1;
 
   for (IntIter = 0; IntIter < nIntIter; IntIter++) {
-
-    /*--- At each pseudo time-step updates transfer data ---*/
-    for (iZone = 0; iZone < nZone; iZone++)
-      for (jZone = 0; jZone < nZone; jZone++)
-        if(jZone != iZone && interface_container[iZone][jZone] != nullptr)
-          Transfer_Data(iZone, jZone);
 
     /*--- For each zone runs one single iteration ---*/
 
@@ -1954,21 +1813,6 @@ void CFluidDriver::Run() {
   if (checkConvergence == nZone) break;
   }
 
-}
-
-void CFluidDriver::Transfer_Data(unsigned short donorZone, unsigned short targetZone) {
-
-  interface_container[donorZone][targetZone]->BroadcastData(*interpolator_container[donorZone][targetZone].get(),
-    solver_container[donorZone][INST_0][MESH_0][FLOW_SOL], solver_container[targetZone][INST_0][MESH_0][FLOW_SOL],
-    geometry_container[donorZone][INST_0][MESH_0], geometry_container[targetZone][INST_0][MESH_0],
-    config_container[donorZone], config_container[targetZone]);
-
-  if (config_container[targetZone]->GetKind_Solver() == MAIN_SOLVER::RANS) {
-    interface_container[donorZone][targetZone]->BroadcastData(*interpolator_container[donorZone][targetZone].get(),
-      solver_container[donorZone][INST_0][MESH_0][TURB_SOL], solver_container[targetZone][INST_0][MESH_0][TURB_SOL],
-      geometry_container[donorZone][INST_0][MESH_0], geometry_container[targetZone][INST_0][MESH_0],
-      config_container[donorZone], config_container[targetZone]);
-  }
 }
 
 void CFluidDriver::Update() {

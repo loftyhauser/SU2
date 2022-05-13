@@ -13,7 +13,6 @@ subdir('geometry/elements')
 subdir('geometry/dual_grid')
 subdir('geometry/primal_grid')
 subdir('geometry/meshreader')
-subdir('interface_interpolation')
 subdir('adt')
 
 if get_option('enable-normal')

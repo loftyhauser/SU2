@@ -304,26 +304,6 @@ def main():
     test_list.append(turb_naca0012_p1c2)
 
     ######################################
-    ### Moving Wall                    ###
-    ######################################
-
-    # Lid-driven cavity
-    cavity           = TestCase('cavity')
-    cavity.cfg_dir   = "moving_wall/cavity"
-    cavity.cfg_file  = "lam_cavity.cfg"
-    cavity.test_iter = 25
-    cavity.test_vals = [-5.627934, -0.164469, 0.052000, 2.547063]
-    test_list.append(cavity)
-
-    # Spinning cylinder
-    spinning_cylinder           = TestCase('spinning_cylinder')
-    spinning_cylinder.cfg_dir   = "moving_wall/spinning_cylinder"
-    spinning_cylinder.cfg_file  = "spinning_cylinder.cfg"
-    spinning_cylinder.test_iter = 25
-    spinning_cylinder.test_vals = [-8.001289, -2.607956, 1.501322, 1.488559]
-    test_list.append(spinning_cylinder)
-
-    ######################################
     ### Unsteady                       ###
     ######################################
 
@@ -383,147 +363,6 @@ def main():
     edge_PPR.test_vals = [-5.401601, 0.738205, -0.000035, 0.000000]
     test_list.append(edge_PPR)
 
-    ######################################
-    ### Sliding Mesh                   ###
-    ######################################
-
-    # Uniform flow
-    uniform_flow         = TestCase('uniform_flow')
-    uniform_flow.cfg_dir   = "sliding_interface/uniform_flow"
-    uniform_flow.cfg_file  = "uniform_NN.cfg"
-    uniform_flow.test_iter = 5
-    uniform_flow.test_vals = [5.000000, 0.000000, -0.188748, -10.631524]
-    uniform_flow.unsteady  = True
-    uniform_flow.multizone = True
-    test_list.append(uniform_flow)
-
-    # Channel_2D
-    channel_2D           = TestCase('channel_2D')
-    channel_2D.cfg_dir   = "sliding_interface/channel_2D"
-    channel_2D.cfg_file  = "channel_2D_WA.cfg"
-    channel_2D.test_iter = 2
-    channel_2D.test_vals = [2.000000, 0.000000, 0.397972, 0.352756, 0.405398]
-    channel_2D.unsteady  = True
-    channel_2D.multizone = True
-    test_list.append(channel_2D)
-
-    # Channel_3D
-    channel_3D           = TestCase('channel_3D')
-    channel_3D.cfg_dir   = "sliding_interface/channel_3D"
-    channel_3D.cfg_file  = "channel_3D_WA.cfg"
-    channel_3D.test_iter = 2
-    channel_3D.test_vals = [2.000000, 0.000000, 0.620171, 0.505178, 0.415313]
-    channel_3D.unsteady  = True
-    channel_3D.multizone = True
-    test_list.append(channel_3D)
-
-    # Pipe
-    pipe           = TestCase('pipe')
-    pipe.cfg_dir   = "sliding_interface/pipe"
-    pipe.cfg_file  = "pipe_NN.cfg"
-    pipe.test_iter = 2
-    pipe.test_vals = [0.150024, 0.491949, 0.677759, 0.963991, 1.006947]
-    pipe.unsteady  = True
-    pipe.multizone = True
-    test_list.append(pipe)
-
-    # Rotating cylinders
-    rotating_cylinders           = TestCase('rotating_cylinders')
-    rotating_cylinders.cfg_dir   = "sliding_interface/rotating_cylinders"
-    rotating_cylinders.cfg_file  = "rot_cylinders_WA.cfg"
-    rotating_cylinders.test_iter = 3
-    rotating_cylinders.test_vals = [3.000000, 0.000000, 0.777568, 1.134807, 1.224137]
-    rotating_cylinders.unsteady  = True
-    rotating_cylinders.multizone  = True
-    test_list.append(rotating_cylinders)
-
-    # Supersonic vortex shedding
-    supersonic_vortex_shedding           = TestCase('supersonic_vortex_shedding')
-    supersonic_vortex_shedding.cfg_dir   = "sliding_interface/supersonic_vortex_shedding"
-    supersonic_vortex_shedding.cfg_file  = "sup_vor_shed_WA.cfg"
-    supersonic_vortex_shedding.test_iter = 5
-    supersonic_vortex_shedding.test_vals = [5.000000, 0.000000, 1.216554, 1.639119]
-    supersonic_vortex_shedding.unsteady  = True
-    supersonic_vortex_shedding.multizone  = True
-    test_list.append(supersonic_vortex_shedding)
-
-    # Bars_SST_2D
-    bars_SST_2D           = TestCase('bars_SST_2D')
-    bars_SST_2D.cfg_dir   = "sliding_interface/bars_SST_2D"
-    bars_SST_2D.cfg_file  = "bars.cfg"
-    bars_SST_2D.test_iter = 13
-    bars_SST_2D.test_vals = [13.000000, -0.619686, -1.564595]
-    bars_SST_2D.multizone = True
-    test_list.append(bars_SST_2D)
-
-    # Sliding mesh with incompressible flows (steady)
-    slinc_steady           = TestCase('slinc_steady')
-    slinc_steady.cfg_dir   = "sliding_interface/incompressible_steady"
-    slinc_steady.cfg_file  = "config.cfg"
-    slinc_steady.test_iter = 19
-    slinc_steady.test_vals = [19.000000, -1.800401, -2.114687]
-    slinc_steady.multizone = True
-    test_list.append(slinc_steady)
-
-    ##########################
-    ### FEA - FSI          ###
-    ##########################
-
-    # Static beam, 3d
-    statbeam3d           = TestCase('statbeam3d')
-    statbeam3d.cfg_dir   = "fea_fsi/StatBeam_3d"
-    statbeam3d.cfg_file  = "configBeam_3d.cfg"
-    statbeam3d.test_iter = 0
-    statbeam3d.test_vals = [-2.378370, -1.585252, -2.028505, 64359.000000]
-    test_list.append(statbeam3d)
-
-    # Dynamic beam, 2d
-    dynbeam2d           = TestCase('dynbeam2d')
-    dynbeam2d.cfg_dir   = "fea_fsi/DynBeam_2d"
-    dynbeam2d.cfg_file  = "configBeam_2d.cfg"
-    dynbeam2d.test_iter = 6
-    dynbeam2d.test_vals = [-3.240015, 2.895057, -0.353146, 66127.000000]
-    dynbeam2d.unsteady  = True
-    test_list.append(dynbeam2d)
-
-    # FSI, 2d
-    fsi2d           = TestCase('fsi2d')
-    fsi2d.cfg_dir   = "fea_fsi/WallChannel_2d"
-    fsi2d.cfg_file  = "configFSI.cfg"
-    fsi2d.test_iter = 4
-    fsi2d.test_vals = [4.000000, 0.000000, -3.743227, -4.133479]
-    fsi2d.multizone= True
-    fsi2d.unsteady = True
-    test_list.append(fsi2d)
-
-    # FSI, Static, 2D, new mesh solver
-    stat_fsi           = TestCase('stat_fsi')
-    stat_fsi.cfg_dir   = "fea_fsi/stat_fsi"
-    stat_fsi.cfg_file  = "config.cfg"
-    stat_fsi.test_iter = 7
-    stat_fsi.test_vals = [-5.403596, -5.722583, 0.000000, 10.000000]
-    stat_fsi.multizone = True
-    test_list.append(stat_fsi)
-
-    # FSI, Dynamic, 2D, new mesh solver
-    dyn_fsi           = TestCase('dyn_fsi')
-    dyn_fsi.cfg_dir   = "fea_fsi/dyn_fsi"
-    dyn_fsi.cfg_file  = "config.cfg"
-    dyn_fsi.test_iter = 4
-    dyn_fsi.test_vals = [-4.355806, -4.060582, 0.000000, 102.000000]
-    dyn_fsi.multizone = True
-    dyn_fsi.unsteady  = True
-    test_list.append(dyn_fsi)
-
-    # FSI, Static, 2D, new mesh solver, restart
-    stat_fsi_restart           = TestCase('stat_fsi_restart')
-    stat_fsi_restart.cfg_dir   = "fea_fsi/stat_fsi"
-    stat_fsi_restart.cfg_file  = "config_restart.cfg"
-    stat_fsi_restart.test_iter = 1
-    stat_fsi_restart.test_vals = [-3.474082, -4.242343, 0.000000, 37.000000]
-    stat_fsi_restart.multizone = True
-    test_list.append(stat_fsi_restart)
-
     ##############################################
     ### Method of Manufactured Solutions (MMS) ###
     ##############################################
@@ -535,22 +374,6 @@ def main():
     mms_fvm_ns.test_iter = 20
     mms_fvm_ns.test_vals = [-2.851428, 2.192348, 0.000000, 0.000000]
     test_list.append(mms_fvm_ns)
-
-    # FVM, incompressible, euler
-    mms_fvm_inc_euler           = TestCase('mms_fvm_inc_euler')
-    mms_fvm_inc_euler.cfg_dir   = "mms/fvm_incomp_euler"
-    mms_fvm_inc_euler.cfg_file  = "inv_mms_jst.cfg"
-    mms_fvm_inc_euler.test_iter = 20
-    mms_fvm_inc_euler.test_vals = [-9.128033, -9.441406, 0.000000, 0.000000]
-    test_list.append(mms_fvm_inc_euler)
-
-    # FVM, incompressible, laminar N-S
-    mms_fvm_inc_ns           = TestCase('mms_fvm_inc_ns')
-    mms_fvm_inc_ns.cfg_dir   = "mms/fvm_incomp_navierstokes"
-    mms_fvm_inc_ns.cfg_file  = "lam_mms_fds.cfg"
-    mms_fvm_inc_ns.test_iter = 20
-    mms_fvm_inc_ns.test_vals = [-7.414944, -7.631546, 0.000000, 0.000000]
-    test_list.append(mms_fvm_inc_ns)
 
     ######################################
     ### RUN TESTS                      ###

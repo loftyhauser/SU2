@@ -121,18 +121,6 @@ def main():
     polar_naca0012.tol       = 0.00001
     test_list.append(polar_naca0012)
 
-    # HYPERSONIC FLOW PAST BLUNT BODY
-    bluntbody           = TestCase('bluntbody')
-    bluntbody.cfg_dir   = "euler/bluntbody"
-    bluntbody.cfg_file  = "blunt.cfg"
-    bluntbody.new_output = True
-    bluntbody.test_iter = 20
-    bluntbody.test_vals = [0.540009, 6.916653, -0.000000, 1.868975] #last 4 columns
-    bluntbody.su2_exec  = "SU2_CFD"
-    bluntbody.timeout   = 1600
-    bluntbody.tol       = 0.00001
-    test_list.append(bluntbody)
-
     ##########################
     ###  Compressible N-S  ###
     ##########################
@@ -617,45 +605,6 @@ def main():
     test_list.append(turb_naca0012_p1c2)
 
     ######################################
-    ### Moving Wall                    ###
-    ######################################
-
-    # Rotating NACA 0012
-    rot_naca0012           = TestCase('rot_naca0012')
-    rot_naca0012.cfg_dir   = "rotating/naca0012"
-    rot_naca0012.cfg_file  = "rot_NACA0012.cfg"
-    rot_naca0012.test_iter = 25
-    rot_naca0012.test_vals = [-2.688979, 2.857521, -0.079219, 0.002135]
-    rot_naca0012.su2_exec  = "SU2_CFD"
-    rot_naca0012.timeout   = 1600
-    rot_naca0012.tol       = 0.00001
-    test_list.append(rot_naca0012)
-
-    # Lid-driven cavity
-    cavity           = TestCase('cavity')
-    cavity.cfg_dir   = "moving_wall/cavity"
-    cavity.cfg_file  = "lam_cavity.cfg"
-    cavity.test_iter = 25
-    cavity.test_vals = [-5.627934, -0.164470, 0.051972, 2.547039]
-    cavity.su2_exec  = "SU2_CFD"
-    cavity.new_output = True
-    cavity.timeout   = 1600
-    cavity.tol       = 0.00001
-    test_list.append(cavity)
-
-    # Spinning cylinder
-    spinning_cylinder           = TestCase('spinning_cylinder')
-    spinning_cylinder.cfg_dir   = "moving_wall/spinning_cylinder"
-    spinning_cylinder.cfg_file  = "spinning_cylinder.cfg"
-    spinning_cylinder.test_iter = 25
-    spinning_cylinder.test_vals = [-7.889994, -2.469385, 1.708162, 1.670039] #last 4 columns
-    spinning_cylinder.su2_exec  = "SU2_CFD"
-    spinning_cylinder.new_output = True
-    spinning_cylinder.timeout   = 1600
-    spinning_cylinder.tol       = 0.00001
-    test_list.append(spinning_cylinder)
-
-    ######################################
     ### Unsteady                       ###
     ######################################
 
@@ -748,132 +697,6 @@ def main():
     edge_PPR.timeout   = 1600
     edge_PPR.tol       = 0.00001
     test_list.append(edge_PPR)
-
-    ######################################
-    ### Sliding Mesh                   ###
-    ######################################
-
-    # Dry run Multizone
-    uniform_flow_d         = TestCase('dry run Multizone')
-    uniform_flow_d.cfg_dir   = "sliding_interface/uniform_flow"
-    uniform_flow_d.cfg_file  = "uniform_NN.cfg"
-    uniform_flow_d.su2_exec  = "SU2_CFD -d"
-    uniform_flow_d.timeout   = 1600
-    test_list.append(uniform_flow_d)
-
-    # Uniform flow
-    uniform_flow         = TestCase('uniform_flow')
-    uniform_flow.cfg_dir   = "sliding_interface/uniform_flow"
-    uniform_flow.cfg_file  = "uniform_NN.cfg"
-    uniform_flow.test_iter = 2
-    uniform_flow.test_vals = [2.000000, 0.000000, -0.205134, -13.250256] #last 4 columns
-    uniform_flow.su2_exec  = "SU2_CFD"
-    uniform_flow.timeout   = 1600
-    uniform_flow.tol       = 0.000001
-    uniform_flow.unsteady  = True
-    uniform_flow.multizone = True
-    test_list.append(uniform_flow)
-
-   # Channel_2D
-    channel_2D           = TestCase('channel_2D')
-    channel_2D.cfg_dir   = "sliding_interface/channel_2D"
-    channel_2D.cfg_file  = "channel_2D_WA.cfg"
-    channel_2D.test_iter = 2
-    channel_2D.test_vals = [2.000000, 0.000000, 0.398005, 0.352783, 0.405475] #last 5 columns
-    channel_2D.su2_exec  = "SU2_CFD"
-    channel_2D.timeout   = 100
-    channel_2D.tol       = 0.00001
-    channel_2D.unsteady  = True
-    channel_2D.multizone = True
-    test_list.append(channel_2D)
-
-    # Channel_3D
-    channel_3D           = TestCase('channel_3D')
-    channel_3D.cfg_dir   = "sliding_interface/channel_3D"
-    channel_3D.cfg_file  = "channel_3D_WA.cfg"
-    channel_3D.test_iter = 1
-    channel_3D.test_vals = [1.000000, 0.000000, 0.661408, 0.769988, 0.696033] #last 5 columns
-    channel_3D.su2_exec  = "SU2_CFD"
-    channel_3D.timeout   = 1600
-    channel_3D.tol       = 0.00001
-    channel_3D.unsteady  = True
-    channel_3D.multizone = True
-    test_list.append(channel_3D)
-
-    # Pipe
-    pipe           = TestCase('pipe')
-    pipe.cfg_dir   = "sliding_interface/pipe"
-    pipe.cfg_file  = "pipe_NN.cfg"
-    pipe.test_iter = 2
-    pipe.test_vals = [0.491954, 0.677756, 0.963981, 1.006936] #last 4 columns
-    pipe.su2_exec  = "SU2_CFD"
-    pipe.timeout   = 1600
-    pipe.tol       = 0.00001
-    pipe.unsteady  = True
-    pipe.multizone = True
-    test_list.append(pipe)
-
-    # Rotating cylinders
-    rotating_cylinders           = TestCase('rotating_cylinders')
-    rotating_cylinders.cfg_dir   = "sliding_interface/rotating_cylinders"
-    rotating_cylinders.cfg_file  = "rot_cylinders_WA.cfg"
-    rotating_cylinders.test_iter = 3
-    rotating_cylinders.test_vals = [3.000000, 0.000000, 0.777574, 1.134794, 1.224127] #last 4 columns
-    rotating_cylinders.su2_exec  = "SU2_CFD"
-    rotating_cylinders.timeout   = 1600
-    rotating_cylinders.tol       = 0.00001
-    rotating_cylinders.unsteady  = True
-    rotating_cylinders.multizone = True
-    test_list.append(rotating_cylinders)
-
-    # Supersonic vortex shedding
-    supersonic_vortex_shedding           = TestCase('supersonic_vortex_shedding')
-    supersonic_vortex_shedding.cfg_dir   = "sliding_interface/supersonic_vortex_shedding"
-    supersonic_vortex_shedding.cfg_file  = "sup_vor_shed_WA.cfg"
-    supersonic_vortex_shedding.test_iter = 5
-    supersonic_vortex_shedding.test_vals = [5.000000, 0.000000, 1.227921, 1.638901] #last 4 columns
-    supersonic_vortex_shedding.su2_exec  = "SU2_CFD"
-    supersonic_vortex_shedding.timeout   = 1600
-    supersonic_vortex_shedding.tol       = 0.00001
-    supersonic_vortex_shedding.unsteady  = True
-    supersonic_vortex_shedding.multizone = True
-    test_list.append(supersonic_vortex_shedding)
-
-    # Bars_SST_2D
-    bars_SST_2D           = TestCase('bars_SST_2D')
-    bars_SST_2D.cfg_dir   = "sliding_interface/bars_SST_2D"
-    bars_SST_2D.cfg_file  = "bars.cfg"
-    bars_SST_2D.test_iter = 13
-    bars_SST_2D.test_vals = [13.000000, -0.619686, -1.564594]
-    bars_SST_2D.su2_exec  = "SU2_CFD"
-    bars_SST_2D.timeout   = 1600
-    bars_SST_2D.tol       = 0.00001
-    bars_SST_2D.multizone = True
-    test_list.append(bars_SST_2D)
-
-    # Sliding mesh with incompressible flows (steady)
-    slinc_steady           = TestCase('slinc_steady')
-    slinc_steady.cfg_dir   = "sliding_interface/incompressible_steady"
-    slinc_steady.cfg_file  = "config.cfg"
-    slinc_steady.test_iter = 19
-    slinc_steady.test_vals = [19.000000, -1.803326, -2.097400] #last 3 columns
-    slinc_steady.su2_exec  = "SU2_CFD"
-    slinc_steady.timeout   = 100
-    slinc_steady.tol       = 0.00001
-    slinc_steady.multizone = True
-    test_list.append(slinc_steady)
-
-    # Sliding mesh with incompressible flows (unsteady)
-    # slinc_unsteady           = TestCase('slinc_unsteady')
-    # slinc_unsteady.cfg_dir   = "sliding_interface/incompressible_unsteady"
-    # slinc_unsteady.cfg_file  = "config.cfg"
-    # slinc_unsteady.test_iter = 19
-    # slinc_unsteady.test_vals = [-3.515218,1.930028,0.000000,0.000000] #last 4 columns
-    # slinc_unsteady.su2_exec  = "SU2_CFD"
-    # slinc_unsteady.timeout   = 100
-    # slinc_unsteady.tol       = 0.00001
-    # slinc_unsteady.unsteady  = True
-    # test_list.append(slinc_unsteady)
 
     ##############################################
     ### Method of Manufactured Solutions (MMS) ###

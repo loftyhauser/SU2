@@ -101,7 +101,6 @@ int main(int argc, char *argv[]) {
    and perform all the preprocessing. ---*/
 
   const bool disc_adj = config.GetDiscrete_Adjoint();
-  const bool multizone = config.GetMultizone_Problem();
 
   if (dry_run) {
 
@@ -109,7 +108,7 @@ int main(int argc, char *argv[]) {
     driver = new CDummyDriver(config_file_name, nZone, MPICommunicator);
 
   }
-  else if ((!multizone) || (disc_adj)) {
+  else {
 
     /*--- Generic single zone problem: instantiate the single zone driver class. ---*/
     if (nZone != 1)
@@ -120,17 +119,6 @@ int main(int argc, char *argv[]) {
     }
     else {
       driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
-    }
-
-  }
-  else if (multizone) {
-
-    /*--- Generic multizone problems. ---*/
-    if (disc_adj) {
-      driver = new CDiscAdjMultizoneDriver(config_file_name, nZone, MPICommunicator);
-    }
-    else {
-      driver = new CMultizoneDriver(config_file_name, nZone, MPICommunicator);
     }
 
   }
