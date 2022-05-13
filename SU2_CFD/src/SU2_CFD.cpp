@@ -100,8 +100,6 @@ int main(int argc, char *argv[]) {
    solver types from the config, instantiate the appropriate driver for the problem
    and perform all the preprocessing. ---*/
 
-  const bool disc_adj = config.GetDiscrete_Adjoint();
-
   if (dry_run) {
 
     /*--- Dry Run. ---*/
@@ -113,10 +111,6 @@ int main(int argc, char *argv[]) {
     /*--- Generic single zone problem: instantiate the single zone driver class. ---*/
     if (nZone != 1)
       SU2_MPI::Error("The required solver doesn't support multizone simulations", CURRENT_FUNCTION);
-
-    if (disc_adj) {
-      driver = new CDiscAdjSinglezoneDriver(config_file_name, nZone, MPICommunicator);
-    }
     else {
       driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
     }

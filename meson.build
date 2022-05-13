@@ -21,9 +21,6 @@ if build_machine.system() != 'windows'
   default_warning_flags += ['-Wno-unused-parameter',
                             '-Wno-deprecated-declarations']
 
-  if get_option('enable-autodiff') or get_option('enable-directdiff')
-    default_warning_flags += ['-Wno-non-virtual-dtor']
-  endif
 endif
 
 # meson script path
@@ -50,12 +47,6 @@ omp = get_option('with-omp')
 
 if omp
   omp_dep = dependency('openmp', language:'cpp')
-endif
-
-if get_option('enable-autodiff') or get_option('enable-directdiff')
-  codi_dep = [declare_dependency(include_directories: 'externals/codi/include')]
-  codi_rev_args = ['-DCODI_REVERSE_TYPE']
-  codi_for_args = ['-DCODI_FORWARD_TYPE']
 endif
 
 # add cgns library
@@ -96,21 +87,12 @@ if mpi
   su2_deps     += parmetis_dep
   su2_cpp_args += '-DHAVE_PARMETIS'
 
-  # add medi dependency
-  if get_option('enable-autodiff') or get_option('enable-directdiff')
-    codi_dep += declare_dependency(include_directories: ['externals/medi/include', 'externals/medi/src'])
-  endif
 endif
 
 if omp
   # add OpenMP dependency
   su2_deps += omp_dep
 
-  # add opdi dependency
-  if get_option('enable-autodiff')
-    codi_dep += declare_dependency(include_directories: 'externals/opdi/include')
-
-  endif
 endif
 
 if get_option('enable-tecio')
@@ -165,25 +147,12 @@ elif get_option('enable-openblas')
 
 endif
 
-mel_dep = declare_dependency(include_directories: 'externals/mel')
-su2_deps += mel_dep
-
 extra_deps = get_option('extra-deps').split(',')
 foreach dep : extra_deps
   if dep != ''
     su2_deps += dependency(dep)
   endif
 endforeach
-
-catch2_dep = declare_dependency(include_directories: 'externals/catch2/')
-
-if omp and get_option('enable-autodiff')
-  py = find_program('python3','python')
-  p = run_command(py, 'externals/opdi/syntax/check.py', 'su2omp.syntax.json', 'Common', 'SU2_CFD', '-p', '*.hpp', '*.cpp', '*.inl', '-r', '-q')
-  if p.returncode() != 0
-    error(p.stdout())
-  endif
-endif
 
 # compile common library
 subdir('Common/src')
@@ -193,8 +162,6 @@ subdir('SU2_CFD/src')
 subdir('SU2_SOL/src')
 # install python scripts
 subdir('SU2_PY')
-# unit tests
-subdir('UnitTests')
 
 if get_option('enable-pywrapper')
   subdir('SU2_PY/pySU2')
@@ -212,13 +179,11 @@ message('''---------------------------------------------------------------------
          ---------------------
          TecIO:          @2@
          CGNS:           @3@
-         AD (reverse):   @4@
-         AD (forward):   @5@
-         Python Wrapper: @6@
-         Intel-MKL:      @7@
-         OpenBlas:       @8@
-         PaStiX:         @9@
-         Mixed Float:    @10@
+         Python Wrapper: @4@
+         Intel-MKL:      @5@
+         OpenBlas:       @6@
+         PaStiX:         @7@
+         Mixed Float:    @8@
 
          Please be sure to add the $SU2_HOME and $SU2_RUN environment variables,
          and update your $PATH (and $PYTHONPATH if applicable) with $SU2_RUN
@@ -230,7 +195,7 @@ message('''---------------------------------------------------------------------
          export PATH=$PATH:$SU2_RUN
          export PYTHONPATH=$PYTHONPATH:$SU2_RUN
 
-         Use './ninja -C @11@ install' to compile and install SU2
+         Use './ninja -C @9@ install' to compile and install SU2
 '''.format(get_option('prefix')+'/bin', meson.source_root(), get_option('enable-tecio'), get_option('enable-cgns'),
-           get_option('enable-autodiff'), get_option('enable-directdiff'), get_option('enable-pywrapper'), get_option('enable-mkl'),
+           get_option('enable-pywrapper'), get_option('enable-mkl'),
            get_option('enable-openblas'), get_option('enable-pastix'), get_option('enable-mixedprec'),  meson.build_root().split('/')[-1]))

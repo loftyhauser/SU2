@@ -28,7 +28,6 @@
 #include "../../include/output/COutputFactory.hpp"
 #include "../../include/output/COutput.hpp"
 #include "../../include/output/CFlowCompOutput.hpp"
-#include "../../include/output/CAdjFlowCompOutput.hpp"
 
 COutput* COutputFactory::CreateOutput(MAIN_SOLVER kindSolver, CConfig* config, int nDim){
 
@@ -37,10 +36,6 @@ COutput* COutputFactory::CreateOutput(MAIN_SOLVER kindSolver, CConfig* config, i
   switch(kindSolver){
     case MAIN_SOLVER::EULER: case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::RANS:
       output = new CFlowCompOutput(config, nDim);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
-    case MAIN_SOLVER::ADJ_EULER: case MAIN_SOLVER::ADJ_NAVIER_STOKES: case MAIN_SOLVER::ADJ_RANS:
-      output = new CAdjFlowCompOutput(config, nDim);
       break;
     default:
       output = new COutput(config, nDim, false);

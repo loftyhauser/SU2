@@ -1,5 +1,5 @@
 /*!
- * \file CAdjFluidIteration.cpp
+ * \file CIterationFactory.cpp
  * \brief Main subroutines used by SU2_CFD
  * \author F. Palacios, T. Economon
  * \version 7.3.1 "Blackbird"
@@ -27,8 +27,6 @@
 
 #include "../../include/iteration/CIterationFactory.hpp"
 #include "../../include/iteration/CIteration.hpp"
-#include "../../include/iteration/CAdjFluidIteration.hpp"
-#include "../../include/iteration/CDiscAdjFluidIteration.hpp"
 #include "../../include/iteration/CFluidIteration.hpp"
 
 CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CConfig* config){
@@ -45,18 +43,6 @@ CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CCo
         if (rank == MASTER_NODE)
           cout << "Euler/Navier-Stokes/RANS fluid iteration." << endl;
         iteration = new CFluidIteration(config);
-      break;
-
-    case MAIN_SOLVER::ADJ_EULER: case MAIN_SOLVER::ADJ_NAVIER_STOKES: case MAIN_SOLVER::ADJ_RANS:
-      if (rank == MASTER_NODE)
-        cout << "Adjoint Euler/Navier-Stokes/RANS fluid iteration." << endl;
-      iteration = new CAdjFluidIteration(config);
-      break;
-
-    case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
-      if (rank == MASTER_NODE)
-        cout << "Discrete adjoint Euler/Navier-Stokes/RANS fluid iteration." << endl;
-      iteration = new CDiscAdjFluidIteration(config);
       break;
 
     case MAIN_SOLVER::NONE: case MAIN_SOLVER::TEMPLATE_SOLVER: case MAIN_SOLVER::MULTIPHYSICS:

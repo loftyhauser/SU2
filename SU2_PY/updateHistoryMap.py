@@ -29,14 +29,7 @@ import os, pprint
 su2_home = os.environ['SU2_HOME'] 
 
 fileList = ['CFlowOutput.cpp', 
-'CFlowIncOutput.cpp', 
-'CFlowCompOutput.cpp',
-'CFlowCompFEMOutput.cpp',
-'CElasticityOutput.cpp',
-'CAdjFlowOutput.cpp',
-'CAdjFlowIncOutput.cpp',
-'CAdjFlowCompOutput.cpp',
-'CAdjElasticityOutput.cpp']
+'CFlowCompOutput.cpp']
 
 fileList = [os.path.join(su2_home, 'SU2_CFD/src/output/' + i) for i in fileList]
 

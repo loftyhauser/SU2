@@ -44,32 +44,16 @@ def init_submodules(method = 'auto'):
 
   # This information of the modules is used if projects was not cloned using git
   # The sha tag must be maintained manually to point to the correct commit
-  sha_version_codi = '3c3211fef2e225ab89680a4063b62bb3bb38a7e4'
-  github_repo_codi = 'https://github.com/scicompkl/CoDiPack'
-  sha_version_medi = '6aef76912e7099c4f08c9705848797ca9e8070da'
-  github_repo_medi = 'https://github.com/SciCompKL/MeDiPack'
-  sha_version_opdi = '6fb2691b8e4a8f00f47d2a27740fa890df0b5405'
-  github_repo_opdi = 'https://github.com/SciCompKL/OpDiLib'
   sha_version_meson = '41c650a040d50e0912d268af7a903a9ce1456dfa'
   github_repo_meson = 'https://github.com/mesonbuild/meson'
   sha_version_ninja = '52649de2c56b63f42bc59513d51286531c595b44'
   github_repo_ninja = 'https://github.com/ninja-build/ninja'
-  sha_version_mel = '2484cd3258ef800a10e361016cb341834ee7930b'
-  github_repo_mel = 'https://github.com/pcarruscag/MEL'
 
-  medi_name = 'MeDiPack'
-  codi_name = 'CoDiPack'
-  opdi_name = 'OpDiLib'
   meson_name = 'meson'
   ninja_name= 'ninja'
-  mel_name = 'MEL'
   base_path = cur_dir + os.path.sep + 'externals' + os.path.sep 
-  alt_name_medi = base_path + 'medi'
-  alt_name_codi = base_path + 'codi'
-  alt_name_opdi = base_path + 'opdi'
   alt_name_meson = base_path + 'meson'
   alt_name_ninja = base_path + 'ninja'
-  alt_name_mel = base_path + 'mel'
 
   if method == 'auto':
     is_git = is_git_directory(cur_dir)
@@ -84,20 +68,12 @@ def init_submodules(method = 'auto'):
   # If directory was cloned using git, use submodule feature 
   # to check and initialize submodules if necessary
   if is_git:
-    submodule_status(alt_name_codi, sha_version_codi)
-    submodule_status(alt_name_medi, sha_version_medi)
-    submodule_status(alt_name_opdi, sha_version_opdi)
     submodule_status(alt_name_meson, sha_version_meson)
     submodule_status(alt_name_ninja, sha_version_ninja)
-    submodule_status(alt_name_mel, sha_version_mel)
   # Otherwise download the zip file from git
   else:
-    download_module(codi_name, alt_name_codi, github_repo_codi, sha_version_codi)
-    download_module(medi_name, alt_name_medi, github_repo_medi, sha_version_medi)
-    download_module(opdi_name, alt_name_opdi, github_repo_opdi, sha_version_opdi)
     download_module(meson_name, alt_name_meson, github_repo_meson, sha_version_meson)
     download_module(ninja_name, alt_name_ninja, github_repo_ninja, sha_version_ninja)
-    download_module(mel_name, alt_name_mel, github_repo_mel, sha_version_mel)
 
 
 def is_git_directory(path = '.'):

@@ -3629,12 +3629,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
 
   AD::PreaccEnabled = AD_Preaccumulation;
 
-#else
-  if (AD_Mode == YES) {
-    SU2_MPI::Error("Config option AUTO_DIFF= YES requires AD support.\n"
-                   "Please use SU2_???_AD (meson.py ... -Denable-autodiff=true ...).",
-                   CURRENT_FUNCTION);
-  }
 #endif
 
   delete [] tmp_smooth;

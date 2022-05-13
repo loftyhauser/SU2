@@ -39,16 +39,6 @@
 #include "tools/CWindowingTools.hpp"
 #include "../../../Common/include/option_structure.hpp"
 
-/*--- AD workaround for a cmath function not defined in CoDi. ---*/
-namespace mel {
-namespace internal {
-inline su2double hypot(const su2double& a, const su2double& b) {
-  return sqrt(a*a + b*b);
-}
-}
-}
-#include "mel.hpp"
-
 class CGeometry;
 class CSolver;
 class CFileWriter;
@@ -171,20 +161,6 @@ protected:
 
   //! Structure to store the value initial residuals for relative residual computation
   std::map<string, su2double> initialResiduals;
-
-  /** \brief Struct to hold a parsed user-defined expression. */
-  struct CustomHistoryOutput {
-    mel::ExpressionTree<passivedouble> expression;
-    /*--- Pointers to values in the history output maps, to avoid key lookup every time. ---*/
-    std::vector<const su2double*> symbolValues;
-    bool ready = false;
-
-    su2double eval() const {
-      return mel::Eval<su2double>(expression, [&](int i) {return *symbolValues[i];});
-    }
-  };
-
-  CustomHistoryOutput customObjFunc;  /*!< \brief User-defined expression for a custom objective. */
 
    /*----------------------------- Volume output ----------------------------*/
 
@@ -629,13 +605,6 @@ protected:
   }
 
   /*!
-   * \brief Setup a custom history output object for a given expression.
-   * \param[in] expression - Some user-defined math with the history field names as variables.
-   * \param[out] output - Custom output ready to evaluate.
-   */
-  void SetupCustomHistoryOutput(const string& expression, CustomHistoryOutput& output) const;
-
-  /*!
    * \brief Add a new field to the volume output.
    * \param[in] name - Name for referencing it (in the config file and in the code).
    * \param[in] field_name - Header that is printed in the output files.
@@ -738,15 +707,6 @@ protected:
    * \param[in] geometry - Geometrical definition of the problem.
    */
   void AllocateDataSorters(CConfig *config, CGeometry *geometry);
-
-  /*!
-   * \brief Computes the custom and combo objectives.
-   * \note To be called after all other history outputs are set.
-   * \param[in] idxSol - Index of the main solver.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] solver - The container holding all solution data.
-   */
-  void SetCustomAndComboObjectives(int idxSol, const CConfig *config, CSolver **solver);
 
   /*--------------------------------- Virtual functions ---------------------------------------- */
 public:

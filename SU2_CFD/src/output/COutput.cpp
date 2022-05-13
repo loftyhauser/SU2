@@ -260,55 +260,6 @@ void COutput::OutputScreenAndHistory(CConfig *config) {
   }
 }
 
-void COutput::SetupCustomHistoryOutput(const std::string& expression, CustomHistoryOutput& output) const {
-
-  std::vector<std::string> symbols;
-  output.expression = mel::Parse<passivedouble>(expression, symbols);
-
-  auto ptrToSymbolValue = [&](const std::string& symbol) {
-    /*--- Decide if it should be per surface. ---*/
-    const auto pos = symbol.find('[');
-    const su2double* ptr = nullptr;
-    if (pos == std::string::npos) {
-      const auto it = historyOutput_Map.find(symbol);
-      if (it != historyOutput_Map.end()) {
-        ptr = &(it->second.value);
-      }
-    } else {
-      const auto name = std::string(symbol, 0, pos);
-      const auto idx = std::stoi(std::string(symbol.begin()+pos+1, symbol.end()-1));
-      const auto it = historyOutputPerSurface_Map.find(name);
-      if (it != historyOutputPerSurface_Map.end()) {
-        ptr = &(it->second[idx].value);
-      }
-    }
-    return ptr;
-  };
-
-  output.symbolValues.reserve(symbols.size());
-  for (const auto& symbol : symbols) {
-    const auto* ptr = ptrToSymbolValue(symbol);
-    if (ptr == nullptr) {
-      SU2_MPI::Error(std::string("Invalid history output (") + symbol + std::string(") used in expression:\n") +
-                     expression, CURRENT_FUNCTION);
-    }
-    output.symbolValues.push_back(ptr);
-  }
-  output.ready = true;
-}
-
-void COutput::SetCustomAndComboObjectives(int idxSol, const CConfig *config, CSolver **solver) {
-
-  if (config->GetKind_ObjFunc() == CUSTOM_OBJFUNC && !config->GetCustomObjFunc().empty()) {
-    if (!customObjFunc.ready) {
-      SetupCustomHistoryOutput(config->GetCustomObjFunc(), customObjFunc);
-    }
-    solver[idxSol]->SetTotal_Custom_ObjFunc(customObjFunc.eval());
-  }
-  solver[idxSol]->Evaluate_ObjFunc(config, solver);
-  SetHistoryOutputValue("COMBO", solver[idxSol]->GetTotal_ComboObj());
-}
-
 void COutput::AllocateDataSorters(CConfig *config, CGeometry *geometry){
 
   /*---- Construct a data sorter object to partition and distribute

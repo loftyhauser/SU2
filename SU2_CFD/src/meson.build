@@ -8,8 +8,6 @@ su2_cfd_src += files(['fluid/CFluidModel.cpp',
                       'fluid/CVanDerWaalsGas.cpp'])
 
 su2_cfd_src += files(['output/COutputFactory.cpp',
-                      'output/CAdjFlowOutput.cpp',
-                      'output/CAdjFlowCompOutput.cpp',
                       'output/CBaselineOutput.cpp',
                       'output/CFlowCompOutput.cpp',
                       'output/CFVMOutput.cpp',
@@ -35,13 +33,9 @@ su2_cfd_src += files(['output/COutputFactory.cpp',
                       'output/tools/CWindowingTools.cpp'])
 
 su2_cfd_src += files(['variables/CTransLMVariable.cpp',
-                      'variables/CAdjEulerVariable.cpp',
                       'variables/CTurbVariable.cpp',
                       'variables/CScalarVariable.cpp',
-                      'variables/CAdjNSVariable.cpp',
                       'variables/CBaselineVariable.cpp',
-                      'variables/CDiscAdjMeshBoundVariable.cpp',
-                      'variables/CDiscAdjVariable.cpp',
                       'variables/CTurbSAVariable.cpp',
                       'variables/CMeshVariable.cpp',
                       'variables/CMeshBoundVariable.cpp',
@@ -49,17 +43,12 @@ su2_cfd_src += files(['variables/CTransLMVariable.cpp',
                       'variables/CTurbSSTVariable.cpp',
                       'variables/CVariable.cpp',
                       'variables/CNSVariable.cpp',
-                      'variables/CAdjTurbVariable.cpp',
                       'variables/CFlowVariable.cpp',
                       'variables/CEulerVariable.cpp',
                       'variables/CSobolevSmoothingVariable.cpp'])
 
 su2_cfd_src += files(['solvers/CSolverFactory.cpp',
-                      'solvers/CAdjEulerSolver.cpp',
-                      'solvers/CAdjNSSolver.cpp',
-                      'solvers/CAdjTurbSolver.cpp',
                       'solvers/CBaselineSolver.cpp',
-                      'solvers/CDiscAdjSolver.cpp',
                       'solvers/CEulerSolver.cpp',
                       'solvers/CNSSolver.cpp',
                       'solvers/CSolver.cpp',
@@ -89,7 +78,6 @@ su2_cfd_src += files(['../include/numerics_simd/CNumericsSIMD.cpp'])
 
 su2_cfd_src += files(['drivers/CDriver.cpp',
                       'drivers/CSinglezoneDriver.cpp',
-                      'drivers/CDiscAdjSinglezoneDriver.cpp',
                       'drivers/CDummyDriver.cpp'])
 
 su2_cfd_src += files(['integration/CIntegration.cpp',
@@ -100,8 +88,6 @@ su2_cfd_src += files(['integration/CIntegration.cpp',
 
 su2_cfd_src += files(['iteration/CIteration.cpp',
                       'iteration/CIterationFactory.cpp',
-                      'iteration/CAdjFluidIteration.cpp',
-                      'iteration/CDiscAdjFluidIteration.cpp',
                       'iteration/CFluidIteration.cpp'])
 
 su2_cfd_src += files(['limiters/CLimiterDetails.cpp'])
@@ -119,35 +105,5 @@ if get_option('enable-normal')
                        install : true,
                        dependencies : [su2_cfd_dep, su2_deps, common_dep],
                        cpp_args:  ['-fPIC'] + [default_warning_flags, su2_cpp_args])
-endif
-
-if get_option('enable-autodiff')
-  su2_cfd_lib_ad = static_library('SU2core_AD',
-                               su2_cfd_src,
-                               install : false,
-		               dependencies : [su2_deps, codi_dep, commonAD_dep],
-                               cpp_args: [default_warning_flags, su2_cpp_args, codi_rev_args])
-  su2_cfd_dep_ad = declare_dependency(link_with: su2_cfd_lib_ad,
-                                   include_directories: su2_cfd_include)
-  su2_cfd_ad = executable('SU2_CFD_AD',
-                          'SU2_CFD.cpp',
-                          install : true,
-                          dependencies : [su2_cfd_dep_ad, su2_deps, codi_dep, commonAD_dep],
-                          cpp_args: ['-fPIC'] + [default_warning_flags, su2_cpp_args, codi_rev_args])
-endif
-
-if get_option('enable-directdiff')
-  su2_cfd_lib_dd = static_library('SU2core_DIRECTDIFF',
-                               su2_cfd_src,
-                               install : false,
-		               dependencies : [su2_deps, codi_dep, commonDD_dep],
-                               cpp_args: [default_warning_flags, su2_cpp_args, codi_for_args])
-  su2_cfd_dep_dd = declare_dependency(link_with: su2_cfd_lib_dd,
-                                   include_directories: su2_cfd_include)
-  su2_cfd_dd = executable('SU2_CFD_DIRECTDIFF',
-                          'SU2_CFD.cpp',
-                          install : true,
-                          dependencies : [su2_cfd_dep_dd, su2_deps, codi_dep, commonDD_dep],
-                          cpp_args: ['-fPIC'] + [default_warning_flags, su2_cpp_args, codi_for_args])
 endif
 

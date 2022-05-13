@@ -33,7 +33,6 @@
 
 #include "drivers/CDriver.hpp"
 #include "drivers/CSinglezoneDriver.hpp"
-#include "drivers/CDiscAdjSinglezoneDriver.hpp"
 #include "drivers/CDummyDriver.hpp"
 #include "output/COutput.hpp"
 #include "../../Common/include/geometry/CGeometry.hpp"

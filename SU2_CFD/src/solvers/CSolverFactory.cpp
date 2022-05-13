@@ -32,11 +32,7 @@
 #include "../../include/solvers/CTurbSASolver.hpp"
 #include "../../include/solvers/CTurbSSTSolver.hpp"
 #include "../../include/solvers/CTransLMSolver.hpp"
-#include "../../include/solvers/CAdjEulerSolver.hpp"
-#include "../../include/solvers/CAdjNSSolver.hpp"
-#include "../../include/solvers/CAdjTurbSolver.hpp"
 #include "../../include/solvers/CTemplateSolver.hpp"
-#include "../../include/solvers/CDiscAdjSolver.hpp"
 #include "../../include/solvers/CBaselineSolver.hpp"
 
 map<const CSolver*, SolverMetaData> CSolverFactory::allocatedSolvers;
@@ -108,28 +104,12 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
   metaData.solverType = kindSolver;
 
   switch (kindSolver) {
-    case SUB_SOLVER_TYPE::CONT_ADJ_EULER:
-      genericSolver = new CAdjEulerSolver(geometry, config, iMGLevel);
-      metaData.integrationType = INTEGRATION_TYPE::MULTIGRID;
-      break;
-    case SUB_SOLVER_TYPE::CONT_ADJ_NAVIER_STOKES:
-      genericSolver = new CAdjNSSolver(geometry, config, iMGLevel);
-      metaData.integrationType = INTEGRATION_TYPE::MULTIGRID;
-      break;
-    case SUB_SOLVER_TYPE::CONT_ADJ_TURB:
-      genericSolver = CreateTurbSolver(kindTurbModel, solver, geometry, config, iMGLevel, true);
-      metaData.integrationType = INTEGRATION_TYPE::SINGLEGRID;
-      break;
     case SUB_SOLVER_TYPE::DISC_ADJ_TURB:
       genericSolver = CreateTurbSolver(kindTurbModel, solver, geometry, config, iMGLevel, true);
       metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
       break;
     case SUB_SOLVER_TYPE::BASELINE:
       genericSolver = new CBaselineSolver(geometry, config);
-      metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
-      break;
-    case SUB_SOLVER_TYPE::DISC_ADJ_FLOW:
-      genericSolver = new CDiscAdjSolver(geometry, config, solver[FLOW_SOL], RUNTIME_FLOW_SYS, iMGLevel);
       metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
       break;
     case SUB_SOLVER_TYPE::EULER:
@@ -186,15 +166,6 @@ CSolver* CSolverFactory::CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **so
       case TURB_FAMILY::NONE:
         SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=NONE.", CURRENT_FUNCTION);
         break;
-    }
-  } else {
-
-    if (config->GetDiscrete_Adjoint()){
-      if (!config->GetFrozen_Visc_Disc())
-        turbSolver = new CDiscAdjSolver(geometry, config, solver[TURB_SOL], RUNTIME_TURB_SYS, iMGLevel);
-    } else {
-      if (!config->GetFrozen_Visc_Cont())
-        turbSolver = new CAdjTurbSolver(geometry, config, iMGLevel);
     }
   }
 

@@ -1673,7 +1673,7 @@ void CDriver::Print_DirectResidual(RECORDING kind_recording) {
         }
 
       }
-        SU2_MPI::Error("Invalid KindSolver for CDiscAdj-MultiZone/SingleZone-Driver.", CURRENT_FUNCTION);
+        SU2_MPI::Error("Invalid KindSolver for SingleZone-Driver.", CURRENT_FUNCTION);
     } // loop iZone
 
     if (!addVals) RMSTable.PrintHeader();
