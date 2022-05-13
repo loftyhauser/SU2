@@ -45,20 +45,6 @@ class CSobolevSmoothingVariable final : public CVariable {
   CSobolevSmoothingVariable(unsigned long npoint, unsigned long ndim, const CConfig *config);
 
   /*!
-   * \brief Set the sensitivity at the node
-   * \param[in] iDim - spacial component
-   * \param[in] val - value of the Sensitivity
-   */
-  inline void SetSensitivity(unsigned long iPoint, unsigned long iDim, su2double val) override { Sensitivity(iPoint,iDim) = val;}
-
-  /*!
-   * \brief Get the Sensitivity at the node
-   * \param[in] iDim - spacial component
-   * \return value of the Sensitivity
-   */
-  inline su2double GetSensitivity(unsigned long iPoint, unsigned long iDim) const override { return Sensitivity(iPoint,iDim); }
-
-  /*!
    * \brief Mark a point as boundary of a boundary
    */
   void MarkAsBoundaryPoint(unsigned long iPoint);

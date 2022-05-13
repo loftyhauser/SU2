@@ -1,5 +1,4 @@
-common_src += files(['CSysSolve_b.cpp',
-                     'CSysSolve.cpp',
+common_src += files(['CSysSolve.cpp',
                      'CSysVector.cpp',
                      'CSysMatrix.cpp',
                      'CPastixWrapper.cpp',

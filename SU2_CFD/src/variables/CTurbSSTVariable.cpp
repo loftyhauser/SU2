@@ -54,12 +54,6 @@ void CTurbSSTVariable::SetBlendingFunc(unsigned long iPoint, su2double val_visco
                                        su2double val_dist, su2double val_density) {
   su2double arg2, arg2A, arg2B, arg1;
 
-  AD::StartPreacc();
-  AD::SetPreaccIn(val_viscosity);  AD::SetPreaccIn(val_dist);
-  AD::SetPreaccIn(val_density);
-  AD::SetPreaccIn(Solution[iPoint], nVar);
-  AD::SetPreaccIn(Gradient[iPoint], nVar, nDim);
-
   /*--- Cross diffusion ---*/
 
   CDkw(iPoint) = 0.0;
@@ -80,8 +74,5 @@ void CTurbSSTVariable::SetBlendingFunc(unsigned long iPoint, su2double val_visco
 
   arg2 = max(2.0*arg2A, arg2B);
   F2(iPoint) = tanh(pow(arg2, 2.0));
-
-  AD::SetPreaccOut(F1(iPoint)); AD::SetPreaccOut(F2(iPoint)); AD::SetPreaccOut(CDkw(iPoint));
-  AD::EndPreacc();
 
 }

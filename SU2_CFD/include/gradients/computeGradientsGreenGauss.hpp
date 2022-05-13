@@ -76,14 +76,6 @@ void computeGradientsGreenGauss(CSolver* solver,
   {
     auto nodes = geometry.nodes;
 
-    /*--- Cannot preaccumulate if hybrid parallel due to shared reading. ---*/
-    if (omp_get_num_threads() == 1) AD::StartPreacc();
-    AD::SetPreaccIn(nodes->GetVolume(iPoint));
-    AD::SetPreaccIn(nodes->GetPeriodicVolume(iPoint));
-
-    for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
-      AD::SetPreaccIn(field(iPoint,iVar));
-
     /*--- Clear the gradient. --*/
 
     for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
@@ -108,11 +100,9 @@ void computeGradientsGreenGauss(CSolver* solver,
       su2double weight = dir * halfOnVol;
 
       const auto area = geometry.edges->GetNormal(iEdge);
-      AD::SetPreaccIn(area, nDim);
 
       for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
       {
-        AD::SetPreaccIn(field(jPoint,iVar));
 
         su2double flux = weight * (field(iPoint,iVar) + field(jPoint,iVar));
 
@@ -122,11 +112,6 @@ void computeGradientsGreenGauss(CSolver* solver,
 
     }
 
-    for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
-      for (size_t iDim = 0; iDim < nDim; ++iDim)
-        AD::SetPreaccOut(gradient(iPoint,iVar,iDim));
-
-    AD::EndPreacc();
   }
   END_SU2_OMP_FOR
 

@@ -462,39 +462,6 @@ public:
    */
   inline su2double ComputeCurrentVolume(void) const {return ComputeVolume(CURRENT);}
 
-  /*!
-   * \brief Register the current and reference coordinates of the element as pre-accumulation inputs
-   * the latter are needed for compatibility with shape derivatives, there is no problem registering
-   * because inactive variables are ignored.
-   */
-  inline void SetPreaccIn_Coords(bool nonlinear = true) {
-    AD::SetPreaccIn(RefCoord.data(), nNodes*MAXNDIM);
-    if (nonlinear)
-      AD::SetPreaccIn(CurrentCoord.data(), nNodes*MAXNDIM);
-  }
-
-  /*!
-   * \brief Register the stress residual as a pre-accumulation output. When computing the element
-   * stiffness matrix this is the only term that sees its way into the RHS of the system.
-   */
-  inline void SetPreaccOut_Kt_a(void) {
-    AD::SetPreaccOut(Kt_a.data(), nNodes*nDim);
-  }
-
-  /*!
-   * \brief Register the mass matrix as a pre-accumulation output.
-   */
-  inline void SetPreaccOut_Mab(void) {
-    AD::SetPreaccOut(Mab.data(), nNodes*nNodes);
-  }
-
-  /*!
-   * \brief Register the dead load as a pre-accumulation output.
-   */
-  inline void SetPreaccOut_FDL_a(void) {
-    AD::SetPreaccOut(FDL_a.data(), nNodes*nDim);
-  }
-
  /*!
   * \brief Add the scalar product of the shape functions to the tangent matrix.
   * \param[in] nodeA - index of Node a.

@@ -29,7 +29,6 @@
 #include "../include/CConfig.hpp"
 #undef ENABLE_MAPS
 
-#include "../include/basic_types/ad_structure.hpp"
 #include "../include/toolboxes/printing_toolbox.hpp"
 
 using namespace PrintingToolbox;
@@ -973,11 +972,7 @@ void CConfig::SetConfig_Options() {
   addBoolOption("MULTIZONE", Multizone_Problem, NO);
   /*!\brief PHYSICAL_PROBLEM \n DESCRIPTION: Physical governing equations \n Options: see \link Solver_Map \endlink \n DEFAULT: NONE \ingroup Config*/
   addEnumOption("MULTIZONE_SOLVER", Kind_MZSolver, Multizone_Map, ENUM_MULTIZONE::MZ_BLOCK_GAUSS_SEIDEL);
-#ifdef CODI_REVERSE_TYPE
-  const bool discAdjDefault = true;
-#else
   const bool discAdjDefault = false;
-#endif
   /*!\brief MATH_PROBLEM  \n DESCRIPTION: Mathematical problem \n  Options: DIRECT, ADJOINT \ingroup Config*/
   addMathProblemOption("MATH_PROBLEM", ContinuousAdjoint, false, DiscreteAdjoint, discAdjDefault, Restart_Flow, discAdjDefault);
   /*!\brief KIND_TURB_MODEL \n DESCRIPTION: Specify turbulence model \n Options: see \link Turb_Model_Map \endlink \n DEFAULT: NONE \ingroup Config*/
@@ -3594,13 +3589,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   if (Fixed_CL_Mode) Update_AoA = false;
 
   if (DirectDiff != NO_DERIVATIVE) {
-#ifndef CODI_FORWARD_TYPE
-    if (Kind_SU2 == SU2_COMPONENT::SU2_CFD) {
-      SU2_MPI::Error("SU2_CFD: Config option DIRECT_DIFF= YES requires AD support.\n"
-                     "Please use SU2_CFD_DIRECTDIFF (meson.py ... -Denable-directdiff=true ...).",
-                     CURRENT_FUNCTION);
-    }
-#endif
     /*--- Initialize the derivative values ---*/
     switch (DirectDiff) {
       case D_MACH:
@@ -3623,13 +3611,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
         break;
       }
   }
-
-#if defined CODI_REVERSE_TYPE
-  AD_Mode = YES;
-
-  AD::PreaccEnabled = AD_Preaccumulation;
-
-#endif
 
   delete [] tmp_smooth;
 
@@ -3884,64 +3865,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   if (isPastix(Kind_DiscAdj_Linear_Solver)) Kind_DiscAdj_Linear_Prec = LU_SGS;
   if (isPastix(Kind_Deform_Linear_Solver)) Kind_Deform_Linear_Solver_Prec = LU_SGS;
 
-
-  if (DiscreteAdjoint) {
-#if !defined CODI_REVERSE_TYPE
-    if (Kind_SU2 == SU2_COMPONENT::SU2_CFD) {
-      SU2_MPI::Error(string("SU2_CFD: Config option MATH_PROBLEM= DISCRETE_ADJOINT requires AD support!\n") +
-                     string("Please use SU2_CFD_AD (configuration/compilation is done using the preconfigure.py script)."),
-                     CURRENT_FUNCTION);
-    }
-#endif
-
-    /*--- Use the same linear solver on the primal as the one used in the adjoint. ---*/
-    Kind_Linear_Solver = Kind_DiscAdj_Linear_Solver;
-    Kind_Linear_Solver_Prec = Kind_DiscAdj_Linear_Prec;
-
-    if (Time_Domain) {
-
-      Restart_Flow = false;
-
-      if (Unst_AdjointIter- long(nTimeIter) < 0){
-        SU2_MPI::Error(string("Invalid iteration number requested for unsteady adjoint.\n" ) +
-                       string("Make sure EXT_ITER is larger or equal than UNST_ADJOINT_ITER."),
-                       CURRENT_FUNCTION);
-      }
-
-      /*--- If the averaging interval is not set, we average over all time-steps ---*/
-
-      if (Iter_Avg_Objective == 0.0) {
-        Iter_Avg_Objective = nTimeIter;
-      }
-
-    }
-
-    /*--- Note that this is deliberately done at the end of this routine! ---*/
-    switch(Kind_Solver) {
-      case MAIN_SOLVER::EULER:
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_EULER;
-        break;
-      case MAIN_SOLVER::RANS:
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_RANS;
-        break;
-      case MAIN_SOLVER::NAVIER_STOKES:
-        Kind_Solver = MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES;
-        break;
-      default:
-        break;
-    }
-
-    RampRotatingFrame = false;
-  }
-
-  /* 2nd-order MUSCL is not possible for the continuous adjoint
-   turbulence model. */
-
-  if (MUSCL_AdjTurb) {
-    SU2_MPI::Error(string("MUSCL_ADJTURB= YES not currently supported.\n") +
-                   string("Please select MUSCL_ADJTURB= NO (first-order)."),
-                   CURRENT_FUNCTION);
-  }
 
   /* Check for whether we need a second gradient method to calculate
    gradients for uwpind reconstruction. Set additional booleans to

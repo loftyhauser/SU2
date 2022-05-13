@@ -30,10 +30,6 @@
 
 #ifdef HAVE_PASTIX
 
-#ifdef CODI_FORWARD_TYPE
-  #error Cannot use PaStiX with forward mode AD
-#endif
-
 namespace PaStiX {
 extern "C" {
 #include <pastix.h>

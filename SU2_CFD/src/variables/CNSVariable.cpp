@@ -58,18 +58,6 @@ void CNSVariable::SetRoe_Dissipation_NTS(unsigned long iPoint,
   unsigned long iDim;
   su2double Omega, Omega_2 = 0.0, Baux, Gaux, Lturb, Kaux, Aaux;
 
-  AD::StartPreacc();
-  AD::SetPreaccIn(Vorticity[iPoint], 3);
-  AD::SetPreaccIn(StrainMag(iPoint));
-  AD::SetPreaccIn(val_delta);
-  AD::SetPreaccIn(val_const_DES);
-  /*--- Density ---*/
-  AD::SetPreaccIn(Solution(iPoint,0));
-  /*--- Laminar viscosity --- */
-  AD::SetPreaccIn(Primitive(iPoint, indices.LaminarViscosity()));
-  /*--- Eddy viscosity ---*/
-  AD::SetPreaccIn(Primitive(iPoint, indices.EddyViscosity()));
-
   /*--- Central/upwind blending based on:
    * Zhixiang Xiao, Jian Liu, Jingbo Huang, and Song Fu.  "Numerical
    * Dissipation Effects on Massive Separation Around Tandem Cylinders",
@@ -96,9 +84,6 @@ void CNSVariable::SetRoe_Dissipation_NTS(unsigned long iPoint,
 
   Roe_Dissipation(iPoint) = sigma_max * tanh(pow(Aaux, ch1));
 
-  AD::SetPreaccOut(Roe_Dissipation(iPoint));
-  AD::EndPreacc();
-
 }
 
 void CNSVariable::SetRoe_Dissipation_FD(unsigned long iPoint, su2double val_wall_dist){
@@ -106,14 +91,6 @@ void CNSVariable::SetRoe_Dissipation_FD(unsigned long iPoint, su2double val_wall
   /*--- Constants for Roe Dissipation ---*/
 
   const passivedouble k2 = pow(0.41,2.0);
-
-  AD::StartPreacc();
-  AD::SetPreaccIn(Gradient_Primitive[iPoint], nVar, nDim);
-  AD::SetPreaccIn(val_wall_dist);
-  /*--- Eddy viscosity ---*/
-  AD::SetPreaccIn(Primitive(iPoint, indices.EddyViscosity()));
-  /*--- Laminar viscosity --- */
-  AD::SetPreaccIn(Primitive(iPoint, indices.LaminarViscosity()));
 
   su2double uijuij = 0.0;
 
@@ -129,8 +106,6 @@ void CNSVariable::SetRoe_Dissipation_FD(unsigned long iPoint, su2double val_wall
 
   Roe_Dissipation(iPoint) = 1.0-tanh(pow(8.0*r_d,3.0));
 
-  AD::SetPreaccOut(Roe_Dissipation(iPoint));
-  AD::EndPreacc();
 }
 
 bool CNSVariable::SetPrimVar(unsigned long iPoint, su2double eddy_visc, su2double turb_ke, CFluidModel *FluidModel) {

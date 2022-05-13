@@ -50,11 +50,6 @@ private:
   using Base::implicit;
 
   /*!
-   * \brief Adds any extra variables to AD.
-   */
-  void ExtraADPreaccIn() override {}
-
-  /*!
    * \brief SA specific steps in the ComputeResidual method
    * \param[in] config - Definition of the particular problem.
    */
@@ -100,14 +95,6 @@ private:
   using Base::ScalarVar_j;
   using Base::implicit;
   using Base::idx;
-
-  /*!
-   * \brief Adds any extra variables to AD
-   */
-  void ExtraADPreaccIn() override {
-    AD::SetPreaccIn(V_i[idx.Density()]);
-    AD::SetPreaccIn(V_j[idx.Density()]);
-  }
 
   /*!
    * \brief SST specific steps in the ComputeResidual method

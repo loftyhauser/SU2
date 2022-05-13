@@ -812,43 +812,6 @@ public:
   inline CMatrixView<const su2double> GetGridVel_Grad(unsigned long iPoint) const { return GridVel_Grad[iPoint]; }
 
   /*!
-   * \brief Set the adjoint values of the (geometric) coordinates.
-   * \param[in] iPoint - Index of the point.
-   * \param[in] adj_sol - Adjoint values of the Coord variables.
-   */
-  inline void SetAdjointSolution(unsigned long iPoint, const su2double *adj_sol) {
-    for (unsigned long iDim = 0; iDim < nDim; iDim++)
-      AD::SetDerivative(AD_OutputIndex(iPoint,iDim), SU2_TYPE::GetValue(adj_sol[iDim]));
-  }
-
-  /*!
-   * \brief Get the adjoint values of the (geometric) coordinates.
-   * \param[in] iPoint - Index of the point.
-   * \param[in] iDim - Dimension.
-   */
-  inline su2double GetAdjointSolution(unsigned long iPoint, unsigned long iDim) const {
-    return AD::GetDerivative(AD_InputIndex(iPoint,iDim));
-  }
-
-  /*!
-   * \brief Register coordinates of a point.
-   * \param[in] iPoint - Index of the point.
-   * \param[in] input - Register as input or output.
-   */
-  inline void RegisterCoordinates(unsigned long iPoint, bool input) {
-    for (unsigned long iDim = 0; iDim < nDim; iDim++) {
-      if(input) {
-        AD::RegisterInput(Coord(iPoint,iDim));
-        AD::SetIndex(AD_InputIndex(iPoint,iDim), Coord(iPoint,iDim));
-      }
-      else {
-        AD::RegisterOutput(Coord(iPoint,iDim));
-        AD::SetIndex(AD_OutputIndex(iPoint,iDim), Coord(iPoint,iDim));
-      }
-    }
-  }
-
-  /*!
    * \brief Set wall roughnesses according to stored closest wall information.
    * \param[in] roughness - Mapping [rank][zone][marker] -> roughness
    */

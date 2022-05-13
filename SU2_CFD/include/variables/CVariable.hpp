@@ -119,15 +119,6 @@ protected:
   void RegisterContainer(bool input, su2activematrix& variable, su2matrix<int>* ad_index = nullptr) {
     const auto nPoint = variable.rows();
     SU2_OMP_FOR_STAT(roundUpDiv(nPoint,omp_get_num_threads()))
-    for (unsigned long iPoint = 0; iPoint < nPoint; ++iPoint) {
-      for(unsigned long iVar=0; iVar<variable.cols(); ++iVar) {
-
-        if (input) AD::RegisterInput(variable(iPoint,iVar));
-        else AD::RegisterOutput(variable(iPoint,iVar));
-
-        if (ad_index) AD::SetIndex((*ad_index)(iPoint,iVar), variable(iPoint,iVar));
-      }
-    }
     END_SU2_OMP_FOR
   }
 
@@ -2049,48 +2040,6 @@ public:
    * \brief Register the variables in the solution_time_n1 array as input/output variable.
    */
   void RegisterSolution_time_n1();
-
-  /*!
-   * \brief Set the adjoint values of the solution.
-   * \param[in] adj_sol - The adjoint values of the solution.
-   */
-  inline void SetAdjointSolution(unsigned long iPoint, const su2double *adj_sol) {
-    for (unsigned long iVar = 0; iVar < AD_OutputIndex.cols(); iVar++)
-      AD::SetDerivative(AD_OutputIndex(iPoint,iVar), SU2_TYPE::GetValue(adj_sol[iVar]));
-  }
-
-  /*!
-   * \brief Get the adjoint values of the solution.
-   * \param[in] adj_sol - The adjoint values of the solution.
-   */
-  inline void GetAdjointSolution(unsigned long iPoint, su2double *adj_sol) const {
-    for (unsigned long iVar = 0; iVar < AD_InputIndex.cols(); iVar++)
-      adj_sol[iVar] = AD::GetDerivative(AD_InputIndex(iPoint,iVar));
-  }
-
-  inline void GetAdjointSolution_time_n(unsigned long iPoint, su2double *adj_sol) const {
-    for (unsigned long iVar = 0; iVar < Solution_time_n.cols(); iVar++)
-      adj_sol[iVar] = SU2_TYPE::GetDerivative(Solution_time_n(iPoint,iVar));
-  }
-
-  inline void GetAdjointSolution_time_n1(unsigned long iPoint, su2double *adj_sol) const {
-    for (unsigned long iVar = 0; iVar < Solution_time_n1.cols(); iVar++)
-      adj_sol[iVar] = SU2_TYPE::GetDerivative(Solution_time_n1(iPoint,iVar));
-  }
-
-  /*!
-   * \brief Set the sensitivity at the node
-   * \param[in] iDim - spacial component
-   * \param[in] val - value of the Sensitivity
-   */
-  inline virtual void SetSensitivity(unsigned long iPoint, unsigned long iDim, su2double val) {}
-
-  /*!
-   * \brief Get the Sensitivity at the node
-   * \param[in] iDim - spacial component
-   * \return value of the Sensitivity
-   */
-  inline virtual su2double GetSensitivity(unsigned long iPoint, unsigned long iDim) const { return 0.0; }
 
   inline virtual void SetTau_Wall(unsigned long iPoint, su2double tau_wall) {}
 

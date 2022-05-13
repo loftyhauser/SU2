@@ -76,13 +76,6 @@ FORCEINLINE void solveLeastSquares(size_t iPoint,
 
   /*--- Entries of upper triangular matrix R. ---*/
 
-  if (periodic) {
-    AD::StartPreacc();
-    AD::SetPreaccIn(Rmatrix(iPoint,0,0));
-    AD::SetPreaccIn(Rmatrix(iPoint,0,1));
-    AD::SetPreaccIn(Rmatrix(iPoint,1,1));
-  }
-
   su2double r11 = Rmatrix(iPoint,0,0);
   su2double r12 = Rmatrix(iPoint,0,1);
   su2double r22 = Rmatrix(iPoint,1,1);
@@ -93,12 +86,6 @@ FORCEINLINE void solveLeastSquares(size_t iPoint,
   r22 = sqrt(max(r22 - r12*r12, eps));
 
   if (nDim == 3) {
-    if (periodic) {
-      AD::SetPreaccIn(Rmatrix(iPoint,0,2));
-      AD::SetPreaccIn(Rmatrix(iPoint,1,2));
-      AD::SetPreaccIn(Rmatrix(iPoint,2,1));
-      AD::SetPreaccIn(Rmatrix(iPoint,2,2));
-    }
 
     r13 = Rmatrix(iPoint,0,2);
     r33 = Rmatrix(iPoint,2,2);
@@ -124,14 +111,6 @@ FORCEINLINE void solveLeastSquares(size_t iPoint,
     computeSmatrix(r11, r12, r13, r22, r23, r33, detR2, Smatrix);
   }
 
-  if (periodic) {
-    /*--- Stop preacc here as gradient is in/out. ---*/
-    for (size_t iDim = 0; iDim < nDim; ++iDim)
-      for (size_t jDim = iDim; jDim < nDim; ++jDim)
-        AD::SetPreaccOut(Smatrix[iDim][jDim]);
-    AD::EndPreacc();
-  }
-
   /*--- Computation of the gradient: S*c ---*/
 
   for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
@@ -146,13 +125,6 @@ FORCEINLINE void solveLeastSquares(size_t iPoint,
       gradient(iPoint, iVar, iDim) = Cvector[iDim];
   }
 
-  if (!periodic) {
-    /*--- Stop preacc here instead as gradient is only out. ---*/
-    for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
-      for (size_t iDim = 0; iDim < nDim; ++iDim)
-        AD::SetPreaccOut(gradient(iPoint, iVar, iDim));
-    AD::EndPreacc();
-  }
 }
 
 /*!
@@ -203,13 +175,6 @@ void computeGradientsLeastSquares(CSolver* solver,
     auto nodes = geometry.nodes;
     const auto coord_i = nodes->GetCoord(iPoint);
 
-    /*--- Cannot preaccumulate if hybrid parallel due to shared reading. ---*/
-    if (omp_get_num_threads() == 1) AD::StartPreacc();
-    AD::SetPreaccIn(coord_i, nDim);
-
-    for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
-      AD::SetPreaccIn(field(iPoint,iVar));
-
     /*--- Clear gradient and Rmatrix. ---*/
 
     for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
@@ -224,7 +189,6 @@ void computeGradientsLeastSquares(CSolver* solver,
     for (auto jPoint : nodes->GetPoints(iPoint))
     {
       const auto coord_j = geometry.nodes->GetCoord(jPoint);
-      AD::SetPreaccIn(coord_j, nDim);
 
 
       /*--- Distance vector from iPoint to jPoint ---*/
@@ -255,7 +219,6 @@ void computeGradientsLeastSquares(CSolver* solver,
 
         for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
         {
-          AD::SetPreaccIn(field(jPoint,iVar));
 
           su2double delta_ij = weight * (field(jPoint,iVar) - field(iPoint,iVar));
 
@@ -265,25 +228,9 @@ void computeGradientsLeastSquares(CSolver* solver,
       }
     }
 
-    if (periodic)
-    {
-      /*--- A second loop is required after periodic comms, checkpoint the preacc. ---*/
-
-      for (size_t iDim = 0; iDim < nDim; ++iDim)
-        for (size_t jDim = 0; jDim < nDim; ++jDim)
-          AD::SetPreaccOut(Rmatrix(iPoint, iDim, jDim));
-
-      for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
-        for (size_t iDim = 0; iDim < nDim; ++iDim)
-          AD::SetPreaccOut(gradient(iPoint, iVar, iDim));
-
-      AD::EndPreacc();
-    }
-    else {
       /*--- Periodic comms are not needed, solve the LS problem for iPoint. ---*/
 
       solveLeastSquares<nDim, false>(iPoint, varBegin, varEnd, Rmatrix, gradient);
-    }
   }
   END_SU2_OMP_FOR
 

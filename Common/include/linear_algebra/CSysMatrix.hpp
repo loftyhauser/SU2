@@ -37,7 +37,7 @@
 #include <cassert>
 
 /*--- In forward mode the matrix is not of a built-in type. ---*/
-#if defined(HAVE_MKL) && !defined(CODI_FORWARD_TYPE)
+#if defined(HAVE_MKL)
 #include "mkl.h"
 #ifndef __INTEL_MKL__
   #error Could not determine the MKL version
@@ -49,7 +49,7 @@
  Lapack direct calls only seem to be created for Intel compilers, and it is not worthwhile
  making "getrf" and "getrs" compatible with AD since they are not used as often as "gemm".
 ---*/
-#if defined(__INTEL_COMPILER) && defined(MKL_DIRECT_CALL_SEQ) && !defined(CODI_REVERSE_TYPE)
+#if defined(__INTEL_COMPILER) && defined(MKL_DIRECT_CALL_SEQ)
   #define USE_MKL_LAPACK
 #endif
 template<class T>

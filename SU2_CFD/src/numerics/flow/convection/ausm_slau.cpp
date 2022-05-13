@@ -316,13 +316,6 @@ CNumerics::ResidualType<> CUpwAUSMPLUS_SLAU_Base_Flow::ComputeResidual(const CCo
   implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
   unsigned short iDim, iVar;
 
-  /*--- Space to start preaccumulation ---*/
-
-  AD::StartPreacc();
-  AD::SetPreaccIn(Normal, nDim);
-  AD::SetPreaccIn(V_i, nDim+4);
-  AD::SetPreaccIn(V_j, nDim+4);
-
   /*--- Variables for the general form and primitives for mass flux and pressure calculation.  ---*/
   /*--- F_{1/2} = ||A|| ( 0.5 * mdot * (psi_i+psi_j) - 0.5 * |mdot| * (psi_i-psi_j) + N * pf ) ---*/
 
@@ -366,11 +359,6 @@ CNumerics::ResidualType<> CUpwAUSMPLUS_SLAU_Base_Flow::ComputeResidual(const CCo
                  0.5*DissFlux*(psi_i[nVar-1]-psi_j[nVar-1]);
 
   for (iVar = 0; iVar < nVar; iVar++) Flux[iVar] *= Area;
-
-  /*--- Space to end preaccumulation ---*/
-
-  AD::SetPreaccOut(Flux, nVar);
-  AD::EndPreacc();
 
   /*--- If required, compute Jacobians, either approximately (Roe) or numerically ---*/
 
@@ -833,11 +821,6 @@ CNumerics::ResidualType<> CUpwAUSM_Flow::ComputeResidual(const CConfig* config) 
 
   implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
 
-  AD::StartPreacc();
-  AD::SetPreaccIn(Normal, nDim);
-  AD::SetPreaccIn(V_i, nDim+4);
-  AD::SetPreaccIn(V_j, nDim+4);
-
   /*--- Face area (norm or the normal vector) ---*/
   Area = GeometryToolbox::Norm(nDim, Normal);
 
@@ -904,9 +887,6 @@ CNumerics::ResidualType<> CUpwAUSM_Flow::ComputeResidual(const CConfig* config) 
 
   for (iVar = 0; iVar < nVar; iVar++)
     Flux[iVar] *= Area;
-
-  AD::SetPreaccOut(Flux, nVar);
-  AD::EndPreacc();
 
   /*--- Roe's Jacobian for AUSM (this must be fixed) ---*/
   if (implicit) {

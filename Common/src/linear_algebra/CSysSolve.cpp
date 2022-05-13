@@ -26,7 +26,6 @@
  */
 
 #include "../../include/linear_algebra/CSysSolve.hpp"
-#include "../../include/linear_algebra/CSysSolve_b.hpp"
 #include "../../include/parallelization/omp_structure.hpp"
 #include "../../include/CConfig.hpp"
 #include "../../include/geometry/CGeometry.hpp"
@@ -865,22 +864,6 @@ unsigned long CSysSolve<ScalarType>::Solve(CSysMatrix<ScalarType> & Jacobian, co
   /*--- Stop the recording for the linear solver ---*/
   bool TapeActive = NO;
 
-  if (config->GetDiscrete_Adjoint()) {
-#ifdef CODI_REVERSE_TYPE
-
-    TapeActive = AD::getGlobalTape().isActive();
-
-    SU2_OMP_MASTER {
-      AD::StartExtFunc(false, false);
-      AD::SetExtFuncIn(&LinSysRes[0], LinSysRes.GetLocSize());
-    }
-    END_SU2_OMP_MASTER
-    SU2_OMP_BARRIER
-
-    AD::StopRecording();
-#endif
-  }
-
   /*--- Create matrix-vector product, preconditioner, and solve the linear system ---*/
 
   HandleTemporariesIn(LinSysRes, LinSysSol);
@@ -969,30 +952,6 @@ unsigned long CSysSolve<ScalarType>::Solve(CSysMatrix<ScalarType> & Jacobian, co
         break;
     }
 
-    /*--- Start recording if it was stopped for the linear solver ---*/
-#ifdef CODI_REVERSE_TYPE
-    AD::StartRecording();
-    SU2_OMP_BARRIER
-
-    SU2_OMP_MASTER {
-      AD::SetExtFuncOut(&LinSysSol[0], LinSysSol.GetLocSize());
-      AD::FuncHelper->addUserData(&LinSysRes);
-      AD::FuncHelper->addUserData(&LinSysSol);
-      AD::FuncHelper->addUserData(&Jacobian);
-      AD::FuncHelper->addUserData(geometry);
-      AD::FuncHelper->addUserData(config);
-      AD::FuncHelper->addUserData(this);
-    }
-    END_SU2_OMP_MASTER
-    SU2_OMP_BARRIER
-
-    AD::FuncHelper->addToTape(CSysSolve_b<ScalarType>::Solve_b);
-    SU2_OMP_BARRIER
-
-    SU2_OMP_MASTER
-    AD::EndExtFunc();
-    END_SU2_OMP_MASTER
-#endif
   }
 
   return IterLinSol;

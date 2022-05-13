@@ -128,8 +128,6 @@ unsigned long CNSSolver::SetPrimitive_Variables(CSolver **solver_container, cons
   const TURB_MODEL turb_model = config->GetKind_Turb_Model();
   const bool tkeNeeded = (turb_model == TURB_MODEL::SST) || (turb_model == TURB_MODEL::SST_SUST);
 
-  AD::StartNoSharedReading();
-
   SU2_OMP_FOR_STAT(omp_chunk_size)
   for (unsigned long iPoint = 0; iPoint < nPoint; iPoint ++) {
 
@@ -158,8 +156,6 @@ unsigned long CNSSolver::SetPrimitive_Variables(CSolver **solver_container, cons
 
   }
   END_SU2_OMP_FOR
-
-  AD::EndNoSharedReading();
 
   return nonPhysicalPoints;
 }

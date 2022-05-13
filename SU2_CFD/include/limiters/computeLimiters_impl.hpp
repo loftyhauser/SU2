@@ -98,9 +98,6 @@ void computeLimiters_impl(CSolver* solver,
 
   /*--- If limiters are frozen do not record the computation ---*/
   bool wasActive = false;
-  if (config.GetDiscrete_Adjoint() && config.GetFrozen_Limiter_Disc()) {
-    wasActive = AD::BeginPassive();
-  }
 
   CLimiterDetails<LimiterKind> limiterDetails;
 
@@ -132,27 +129,13 @@ void computeLimiters_impl(CSolver* solver,
     auto nodes = geometry.nodes;
     const auto coord_i = nodes->GetCoord(iPoint);
 
-    /*--- Cannot preaccumulate if hybrid parallel due to shared reading. ---*/
-    if (omp_get_num_threads() == 1) AD::StartPreacc();
-    AD::SetPreaccIn(coord_i, nDim);
-
     for (size_t iVar = varBegin; iVar < varEnd; ++iVar)
     {
-      AD::SetPreaccIn(field(iPoint,iVar));
 
-      if (periodic) {
-        /*--- Started outside loop, so counts as input. ---*/
-        AD::SetPreaccIn(fieldMax(iPoint,iVar));
-        AD::SetPreaccIn(fieldMin(iPoint,iVar));
-      }
-      else {
         /*--- Initialize min/max now for iPoint if not periodic. ---*/
         fieldMax(iPoint,iVar) = field(iPoint,iVar);
         fieldMin(iPoint,iVar) = field(iPoint,iVar);
-      }
 
-      for(size_t iDim = 0; iDim < nDim; ++iDim)
-        AD::SetPreaccIn(gradient(iPoint,iVar,iDim));
     }
 
     /*--- Initialize min/max projection out of iPoint. ---*/
@@ -167,7 +150,6 @@ void computeLimiters_impl(CSolver* solver,
     for (auto jPoint : geometry.nodes->GetPoints(iPoint)) {
 
       const auto coord_j = geometry.nodes->GetCoord(jPoint);
-      AD::SetPreaccIn(coord_j, nDim);
 
       /*--- Distance vector from iPoint to face (middle of the edge). ---*/
 
@@ -187,8 +169,6 @@ void computeLimiters_impl(CSolver* solver,
 
         projMax[iVar] = max(projMax[iVar], proj);
         projMin[iVar] = min(projMin[iVar], proj);
-
-        AD::SetPreaccIn(field(jPoint,iVar));
 
         fieldMax(iPoint,iVar) = max(fieldMax(iPoint,iVar), field(jPoint,iVar));
         fieldMin(iPoint,iVar) = min(fieldMin(iPoint,iVar), field(jPoint,iVar));
@@ -212,10 +192,8 @@ void computeLimiters_impl(CSolver* solver,
 
       limiter(iPoint,iVar) = geoFactor * min(limMax, limMin);
 
-      AD::SetPreaccOut(limiter(iPoint,iVar));
     }
 
-    AD::EndPreacc();
   }
   END_SU2_OMP_FOR
 
@@ -237,6 +215,5 @@ void computeLimiters_impl(CSolver* solver,
     solver->CompleteComms(&geometry, &config, kindMpiComm);
   }
 
-  AD::EndPassive(wasActive);
 
 }

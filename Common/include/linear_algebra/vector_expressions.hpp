@@ -91,11 +91,7 @@ template<class T> using store_t = typename add_lref_if<T,T::StoreAsRef>::type;
 
 /*--- Namespace from which the math function implementations come. ---*/
 
-#if defined(CODI_REVERSE_TYPE) || defined(CODI_FORWARD_TYPE)
-namespace math = ::codi;
-#else
 namespace math = ::std;
-#endif
 
 /*--- Macro to simplify auto return type deduction in C++11, operator[] needs
  * it to allow inner expressions to propagate as the outer is evaluated.  ---*/
@@ -160,13 +156,8 @@ FORCEINLINE auto FUN(decay_t<S> u, const CVecExpr<V,S>& v)                    \
 /*--- std::max/min have issues (maybe because they return by reference).
  * For AD codi::max/min need to be used to avoid issues in debug builds. ---*/
 
-#if defined(CODI_REVERSE_TYPE) || defined(CODI_FORWARD_TYPE)
-#define max_impl math::max
-#define min_impl math::min
-#else
 #define max_impl(a,b) a<b? Scalar(b) : Scalar(a)
 #define min_impl(a,b) b<a? Scalar(b) : Scalar(a)
-#endif
 MAKE_BINARY_FUN(max, max_, max_impl)
 MAKE_BINARY_FUN(min, min_, min_impl)
 MAKE_BINARY_FUN(pow, pow_, math::pow)

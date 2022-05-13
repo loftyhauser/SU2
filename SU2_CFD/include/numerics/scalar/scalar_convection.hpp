@@ -60,12 +60,6 @@ class CUpwScalar : public CNumerics {
   const bool implicit = false, incompressible = false, dynamic_grid = false;
 
   /*!
-   * \brief A pure virtual function. Derived classes must use it to register the additional
-   *        variables they use as preaccumulation inputs, e.g. the density for SST.
-   */
-  virtual void ExtraADPreaccIn() = 0;
-
-  /*!
    * \brief Model-specific steps in the ComputeResidual method, derived classes
    *        compute the Flux and its Jacobians via this method.
    * \param[in] config - Definition of the particular problem.
@@ -104,14 +98,6 @@ class CUpwScalar : public CNumerics {
    * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
    */
   CNumerics::ResidualType<> ComputeResidual(const CConfig* config) final {
-    AD::StartPreacc();
-    AD::SetPreaccIn(Normal, nDim);
-    AD::SetPreaccIn(ScalarVar_i, nVar);
-    AD::SetPreaccIn(ScalarVar_j, nVar);
-    AD::SetPreaccIn(&V_i[idx.Velocity()], nDim);
-    AD::SetPreaccIn(&V_j[idx.Velocity()], nDim);
-
-    ExtraADPreaccIn();
 
     su2double q_ij = 0.0;
       for (unsigned short iDim = 0; iDim < nDim; iDim++) {
@@ -122,9 +108,6 @@ class CUpwScalar : public CNumerics {
     a1 = 0.5 * (q_ij - fabs(q_ij));
 
     FinishResidualCalc(config);
-
-    AD::SetPreaccOut(Flux, nVar);
-    AD::EndPreacc();
 
     return ResidualType<>(Flux, Jacobian_i, Jacobian_j);
   }

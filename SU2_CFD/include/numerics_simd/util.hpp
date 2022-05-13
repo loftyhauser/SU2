@@ -133,7 +133,6 @@ FORCEINLINE VectorDbl<nDim> tangentProjection(const MatrixDbl<nDim>& tensor,
 template<size_t nDim>
 FORCEINLINE Double norm(const VectorDbl<nDim>& vector) { return sqrt(squaredNorm(vector)); }
 
-#ifndef CODI_REVERSE_TYPE
 /*!
  * \brief Gather a single variable from index iPoint of a 1D container.
  */
@@ -156,62 +155,6 @@ FORCEINLINE VectorDbl<nVar> gatherVariables(Int iPoint, const Container& vars) {
 template<size_t nRows, size_t nCols, class Container>
 FORCEINLINE MatrixDbl<nRows,nCols> gatherVariables(Int iPoint, const Container& vars) {
   return vars.template get<MatrixDbl<nRows,nCols> >(iPoint);
-}
-#else
-
-namespace {
-  template<class Container, su2enable_if<Container::IsVector> = 0>
-  FORCEINLINE const su2double& get(const Container& vars, unsigned long iPoint) { return vars(iPoint); }
-
-  /*--- When getting 1 variable from a matrix container, we assume it is the first. ---*/
-  template<class Container, su2enable_if<!Container::IsVector> = 0>
-  FORCEINLINE const su2double& get(const Container& vars, unsigned long iPoint) { return vars(iPoint,0); }
-}
-
-template<class Container>
-FORCEINLINE Double gatherVariables(Int iPoint, const Container& vars) {
-  Double x;
-  for (size_t k=0; k<Double::Size; ++k) {
-    AD::SetPreaccIn(get(vars, iPoint[k]));
-    x[k] = get(vars, iPoint[k]);
-  }
-  return x;
-}
-
-template<size_t nVar, class Container>
-FORCEINLINE VectorDbl<nVar> gatherVariables(Int iPoint, const Container& vars) {
-  VectorDbl<nVar> x;
-  for (size_t i=0; i<nVar; ++i) {
-    for (size_t k=0; k<Double::Size; ++k) {
-      AD::SetPreaccIn(vars(iPoint[k],i));
-      x[i][k] = vars(iPoint[k],i);
-    }
-  }
-  return x;
-}
-
-template<size_t nRows, size_t nCols, class Container>
-FORCEINLINE MatrixDbl<nRows,nCols> gatherVariables(Int iPoint, const Container& vars) {
-  MatrixDbl<nRows,nCols> x;
-  for (size_t i=0; i<nRows; ++i) {
-    for (size_t j=0; j<nCols; ++j) {
-      for (size_t k=0; k<Double::Size; ++k) {
-        AD::SetPreaccIn(vars(iPoint[k],i,j));
-        x(i,j)[k] = vars(iPoint[k],i,j);
-      }
-    }
-  }
-  return x;
-}
-#endif
-
-/*!
- * \brief Stop the AD preaccumulation.
- */
-template<size_t nVar>
-FORCEINLINE void stopPreacc(VectorDbl<nVar>& x) {
-  AD::SetPreaccOut(x, nVar, Double::Size);
-  AD::EndPreacc();
 }
 
 /*!
@@ -247,17 +190,13 @@ FORCEINLINE void updateLinearSystem(Int iEdge,
   if (updateType == UpdateType::COLORING) {
     vector.UpdateBlocks(iPoint, jPoint, flux, updateMask);
     if(implicit) {
-      auto wasActive = AD::BeginPassive();
       matrix.UpdateBlocks(iEdge, iPoint, jPoint, jac_i, jac_j, updateMask);
-      AD::EndPassive(wasActive);
     }
   }
   else {
     vector.SetBlock(iEdge, flux, updateMask);
     if(implicit) {
-      auto wasActive = AD::BeginPassive();
       matrix.SetBlocks(iEdge, jac_i, jac_j, updateMask);
-      AD::EndPassive(wasActive);
     }
   }
 }

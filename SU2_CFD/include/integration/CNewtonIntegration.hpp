@@ -50,15 +50,10 @@
  */
 class CNewtonIntegration final : public CIntegration {
 public:
-#ifdef CODI_FORWARD_TYPE
-  using Scalar = su2double;
-  using MixedScalar = su2double;
-#else
   /*--- No point having single precision matrix-free products. ---*/
   using Scalar = passivedouble;
   /*--- The block preconditioners may still use single precision. ---*/
   using MixedScalar = su2mixedfloat;
-#endif
 
 private:
   /*--- Residual evaluation modes, explicit for products, default to allow preconditioners to be built. ---*/

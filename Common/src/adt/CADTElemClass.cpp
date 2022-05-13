@@ -359,8 +359,6 @@ void CADTElemClass::DetermineNearestElement_impl(vector<CBBoxTargetClass>& BBoxT
                                                  unsigned long   &elemID,
                                                  int             &rankID) const {
 
-  const bool wasActive = AD::BeginPassive();
-
   /*----------------------------------------------------------------------------*/
   /*--- Step 1: Initialize the distance (squared) to the quaranteed distance ---*/
   /*---         of the central bounding box of the root element.             ---*/
@@ -521,8 +519,6 @@ void CADTElemClass::DetermineNearestElement_impl(vector<CBBoxTargetClass>& BBoxT
       rankID   = ranksOfElems[ii];
     }
   }
-
-  AD::EndPassive(wasActive);
 
   /* At the moment the square of the distance is stored in dist. Compute
      the correct value. */

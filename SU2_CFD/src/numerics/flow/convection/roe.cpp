@@ -98,13 +98,6 @@ CNumerics::ResidualType<> CUpwRoeBase_Flow::ComputeResidual(const CConfig* confi
   unsigned short iVar, jVar, iDim;
   su2double ProjGridVel = 0.0, Energy_i, Energy_j;
 
-  AD::StartPreacc();
-  AD::SetPreaccIn(V_i, nDim+4); AD::SetPreaccIn(V_j, nDim+4); AD::SetPreaccIn(Normal, nDim);
-  if (roe_low_dissipation){
-    AD::SetPreaccIn(Sensor_i); AD::SetPreaccIn(Sensor_j);
-    AD::SetPreaccIn(Dissipation_i); AD::SetPreaccIn(Dissipation_j);
-  }
-
   /*--- Face area (norm or the normal vector) and unit normal ---*/
 
   Area = GeometryToolbox::Norm(nDim, Normal);
@@ -156,9 +149,6 @@ CNumerics::ResidualType<> CUpwRoeBase_Flow::ComputeResidual(const CConfig* confi
         }
       }
     }
-    AD::SetPreaccOut(Flux, nVar);
-    AD::EndPreacc();
-
     return ResidualType<>(Flux, Jacobian_i, Jacobian_j);
   }
 
@@ -219,9 +209,6 @@ CNumerics::ResidualType<> CUpwRoeBase_Flow::ComputeResidual(const CConfig* confi
   /*--- Finalize in children class ---*/
 
   FinalizeResidual(Flux, Jacobian_i, Jacobian_j, config);
-
-  AD::SetPreaccOut(Flux, nVar);
-  AD::EndPreacc();
 
   return ResidualType<>(Flux, Jacobian_i, Jacobian_j);
 
@@ -686,9 +673,6 @@ CUpwGeneralRoe_Flow::~CUpwGeneralRoe_Flow(void) {
 
 CNumerics::ResidualType<> CUpwGeneralRoe_Flow::ComputeResidual(const CConfig* config) {
 
-  AD::StartPreacc();
-  AD::SetPreaccIn(V_i, nDim+4); AD::SetPreaccIn(V_j, nDim+4); AD::SetPreaccIn(Normal, nDim);
-  AD::SetPreaccIn(S_i, 2); AD::SetPreaccIn(S_j, 2);
   su2double U_i[5] = {0.0,0.0,0.0,0.0,0.0}, U_j[5] = {0.0,0.0,0.0,0.0,0.0};
 
   /*--- Face area (norm or the normal vector) ---*/
@@ -759,9 +743,6 @@ CNumerics::ResidualType<> CUpwGeneralRoe_Flow::ComputeResidual(const CConfig* co
       Jacobian_j[iVar][iVar] = 0.0;
       }
     }
-    AD::SetPreaccOut(Flux, nVar);
-    AD::EndPreacc();
-
     return ResidualType<>(Flux, Jacobian_i, Jacobian_j);
   }
 
@@ -885,9 +866,6 @@ CNumerics::ResidualType<> CUpwGeneralRoe_Flow::ComputeResidual(const CConfig* co
     }
 
   }
-
-  AD::SetPreaccOut(Flux, nVar);
-  AD::EndPreacc();
 
   return ResidualType<>(Flux, Jacobian_i, Jacobian_j);
 

@@ -3304,10 +3304,6 @@ void CSolver::RegisterVertexTractions(CGeometry *geometry, const CConfig *config
       /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
       if (!geometry->nodes->GetDomain(iPoint)) continue;
 
-      /*--- Register the vertex traction as output ---*/
-      for (iDim = 0; iDim < nDim; iDim++) {
-        AD::RegisterOutput(VertexTraction[iMarker][iVertex][iDim]);
-      }
     }
     END_SU2_OMP_FOR
   }

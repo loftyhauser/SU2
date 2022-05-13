@@ -66,10 +66,6 @@ CNumerics::ResidualType<> CUpwCUSP_Flow::ComputeResidual(const CConfig* config) 
   unsigned short iDim, iVar;
   su2double Diff_U[5] = {0.0};
 
-  AD::SetPreaccIn(Normal, nDim);
-  AD::SetPreaccIn(V_i, nDim+4);
-  AD::SetPreaccIn(V_j, nDim+4);
-
   /*--- Pressure, density, enthalpy, energy, and velocity at points i and j ---*/
 
   Pressure_i = V_i[nDim+1];     Pressure_j = V_j[nDim+1];
@@ -175,9 +171,6 @@ CNumerics::ResidualType<> CUpwCUSP_Flow::ComputeResidual(const CConfig* config) 
     Jacobian_j[nVar-1][nVar-1] -= cte_0*Gamma;
 
   }
-
-  AD::SetPreaccOut(Flux, nVar);
-  AD::EndPreacc();
 
   return ResidualType<>(Flux, Jacobian_i, Jacobian_j);
 

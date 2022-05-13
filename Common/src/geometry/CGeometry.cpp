@@ -1686,8 +1686,6 @@ void CGeometry::ComputeAirfoil_Section(su2double *Plane_P0, su2double *Plane_Nor
                                        vector<su2double> &Zcoord_Airfoil, vector<su2double> &Variable_Airfoil,
                                        bool original_surface, CConfig *config) {
 
-  const bool wasActive = AD::BeginPassive();
-
   unsigned short iMarker, iNode, jNode, iDim, Index = 0;
   bool intersect;
   long Next_Edge = 0;
@@ -2404,18 +2402,6 @@ void CGeometry::ComputeAirfoil_Section(su2double *Plane_P0, su2double *Plane_Nor
 
   }
 
-  AD::EndPassive(wasActive);
-
-}
-
-void CGeometry::RegisterCoordinates() const {
-  const bool input = true;
-
-  SU2_OMP_FOR_STAT(roundUpDiv(nPoint,omp_get_num_threads()))
-  for (auto iPoint = 0ul; iPoint < nPoint; iPoint++) {
-    nodes->RegisterCoordinates(iPoint, input);
-  }
-  END_SU2_OMP_FOR
 }
 
 void CGeometry::UpdateGeometry(CGeometry **geometry_container, CConfig *config) {

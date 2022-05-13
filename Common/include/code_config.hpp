@@ -49,9 +49,6 @@
 /*--- Disable warnings related to overloaded virtual. ---*/
 #pragma warning disable 654
 #pragma warning disable 1125
-#if defined(CODI_FORWARD_TYPE) || defined(CODI_REVERSE_TYPE)
-#pragma warning disable 1875
-#endif
 #endif
 
 /*--- Convenience SFINAE typedef to conditionally
@@ -85,22 +82,7 @@ FORCEINLINE Out su2staticcast_p(In ptr) {
 /*--- Depending on the datatype defined during the configuration,
  * include the correct definition, and create the main typedef. ---*/
 
-#if defined(CODI_REVERSE_TYPE) // reverse mode AD
-#include "codi.hpp"
-#include "codi/tools/dataStore.hpp"
-
-#if defined(HAVE_OMP)
-using su2double = codi::RealReverseIndexParallel;
-#else
-using su2double = codi::RealReverse;
-#endif
-#elif defined(CODI_FORWARD_TYPE) // forward mode AD
-#include "codi.hpp"
-using su2double = codi::RealForward;
-
-#else // primal / direct / no AD
 using su2double = double;
-#endif
 
 /*--- This type can be used for (rare) compatibility cases or for
  * computations that are intended to be (always) passive. ---*/
@@ -108,13 +90,3 @@ using passivedouble = double;
 
 /*--- Define a type for potentially lower precision operations. ---*/
 using su2mixedfloat = passivedouble;
-
-/*--- Detect if OpDiLib has to be used. ---*/
-#if defined(HAVE_OMP) && defined(CODI_REVERSE_TYPE)
-#ifndef __INTEL_COMPILER
-#define HAVE_OPDI
-#else
-#warning Hybrid parallel reverse mode AD cannot be used with Intel compilers.
-#endif
-
-#endif

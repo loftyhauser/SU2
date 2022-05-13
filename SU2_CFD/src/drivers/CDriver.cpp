@@ -75,13 +75,6 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
   config_file_name(confFile), StartTime(0.0), StopTime(0.0), UsedTime(0.0),
   TimeIter(0), nZone(val_nZone), StopCalc(false), dry_run(dummy_geo) {
 
-  /*--- Initialize Medipack (must also be here so it is initialized from python) ---*/
-#ifdef HAVE_MPI
-  #if defined(CODI_REVERSE_TYPE) || defined(CODI_FORWARD_TYPE)
-    SU2_MPI::Init_AMPI();
-  #endif
-#endif
-
   SU2_MPI::SetComm(MPICommunicator);
 
   rank = SU2_MPI::GetRank();

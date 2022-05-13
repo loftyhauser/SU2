@@ -204,7 +204,6 @@ void CTurbSSTSolver::Postprocessing(CGeometry *geometry, CSolver **solver_contai
     SetSolution_Gradient_LS(geometry, config);
   }
 
-  AD::StartNoSharedReading();
 
   auto* flowNodes = su2staticcast_p<CFlowVariable*>(solver_container[FLOW_SOL]->GetNodes());
 
@@ -237,7 +236,6 @@ void CTurbSSTSolver::Postprocessing(CGeometry *geometry, CSolver **solver_contai
   }
   END_SU2_OMP_FOR
 
-  AD::EndNoSharedReading();
 }
 
 void CTurbSSTSolver::Viscous_Residual(unsigned long iEdge, CGeometry* geometry, CSolver** solver_container,
@@ -268,7 +266,6 @@ void CTurbSSTSolver::Source_Residual(CGeometry *geometry, CSolver **solver_conta
 
   /*--- Loop over all points. ---*/
 
-  AD::StartNoSharedReading();
 
   SU2_OMP_FOR_DYN(omp_chunk_size)
   for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++) {
@@ -329,7 +326,6 @@ void CTurbSSTSolver::Source_Residual(CGeometry *geometry, CSolver **solver_conta
   }
   END_SU2_OMP_FOR
 
-  AD::EndNoSharedReading();
 
 }
 

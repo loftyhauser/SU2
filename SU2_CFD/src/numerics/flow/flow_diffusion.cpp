@@ -360,15 +360,6 @@ CNumerics::ResidualType<> CAvgGrad_Flow::ComputeResidual(const CConfig* config) 
 
   implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
 
-  AD::StartPreacc();
-  AD::SetPreaccIn(V_i, nDim+9);   AD::SetPreaccIn(V_j, nDim+9);
-  AD::SetPreaccIn(Coord_i, nDim); AD::SetPreaccIn(Coord_j, nDim);
-  AD::SetPreaccIn(PrimVar_Grad_i, nDim+1, nDim);
-  AD::SetPreaccIn(PrimVar_Grad_j, nDim+1, nDim);
-  AD::SetPreaccIn(turb_ke_i); AD::SetPreaccIn(turb_ke_j);
-  AD::SetPreaccIn(TauWall_i); AD::SetPreaccIn(TauWall_j);
-  AD::SetPreaccIn(Normal, nDim);
-
   unsigned short iVar, jVar, iDim;
 
   /*--- Normalized normal vector ---*/
@@ -467,9 +458,6 @@ CNumerics::ResidualType<> CAvgGrad_Flow::ComputeResidual(const CConfig* config) 
 
   }
 
-  AD::SetPreaccOut(Proj_Flux_Tensor, nVar);
-  AD::EndPreacc();
-
   return ResidualType<>(Proj_Flux_Tensor, Jacobian_i, Jacobian_j);
 
 }
@@ -543,15 +531,6 @@ CAvgGradInc_Flow::CAvgGradInc_Flow(unsigned short val_nDim,
 CNumerics::ResidualType<> CAvgGradInc_Flow::ComputeResidual(const CConfig* config) {
 
   implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-
-  AD::StartPreacc();
-  AD::SetPreaccIn(V_i, nDim+9);   AD::SetPreaccIn(V_j, nDim+9);
-  AD::SetPreaccIn(Coord_i, nDim); AD::SetPreaccIn(Coord_j, nDim);
-  AD::SetPreaccIn(PrimVar_Grad_i, nVar, nDim);
-  AD::SetPreaccIn(PrimVar_Grad_j, nVar, nDim);
-  AD::SetPreaccIn(turb_ke_i); AD::SetPreaccIn(turb_ke_j);
-  AD::SetPreaccIn(TauWall_i); AD::SetPreaccIn(TauWall_j);
-  AD::SetPreaccIn(Normal, nDim);
 
   unsigned short iVar, jVar, iDim;
 
@@ -664,9 +643,6 @@ CNumerics::ResidualType<> CAvgGradInc_Flow::ComputeResidual(const CConfig* confi
         Jacobian_j[nDim+1][iVar] = 0.0;
       }
     }
-
-  AD::SetPreaccOut(Proj_Flux_Tensor, nVar);
-  AD::EndPreacc();
 
   return ResidualType<>(Proj_Flux_Tensor, Jacobian_i, Jacobian_j);
 
@@ -859,16 +835,6 @@ CNumerics::ResidualType<> CGeneralAvgGrad_Flow::ComputeResidual(const CConfig* c
 
   implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
 
-  AD::StartPreacc();
-  AD::SetPreaccIn(V_i, nDim+9);   AD::SetPreaccIn(V_j, nDim+9);
-  AD::SetPreaccIn(Coord_i, nDim); AD::SetPreaccIn(Coord_j, nDim);
-  AD::SetPreaccIn(S_i, 4); AD::SetPreaccIn(S_j, 4);
-  AD::SetPreaccIn(PrimVar_Grad_i, nDim+1, nDim);
-  AD::SetPreaccIn(PrimVar_Grad_j, nDim+1, nDim);
-  AD::SetPreaccIn(turb_ke_i); AD::SetPreaccIn(turb_ke_j);
-  AD::SetPreaccIn(TauWall_i); AD::SetPreaccIn(TauWall_j);
-  AD::SetPreaccIn(Normal, nDim);
-
   unsigned short iVar, jVar, iDim;
 
   /*--- Normalized normal vector ---*/
@@ -979,9 +945,6 @@ CNumerics::ResidualType<> CGeneralAvgGrad_Flow::ComputeResidual(const CConfig* c
     }
 
   }
-
-  AD::SetPreaccOut(Proj_Flux_Tensor, nVar);
-  AD::EndPreacc();
 
   return ResidualType<>(Proj_Flux_Tensor, Jacobian_i, Jacobian_j);
 

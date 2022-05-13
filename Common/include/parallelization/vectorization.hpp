@@ -101,15 +101,6 @@ public:
     Scalar s(0); FOREACH s += x_[k] * other[k]; return s;                     \
   }
 
-#if defined(CODI_REVERSE_TYPE) || defined(CODI_FORWARD_TYPE)
-  /*--- These are not very nice but without them it would not be
-   * possible to assign literals to Arrays of active types. ---*/
-  template<class U = Scalar, su2enable_if<std::is_same<U,su2double>::value> = 0>
-  FORCEINLINE Array(passivedouble x) { bcast(x); }
-  template<class U = Scalar, su2enable_if<std::is_same<U,su2double>::value> = 0>
-  FORCEINLINE Array& operator= (passivedouble x) { bcast(x); return *this; }
-#endif
-
   ARRAY_BOILERPLATE
 
   /*! \brief Copy construct from expression. */

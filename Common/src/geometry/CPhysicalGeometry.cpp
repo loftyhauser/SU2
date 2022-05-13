@@ -4856,8 +4856,6 @@ void CPhysicalGeometry::SetMaxLength(CConfig* config) {
      * neighbor, then enable it again and recompute the distance.
      * This reduces the overhead of storing irrelevant computations. ---*/
 
-    const bool wasActive = AD::BeginPassive();
-
     su2double max_delta=0;
     auto max_neighbor = iPoint;
     for (unsigned short iNeigh = 0; iNeigh < nodes->GetnPoint(iPoint); iNeigh++) {
@@ -4876,8 +4874,6 @@ void CPhysicalGeometry::SetMaxLength(CConfig* config) {
         max_neighbor = jPoint;
       }
     }
-
-    AD::EndPassive(wasActive);
 
     /*--- Recompute and set. ---*/
     const su2double* Coord_j = nodes->GetCoord(max_neighbor);
@@ -5605,7 +5601,6 @@ void CPhysicalGeometry::SetControlVolume(CConfig *config, unsigned short action)
 
     /*--- To make preaccumulation more effective, use as few inputs
      as possible, recomputing intermediate quantities as needed. ---*/
-    AD::StartPreacc();
 
     /*--- Get pointers to the coordinates of all the element nodes ---*/
     array<const su2double*, N_POINTS_MAXIMUM> Coord;
@@ -5613,22 +5608,10 @@ void CPhysicalGeometry::SetControlVolume(CConfig *config, unsigned short action)
     for (unsigned short iNode = 0; iNode < nNodes; iNode++) {
       auto iPoint = elem[iElem]->GetNode(iNode);
       Coord[iNode] = nodes->GetCoord(iPoint);
-#ifdef CODI_REVERSE_TYPE
-      /*--- The same points and edges will be referenced multiple times as they are common
-       to many of the element's faces, therefore they are "registered" here only once. ---*/
-      AD::SetPreaccIn(nodes->Volume(iPoint));
-      for (unsigned short jNode = iNode+1; jNode < nNodes; jNode++) {
-        auto jPoint = elem[iElem]->GetNode(jNode);
-        auto iEdge = FindEdge(iPoint, jPoint, false);
-        if (iEdge >= 0) AD::SetPreaccIn(edges->Normal[iEdge], nDim);
-      }
-#endif
     }
-    AD::SetPreaccIn(Coord, nNodes, nDim);
 
     /*--- Compute the element median CG coordinates ---*/
     auto Coord_Elem_CG = elem[iElem]->SetCoord_CG(nDim, Coord);
-    AD::SetPreaccOut(Coord_Elem_CG, nDim);
 
     for (unsigned short iFace = 0; iFace < elem[iElem]->GetnFaces(); iFace++) {
 
@@ -5705,18 +5688,6 @@ void CPhysicalGeometry::SetControlVolume(CConfig *config, unsigned short action)
       }
     }
 
-#ifdef CODI_REVERSE_TYPE
-    for (unsigned short iNode = 0; iNode < nNodes; iNode++) {
-      auto iPoint = elem[iElem]->GetNode(iNode);
-      AD::SetPreaccOut(nodes->Volume(iPoint));
-      for (unsigned short jNode = iNode+1; jNode < nNodes; jNode++) {
-        auto jPoint = elem[iElem]->GetNode(jNode);
-        auto iEdge = FindEdge(iPoint, jPoint, false);
-        if (iEdge >= 0) AD::SetPreaccOut(edges->Normal[iEdge], nDim);
-      }
-    }
-#endif
-    AD::EndPreacc();
   }
 
   su2double DomainVolume;
@@ -5762,9 +5733,6 @@ void CPhysicalGeometry::SetBoundControlVolume(const CConfig *config, unsigned sh
 
       const auto nNodes = bound[iMarker][iElem]->GetnNodes();
 
-      /*--- Cannot preaccumulate if hybrid parallel due to shared reading. ---*/
-      if (omp_get_num_threads() == 1) AD::StartPreacc();
-
       /*--- Get pointers to the coordinates of all the element nodes ---*/
       array<const su2double*, N_POINTS_MAXIMUM> Coord;
 
@@ -5772,13 +5740,10 @@ void CPhysicalGeometry::SetBoundControlVolume(const CConfig *config, unsigned sh
         const auto iPoint = bound[iMarker][iElem]->GetNode(iNode);
         const auto iVertex = nodes->GetVertex(iPoint, iMarker);
         Coord[iNode] = nodes->GetCoord(iPoint);
-        AD::SetPreaccIn(vertex[iMarker][iVertex]->GetNormal(), nDim);
       }
-      AD::SetPreaccIn(Coord, nNodes, nDim);
 
       /*--- Compute the element CG coordinates ---*/
       auto Coord_Elem_CG = bound[iMarker][iElem]->SetCoord_CG(nDim, Coord);
-      AD::SetPreaccOut(Coord_Elem_CG, nDim);
 
       /*--- Loop over all the nodes of the boundary element ---*/
 
@@ -5813,9 +5778,7 @@ void CPhysicalGeometry::SetBoundControlVolume(const CConfig *config, unsigned sh
       for (unsigned short iNode = 0; iNode < nNodes; iNode++) {
         const auto iPoint = bound[iMarker][iElem]->GetNode(iNode);
         const auto iVertex = nodes->GetVertex(iPoint, iMarker);
-        AD::SetPreaccOut(vertex[iMarker][iVertex]->GetNormal(), nDim);
       }
-      AD::EndPreacc();
     }
   }
   END_SU2_OMP_FOR

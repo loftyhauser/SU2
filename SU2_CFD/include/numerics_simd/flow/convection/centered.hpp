@@ -88,10 +88,6 @@ public:
                    CSysVector<su2double>& vector,
                    SparseMatrixType& matrix) const final {
 
-    /*--- Start preaccumulation, inputs are registered
-     *    automatically in "gatherVariables". ---*/
-    AD::StartPreacc();
-
     const bool implicit = (config.GetKind_TimeIntScheme() == EULER_IMPLICIT);
     const auto& solution = static_cast<const CEulerVariable&>(solution_);
 
@@ -155,10 +151,6 @@ public:
 
     Base::viscousTerms(iEdge, iPoint, jPoint, avgV, V, solution_, geometry,
                        config, area, unitNormal, implicit, flux, jac_i, jac_j);
-
-    /*--- Stop preaccumulation. ---*/
-
-    stopPreacc(flux);
 
     /*--- Update the vector and system matrix. ---*/
 

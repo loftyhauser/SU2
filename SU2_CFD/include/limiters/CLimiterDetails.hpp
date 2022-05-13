@@ -250,7 +250,6 @@ struct CLimiterDetails<LIMITER::VENKATAKRISHNAN_WANG>
    */
   inline su2double limiterFunction(size_t iVar, su2double proj, su2double delta) const
   {
-    AD::SetPreaccIn(eps2(iVar));
     return LimiterHelpers<>::venkatFunction(proj, delta, eps2(iVar));
   }
 };
@@ -282,7 +281,6 @@ struct CLimiterDetails<LIMITER::SHARP_EDGES>
    */
   inline su2double geometricFactor(size_t iPoint, CGeometry& geometry) const
   {
-    AD::SetPreaccIn(geometry.nodes->GetSharpEdge_Distance(iPoint));
     su2double dist = geometry.nodes->GetSharpEdge_Distance(iPoint)/(sharpCoeff*eps1)-1.0;
     return LimiterHelpers<>::raisedSine(dist);
   }
@@ -323,7 +321,6 @@ struct CLimiterDetails<LIMITER::WALL_DISTANCE>
    */
   inline su2double geometricFactor(size_t iPoint, CGeometry& geometry) const
   {
-    AD::SetPreaccIn(geometry.nodes->GetWall_Distance(iPoint));
     su2double dist = geometry.nodes->GetWall_Distance(iPoint)/(sharpCoeff*eps1)-1.0;
     return LimiterHelpers<>::raisedSine(dist);
   }

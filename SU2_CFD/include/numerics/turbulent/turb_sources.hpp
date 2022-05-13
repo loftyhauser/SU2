@@ -105,12 +105,6 @@ class CSourceBase_TurbSA : public CNumerics {
     const auto& density = V_i[idx.Density()];
     const auto& laminar_viscosity = V_i[idx.LaminarViscosity()];
 
-    AD::StartPreacc();
-    AD::SetPreaccIn(density, laminar_viscosity, StrainMag_i, ScalarVar_i[0], Volume, dist_i, roughness_i);
-    AD::SetPreaccIn(Vorticity_i, 3);
-    AD::SetPreaccIn(PrimVar_Grad_i + idx.Velocity(), nDim, nDim);
-    AD::SetPreaccIn(ScalarVar_Grad_i[0], nDim);
-
     /*--- Common auxiliary variables and constants of the model. ---*/
     CSAVariables var;
 
@@ -206,9 +200,6 @@ class CSourceBase_TurbSA : public CNumerics {
       Residual = (Production - Destruction + CrossProduction) * Volume;
       Jacobian_i[0] *= Volume;
     }
-
-    AD::SetPreaccOut(Residual);
-    AD::EndPreacc();
 
     return ResidualType<>(&Residual, &Jacobian_i, nullptr);
   }
@@ -598,9 +589,6 @@ class CSourcePieceWise_TurbSST final : public CNumerics {
   inline void ResidualAxisymmetric(su2double alfa_blended, su2double zeta) {
     if (Coord_i[1] < EPS) return;
 
-    AD::SetPreaccIn(Coord_i[1]);
-    AD::SetPreaccIn(V_i[idx.Velocity() + 1]);
-
     const su2double yinv = 1.0 / Coord_i[1];
     const su2double rhov = Density_i * V_i[idx.Velocity() + 1];
     const su2double& k = ScalarVar_i[0];
@@ -687,18 +675,6 @@ class CSourcePieceWise_TurbSST final : public CNumerics {
    * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
    */
   ResidualType<> ComputeResidual(const CConfig* config) override {
-    AD::StartPreacc();
-    AD::SetPreaccIn(StrainMag_i);
-    AD::SetPreaccIn(ScalarVar_i, nVar);
-    AD::SetPreaccIn(ScalarVar_Grad_i, nVar, nDim);
-    AD::SetPreaccIn(Volume);
-    AD::SetPreaccIn(dist_i);
-    AD::SetPreaccIn(F1_i);
-    AD::SetPreaccIn(F2_i);
-    AD::SetPreaccIn(CDkw_i);
-    AD::SetPreaccIn(PrimVar_Grad_i, nDim + idx.Velocity(), nDim);
-    AD::SetPreaccIn(Vorticity_i, 3);
-    AD::SetPreaccIn(V_i[idx.Density()], V_i[idx.LaminarViscosity()], V_i[idx.EddyViscosity()]);
 
     Density_i = V_i[idx.Density()];
     Laminar_Viscosity_i = V_i[idx.LaminarViscosity()];
@@ -779,9 +755,6 @@ class CSourcePieceWise_TurbSST final : public CNumerics {
       Jacobian_i[1][0] = 0.0;
       Jacobian_i[1][1] = -2.0 * beta_blended * ScalarVar_i[1] * Volume;
     }
-
-    AD::SetPreaccOut(Residual, nVar);
-    AD::EndPreacc();
 
     return ResidualType<>(Residual, Jacobian_i, nullptr);
   }

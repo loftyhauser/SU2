@@ -173,13 +173,4 @@ public:
    */
   inline su2double GetPhysicalDensity(void) const override { return physical_rho; }
 
-  /*!
-   * \brief Extract the derivative of the Design density.
-   */
-  inline su2double GetAdjointDensity(void) const override { return SU2_TYPE::GetDerivative(design_rho); }
-
-  /*!
-   * \brief Register the Design density as an AD input variable.
-   */
-  inline void RegisterDensity(void) override { AD::RegisterInput(design_rho); }
 };

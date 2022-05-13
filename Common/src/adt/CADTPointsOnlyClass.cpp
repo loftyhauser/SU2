@@ -121,8 +121,6 @@ void CADTPointsOnlyClass::DetermineNearestNode_impl(vector<unsigned long>& front
                                                     unsigned long   &pointID,
                                                     int             &rankID) const {
 
-  const bool wasActive = AD::BeginPassive();
-
   /*--------------------------------------------------------------------------*/
   /*--- Step 1: Initialize the nearest node to the central node of the     ---*/
   /*---         root leaf. Note that the distance is the distance squared  ---*/
@@ -236,8 +234,6 @@ void CADTPointsOnlyClass::DetermineNearestNode_impl(vector<unsigned long>& front
     frontLeaves = frontLeavesNew;
     if(frontLeaves.size() == 0) break;
   }
-
-  AD::EndPassive(wasActive);
 
   /* Recompute the distance to get the correct dependency if we use AD */
   coorTarget = coorPoints.data() + nDimADT*minIndex;

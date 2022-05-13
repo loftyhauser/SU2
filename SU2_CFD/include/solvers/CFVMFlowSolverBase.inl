@@ -556,9 +556,6 @@ void CFVMFlowSolverBase<V, R>::ComputeVorticityAndStrainMag(const CConfig& confi
 
     /*--- Strain Magnitude ---*/
 
-    AD::StartPreacc();
-    AD::SetPreaccIn(VelocityGradient, nDim, nDim);
-
     su2double Div = 0.0;
     for (unsigned long iDim = 0; iDim < nDim; iDim++)
       Div += VelocityGradient(iDim, iDim);
@@ -585,13 +582,11 @@ void CFVMFlowSolverBase<V, R>::ComputeVorticityAndStrainMag(const CConfig& confi
     }
 
     StrainMag(iPoint) = sqrt(2.0*StrainMag(iPoint));
-    AD::SetPreaccOut(StrainMag(iPoint));
 
     /*--- Max is not differentiable, so we not register them for preacc. ---*/
     strainMax = max(strainMax, StrainMag(iPoint));
     omegaMax = max(omegaMax, GeometryToolbox::Norm(3, Vorticity));
 
-    AD::EndPreacc();
   }
   END_SU2_OMP_FOR
 
@@ -1354,8 +1349,6 @@ void CFVMFlowSolverBase<V, R>::EdgeFluxResidual(const CGeometry *geometry,
   /*--- For hybrid parallel AD, pause preaccumulation if there is shared reading of
   * variables, otherwise switch to the faster adjoint evaluation mode. ---*/
   bool pausePreacc = false;
-  if (ReducerStrategy) pausePreacc = AD::PausePreaccumulation();
-  else AD::StartNoSharedReading();
 
   /*--- Loop over edge colors. ---*/
   for (auto color : EdgeColoring) {
@@ -1378,10 +1371,6 @@ void CFVMFlowSolverBase<V, R>::EdgeFluxResidual(const CGeometry *geometry,
     }
     END_SU2_OMP_FOR
   }
-
-  /*--- Restore preaccumulation and adjoint evaluation state. ---*/
-  AD::ResumePreaccumulation(pausePreacc);
-  if (!ReducerStrategy) AD::EndNoSharedReading();
 
   if (ReducerStrategy) {
     SumEdgeFluxes(geometry);
@@ -1436,8 +1425,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::SetResidual_DualTime(CGeometry *geometry
 
     /*--- Loop over all nodes (excluding halos) ---*/
 
-    AD::StartNoSharedReading();
-
     SU2_OMP_FOR_STAT(omp_chunk_size)
     for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
 
@@ -1472,8 +1459,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::SetResidual_DualTime(CGeometry *geometry
       }
     }
     END_SU2_OMP_FOR
-
-    AD::EndNoSharedReading();
 
 }
 

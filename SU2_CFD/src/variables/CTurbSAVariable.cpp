@@ -57,14 +57,6 @@ void CTurbSAVariable::SetVortex_Tilting(unsigned long iPoint, CMatrixView<const 
   su2double Strain[3][3] = {{0,0,0}, {0,0,0}, {0,0,0}}, Omega, StrainDotVort[3], numVecVort[3];
   su2double numerator, trace0, trace1, denominator;
 
-  AD::StartPreacc();
-  AD::SetPreaccIn(PrimGrad_Flow, nDim+1, nDim);
-  AD::SetPreaccIn(Vorticity, 3);
-  /*--- Eddy viscosity ---*/
-  AD::SetPreaccIn(muT(iPoint));
-  /*--- Laminar viscosity --- */
-  AD::SetPreaccIn(LaminarViscosity);
-
   Strain[0][0] = PrimGrad_Flow[1][0];
   Strain[1][0] = 0.5*(PrimGrad_Flow[2][0] + PrimGrad_Flow[1][1]);
   Strain[0][1] = 0.5*(PrimGrad_Flow[1][1] + PrimGrad_Flow[2][0]);
@@ -94,6 +86,4 @@ void CTurbSAVariable::SetVortex_Tilting(unsigned long iPoint, CMatrixView<const 
 
   Vortex_Tilting(iPoint) = (numerator/denominator) * max(1.0,0.2*LaminarViscosity/muT(iPoint));
 
-  AD::SetPreaccOut(Vortex_Tilting(iPoint));
-  AD::EndPreacc();
 }

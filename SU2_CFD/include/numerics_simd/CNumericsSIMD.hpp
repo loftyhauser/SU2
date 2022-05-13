@@ -50,11 +50,7 @@ class CConfig;
 class CGeometry;
 class CVariable;
 
-#ifdef CODI_FORWARD_TYPE
-using SparseMatrixType = CSysMatrix<su2double>;
-#else
 using SparseMatrixType = CSysMatrix<su2mixedfloat>;
-#endif
 
 /*!
  * \class CNumericsSIMD

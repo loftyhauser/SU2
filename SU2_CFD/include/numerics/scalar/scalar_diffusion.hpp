@@ -60,11 +60,6 @@ class CAvgGrad_Scalar : public CNumerics {
   const bool correct_gradient = false, implicit = false, incompressible = false;
 
   /*!
-   * \brief A pure virtual function; Adds any extra variables to AD
-   */
-  virtual void ExtraADPreaccIn() = 0;
-
-  /*!
    * \brief Model-specific steps in the ComputeResidual method, derived classes
    *        should compute the Flux and Jacobians (i/j) inside this method.
    * \param[in] config - Definition of the particular problem.
@@ -105,19 +100,6 @@ class CAvgGrad_Scalar : public CNumerics {
    * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
    */
   ResidualType<> ComputeResidual(const CConfig* config) final {
-    AD::StartPreacc();
-    AD::SetPreaccIn(Coord_i, nDim);
-    AD::SetPreaccIn(Coord_j, nDim);
-    AD::SetPreaccIn(Normal, nDim);
-    AD::SetPreaccIn(ScalarVar_Grad_i, nVar, nDim);
-    AD::SetPreaccIn(ScalarVar_Grad_j, nVar, nDim);
-    if (correct_gradient) {
-      AD::SetPreaccIn(ScalarVar_i, nVar);
-      AD::SetPreaccIn(ScalarVar_j, nVar);
-    }
-    AD::SetPreaccIn(V_i[idx.Density()], V_i[idx.LaminarViscosity()], V_i[idx.EddyViscosity()]);
-    AD::SetPreaccIn(V_j[idx.Density()], V_j[idx.LaminarViscosity()], V_j[idx.EddyViscosity()]);
-
     Density_i = V_i[idx.Density()];
     Density_j = V_j[idx.Density()];
     Laminar_Viscosity_i = V_i[idx.LaminarViscosity()];
@@ -125,16 +107,11 @@ class CAvgGrad_Scalar : public CNumerics {
     Eddy_Viscosity_i = V_i[idx.EddyViscosity()];
     Eddy_Viscosity_j = V_j[idx.EddyViscosity()];
 
-    ExtraADPreaccIn();
-
     su2double ProjGradScalarVarNoCorr[MAXNVAR];
     proj_vector_ij = ComputeProjectedGradient(nDim, nVar, Normal, Coord_i, Coord_j, ScalarVar_Grad_i, ScalarVar_Grad_j,
                                               correct_gradient, ScalarVar_i, ScalarVar_j, ProjGradScalarVarNoCorr,
                                               Proj_Mean_GradScalarVar);
     FinishResidualCalc(config);
-
-    AD::SetPreaccOut(Flux, nVar);
-    AD::EndPreacc();
 
     return ResidualType<>(Flux, Jacobian_i, Jacobian_j);
   }

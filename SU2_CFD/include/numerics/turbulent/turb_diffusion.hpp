@@ -55,11 +55,6 @@ private:
   const su2double sigma = 2.0/3.0;
 
   /*!
-   * \brief Adds any extra variables to AD
-   */
-  void ExtraADPreaccIn() override {}
-
-  /*!
    * \brief SA specific steps in the ComputeResidual method
    * \param[in] config - Definition of the particular problem.
    */
@@ -118,11 +113,6 @@ private:
 
   const su2double sigma = 2.0/3.0;
   const su2double cn1 = 16.0;
-
-  /*!
-   * \brief Adds any extra variables to AD
-   */
-  void ExtraADPreaccIn() override {}
 
   /*!
    * \brief SA-neg specific steps in the ComputeResidual method
@@ -202,13 +192,6 @@ private:
   const su2double sigma_om2;
 
   su2double F1_i, F1_j; /*!< \brief Menter's first blending function */
-
-  /*!
-   * \brief Adds any extra variables to AD
-   */
-  void ExtraADPreaccIn() override {
-    AD::SetPreaccIn(F1_i, F1_j);
-  }
 
   /*!
    * \brief SST specific steps in the ComputeResidual method
