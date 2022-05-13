@@ -1100,11 +1100,4 @@ unsigned long CSysSolve<ScalarType>::Solve_b(CSysMatrix<ScalarType> & Jacobian, 
 
 /*--- Explicit instantiations ---*/
 
-#ifdef CODI_FORWARD_TYPE
-template class CSysSolve<su2double>;
-#else
 template class CSysSolve<su2mixedfloat>;
-#ifdef USE_MIXED_PRECISION
-template class CSysSolve<passivedouble>;
-#endif
-#endif

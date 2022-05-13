@@ -1433,17 +1433,4 @@ template void CSysMatrix<TYPE>::EnforceSolutionAtNode(unsigned long, const su2do
 template void CSysMatrix<TYPE>::EnforceSolutionAtDOF(unsigned long, unsigned long, su2double, CSysVector<su2double>&);\
 INSTANTIATE_COMMS(TYPE)
 
-#ifdef CODI_FORWARD_TYPE
-/*--- In forward AD only the active type is used. ---*/
-INSTANTIATE_MATRIX(su2double)
-#else
-/*--- Base and reverse AD, matrix is passive. ---*/
 INSTANTIATE_MATRIX(su2mixedfloat)
-/*--- If using mixed precision (float) instantiate also a version for doubles, and allow cross communications. ---*/
-#ifdef USE_MIXED_PRECISION
-INSTANTIATE_MATRIX(passivedouble)
-#endif
-#ifdef CODI_REVERSE_TYPE
-INSTANTIATE_COMMS(su2double)
-#endif
-#endif // CODI_FORWARD_TYPE

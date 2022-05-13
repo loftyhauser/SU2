@@ -54,11 +54,6 @@ if get_option('buildtype')!='debug'
   su2_cpp_args += '-DNDEBUG'
 endif
 
-# check for mixed precision floating point arithmetic
-if get_option('enable-mixedprec')
-  su2_cpp_args += '-DUSE_MIXED_PRECISION'
-endif
-
 # check if MPI dependencies are found and add them
 if mpi
 
@@ -161,7 +156,6 @@ message('''---------------------------------------------------------------------
          Intel-MKL:      @2@
          OpenBlas:       @3@
          PaStiX:         @4@
-         Mixed Float:    @5@
 
          Please be sure to add the $SU2_HOME and $SU2_RUN environment variables,
          and update your $PATH (and $PYTHONPATH if applicable) with $SU2_RUN
@@ -173,7 +167,7 @@ message('''---------------------------------------------------------------------
          export PATH=$PATH:$SU2_RUN
          export PYTHONPATH=$PYTHONPATH:$SU2_RUN
 
-         Use './ninja -C @6@ install' to compile and install SU2
+         Use './ninja -C @5@ install' to compile and install SU2
 '''.format(get_option('prefix')+'/bin', meson.source_root(),
            get_option('enable-mkl'),
-           get_option('enable-openblas'), get_option('enable-pastix'), get_option('enable-mixedprec'),  meson.build_root().split('/')[-1]))
+           get_option('enable-openblas'), get_option('enable-pastix'), meson.build_root().split('/')[-1]))

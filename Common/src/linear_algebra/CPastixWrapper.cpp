@@ -329,12 +329,5 @@ void CPastixWrapper<ScalarType>::Factorize(CGeometry *geometry, const CConfig *c
   isfactorized = true;
 }
 
-#ifdef CODI_FORWARD_TYPE
-template class CPastixWrapper<su2double>;
-#else
 template class CPastixWrapper<su2mixedfloat>;
-#ifdef USE_MIXED_PRECISION
-template class CPastixWrapper<passivedouble>;
-#endif
-#endif
 #endif

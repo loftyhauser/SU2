@@ -107,11 +107,7 @@ using su2double = double;
 using passivedouble = double;
 
 /*--- Define a type for potentially lower precision operations. ---*/
-#ifdef USE_MIXED_PRECISION
-using su2mixedfloat = float;
-#else
 using su2mixedfloat = passivedouble;
-#endif
 
 /*--- Detect if OpDiLib has to be used. ---*/
 #if defined(HAVE_OMP) && defined(CODI_REVERSE_TYPE)

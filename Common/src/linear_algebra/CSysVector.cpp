@@ -71,10 +71,3 @@ CSysVector<ScalarType>::~CSysVector() {
 /*--- Explicit instantiations ---*/
 /*--- We allways need su2double (regardless if it is passive or active). ---*/
 template class CSysVector<su2double>;
-#ifdef USE_MIXED_PRECISION
-/*--- In reverse AD (or with mixed precision) we will also have passive (or float) vectors. ---*/
-template class CSysVector<su2mixedfloat>;
-#endif
-#ifdef CODI_REVERSE_TYPE
-template class CSysVector<passivedouble>;
-#endif
