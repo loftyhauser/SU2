@@ -83,39 +83,6 @@ if omp
 
 endif
 
-# blas-type dependencies
-if get_option('enable-mkl')
-
-  su2_cpp_args += '-DHAVE_MKL'
-
-  # the following mkl name matches the linked libs in manual dependency
-  # see https://software.intel.com/en-us/articles/intel-math-kernel-library-intel-mkl-and-pkg-config-tool
-  # should probably switch to iomp if Intel OpenMP is used
-  mkl_dep = dependency('mkl-static-lp64-seq', required: false)
-
-  if not mkl_dep.found()
-    mkl_root = get_option('mkl_root')
-    mkl_dep = declare_dependency(include_directories: mkl_root+'/include', compile_args: '-m64',
-      link_args: ['-L'+mkl_root+'/lib/intel64','-lmkl_intel_lp64','-lmkl_sequential','-lmkl_core','-lpthread','-lm','-ldl'])
-  endif
-  su2_deps += mkl_dep
-
-elif get_option('enable-openblas')
-
-  su2_cpp_args += '-DHAVE_BLAS'
-  su2_cpp_args += '-DHAVE_LAPACK'
-  blas_dep = dependency(get_option('blas-name'))
-  su2_deps += blas_dep
-
-endif
-
-extra_deps = get_option('extra-deps').split(',')
-foreach dep : extra_deps
-  if dep != ''
-    su2_deps += dependency(dep)
-  endif
-endforeach
-
 # compile common library
 subdir('Common/src')
 # compile SU2_CFD executable
@@ -129,11 +96,6 @@ message('''---------------------------------------------------------------------
          |                                                                       |
          -------------------------------------------------------------------------
          
-         Option          Value
-         ---------------------
-         Intel-MKL:      @2@
-         OpenBlas:       @3@
-
          Please be sure to add the $SU2_HOME and $SU2_RUN environment variables,
          and update your $PATH (and $PYTHONPATH if applicable) with $SU2_RUN
 
@@ -144,7 +106,6 @@ message('''---------------------------------------------------------------------
          export PATH=$PATH:$SU2_RUN
          export PYTHONPATH=$PYTHONPATH:$SU2_RUN
 
-         Use './ninja -C @4@ install' to compile and install SU2
+         Use './ninja -C @2@ install' to compile and install SU2
 '''.format(get_option('prefix')+'/bin', meson.source_root(),
-           get_option('enable-mkl'),
-           get_option('enable-openblas'), meson.build_root().split('/')[-1]))
+           meson.build_root().split('/')[-1]))

@@ -505,12 +505,6 @@ void CSysMatrix<ScalarType>::SetValDiagonalZero() {
 template<class ScalarType>
 void CSysMatrix<ScalarType>::Gauss_Elimination(ScalarType* matrix, ScalarType* vec) const {
 
-#ifdef USE_MKL_LAPACK
-  // With MKL_DIRECT_CALL enabled, this is significantly faster than native code on Intel Architectures.
-  lapack_int ipiv[MAXNVAR];
-  LAPACKE_dgetrf( LAPACK_ROW_MAJOR, nVar, nVar, matrix, nVar, ipiv);
-  LAPACKE_dgetrs( LAPACK_ROW_MAJOR, 'N', nVar, 1, matrix, nVar, ipiv, vec, 1 );
-#else
 #define A(I,J) matrix[(I)*nVar+(J)]
 
   /*--- Transform system in Upper Matrix ---*/
@@ -531,7 +525,6 @@ void CSysMatrix<ScalarType>::Gauss_Elimination(ScalarType* matrix, ScalarType* v
     vec[iVar] /= A(iVar,iVar);
   }
 #undef A
-#endif
 }
 
 template<class ScalarType>
@@ -552,12 +545,6 @@ void CSysMatrix<ScalarType>::MatrixInverse(ScalarType *matrix, ScalarType *inver
       M(iVar,jVar) = ScalarType(iVar==jVar);
 
   /*--- Inversion ---*/
-#ifdef USE_MKL_LAPACK
-  // With MKL_DIRECT_CALL enabled, this is significantly faster than native code on Intel Architectures.
-  lapack_int ipiv[MAXNVAR];
-  LAPACKE_dgetrf( LAPACK_ROW_MAJOR, nVar, nVar, matrix, nVar, ipiv );
-  LAPACKE_dgetrs( LAPACK_ROW_MAJOR, 'N', nVar, nVar, matrix, nVar, ipiv, inverse, nVar );
-#else
 #define A(I,J) matrix[(I)*nVar+(J)]
 
   /*--- Transform system in Upper Matrix ---*/
@@ -586,7 +573,6 @@ void CSysMatrix<ScalarType>::MatrixInverse(ScalarType *matrix, ScalarType *inver
       M(iVar,kVar) /= A(iVar,iVar);
   }
 #undef A
-#endif
 #undef M
 }
 

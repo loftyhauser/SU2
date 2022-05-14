@@ -35,41 +35,6 @@
 #include <vector>
 #include <cassert>
 
-/*--- In forward mode the matrix is not of a built-in type. ---*/
-#if defined(HAVE_MKL)
-#include "mkl.h"
-#ifndef __INTEL_MKL__
-  #error Could not determine the MKL version
-#endif
-/*--- JIT is only available since 2019. ---*/
-#if __INTEL_MKL__ >= 2019
-#define USE_MKL
-/*---
- Lapack direct calls only seem to be created for Intel compilers, and it is not worthwhile
- making "getrf" and "getrs" compatible with AD since they are not used as often as "gemm".
----*/
-#if defined(__INTEL_COMPILER) && defined(MKL_DIRECT_CALL_SEQ)
-  #define USE_MKL_LAPACK
-#endif
-template<class T>
-struct mkl_jit_wrapper {
-  using gemm_t = dgemm_jit_kernel_t;
-  template<class... Ts>
-  static void create_gemm(Ts&&... args) { mkl_jit_create_dgemm(args...); }
-  static gemm_t get_gemm(void* jitter) { return mkl_jit_get_dgemm_ptr(jitter); }
-};
-template<>
-struct mkl_jit_wrapper<float> {
-  using gemm_t = sgemm_jit_kernel_t;
-  template<class... Ts>
-  static void create_gemm(Ts&&... args) { mkl_jit_create_sgemm(args...); }
-  static gemm_t get_gemm(void* jitter) { return mkl_jit_get_sgemm_ptr(jitter); }
-};
-#else
-  #warning The current version of MKL does not support JIT gemm kernels
-#endif
-#endif
-
 class CGeometry;
 
 struct CSysMatrixComms {

@@ -46,7 +46,6 @@
 #include "../../../Common/include/linear_algebra/CSysMatrix.hpp"
 #include "../../../Common/include/linear_algebra/CSysVector.hpp"
 #include "../../../Common/include/linear_algebra/CSysSolve.hpp"
-#include "../../../Common/include/linear_algebra/blas_structure.hpp"
 #include "../../../Common/include/graph_coloring_structure.hpp"
 #include "../variables/CVariable.hpp"
 

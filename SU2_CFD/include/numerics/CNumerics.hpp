@@ -34,7 +34,6 @@
 #include <cstdlib>
 
 #include "../../../Common/include/CConfig.hpp"
-#include "../../../Common/include/linear_algebra/blas_structure.hpp"
 
 class CElement;
 class CFluidModel;
@@ -512,100 +511,6 @@ public:
         tau[iDim][jDim] -= c_cr1 * tauQCR[iDim][jDim];
   }
 
-  /*!
-   * \brief Perturb the Reynolds stress tensor based on parameters.
-   * \param[in] nDim - Dimension of the flow problem, 2 or 3.
-   * \param[in] uq_eigval_comp - Component 1C 2C 3C.
-   * \param[in] uq_permute - Whether to swap order of eigen vectors.
-   * \param[in] uq_delta_b - Delta_b parameter.
-   * \param[in] uq_urlx - Relaxation factor.
-   * \param[in] velgrad - A velocity gradient matrix.
-   * \param[in] density - Density.
-   * \param[in] viscosity - Eddy viscosity.
-   * \param[in] turb_ke: Turbulent kinetic energy.
-   * \param[out] MeanPerturbedRSM - Perturbed stress tensor.
-   */
-  template<class Mat1, class Mat2, class Scalar>
-  NEVERINLINE static void ComputePerturbedRSM(size_t nDim, size_t uq_eigval_comp, bool uq_permute, su2double uq_delta_b,
-                                              su2double uq_urlx, const Mat1& velgrad, Scalar density,
-                                              Scalar viscosity, Scalar turb_ke, Mat2& MeanPerturbedRSM) {
-    Scalar MeanReynoldsStress[3][3];
-    ComputeStressTensor(nDim, MeanReynoldsStress, velgrad, viscosity, density, turb_ke, true);
-    for (size_t iDim = 0; iDim < 3; iDim++)
-      for (size_t jDim = 0; jDim < 3; jDim++)
-        MeanReynoldsStress[iDim][jDim] /= -density;
-
-    /* --- Calculate anisotropic part of Reynolds Stress tensor --- */
-
-    Scalar A_ij[3][3];
-    for (size_t iDim = 0; iDim < 3; iDim++) {
-      for (size_t jDim = 0; jDim < 3; jDim++) {
-        A_ij[iDim][jDim] = .5 * MeanReynoldsStress[iDim][jDim] / turb_ke;
-      }
-      A_ij[iDim][iDim] -= 1.0/3.0;
-    }
-
-    /* --- Get ordered eigenvectors and eigenvalues of A_ij --- */
-
-    Scalar work[3], Eig_Vec[3][3], Eig_Val[3];
-    CBlasStructure::EigenDecomposition(A_ij, Eig_Vec, Eig_Val, 3, work);
-
-    /* compute convex combination coefficients */
-    Scalar c1c = Eig_Val[2] - Eig_Val[1];
-    Scalar c2c = 2.0 * (Eig_Val[1] - Eig_Val[0]);
-    Scalar c3c = 3.0 * Eig_Val[0] + 1.0;
-
-    /* define barycentric traingle corner points */
-    Scalar Corners[3][2];
-    Corners[0][0] = 1.0;
-    Corners[0][1] = 0.0;
-    Corners[1][0] = 0.0;
-    Corners[1][1] = 0.0;
-    Corners[2][0] = 0.5;
-    Corners[2][1] = 0.866025;
-
-    /* define barycentric coordinates */
-    Scalar Barycentric_Coord[2];
-    Barycentric_Coord[0] = Corners[0][0] * c1c + Corners[1][0] * c2c + Corners[2][0] * c3c;
-    Barycentric_Coord[1] = Corners[0][1] * c1c + Corners[1][1] * c2c + Corners[2][1] * c3c;
-
-    /* component 1C, 2C, 3C, converted to index of the "corners" */
-    Scalar New_Coord[2];
-    New_Coord[0] = Corners[uq_eigval_comp-1][0];
-    New_Coord[1] = Corners[uq_eigval_comp-1][1];
-
-    /* calculate perturbed barycentric coordinates */
-    Barycentric_Coord[0] = Barycentric_Coord[0] + (uq_delta_b) * (New_Coord[0] - Barycentric_Coord[0]);
-    Barycentric_Coord[1] = Barycentric_Coord[1] + (uq_delta_b) * (New_Coord[1] - Barycentric_Coord[1]);
-
-    /* rebuild c1c,c2c,c3c based on perturbed barycentric coordinates */
-    c3c = Barycentric_Coord[1] / Corners[2][1];
-    c1c = Barycentric_Coord[0] - Corners[2][0] * c3c;
-    c2c = 1 - c1c - c3c;
-
-    /* build new anisotropy eigenvalues */
-    Eig_Val[0] = (c3c - 1) / 3.0;
-    Eig_Val[1] = 0.5 *c2c + Eig_Val[0];
-    Eig_Val[2] = c1c + Eig_Val[1];
-
-    /* permute eigenvectors if required */
-    if (uq_permute) {
-      for (size_t jDim = 0; jDim < 3; jDim++)
-        swap(Eig_Vec[0][jDim], Eig_Vec[2][jDim]);
-    }
-
-    CBlasStructure::EigenRecomposition(A_ij, Eig_Vec, Eig_Val, 3);
-
-    /* compute perturbed Reynolds stress matrix; using under-relaxation factor (uq_urlx)*/
-    for (size_t iDim = 0; iDim < 3; iDim++) {
-      for (size_t jDim = 0; jDim < 3; jDim++) {
-        auto delta_ij = (jDim==iDim)? 1.0 : 0.0;
-        MeanPerturbedRSM[iDim][jDim] = 2.0 * turb_ke * (A_ij[iDim][jDim] + 1.0/3.0 * delta_ij);
-        MeanPerturbedRSM[iDim][jDim] = MeanReynoldsStress[iDim][jDim] +
-          uq_urlx*(MeanPerturbedRSM[iDim][jDim] - MeanReynoldsStress[iDim][jDim]);
-      }
-    }
-  }
 
   /*!
    * \brief Project average gradient onto normal (with or w/o correction) for viscous fluxes of scalar quantities.

@@ -490,13 +490,6 @@ public:
   void SetBoundSensitivity(CConfig *config) override;
 
   /*!
-   * \brief Compute the maximum thickness of an airfoil.
-   * \return Maximum thickness at a particular seccion.
-   */
-  su2double Compute_MaxThickness(su2double *Plane_P0, su2double *Plane_Normal, CConfig *config, vector<su2double> &Xcoord_Airfoil,
-                                 vector<su2double> &Ycoord_Airfoil, vector<su2double> &Zcoord_Airfoil) override;
-
-  /*!
    * \brief Compute the twist of an airfoil.
    * \return Twist at a particular seccion.
    */
@@ -553,12 +546,6 @@ public:
                              vector<su2double> &Ycoord_Airfoil, vector<su2double> &Zcoord_Airfoil) override;
 
   /*!
-   * \brief Compute the thickness of an airfoil.
-   */
-  su2double Compute_Thickness(su2double *Plane_P0, su2double *Plane_Normal, su2double Location, CConfig *config, vector<su2double> &Xcoord_Airfoil,
-                              vector<su2double> &Ycoord_Airfoil, vector<su2double> &Zcoord_Airfoil, su2double &ZLoc) override;
-
-  /*!
    * \brief Compute the area of an airfoil.
    * \return Area of an airfoil.
    */
@@ -589,33 +576,12 @@ public:
   /*!
    * \brief Evaluate geometrical parameters of a wing.
    */
-  void Compute_Wing(CConfig *config, bool original_surface,
-                    su2double &Wing_Volume, su2double &Wing_MinMaxThickness, su2double &Wing_MaxMaxThickness,
-                    su2double &Wing_MinChord, su2double &Wing_MaxChord,
-                    su2double &Wing_MinLERadius, su2double &Wing_MaxLERadius,
-                    su2double &Wing_MinToC, su2double &Wing_MaxToC,
-                    su2double &Wing_ObjFun_MinToC, su2double &Wing_MaxTwist,
-                    su2double &Wing_MaxCurvature, su2double &Wing_MaxDihedral) override;
-
-  /*!
-   * \brief Evaluate geometrical parameters of a wing.
-   */
   void Compute_Fuselage(CConfig *config, bool original_surface,
                         su2double &Fuselage_Volume, su2double &Fuselage_WettedArea,
                         su2double &Fuselage_MinWidth, su2double &Fuselage_MaxWidth,
                         su2double &Fuselage_MinWaterLineWidth, su2double &Fuselage_MaxWaterLineWidth,
                         su2double &Fuselage_MinHeight, su2double &Fuselage_MaxHeight,
                         su2double &Fuselage_MaxCurvature) override;
-
-  /*!
-   * \brief Evaluate geometrical parameters of a wing.
-   */
-  void Compute_Nacelle(CConfig *config, bool original_surface,
-                       su2double &Nacelle_Volume, su2double &Nacelle_MinMaxThickness, su2double &Nacelle_MaxMaxThickness,
-                       su2double &Nacelle_MinChord, su2double &Nacelle_MaxChord,
-                       su2double &Nacelle_MinLERadius, su2double &Nacelle_MaxLERadius,
-                       su2double &Nacelle_MinToC, su2double &Nacelle_MaxToC,
-                       su2double &Nacelle_ObjFun_MinToC, su2double &Nacelle_MaxTwist) override;
 
   /*!
    * \brief Read the sensitivity from adjoint solution file and store it.

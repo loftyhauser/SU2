@@ -153,12 +153,6 @@ protected:
 
     auto tau = stressTensor(avgV.laminarVisc() + (uq? Double(0.0) : avgV.eddyVisc()), avgGrad);
     if(useSA_QCR) addQCR(avgGrad, tau);
-    if(uq) {
-      Double turb_ke = 0.5*(gatherVariables(iPoint, turbVars->GetSolution()) +
-                            gatherVariables(jPoint, turbVars->GetSolution()));
-      addPerturbedRSM(avgV, avgGrad, turb_ke, tau,
-                      uq_eigval_comp, uq_permute, uq_delta_b, uq_urlx);
-    }
 
     if(wallFun) addTauWall(iPoint, jPoint, solution.GetTau_Wall(), unitNormal, tau);
 

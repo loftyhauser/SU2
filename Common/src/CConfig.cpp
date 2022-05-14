@@ -33,12 +33,6 @@
 
 using namespace PrintingToolbox;
 
-#ifdef PROFILE
-#ifdef HAVE_MKL
-#include "mkl.h"
-#endif
-#endif
-
 vector<string> Profile_Function_tp;       /*!< \brief Vector of string names for profiled functions. */
 vector<double> Profile_Time_tp;           /*!< \brief Vector of elapsed time for profiled functions. */
 vector<double> Profile_ID_tp;             /*!< \brief Vector of group ID number for profiled functions. */
@@ -7421,11 +7415,7 @@ void CConfig::GEMM_Tick(double *val_start_time) const {
 
 #ifdef PROFILE
 
-#ifdef HAVE_MKL
-  *val_start_time = dsecnd();
-#else
   *val_start_time = SU2_MPI::Wtime();
-#endif
 
 #endif
 
@@ -7439,11 +7429,7 @@ void CConfig::GEMM_Tock(double val_start_time, int M, int N, int K) const {
      the type of executable. */
   double val_stop_time = 0.0;
 
-#ifdef HAVE_MKL
-  val_stop_time = dsecnd();
-#else
   val_stop_time = SU2_MPI::Wtime();
-#endif
 
   /* Compute the elapsed time. */
   const double val_elapsed_time = val_stop_time - val_start_time;

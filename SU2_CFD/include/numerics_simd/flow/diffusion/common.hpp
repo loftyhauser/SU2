@@ -91,33 +91,6 @@ FORCEINLINE MatrixDbl<nDim> stressTensor(Double viscosity,
 }
 
 /*!
- * \brief Add perturbed stress tensor.
- * \note Not inlined because it is not easy to vectorize properly, due to tred2 and tql2.
- */
-template<class PrimitiveType, class MatrixType, size_t nDim, class... Ts>
-NEVERINLINE void addPerturbedRSM(const PrimitiveType& V,
-                                 const MatrixType& grad,
-                                 const Double& turb_ke,
-                                 MatrixDbl<nDim,nDim>& tau,
-                                 Ts... uq_args) {
-  /*--- Handle SIMD dimensions 1 by 1. ---*/
-  for (size_t k = 0; k < Double::Size; ++k) {
-    su2double velgrad[nDim][nDim];
-    for (size_t iVar = 0; iVar < nDim; ++iVar)
-      for (size_t iDim = 0; iDim < nDim; ++iDim)
-        velgrad[iVar][iDim] = grad(iVar+1,iDim)[k];
-
-    su2double rsm[3][3];
-    CNumerics::ComputePerturbedRSM(nDim, uq_args..., velgrad, V.density()[k],
-                                   V.eddyVisc()[k], turb_ke[k], rsm);
-
-    for (size_t iDim = 0; iDim < nDim; ++iDim)
-      for (size_t jDim = 0; jDim < nDim; ++jDim)
-        tau(iDim,jDim)[k] -= V.density()[k] * rsm[iDim][jDim];
-  }
-}
-
-/*!
  * \brief SA-QCR2000 modification of the stress tensor.
  */
 template<class MatrixType, size_t nDim>
