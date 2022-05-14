@@ -83,28 +83,6 @@ if omp
 
 endif
 
-# PaStiX
-if get_option('enable-pastix')
-  assert(mpi,
-         'PaStiX support requires MPI')
-  assert(get_option('enable-mkl') or get_option('enable-openblas'),
-         'PaStiX support requires either mkl or openblas')
-
-  su2_cpp_args += '-DHAVE_PASTIX'
-
-  pastix_dep = dependency('pastix', required: false)
-
-  if not pastix_dep.found()
-    pastix_root = get_option('pastix_root')+'/install'
-    scotch_root = get_option('scotch_root')+'/lib'
-    pastix_dep  = declare_dependency(include_directories: pastix_root,
-                                    link_args: [ '-L../'+pastix_root, '-L../'+scotch_root,
-                                    '-lpastix', '-lscotch', '-lptscotch', '-lptscotcherr',
-                                    '-lm', '-lrt', '-lpthread'])
-  endif
-  su2_deps += pastix_dep
-endif
-
 # blas-type dependencies
 if get_option('enable-mkl')
 
@@ -155,7 +133,6 @@ message('''---------------------------------------------------------------------
          ---------------------
          Intel-MKL:      @2@
          OpenBlas:       @3@
-         PaStiX:         @4@
 
          Please be sure to add the $SU2_HOME and $SU2_RUN environment variables,
          and update your $PATH (and $PYTHONPATH if applicable) with $SU2_RUN
@@ -167,7 +144,7 @@ message('''---------------------------------------------------------------------
          export PATH=$PATH:$SU2_RUN
          export PYTHONPATH=$PYTHONPATH:$SU2_RUN
 
-         Use './ninja -C @5@ install' to compile and install SU2
+         Use './ninja -C @4@ install' to compile and install SU2
 '''.format(get_option('prefix')+'/bin', meson.source_root(),
            get_option('enable-mkl'),
-           get_option('enable-openblas'), get_option('enable-pastix'), meson.build_root().split('/')[-1]))
+           get_option('enable-openblas'), meson.build_root().split('/')[-1]))

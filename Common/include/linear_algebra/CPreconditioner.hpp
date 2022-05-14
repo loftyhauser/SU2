@@ -271,61 +271,6 @@ public:
   }
 };
 
-
-/*!
- * \class CPastixPreconditioner
- * \brief Specialization of preconditioner that uses PaStiX to factorize a CSysMatrix.
- */
-template<class ScalarType>
-class CPastixPreconditioner final : public CPreconditioner<ScalarType> {
-private:
-  CSysMatrix<ScalarType>& sparse_matrix; /*!< \brief Pointer to the matrix. */
-  CGeometry* geometry;                   /*!< \brief Geometry associated with the problem. */
-  const CConfig *config;                 /*!< \brief Configuration of the problem. */
-  unsigned short kind_fact;              /*!< \brief The type of factorization desired. */
-
-public:
-  /*!
-   * \brief Constructor of the class
-   * \param[in] matrix_ref - Matrix reference that will be used to define the preconditioner.
-   * \param[in] geometry_ref - Associated geometry.
-   * \param[in] config_ref - Problem configuration.
-   * \param[in] kind_factorization - Type of factorization required.
-   */
-  inline CPastixPreconditioner(CSysMatrix<ScalarType> & matrix_ref, CGeometry *geometry_ref,
-                               const CConfig *config_ref, unsigned short kind_factorization) :
-    sparse_matrix(matrix_ref)
-  {
-    if((geometry_ref == nullptr) || (config_ref == nullptr))
-      SU2_MPI::Error("Preconditioner needs to be built with valid references.", CURRENT_FUNCTION);
-    geometry = geometry_ref;
-    config = config_ref;
-    kind_fact = kind_factorization;
-  }
-
-  /*!
-   * \note This class cannot be default constructed as that would leave us with invalid Pointers.
-   */
-  CPastixPreconditioner() = delete;
-
-  /*!
-   * \brief Operator that defines the preconditioner operation.
-   * \param[in] u - CSysVector that is being preconditioned.
-   * \param[out] v - CSysVector that is the result of the preconditioning.
-   */
-  inline void operator()(const CSysVector<ScalarType> & u, CSysVector<ScalarType> & v) const override {
-    sparse_matrix.ComputePastixPreconditioner(u, v, geometry, config);
-  }
-
-  /*!
-   * \note Request the associated matrix to build the preconditioner.
-   */
-  inline void Build() override {
-    sparse_matrix.BuildPastixPreconditioner(geometry, config, kind_fact);
-  }
-};
-
-
 template<class ScalarType>
 CPreconditioner<ScalarType>* CPreconditioner<ScalarType>::Create(ENUM_LINEAR_SOLVER_PREC kind,
                                                                  CSysMatrix<ScalarType>& jacobian,
@@ -345,9 +290,6 @@ CPreconditioner<ScalarType>* CPreconditioner<ScalarType>::Create(ENUM_LINEAR_SOL
       break;
     case ILU:
       prec = new CILUPreconditioner<ScalarType>(jacobian, geometry, config);
-      break;
-    case PASTIX_ILU: case PASTIX_LU_P: case PASTIX_LDLT_P:
-      prec = new CPastixPreconditioner<ScalarType>(jacobian, geometry, config, kind);
       break;
   }
 

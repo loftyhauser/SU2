@@ -1369,8 +1369,6 @@ enum ENUM_LINEAR_SOLVER {
   BCGSTAB,              /*!< \brief BCGSTAB - Biconjugate Gradient Stabilized Method (main solver). */
   RESTARTED_FGMRES,     /*!< \brief Flexible Generalized Minimal Residual method with restart. */
   SMOOTHER,             /*!< \brief Iterative smoother. */
-  PASTIX_LDLT,          /*!< \brief PaStiX LDLT (complete) factorization. */
-  PASTIX_LU,            /*!< \brief PaStiX LU (complete) factorization. */
 };
 static const MapType<std::string, ENUM_LINEAR_SOLVER> Linear_Solver_Map = {
   MakePair("CONJUGATE_GRADIENT", CONJUGATE_GRADIENT)
@@ -1378,8 +1376,6 @@ static const MapType<std::string, ENUM_LINEAR_SOLVER> Linear_Solver_Map = {
   MakePair("FGMRES", FGMRES)
   MakePair("RESTARTED_FGMRES", RESTARTED_FGMRES)
   MakePair("SMOOTHER", SMOOTHER)
-  MakePair("PASTIX_LDLT", PASTIX_LDLT)
-  MakePair("PASTIX_LU", PASTIX_LU)
 };
 
 /*!
@@ -1436,18 +1432,12 @@ enum ENUM_LINEAR_SOLVER_PREC {
   LU_SGS,         /*!< \brief LU SGS preconditioner. */
   LINELET,        /*!< \brief Line implicit preconditioner. */
   ILU,            /*!< \brief ILU(k) preconditioner. */
-  PASTIX_ILU=10,  /*!< \brief PaStiX ILU(k) preconditioner. */
-  PASTIX_LU_P,    /*!< \brief PaStiX LU as preconditioner. */
-  PASTIX_LDLT_P,  /*!< \brief PaStiX LDLT as preconditioner. */
 };
 static const MapType<std::string, ENUM_LINEAR_SOLVER_PREC> Linear_Solver_Prec_Map = {
   MakePair("JACOBI", JACOBI)
   MakePair("LU_SGS", LU_SGS)
   MakePair("LINELET", LINELET)
   MakePair("ILU", ILU)
-  MakePair("PASTIX_ILU", PASTIX_ILU)
-  MakePair("PASTIX_LU", PASTIX_LU_P)
-  MakePair("PASTIX_LDLT", PASTIX_LDLT_P)
 };
 
 /*!

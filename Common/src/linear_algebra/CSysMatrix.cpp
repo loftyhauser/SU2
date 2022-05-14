@@ -1361,11 +1361,6 @@ void CSysMatrix<ScalarType>::TransposeInPlace() {
   }
   END_SU2_OMP_FOR
 
-#ifdef HAVE_PASTIX
-  SU2_OMP_MASTER
-  pastix_wrapper.SetTransposedSolve();
-  END_SU2_OMP_MASTER
-#endif
 }
 
 template<class ScalarType>
@@ -1385,40 +1380,6 @@ void CSysMatrix<ScalarType>::MatrixMatrixAddition(ScalarType alpha, const CSysMa
     matrix[i] += alpha*B.matrix[i];
   END_SU2_OMP_FOR
 
-}
-
-template<class ScalarType>
-void CSysMatrix<ScalarType>::BuildPastixPreconditioner(CGeometry *geometry, const CConfig *config,
-                                                       unsigned short kind_fact) {
-#ifdef HAVE_PASTIX
-  /*--- Pastix will launch nested threads. ---*/
-  SU2_OMP_MASTER
-  {
-    pastix_wrapper.SetMatrix(nVar,nPoint,nPointDomain,row_ptr,col_ind,matrix);
-    pastix_wrapper.Factorize(geometry, config, kind_fact);
-  }
-  END_SU2_OMP_MASTER
-  SU2_OMP_BARRIER
-#else
-  SU2_MPI::Error("SU2 was not compiled with -DHAVE_PASTIX", CURRENT_FUNCTION);
-#endif
-}
-
-template<class ScalarType>
-void CSysMatrix<ScalarType>::ComputePastixPreconditioner(const CSysVector<ScalarType> & vec, CSysVector<ScalarType> & prod,
-                                                         CGeometry *geometry, const CConfig *config) const {
-#ifdef HAVE_PASTIX
-  SU2_OMP_BARRIER
-  SU2_OMP_MASTER
-  pastix_wrapper.Solve(vec,prod);
-  END_SU2_OMP_MASTER
-  SU2_OMP_BARRIER
-
-  CSysMatrixComms::Initiate(prod, geometry, config);
-  CSysMatrixComms::Complete(prod, geometry, config);
-#else
-  SU2_MPI::Error("SU2 was not compiled with -DHAVE_PASTIX", CURRENT_FUNCTION);
-#endif
 }
 
 /*--- Explicit instantiations ---*/

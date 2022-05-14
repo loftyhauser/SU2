@@ -3855,16 +3855,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
                    CURRENT_FUNCTION);
   }
 
-  /* Force the lowest memory preconditioner when direct solvers are used. */
-
-  auto isPastix = [](unsigned short kindSolver) {
-    return kindSolver == PASTIX_LDLT || kindSolver == PASTIX_LU;
-  };
-
-  if (isPastix(Kind_Linear_Solver)) Kind_Linear_Solver_Prec = LU_SGS;
-  if (isPastix(Kind_DiscAdj_Linear_Solver)) Kind_DiscAdj_Linear_Prec = LU_SGS;
-  if (isPastix(Kind_Deform_Linear_Solver)) Kind_Deform_Linear_Solver_Prec = LU_SGS;
-
 
   /* Check for whether we need a second gradient method to calculate
    gradients for uwpind reconstruction. Set additional booleans to

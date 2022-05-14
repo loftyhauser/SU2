@@ -30,7 +30,6 @@
 
 #include "../../include/CConfig.hpp"
 #include "CSysVector.hpp"
-#include "CPastixWrapper.hpp"
 
 #include <cstdlib>
 #include <vector>
@@ -162,10 +161,6 @@ private:
   gemm_t MatrixVectorProductKernelBetaOne;       /*!< \brief MKL JIT based GEMV kernel with BETA=1.0. */
   void * MatrixVectorProductJitterAlphaMinusOne; /*!< \brief Jitter handle for MKL JIT based GEMV with ALPHA=-1.0 and BETA=1.0. */
   gemm_t MatrixVectorProductKernelAlphaMinusOne; /*!< \brief MKL JIT based GEMV kernel with ALPHA=-1.0 and BETA=1.0. */
-#endif
-
-#ifdef HAVE_PASTIX
-  mutable CPastixWrapper<ScalarType> pastix_wrapper;
 #endif
 
   /*!
@@ -901,23 +896,5 @@ public:
    */
   void ComputeResidual(const CSysVector<ScalarType> & sol, const CSysVector<ScalarType> & f,
                        CSysVector<ScalarType> & res) const;
-
-  /*!
-   * \brief Factorize matrix using PaStiX.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] kind_fact - Type of factorization.
-   */
-  void BuildPastixPreconditioner(CGeometry *geometry, const CConfig *config, unsigned short kind_fact);
-
-  /*!
-   * \brief Apply the PaStiX factorization to CSysVec.
-   * \param[in] vec - CSysVector to be multiplied by the preconditioner.
-   * \param[out] prod - Result of the product M*vec.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void ComputePastixPreconditioner(const CSysVector<ScalarType> & vec, CSysVector<ScalarType> & prod,
-                                   CGeometry *geometry, const CConfig *config) const;
 
 };

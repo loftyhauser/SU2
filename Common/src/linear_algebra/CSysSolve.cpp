@@ -899,12 +899,6 @@ unsigned long CSysSolve<ScalarType>::Solve(CSysMatrix<ScalarType> & Jacobian, co
     case SMOOTHER:
       IterLinSol = Smoother_LinSolver(*LinSysRes_ptr, *LinSysSol_ptr, mat_vec, *precond, SolverTol, MaxIter, residual, ScreenOutput, config);
       break;
-    case PASTIX_LDLT : case PASTIX_LU:
-      Jacobian.BuildPastixPreconditioner(geometry, config, KindSolver);
-      Jacobian.ComputePastixPreconditioner(*LinSysRes_ptr, *LinSysSol_ptr, geometry, config);
-      IterLinSol = 1;
-      residual = 1e-20;
-      break;
     default:
       SU2_MPI::Error("Unknown type of linear solver.",CURRENT_FUNCTION);
   }
@@ -943,9 +937,6 @@ unsigned long CSysSolve<ScalarType>::Solve(CSysMatrix<ScalarType> & Jacobian, co
         break;
       case LU_SGS:
         /*--- Nothing to build. ---*/
-        break;
-      case PASTIX_ILU: case PASTIX_LU_P: case PASTIX_LDLT_P:
-        /*--- It was already built. ---*/
         break;
       default:
         SU2_MPI::Error("The specified preconditioner is not yet implemented for the discrete adjoint method.", CURRENT_FUNCTION);
@@ -1033,12 +1024,6 @@ unsigned long CSysSolve<ScalarType>::Solve_b(CSysMatrix<ScalarType> & Jacobian, 
       break;
     case SMOOTHER:
       IterLinSol = Smoother_LinSolver(*LinSysRes_ptr, *LinSysSol_ptr, mat_vec, *precond, SolverTol, MaxIter, Residual, ScreenOutput, config);
-      break;
-    case PASTIX_LDLT : case PASTIX_LU:
-      if (directCall) Jacobian.BuildPastixPreconditioner(geometry, config, KindSolver);
-      Jacobian.ComputePastixPreconditioner(*LinSysRes_ptr, *LinSysSol_ptr, geometry, config);
-      IterLinSol = 1;
-      Residual = 1e-20;
       break;
     default:
       SU2_MPI::Error("Unknown type of linear solver.",CURRENT_FUNCTION);
