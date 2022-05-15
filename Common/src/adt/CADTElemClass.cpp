@@ -45,13 +45,6 @@ CADTElemClass::CADTElemClass(unsigned short         val_nDim,
   /* Copy the dimension of the problem into nDim. */
   nDim = val_nDim;
 
-  /* Allocate some thread-safe working variables if required. */
-#ifdef HAVE_OMP
-  BBoxTargets.resize(omp_get_max_threads());
-  FrontLeaves.resize(omp_get_max_threads());
-  FrontLeavesNew.resize(omp_get_max_threads());
-#endif
-
   /*--------------------------------------------------------------------------*/
   /*--- Step 1: If a global tree must be built, gather the local grids on  ---*/
   /*---         all ranks, such that the entire grid to be searched is     ---*/
@@ -63,111 +56,6 @@ CADTElemClass::CADTElemClass(unsigned short         val_nDim,
 
   /*--- Make a distinction between parallel and sequential mode. ---*/
 
-#ifdef HAVE_MPI
-
-  /* Parallel mode. Check whether a global or a local tree must be built. */
-  if( globalTree ) {
-
-    /*--- The local grids are gathered on all ranks. For very large cases this
-          could become a serious memory bottleneck and a parallel version may
-          be needed.  ---*/
-
-    /*--- First determine the number of points per rank and make them
-          available to all ranks. ---*/
-    int rank, size;
-    SU2_MPI::Comm_rank(SU2_MPI::GetComm(), &rank);
-    SU2_MPI::Comm_size(SU2_MPI::GetComm(), &size);
-
-    vector<int> recvCounts(size), displs(size);
-    int sizeLocal = (int) val_coor.size();
-
-    SU2_MPI::Allgather(&sizeLocal, 1, MPI_INT, recvCounts.data(), 1,
-                       MPI_INT, SU2_MPI::GetComm());
-    displs[0] = 0;
-    for(int i=1; i<size; ++i) displs[i] = displs[i-1] + recvCounts[i-1];
-
-    /*--- Correct the local connectivities with the offset of this rank,
-          such that they get the correct values when all the points from
-          all ranks are gathered. ---*/
-    const unsigned long offsetRank = displs[rank]/nDim;
-    for(unsigned long i=0; i<val_connElem.size(); ++i)
-      val_connElem[i] += offsetRank;
-
-    /*--- Gather the coordinates of the points on all ranks. ---*/
-    int sizeGlobal = displs.back() + recvCounts.back();
-
-    coorPoints.resize(sizeGlobal);
-    SU2_MPI::Allgatherv(val_coor.data(), sizeLocal, MPI_DOUBLE, coorPoints.data(),
-                        recvCounts.data(), displs.data(), MPI_DOUBLE, SU2_MPI::GetComm());
-
-    /*--- Determine the number of elements per rank and make them
-          available to all ranks. ---*/
-    sizeLocal = (int) val_VTKElem.size();
-
-    SU2_MPI::Allgather(&sizeLocal, 1, MPI_INT, recvCounts.data(), 1,
-                       MPI_INT, SU2_MPI::GetComm());
-    displs[0] = 0;
-    for(int i=1; i<size; ++i) displs[i] = displs[i-1] + recvCounts[i-1];
-
-    /*--- Gather the element type, the possible markers of these elements
-          and the local element ID's on all ranks. ---*/
-    sizeGlobal = displs.back() + recvCounts.back();
-
-    elemVTK_Type.resize(sizeGlobal);
-    localMarkers.resize(sizeGlobal);
-    localElemIDs.resize(sizeGlobal);
-
-    SU2_MPI::Allgatherv(val_VTKElem.data(), sizeLocal, MPI_UNSIGNED_SHORT, elemVTK_Type.data(),
-                        recvCounts.data(), displs.data(), MPI_UNSIGNED_SHORT, SU2_MPI::GetComm());
-
-    SU2_MPI::Allgatherv(val_markerID.data(), sizeLocal, MPI_UNSIGNED_SHORT, localMarkers.data(),
-                        recvCounts.data(), displs.data(), MPI_UNSIGNED_SHORT, SU2_MPI::GetComm());
-
-    SU2_MPI::Allgatherv(val_elemID.data(), sizeLocal, MPI_UNSIGNED_LONG, localElemIDs.data(),
-                        recvCounts.data(), displs.data(), MPI_UNSIGNED_LONG, SU2_MPI::GetComm());
-
-    /*--- Create the content of ranksOfElems, which stores the original ranks
-          where the elements come from. ---*/
-    ranksOfElems.resize(sizeGlobal);
-
-    for(int i=0; i<size; ++i) {
-      for(int j=0; j<recvCounts[i]; ++j)
-        ranksOfElems[displs[i]+j] = i;
-    }
-
-    /*--- Determine the size of the local connectivity per rank and make them
-          available to all ranks. ---*/
-    sizeLocal = (int) val_connElem.size();
-
-    SU2_MPI::Allgather(&sizeLocal, 1, MPI_INT, recvCounts.data(), 1,
-                       MPI_INT, SU2_MPI::GetComm());
-    displs[0] = 0;
-    for(int i=1; i<size; ++i) displs[i] = displs[i-1] + recvCounts[i-1];
-
-    /*--- Gather the element connectivity on all ranks. ---*/
-    sizeGlobal = displs.back() + recvCounts.back();
-
-    elemConns.resize(sizeGlobal);
-
-    SU2_MPI::Allgatherv(val_connElem.data(), sizeLocal, MPI_UNSIGNED_LONG, elemConns.data(),
-                        recvCounts.data(), displs.data(), MPI_UNSIGNED_LONG, SU2_MPI::GetComm());
-  }
-    else {
-
-    /*--- A local tree must be built. Copy the data from the arguments into the
-          member variables and set the ranks to the rank of this processor. ---*/
-    int rank;
-    SU2_MPI::Comm_rank(SU2_MPI::GetComm(), &rank);
-
-    coorPoints   = val_coor;
-    elemConns    = val_connElem;
-    elemVTK_Type = val_VTKElem;
-    localMarkers = val_markerID;
-    localElemIDs = val_elemID;
-
-    ranksOfElems.assign(elemVTK_Type.size(), rank);
-  }
-#else
 
   /*--- Sequential mode. Copy the data from the arguments into the member
         variables and set the ranks to MASTER_NODE. ---*/
@@ -178,8 +66,6 @@ CADTElemClass::CADTElemClass(unsigned short         val_nDim,
   localElemIDs = val_elemID;
 
   ranksOfElems.assign(elemVTK_Type.size(), MASTER_NODE);
-
-#endif
 
     /*--- Determine the values of the vector nDOFsPerElem, which contains the
         number of DOFs per element in cumulative storage format. ---*/

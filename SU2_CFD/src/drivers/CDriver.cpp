@@ -48,9 +48,6 @@
 #include "../../include/numerics/flow/convection/ausm_slau.hpp"
 #include "../../include/numerics/flow/flow_diffusion.hpp"
 #include "../../include/numerics/flow/flow_sources.hpp"
-#include "../../include/numerics/continuous_adjoint/adj_convection.hpp"
-#include "../../include/numerics/continuous_adjoint/adj_diffusion.hpp"
-#include "../../include/numerics/continuous_adjoint/adj_sources.hpp"
 #include "../../include/numerics/scalar/scalar_convection.hpp"
 #include "../../include/numerics/scalar/scalar_diffusion.hpp"
 #include "../../include/numerics/scalar/scalar_sources.hpp"
@@ -66,9 +63,6 @@
 
 #include <cassert>
 
-#ifdef VTUNEPROF
-#include <ittnotify.h>
-#endif
 #include <fenv.h>
 
 CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunicator, bool dummy_geo) :
@@ -348,13 +342,6 @@ void CDriver::Postprocessing() {
 
   if (rank == MASTER_NODE) cout << "Deleted CFreeFormDefBox class." << endl;
 
-  /*--- Output profiling information ---*/
-  // Note that for now this is called only by a single thread, but all
-  // necessary variables have been made thread private for safety (tick/tock)!!
-
-  config_container[ZONE_0]->SetProfilingCSV();
-  config_container[ZONE_0]->GEMMProfilingCSV();
-
   /*--- Deallocate config container ---*/
   if (config_container!= nullptr) {
     for (iZone = 0; iZone < nZone; iZone++)
@@ -471,14 +458,6 @@ void CDriver::Input_Preprocessing(CConfig **&config, CConfig *&driver_config) {
   }
 
 
-  /*--- Set the multizone part of the problem. ---*/
-  if (driver_config->GetMultizone_Problem()){
-    for (iZone = 0; iZone < nZone; iZone++) {
-      /*--- Set the interface markers for multizone ---*/
-      config_container[iZone]->SetMultizone(driver_config, config_container);
-    }
-  }
-
 }
 
 void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, bool dummy){
@@ -576,10 +555,6 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
   /*--- Set the dimension --- */
 
   nDim = geometry_aux->GetnDim();
-
-  /*--- Color the initial grid and set the send-receive domains (ParMETIS) ---*/
-
-  geometry_aux->SetColorGrid_Parallel(config);
 
   /*--- Allocate the memory of the current domain, and divide the grid
      between the ranks. ---*/
@@ -1403,154 +1378,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
     }
   }
 
-  /*--- Solver definition for the flow adjoint problem ---*/
-
-  if (adj_euler || adj_ns) {
-
-    /*--- Definition of the convective scheme for each equation and mesh level ---*/
-
-    switch (config->GetKind_ConvNumScheme_AdjFlow()) {
-      case NO_CONVECTIVE:
-        SU2_MPI::Error("Config file is missing the CONV_NUM_METHOD_ADJFLOW option.", CURRENT_FUNCTION);
-        break;
-
-      case SPACE_CENTERED :
-
-        if (compressible) {
-
-          /*--- Compressible flow ---*/
-
-          switch (config->GetKind_Centered_AdjFlow()) {
-            case LAX : numerics[MESH_0][ADJFLOW_SOL][conv_term] = new CCentLax_AdjFlow(nDim, nVar_Adj_Flow, config); break;
-            case JST : numerics[MESH_0][ADJFLOW_SOL][conv_term] = new CCentJST_AdjFlow(nDim, nVar_Adj_Flow, config); break;
-            default:
-              SU2_MPI::Error("Centered scheme not implemented.", CURRENT_FUNCTION);
-              break;
-          }
-
-          for (iMGlevel = 1; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-            numerics[iMGlevel][ADJFLOW_SOL][conv_term] = new CCentLax_AdjFlow(nDim, nVar_Adj_Flow, config);
-
-          for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-            numerics[iMGlevel][ADJFLOW_SOL][conv_bound_term] = new CUpwRoe_AdjFlow(nDim, nVar_Adj_Flow, config);
-
-        }
-        break;
-
-      case SPACE_UPWIND :
-
-        if (compressible) {
-
-          /*--- Compressible flow ---*/
-
-          switch (config->GetKind_Upwind_AdjFlow()) {
-            case ROE:
-              for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-                numerics[iMGlevel][ADJFLOW_SOL][conv_term] = new CUpwRoe_AdjFlow(nDim, nVar_Adj_Flow, config);
-                numerics[iMGlevel][ADJFLOW_SOL][conv_bound_term] = new CUpwRoe_AdjFlow(nDim, nVar_Adj_Flow, config);
-              }
-              break;
-            default:
-              SU2_MPI::Error("Upwind scheme not implemented.", CURRENT_FUNCTION);
-              break;
-          }
-        }
-        break;
-
-      default:
-        SU2_MPI::Error("Invalid convective scheme for the continuous adjoint Euler / Navier-Stokes equations.", CURRENT_FUNCTION);
-        break;
-    }
-
-    /*--- Definition of the viscous scheme for each equation and mesh level ---*/
-
-    if (compressible) {
-
-      /*--- Compressible flow ---*/
-
-      numerics[MESH_0][ADJFLOW_SOL][visc_term] = new CAvgGradCorrected_AdjFlow(nDim, nVar_Adj_Flow, config);
-      numerics[MESH_0][ADJFLOW_SOL][visc_bound_term] = new CAvgGrad_AdjFlow(nDim, nVar_Adj_Flow, config);
-
-      for (iMGlevel = 1; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-        numerics[iMGlevel][ADJFLOW_SOL][visc_term] = new CAvgGrad_AdjFlow(nDim, nVar_Adj_Flow, config);
-        numerics[iMGlevel][ADJFLOW_SOL][visc_bound_term] = new CAvgGrad_AdjFlow(nDim, nVar_Adj_Flow, config);
-      }
-
-    }
-
-    /*--- Definition of the source term integration scheme for each equation and mesh level ---*/
-
-    for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-
-      /*--- Note that RANS is incompatible with Axisymmetric or Rotational (Fix it!) ---*/
-
-      if (compressible) {
-
-        if (adj_ns) {
-
-          numerics[iMGlevel][ADJFLOW_SOL][source_first_term] = new CSourceViscous_AdjFlow(nDim, nVar_Adj_Flow, config);
-
-          if (config->GetRotating_Frame() == YES)
-            numerics[iMGlevel][ADJFLOW_SOL][source_second_term] = new CSourceRotatingFrame_AdjFlow(nDim, nVar_Adj_Flow, config);
-          else
-            numerics[iMGlevel][ADJFLOW_SOL][source_second_term] = new CSourceConservative_AdjFlow(nDim, nVar_Adj_Flow, config);
-
-        }
-
-        else {
-
-          if (config->GetRotating_Frame() == YES)
-            numerics[iMGlevel][ADJFLOW_SOL][source_first_term] = new CSourceRotatingFrame_AdjFlow(nDim, nVar_Adj_Flow, config);
-          else if (config->GetAxisymmetric() == YES)
-            numerics[iMGlevel][ADJFLOW_SOL][source_first_term] = new CSourceAxisymmetric_AdjFlow(nDim, nVar_Adj_Flow, config);
-          else
-            numerics[iMGlevel][ADJFLOW_SOL][source_first_term] = new CSourceNothing(nDim, nVar_Adj_Flow, config);
-
-          numerics[iMGlevel][ADJFLOW_SOL][source_second_term] = new CSourceNothing(nDim, nVar_Adj_Flow, config);
-
-        }
-
-      }
-
-    }
-
-  }
-
-  /*--- Solver definition for the turbulent adjoint problem ---*/
-  if (adj_turb) {
-
-    if (config->GetKind_Turb_Model() != TURB_MODEL::SA)
-      SU2_MPI::Error("Only the SA turbulence model can be used with the continuous adjoint solver.", CURRENT_FUNCTION);
-
-    /*--- Definition of the convective scheme for each equation and mesh level ---*/
-    switch (config->GetKind_ConvNumScheme_AdjTurb()) {
-      case NO_CONVECTIVE:
-        SU2_MPI::Error("Config file is missing the CONV_NUM_METHOD_ADJTURB option.", CURRENT_FUNCTION);
-        break;
-      case SPACE_UPWIND :
-        for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-          numerics[iMGlevel][ADJTURB_SOL][conv_term] = new CUpwSca_AdjTurb(nDim, nVar_Adj_Turb, config);
-        break;
-      default:
-        SU2_MPI::Error("Convective scheme not implemented (adjoint turbulence).", CURRENT_FUNCTION);
-        break;
-    }
-
-    /*--- Definition of the viscous scheme for each equation and mesh level ---*/
-    for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-      numerics[iMGlevel][ADJTURB_SOL][visc_term] = new CAvgGradCorrected_AdjTurb(nDim, nVar_Adj_Turb, config);
-
-    /*--- Definition of the source term integration scheme for each equation and mesh level ---*/
-    for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-      numerics[iMGlevel][ADJTURB_SOL][source_first_term] = new CSourcePieceWise_AdjTurb(nDim, nVar_Adj_Turb, config);
-      numerics[iMGlevel][ADJTURB_SOL][source_second_term] = new CSourceConservative_AdjTurb(nDim, nVar_Adj_Turb, config);
-    }
-
-    /*--- Definition of the boundary condition method ---*/
-    for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-      numerics[iMGlevel][ADJTURB_SOL][conv_bound_term] = new CUpwLin_AdjTurb(nDim, nVar_Adj_Turb, config);
-
-  }
 
   } // end "per-thread" allocation loop
 
@@ -1686,10 +1513,6 @@ CFluidDriver::~CFluidDriver(void) { }
 
 void CFluidDriver::StartSolver(){
 
-#ifdef VTUNEPROF
-  __itt_resume();
-#endif
-
   /*--- Main external loop of the solver. Within this loop, each iteration ---*/
 
   if (rank == MASTER_NODE){
@@ -1729,9 +1552,6 @@ void CFluidDriver::StartSolver(){
     Iter++;
 
   }
-#ifdef VTUNEPROF
-  __itt_pause();
-#endif
 }
 
 

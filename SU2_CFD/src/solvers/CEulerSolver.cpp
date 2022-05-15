@@ -608,57 +608,6 @@ void CEulerSolver::Set_MPI_ActDisk(CSolver **solver_container, CGeometry *geomet
    points/elements in the mesh. First, create the domain structures for
    the points on this rank. First, we recv all of the point data ---*/
 
-  for (iDomain = 0; iDomain < size; iDomain++) {
-
-    if (rank != iDomain) {
-
-#ifdef HAVE_MPI
-
-      /*--- Allocate the receive buffer vector. Send the colors so that we
-       know whether what we recv is an owned or halo node. ---*/
-
-      Buffer_Receive_PrimVar            = new su2double [nPointTotal_r[iDomain]*(nPrimVar_)];
-      Buffer_Receive_Data               = new long [nPointTotal_r[iDomain]*(3)];
-
-      /*--- Receive the buffers with the coords, global index, and colors ---*/
-
-      SU2_MPI::Recv(Buffer_Receive_PrimVar, nPointTotal_r[iDomain]*(nPrimVar_) , MPI_DOUBLE,
-                    iDomain, rank, SU2_MPI::GetComm(), &status);
-
-      SU2_MPI::Recv(Buffer_Receive_Data, nPointTotal_r[iDomain]*(3) , MPI_LONG,
-                    iDomain, rank+nDomain, SU2_MPI::GetComm(), &status);
-
-      /*--- Loop over all of the points that we have recv'd and store the
-       coords, global index vertex and markers ---*/
-
-      for (iPoint = 0; iPoint < nPointTotal_r[iDomain]; iPoint++) {
-
-        iGlobal      = Buffer_Receive_Data[iPoint*(3)+(0)];
-        iVertex      = Buffer_Receive_Data[iPoint*(3)+(1)];
-        iMarker      = Buffer_Receive_Data[iPoint*(3)+(2)];
-
-        for (iVar = 0; iVar < nPrimVar_; iVar++)
-          iPrimVar[iVar] = Buffer_Receive_PrimVar[iPoint*(nPrimVar_)+iVar];
-
-        for (iVar = 0; iVar < nPrimVar_; iVar++) {
-          DonorPrimVar[iMarker][iVertex][iVar] = iPrimVar[iVar];
-        }
-
-        SetDonorGlobalIndex(iMarker, iVertex, iGlobal);
-
-      }
-
-      /*--- Delete memory for recv the point stuff ---*/
-
-      delete [] Buffer_Receive_PrimVar;
-      delete [] Buffer_Receive_Data;
-
-#endif
-
-    }
-
-  }
-
   /*--- Wait for the non-blocking sends to complete. ---*/
 
   SU2_MPI::Barrier(SU2_MPI::GetComm());

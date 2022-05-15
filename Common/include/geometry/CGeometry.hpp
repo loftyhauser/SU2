@@ -30,15 +30,6 @@
 
 #include "../parallelization/mpi_structure.hpp"
 
-#ifdef HAVE_METIS
-#include "metis.h"
-#endif
-#ifdef HAVE_PARMETIS
-extern "C" {
-#include "parmetis.h"
-}
-#endif
-
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -132,12 +123,6 @@ protected:
   vector<vector<unsigned long> > Plane_points; /*!< \brief Vector containing points appearing on a single plane */
 
   vector<su2double> XCoordList;              /*!< \brief Vector containing points appearing on a single plane */
-
-#if defined(HAVE_MPI) && defined(HAVE_PARMETIS)
-  vector<vector<unsigned long> > adj_nodes; /*!< \brief Vector of vectors holding each node's adjacency during preparation for ParMETIS. */
-  vector<idx_t> adjacency; /*!< \brief Local adjacency array to be input into ParMETIS for partitioning (idx_t is a ParMETIS type defined in their headers). */
-  vector<idx_t> xadj;      /*!< \brief Index array that points to the start of each node's adjacency in CSR format (needed to interpret the adjacency array).  */
-#endif
 
   /*--- Sparsity patterns associated with the geometry. ---*/
 
@@ -651,12 +636,6 @@ public:
    * \param[in] config - Definition of the particular problem.
    */
   inline virtual void SetColorGrid(CConfig *config) {}
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] config - Definition of the particular problem.
-   */
-  inline virtual void SetColorGrid_Parallel(const CConfig *config) {}
 
   /*!
    * \brief A virtual member.

@@ -74,11 +74,6 @@ FORCEINLINE Out su2staticcast_p(In ptr) {
 #endif
 }
 
-/*--- Detect compilation with OpenMP. ---*/
-#if defined(_OPENMP)
-#define HAVE_OMP
-#endif
-
 /*--- Depending on the datatype defined during the configuration,
  * include the correct definition, and create the main typedef. ---*/
 

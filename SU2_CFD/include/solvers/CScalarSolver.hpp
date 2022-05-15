@@ -59,14 +59,9 @@ class CScalarSolver : public CSolver {
 
   /*--- Shallow copy of grid coloring for OpenMP parallelization. ---*/
 
-#ifdef HAVE_OMP
-  vector<GridColor<> > EdgeColoring; /*!< \brief Edge colors. */
-  bool ReducerStrategy = false;      /*!< \brief If the reducer strategy is in use. */
-#else
   array<DummyGridColor<>, 1> EdgeColoring;
   /*--- Never use the reducer strategy if compiling for MPI-only. ---*/
   static constexpr bool ReducerStrategy = false;
-#endif
 
   /*--- Edge fluxes for reducer strategy (see the notes in CEulerSolver.hpp). ---*/
   CSysVector<su2double> EdgeFluxes; /*!< \brief Flux across each edge. */

@@ -45,11 +45,6 @@ void CGraphColoringStructure::GraphVertexColoring(
   int nRank  = 1;
   int myRank = 0;
 
-#ifdef HAVE_MPI
-  SU2_MPI::Comm_rank(SU2_MPI::GetComm(), &myRank);
-  SU2_MPI::Comm_size(SU2_MPI::GetComm(), &nRank);
-#endif
-
   /*--- Determine the algorithm to use for the graph coloring. ---*/
   switch( config->GetKind_Matrix_Coloring() ) {
 
@@ -75,33 +70,6 @@ void CGraphColoringStructure::GraphVertexColoring(
         for(unsigned long i=nVerticesPerRank[0]; i<nVerticesPerRank[1]; ++i)
           entriesVert[i] = entriesVertices[i];
 
-        /* Receive the data from the other ranks. Only needed in parallel mode. */
-#ifdef HAVE_MPI
-        for(int rank=1; rank<nRank; ++rank) {
-
-          /* Determine the size of the message to be received. */
-          SU2_MPI::Status status;
-          SU2_MPI::Probe(rank, rank, SU2_MPI::GetComm(), &status);
-
-          int sizeMess;
-          SU2_MPI::Get_count(&status, MPI_UNSIGNED_LONG, &sizeMess);
-
-          /* Allocate the memory for the receive buffer and receive the message. */
-          vector<unsigned long> recvBuf(sizeMess);
-          SU2_MPI::Recv(recvBuf.data(), sizeMess, MPI_UNSIGNED_LONG, rank, rank,
-                        SU2_MPI::GetComm(), &status);
-
-          /* Store the data just received in the global vector for the graph. */
-          unsigned long ii = 0;
-          for(unsigned long i=nVerticesPerRank[rank]; i<nVerticesPerRank[rank+1]; ++i) {
-            const unsigned long nEntries = recvBuf[ii++];
-
-            entriesVert[i].resize(nEntries);
-            for(unsigned long j=0; j<nEntries; ++j, ++ii)
-              entriesVert[i][j] = recvBuf[ii];
-          }
-        }
-#endif
 
         /**********************************************************************/
         /* Step 2: The greedy algorithm to determine the vertex colors.       */
@@ -191,39 +159,7 @@ void CGraphColoringStructure::GraphVertexColoring(
 
         /* Send the color of the vertices to the other ranks. Only in parallel
            mode. Use blocking sends, because deadlock cannot occur. */
-#ifdef HAVE_MPI
-        for(int rank=1; rank<nRank; ++rank) {
-          int *sendBuf = colorVertices.data() + nVerticesPerRank[rank];
-          unsigned long sizeMess = nVerticesPerRank[rank+1] - nVerticesPerRank[rank];
-          SU2_MPI::Send(sendBuf, sizeMess, MPI_INT, rank, rank+1, SU2_MPI::GetComm());
-        }
-#endif
       }
-#ifdef HAVE_MPI
-      else {
-        /* Not the master node. Communicate the data of my graph to the master
-           node. First copy the data in a buffer.  */
-        vector<unsigned long> sendBuf;
-        for(unsigned long i=0; i<entriesVertices.size(); ++i) {
-          sendBuf.push_back(entriesVertices[i].size());
-          sendBuf.insert(sendBuf.end(), entriesVertices[i].begin(),
-                         entriesVertices[i].end());
-        }
-
-        /* Send the data to the master node. A blocking send can be used,
-           because there is no danger of deadlock here. */
-        SU2_MPI::Send(sendBuf.data(), sendBuf.size(), MPI_UNSIGNED_LONG, 0,
-                      myRank, SU2_MPI::GetComm());
-
-        /* Receive the data for the colors of my locally owned DOFs. */
-        unsigned long nLocalVert = entriesVertices.size();
-        colorLocalVertices.resize(nLocalVert);
-
-        SU2_MPI::Status status;
-        SU2_MPI::Recv(colorLocalVertices.data(), nLocalVert, MPI_INT, 0, myRank+1,
-                      SU2_MPI::GetComm(), &status);
-      }
-#endif
       break;
     }
 
@@ -249,10 +185,5 @@ void CGraphColoringStructure::GraphVertexColoring(
     nLocalColors = max(nLocalColors, colorLocalVertices[i]);
   ++nLocalColors;
 
-#ifdef HAVE_MPI
-  SU2_MPI::Allreduce(&nLocalColors, &nGlobalColors, 1, MPI_INT,
-                     MPI_MAX, SU2_MPI::GetComm());
-#else
   nGlobalColors = nLocalColors;
-#endif
 }

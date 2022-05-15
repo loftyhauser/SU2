@@ -451,12 +451,6 @@ public:
   void Check_BoundElem_Orientation(const CConfig *config) override;
 
   /*!
-   * \brief Set the domains for grid grid partitioning using ParMETIS.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void SetColorGrid_Parallel(const CConfig *config) override;
-
-  /*!
    * \brief Determine the donor elements for the boundary elements on viscous
             wall boundaries when wall functions are used.
    * \param[in]  config - Definition of the particular problem.

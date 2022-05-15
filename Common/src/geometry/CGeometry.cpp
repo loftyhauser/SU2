@@ -830,11 +830,6 @@ void CGeometry::CompleteComms(CGeometry *geometry,
    Note that this should be satisfied, as we have received all of the
    data in the loop above at this point. ---*/
 
-#ifdef HAVE_MPI
-  SU2_OMP_MASTER
-  SU2_MPI::Waitall(nP2PSend, req_P2PSend, MPI_STATUS_IGNORE);
-  END_SU2_OMP_MASTER
-#endif
   SU2_OMP_BARRIER
 
 }
@@ -1070,80 +1065,6 @@ void CGeometry::PreprocessPeriodicComms(CGeometry *geometry,
   for (iRecv = 0; iRecv < nPoint_PeriodicRecv[nPeriodicRecv]*nPackets; iRecv++)
     idRecv[iRecv] = 0;
 
-#ifdef HAVE_MPI
-
-  int iMessage, offset, count, source, dest, tag;
-
-  /*--- Launch the non-blocking recv's first. Note that we have stored
-   the counts and sources, so we can launch these before we even load
-   the data and send from the periodically matching ranks. ---*/
-
-  iMessage = 0;
-  for (iRecv = 0; iRecv < nPeriodicRecv; iRecv++) {
-
-    /*--- Compute our location in the recv buffer. ---*/
-
-    offset = nPackets*nPoint_PeriodicRecv[iRecv];
-
-    /*--- Take advantage of cumulative storage format to get the number
-     of elems that we need to recv. ---*/
-
-    count = nPackets*(nPoint_PeriodicRecv[iRecv+1] - nPoint_PeriodicRecv[iRecv]);
-
-    /*--- Get the rank from which we receive the message. ---*/
-
-    source = Neighbors_PeriodicRecv[iRecv];
-    tag    = source + 1;
-
-    /*--- Post non-blocking recv for this proc. ---*/
-
-    SU2_MPI::Irecv(&(static_cast<unsigned long*>(idRecv)[offset]),
-                   count, MPI_UNSIGNED_LONG, source, tag, SU2_MPI::GetComm(),
-                   &(req_PeriodicRecv[iMessage]));
-
-    /*--- Increment message counter. ---*/
-
-    iMessage++;
-
-  }
-
-  /*--- Post the non-blocking sends. ---*/
-
-  iMessage = 0;
-  for (iSend = 0; iSend < nPeriodicSend; iSend++) {
-
-    /*--- Compute our location in the send buffer. ---*/
-
-    offset = nPackets*nPoint_PeriodicSend[iSend];
-
-    /*--- Take advantage of cumulative storage format to get the number
-     of points that we need to send. ---*/
-
-    count = nPackets*(nPoint_PeriodicSend[iSend+1] - nPoint_PeriodicSend[iSend]);
-
-    /*--- Get the rank to which we send the message. ---*/
-
-    dest = Neighbors_PeriodicSend[iSend];
-    tag  = rank + 1;
-
-    /*--- Post non-blocking send for this proc. ---*/
-
-    SU2_MPI::Isend(&(static_cast<unsigned long*>(idSend)[offset]),
-                   count, MPI_UNSIGNED_LONG, dest, tag, SU2_MPI::GetComm(),
-                   &(req_PeriodicSend[iMessage]));
-
-    /*--- Increment message counter. ---*/
-
-    iMessage++;
-
-  }
-
-  /*--- Wait for the non-blocking comms to complete. ---*/
-
-  SU2_MPI::Waitall(nPeriodicSend, req_PeriodicSend, MPI_STATUS_IGNORE);
-  SU2_MPI::Waitall(nPeriodicRecv, req_PeriodicRecv, MPI_STATUS_IGNORE);
-
-#else
 
   /*--- Copy my own rank's data into the recv buffer directly in serial. ---*/
 
@@ -1158,8 +1079,6 @@ void CGeometry::PreprocessPeriodicComms(CGeometry *geometry,
       iRecv++;
     }
   }
-
-#endif
 
   /*--- Store the local periodic point and marker index values in our
    data structures so we can quickly unpack data during the iterations. ---*/
@@ -1222,58 +1141,6 @@ void CGeometry::PostPeriodicRecvs(CGeometry *geometry,
                                   unsigned short commType,
                                   unsigned short countPerPeriodicPoint) {
 
-  /*--- In parallel, communicate the data with non-blocking send/recv. ---*/
-
-#ifdef HAVE_MPI
-
-  /*--- Launch the non-blocking recv's first. Note that we have stored
-   the counts and sources, so we can launch these before we even load
-   the data and send from the neighbor ranks. ---*/
-
-  SU2_OMP_MASTER
-  for (int iRecv = 0; iRecv < nPeriodicRecv; iRecv++) {
-
-    /*--- Compute our location in the recv buffer. ---*/
-
-    auto offset = countPerPeriodicPoint*nPoint_PeriodicRecv[iRecv];
-
-    /*--- Take advantage of cumulative storage format to get the number
-     of elems that we need to recv. ---*/
-
-    auto nPointPeriodic = nPoint_PeriodicRecv[iRecv+1] - nPoint_PeriodicRecv[iRecv];
-
-    /*--- Total count can include multiple pieces of data per element. ---*/
-
-    auto count = countPerPeriodicPoint*nPointPeriodic;
-
-    /*--- Get the rank from which we receive the message. ---*/
-
-    auto source = Neighbors_PeriodicRecv[iRecv];
-    auto tag = source + 1;
-
-    /*--- Post non-blocking recv for this proc. ---*/
-
-    switch (commType) {
-      case COMM_TYPE_DOUBLE:
-        SU2_MPI::Irecv(&(static_cast<su2double*>(bufD_PeriodicRecv)[offset]),
-                       count, MPI_DOUBLE, source, tag, SU2_MPI::GetComm(),
-                       &(req_PeriodicRecv[iRecv]));
-        break;
-      case COMM_TYPE_UNSIGNED_SHORT:
-        SU2_MPI::Irecv(&(static_cast<unsigned short*>(bufS_PeriodicRecv)[offset]),
-                       count, MPI_UNSIGNED_SHORT, source, tag, SU2_MPI::GetComm(),
-                       &(req_PeriodicRecv[iRecv]));
-        break;
-      default:
-        SU2_MPI::Error("Unrecognized data type for periodic MPI comms.",
-                       CURRENT_FUNCTION);
-        break;
-    }
-
-  }
-  END_SU2_OMP_MASTER
-
-#endif
 
 }
 
@@ -1282,53 +1149,6 @@ void CGeometry::PostPeriodicSends(CGeometry *geometry,
                                   unsigned short commType,
                                   unsigned short countPerPeriodicPoint,
                                   int val_iSend) const {
-
-  /*--- In parallel, communicate the data with non-blocking send/recv. ---*/
-
-#ifdef HAVE_MPI
-  SU2_OMP_MASTER {
-  /*--- Post the non-blocking send as soon as the buffer is loaded. ---*/
-
-  /*--- Compute our location in the send buffer. ---*/
-
-  auto offset = countPerPeriodicPoint*nPoint_PeriodicSend[val_iSend];
-
-  /*--- Take advantage of cumulative storage format to get the number
-   of points that we need to send. ---*/
-
-  auto nPointPeriodic = (nPoint_PeriodicSend[val_iSend+1] -
-                         nPoint_PeriodicSend[val_iSend]);
-
-  /*--- Total count can include multiple pieces of data per element. ---*/
-
-  auto count = countPerPeriodicPoint*nPointPeriodic;
-
-  /*--- Get the rank to which we send the message. ---*/
-
-  auto dest = Neighbors_PeriodicSend[val_iSend];
-  auto tag = rank + 1;
-
-  /*--- Post non-blocking send for this proc. ---*/
-
-  switch (commType) {
-    case COMM_TYPE_DOUBLE:
-      SU2_MPI::Isend(&(static_cast<su2double*>(bufD_PeriodicSend)[offset]),
-                     count, MPI_DOUBLE, dest, tag, SU2_MPI::GetComm(),
-                     &(req_PeriodicSend[val_iSend]));
-      break;
-    case COMM_TYPE_UNSIGNED_SHORT:
-      SU2_MPI::Isend(&(static_cast<unsigned short*>(bufS_PeriodicSend)[offset]),
-                     count, MPI_UNSIGNED_SHORT, dest, tag, SU2_MPI::GetComm(),
-                     &(req_PeriodicSend[val_iSend]));
-      break;
-    default:
-      SU2_MPI::Error("Unrecognized data type for periodic MPI comms.",
-                     CURRENT_FUNCTION);
-      break;
-  }
-  }
-  END_SU2_OMP_MASTER
-#else
 
   /*--- Copy my own rank's data into the recv buffer directly in serial. ---*/
 
@@ -1350,8 +1170,6 @@ void CGeometry::PostPeriodicSends(CGeometry *geometry,
                      CURRENT_FUNCTION);
       break;
   }
-
-#endif
 
 }
 
@@ -1705,14 +1523,6 @@ void CGeometry::ComputeAirfoil_Section(su2double *Plane_P0, su2double *Plane_Nor
   unsigned long EdgeDonor;
   bool FoundEdge;
 
-#ifdef HAVE_MPI
-  unsigned long nLocalEdge, MaxLocalEdge, *Buffer_Send_nEdge, *Buffer_Receive_nEdge, nBuffer_Coord, nBuffer_Variable, nBuffer_GlobalID;
-  int nProcessor, iProcessor;
-  su2double *Buffer_Send_Coord, *Buffer_Receive_Coord;
-  su2double *Buffer_Send_Variable, *Buffer_Receive_Variable;
-  unsigned long *Buffer_Send_GlobalID, *Buffer_Receive_GlobalID;
-#endif
-
   Xcoord_Airfoil.clear();
   Ycoord_Airfoil.clear();
   Zcoord_Airfoil.clear();
@@ -1903,97 +1713,6 @@ void CGeometry::ComputeAirfoil_Section(su2double *Plane_P0, su2double *Plane_Nor
     delete [] Coord_Variation;
   }
 
-#ifdef HAVE_MPI
-
-  /*--- Copy the coordinates of all the points in the plane to the master node ---*/
-
-  nLocalEdge = 0, MaxLocalEdge = 0;
-  nProcessor = size;
-
-  Buffer_Send_nEdge = new unsigned long [1];
-  Buffer_Receive_nEdge = new unsigned long [nProcessor];
-
-  nLocalEdge = Xcoord_Index0.size();
-
-  Buffer_Send_nEdge[0] = nLocalEdge;
-
-  SU2_MPI::Allreduce(&nLocalEdge, &MaxLocalEdge, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::GetComm());
-  SU2_MPI::Allgather(Buffer_Send_nEdge, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nEdge, 1, MPI_UNSIGNED_LONG, SU2_MPI::GetComm());
-
-  Buffer_Send_Coord    = new su2double [MaxLocalEdge*6];
-  Buffer_Receive_Coord = new su2double [nProcessor*MaxLocalEdge*6];
-
-  Buffer_Send_Variable    = new su2double [MaxLocalEdge*2];
-  Buffer_Receive_Variable = new su2double [nProcessor*MaxLocalEdge*2];
-
-  Buffer_Send_GlobalID    = new unsigned long [MaxLocalEdge*4];
-  Buffer_Receive_GlobalID = new unsigned long [nProcessor*MaxLocalEdge*4];
-
-  nBuffer_Coord    = MaxLocalEdge*6;
-  nBuffer_Variable = MaxLocalEdge*2;
-  nBuffer_GlobalID = MaxLocalEdge*4;
-
-  for (iEdge = 0; iEdge < nLocalEdge; iEdge++) {
-    Buffer_Send_Coord[iEdge*6 + 0] = Xcoord_Index0[iEdge];
-    Buffer_Send_Coord[iEdge*6 + 1] = Ycoord_Index0[iEdge];
-    Buffer_Send_Coord[iEdge*6 + 2] = Zcoord_Index0[iEdge];
-    Buffer_Send_Coord[iEdge*6 + 3] = Xcoord_Index1[iEdge];
-    Buffer_Send_Coord[iEdge*6 + 4] = Ycoord_Index1[iEdge];
-    Buffer_Send_Coord[iEdge*6 + 5] = Zcoord_Index1[iEdge];
-
-    Buffer_Send_Variable[iEdge*2 + 0] = Variable_Index0[iEdge];
-    Buffer_Send_Variable[iEdge*2 + 1] = Variable_Index1[iEdge];
-
-    Buffer_Send_GlobalID[iEdge*4 + 0] = IGlobalID_Index0[iEdge];
-    Buffer_Send_GlobalID[iEdge*4 + 1] = JGlobalID_Index0[iEdge];
-    Buffer_Send_GlobalID[iEdge*4 + 2] = IGlobalID_Index1[iEdge];
-    Buffer_Send_GlobalID[iEdge*4 + 3] = JGlobalID_Index1[iEdge];
-  }
-
-  SU2_MPI::Allgather(Buffer_Send_Coord, nBuffer_Coord, MPI_DOUBLE, Buffer_Receive_Coord, nBuffer_Coord, MPI_DOUBLE, SU2_MPI::GetComm());
-  SU2_MPI::Allgather(Buffer_Send_Variable, nBuffer_Variable, MPI_DOUBLE, Buffer_Receive_Variable, nBuffer_Variable, MPI_DOUBLE, SU2_MPI::GetComm());
-  SU2_MPI::Allgather(Buffer_Send_GlobalID, nBuffer_GlobalID, MPI_UNSIGNED_LONG, Buffer_Receive_GlobalID, nBuffer_GlobalID, MPI_UNSIGNED_LONG, SU2_MPI::GetComm());
-
-  /*--- Clean the vectors before adding the new vertices only to the master node ---*/
-
-  Xcoord_Index0.clear();     Xcoord_Index1.clear();
-  Ycoord_Index0.clear();     Ycoord_Index1.clear();
-  Zcoord_Index0.clear();     Zcoord_Index1.clear();
-  Variable_Index0.clear();   Variable_Index1.clear();
-  IGlobalID_Index0.clear();  IGlobalID_Index1.clear();
-  JGlobalID_Index0.clear();  JGlobalID_Index1.clear();
-
-  /*--- Copy the boundary to the master node vectors ---*/
-
-  if (rank == MASTER_NODE) {
-    for (iProcessor = 0; iProcessor < nProcessor; iProcessor++) {
-      for (iEdge = 0; iEdge < Buffer_Receive_nEdge[iProcessor]; iEdge++) {
-        Xcoord_Index0.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalEdge*6 + iEdge*6 + 0] );
-        Ycoord_Index0.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalEdge*6 + iEdge*6 + 1] );
-        Zcoord_Index0.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalEdge*6 + iEdge*6 + 2] );
-        Xcoord_Index1.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalEdge*6 + iEdge*6 + 3] );
-        Ycoord_Index1.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalEdge*6 + iEdge*6 + 4] );
-        Zcoord_Index1.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalEdge*6 + iEdge*6 + 5] );
-
-        Variable_Index0.push_back( Buffer_Receive_Variable[ iProcessor*MaxLocalEdge*2 + iEdge*2 + 0] );
-        Variable_Index1.push_back( Buffer_Receive_Variable[ iProcessor*MaxLocalEdge*2 + iEdge*2 + 1] );
-
-        IGlobalID_Index0.push_back( Buffer_Receive_GlobalID[ iProcessor*MaxLocalEdge*4 + iEdge*4 + 0] );
-        JGlobalID_Index0.push_back( Buffer_Receive_GlobalID[ iProcessor*MaxLocalEdge*4 + iEdge*4 + 1] );
-        IGlobalID_Index1.push_back( Buffer_Receive_GlobalID[ iProcessor*MaxLocalEdge*4 + iEdge*4 + 2] );
-        JGlobalID_Index1.push_back( Buffer_Receive_GlobalID[ iProcessor*MaxLocalEdge*4 + iEdge*4 + 3] );
-
-      }
-    }
-  }
-
-  delete[] Buffer_Send_Coord;      delete[] Buffer_Receive_Coord;
-  delete[] Buffer_Send_Variable;   delete[] Buffer_Receive_Variable;
-  delete[] Buffer_Send_GlobalID;   delete[] Buffer_Receive_GlobalID;
-  delete[] Buffer_Send_nEdge;    delete[] Buffer_Receive_nEdge;
-
-#endif
-
   if ((rank == MASTER_NODE) && (Xcoord_Index0.size() != 0)) {
 
     /*--- Remove singular edges ---*/
@@ -2126,25 +1845,6 @@ void CGeometry::ComputeAirfoil_Section(su2double *Plane_P0, su2double *Plane_Nor
 
           XCoord_Trans = Xcoord_Index0[iEdge] - config->GetNacelleLocation(0);
           YCoord_Trans = Ycoord_Index0[iEdge] - config->GetNacelleLocation(1);
-          ZCoord_Trans = Zcoord_Index0[iEdge] - config->GetNacelleLocation(2);
-
-          /*--- Apply tilt angle ---*/
-
-          XCoord_Trans_Tilt = XCoord_Trans*cos(Tilt_Angle) + ZCoord_Trans*sin(Tilt_Angle);
-          YCoord_Trans_Tilt = YCoord_Trans;
-          ZCoord_Trans_Tilt = ZCoord_Trans*cos(Tilt_Angle) - XCoord_Trans*sin(Tilt_Angle);
-
-          /*--- Apply toe angle ---*/
-
-          XCoord_Trans_Tilt_Toe = XCoord_Trans_Tilt*cos(Toe_Angle) - YCoord_Trans_Tilt*sin(Toe_Angle);
-          YCoord_Trans_Tilt_Toe = XCoord_Trans_Tilt*sin(Toe_Angle) + YCoord_Trans_Tilt*cos(Toe_Angle);
-          ZCoord_Trans_Tilt_Toe = ZCoord_Trans_Tilt;
-
-          /*--- Rotate to X-Z plane (roll) ---*/
-
-          XCoord = XCoord_Trans_Tilt_Toe;
-          YCoord = YCoord_Trans_Tilt_Toe*cos(Roll_Angle) - ZCoord_Trans_Tilt_Toe*sin(Roll_Angle);
-          ZCoord = YCoord_Trans_Tilt_Toe*sin(Roll_Angle) + ZCoord_Trans_Tilt_Toe*cos(Roll_Angle);
 
           /*--- Update coordinates ---*/
 
@@ -3066,10 +2766,6 @@ void CGeometry::FilterValuesAtElementCG(const vector<su2double> &filter_radius,
   /*--- Element centroids and volumes. ---*/
   su2double *cg_elem  = new su2double [Global_nElemDomain*nDim],
             *vol_elem = new su2double [Global_nElemDomain];
-#ifdef HAVE_MPI
-  /*--- Number of subdomain each point is part of. ---*/
-  vector<char> halo_detect(Global_nElemDomain);
-#endif
 
   /*--- Inputs of a filter stage, like with CG and volumes, each processor needs to see everything. ---*/
   su2double *work_values = new su2double [Global_nElemDomain];
@@ -3104,46 +2800,6 @@ void CGeometry::FilterValuesAtElementCG(const vector<su2double> &filter_radius,
   }
   END_SU2_OMP_FOR
 
-#ifdef HAVE_MPI
-  /*--- Account for the duplication introduced by the halo elements and the
-  reduction using MPI_SUM, which is required to maintain differentiabillity. ---*/
-  SU2_OMP_FOR_STAT(256)
-  for(auto iElem=0ul; iElem<Global_nElemDomain; ++iElem)
-    halo_detect[iElem] = 0;
-  END_SU2_OMP_FOR
-
-  SU2_OMP_FOR_STAT(256)
-  for(auto iElem=0ul; iElem<nElem; ++iElem)
-    halo_detect[elem[iElem]->GetGlobalIndex()] = 1;
-  END_SU2_OMP_FOR
-
-  /*--- Share with all processors ---*/
-  SU2_OMP_MASTER
-  {
-    su2double* dbl_buffer = new su2double [Global_nElemDomain*nDim];
-    SU2_MPI::Allreduce(cg_elem,dbl_buffer,Global_nElemDomain*nDim,MPI_DOUBLE,MPI_SUM,SU2_MPI::GetComm());
-    swap(dbl_buffer, cg_elem); delete [] dbl_buffer;
-
-    dbl_buffer = new su2double [Global_nElemDomain];
-    SU2_MPI::Allreduce(vol_elem,dbl_buffer,Global_nElemDomain,MPI_DOUBLE,MPI_SUM,SU2_MPI::GetComm());
-    swap(dbl_buffer, vol_elem); delete [] dbl_buffer;
-
-    vector<char> char_buffer(Global_nElemDomain);
-    MPI_Allreduce(halo_detect.data(),char_buffer.data(),Global_nElemDomain,MPI_CHAR,MPI_SUM,SU2_MPI::GetComm());
-    halo_detect.swap(char_buffer);
-  }
-  END_SU2_OMP_MASTER
-  SU2_OMP_BARRIER
-
-  SU2_OMP_FOR_STAT(256)
-  for(auto iElem=0ul; iElem<Global_nElemDomain; ++iElem) {
-    su2double numRepeat = halo_detect[iElem];
-    for(unsigned short iDim=0; iDim<nDim; ++iDim)
-      cg_elem[nDim*iElem+iDim] /= numRepeat;
-    vol_elem[iElem] /= numRepeat;
-  }
-  END_SU2_OMP_FOR
-#endif
 
   /*--- SECOND: Each processor performs the average for its elements. For each
   element we look for neighbours of neighbours of... until the distance to the
@@ -3169,26 +2825,6 @@ void CGeometry::FilterValuesAtElementCG(const vector<su2double> &filter_radius,
     for(auto iElem=0ul; iElem<nElem; ++iElem)
       work_values[elem[iElem]->GetGlobalIndex()] = values[iElem];
     END_SU2_OMP_FOR
-
-#ifdef HAVE_MPI
-    /*--- Share with all processors ---*/
-    SU2_OMP_MASTER
-    {
-      su2double *buffer = new su2double [Global_nElemDomain];
-      SU2_MPI::Allreduce(work_values,buffer,Global_nElemDomain,MPI_DOUBLE,MPI_SUM,SU2_MPI::GetComm());
-      swap(buffer, work_values); delete [] buffer;
-    }
-    END_SU2_OMP_MASTER
-    SU2_OMP_BARRIER
-
-    /*--- Account for duplication ---*/
-    SU2_OMP_FOR_STAT(256)
-    for(auto iElem=0ul; iElem<Global_nElemDomain; ++iElem) {
-      su2double numRepeat = halo_detect[iElem];
-      work_values[iElem] /= numRepeat;
-    }
-    END_SU2_OMP_FOR
-#endif
 
     /*--- Filter ---*/
     SU2_OMP_FOR_DYN(128)
@@ -3300,15 +2936,6 @@ void CGeometry::GetGlobalElementAdjacencyMatrix(vector<unsigned long> &neighbour
     END_SU2_OMP_FOR
   }
   END_SU2_OMP_PARALLEL
-#ifdef HAVE_MPI
-  /*--- Share with all processors ---*/
-  {
-    unsigned short *buffer = new unsigned short [Global_nElemDomain];
-    MPI_Allreduce(nFaces_elem,buffer,Global_nElemDomain,MPI_UNSIGNED_SHORT,MPI_MAX,SU2_MPI::GetComm());
-    /*--- swap pointers and delete old data to keep the same variable name after reduction ---*/
-    swap(buffer, nFaces_elem); delete [] buffer;
-  }
-#endif
 
   /*--- Vector with the addresses of the start of the neighbours of a given element.
   This is generated by a cumulative sum of the neighbour count. ---*/
@@ -3350,14 +2977,6 @@ void CGeometry::GetGlobalElementAdjacencyMatrix(vector<unsigned long> &neighbour
     END_SU2_OMP_FOR
   }
   END_SU2_OMP_PARALLEL
-#ifdef HAVE_MPI
-  /*--- Share with all processors ---*/
-  {
-    long *buffer = new long [matrix_size];
-    MPI_Allreduce(neighbour_idx,buffer,matrix_size,MPI_LONG,MPI_MAX,SU2_MPI::GetComm());
-    swap(buffer, neighbour_idx); delete [] buffer;
-  }
-#endif
 }
 
 bool CGeometry::GetRadialNeighbourhood(const unsigned long iElem_global,

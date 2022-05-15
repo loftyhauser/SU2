@@ -49,13 +49,8 @@ protected:
 
   vector<CADTNodeClass> leaves; /*!< \brief Vector, which contains all the leaves of the ADT. */
 
-#ifdef HAVE_OMP
-  vector<vector<unsigned long> > FrontLeaves;    /*!< \brief Vector used in the tree traversal. */
-  vector<vector<unsigned long> > FrontLeavesNew; /*!< \brief Vector used in the tree traversal. */
-#else
   array<vector<unsigned long>,1> FrontLeaves;
   array<vector<unsigned long>,1> FrontLeavesNew;
-#endif
 private:
   vector<su2double> coorMinLeaves; /*!< \brief Vector, which contains all the minimum coordinates
                                                of the leaves. */

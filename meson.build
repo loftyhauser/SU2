@@ -26,61 +26,9 @@ endif
 # meson script path
 script_path = meson.source_root() / 'meson_scripts'
 
-# mpi flag
-mpi = false
-
-# If custom mpi mode is enabled, include and library pathes for MPI have to be set manually to env variables
-if get_option('custom-mpi')
-  mpi_dep = []
-  mpi = true
-# Otherwise they are automatically determined
-else
-  mpi_dep = [dependency('mpi', language:'c', required : get_option('with-mpi')),
-             dependency('mpi', language:'cpp', required : get_option('with-mpi'))]
-  if mpi_dep[0].found() or mpi_dep[1].found()
-    mpi = true
-  endif
-endif
-
-# OpenMP
-omp = get_option('with-omp')
-
-if omp
-  omp_dep = dependency('openmp', language:'cpp')
-endif
-
 # check for non-debug build
 if get_option('buildtype')!='debug'
   su2_cpp_args += '-DNDEBUG'
-endif
-
-# check if MPI dependencies are found and add them
-if mpi
-
-  # add MPI dependency
-  su2_deps += mpi_dep
-  su2_cpp_args += '-DHAVE_MPI'
-
-  # compile metis
-  subdir('externals/metis')
-
-  # add metis dependency
-  su2_deps     += metis_dep
-  su2_cpp_args += '-DHAVE_METIS'
-
-  # compile parmetis
-  subdir('externals/parmetis')
-
-  # add parmetis dependency
-  su2_deps     += parmetis_dep
-  su2_cpp_args += '-DHAVE_PARMETIS'
-
-endif
-
-if omp
-  # add OpenMP dependency
-  su2_deps += omp_dep
-
 endif
 
 # compile common library

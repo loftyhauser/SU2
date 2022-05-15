@@ -57,12 +57,6 @@ void CSurfaceFVMDataSorter::SortOutputData() {
   int *Local_Halo = nullptr;
   int iNode, count;
 
-#ifdef HAVE_MPI
-  SU2_MPI::Request *send_req, *recv_req;
-  SU2_MPI::Status status;
-  int ind;
-#endif
-
   const unsigned long nElemLine = GetnElem(LINE);
   const unsigned long nElemTria = GetnElem(TRIANGLE);
   const unsigned long nElemQuad = GetnElem(QUADRILATERAL);
@@ -306,46 +300,6 @@ void CSurfaceFVMDataSorter::SortOutputData() {
 
   unsigned long *idRecv = new unsigned long[nElem_Recv[size]]();
 
-#ifdef HAVE_MPI
-  /*--- We need double the number of messages to send both the conn.
-   and the flags for the halo cells. ---*/
-
-  send_req = new SU2_MPI::Request[nSends];
-  recv_req = new SU2_MPI::Request[nRecvs];
-
-  /*--- Launch the non-blocking recv's for the global IDs. ---*/
-
-  unsigned long iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Recv[ii+1] > nElem_Recv[ii])) {
-      int ll     = nElem_Recv[ii];
-      int kk     = nElem_Recv[ii+1] - nElem_Recv[ii];
-      int count  = kk;
-      int source = ii;
-      int tag    = ii + 1;
-      SU2_MPI::Irecv(&(idRecv[ll]), count, MPI_UNSIGNED_LONG, source, tag,
-                     SU2_MPI::GetComm(), &(recv_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking sends of the global IDs. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Send[ii+1] > nElem_Send[ii])) {
-      int ll = nElem_Send[ii];
-      int kk = nElem_Send[ii+1] - nElem_Send[ii];
-      int count  = kk;
-      int dest = ii;
-      int tag    = rank + 1;
-      SU2_MPI::Isend(&(idSend[ll]), count, MPI_UNSIGNED_LONG, dest, tag,
-                     SU2_MPI::GetComm(), &(send_req[iMessage]));
-      iMessage++;
-    }
-  }
-#endif
-
   /*--- Copy my own rank's data into the recv buffer directly. ---*/
 
   int mm = nElem_Recv[rank];
@@ -353,21 +307,6 @@ void CSurfaceFVMDataSorter::SortOutputData() {
   int kk = nElem_Send[rank+1];
 
   for (int nn=ll; nn<kk; nn++, mm++) idRecv[mm] = idSend[nn];
-
-  /*--- Wait for the non-blocking sends and recvs to complete. ---*/
-
-#ifdef HAVE_MPI
-  int number = nSends;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, send_req, &ind, &status);
-
-  number = nRecvs;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, recv_req, &ind, &status);
-
-  delete [] send_req;
-  delete [] recv_req;
-#endif
 
   /*--------------------------------------------------------------------------*/
   /*--- Step 2: Each proc now knows which is its local grid nodes from     ---*/
@@ -586,79 +525,6 @@ void CSurfaceFVMDataSorter::SortOutputData() {
   auto globalRecv = new unsigned long[nElem_Recv[size]]();
   auto renumbRecv = new unsigned long[nElem_Recv[size]]();
 
-#ifdef HAVE_MPI
-  /*--- We need double the number of messages to send both the conn.
-   and the flags for the halo cells. ---*/
-
-  send_req = new SU2_MPI::Request[2*nSends];
-  recv_req = new SU2_MPI::Request[2*nRecvs];
-
-  /*--- Launch the non-blocking recv's for the global ID. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Recv[ii+1] > nElem_Recv[ii])) {
-      int ll     = nElem_Recv[ii];
-      int kk     = nElem_Recv[ii+1] - nElem_Recv[ii];
-      int count  = kk;
-      int source = ii;
-      int tag    = ii + 1;
-      SU2_MPI::Irecv(&(globalRecv[ll]), count, MPI_UNSIGNED_LONG, source, tag,
-                     SU2_MPI::GetComm(), &(recv_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking sends of the global ID. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Send[ii+1] > nElem_Send[ii])) {
-      int ll = nElem_Send[ii];
-      int kk = nElem_Send[ii+1] - nElem_Send[ii];
-      int count  = kk;
-      int dest = ii;
-      int tag    = rank + 1;
-      SU2_MPI::Isend(&(globalSend[ll]), count, MPI_UNSIGNED_LONG, dest, tag,
-                     SU2_MPI::GetComm(), &(send_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking recv's for the renumbered ID. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Recv[ii+1] > nElem_Recv[ii])) {
-      int ll     = nElem_Recv[ii];
-      int kk     = nElem_Recv[ii+1] - nElem_Recv[ii];
-      int count  = kk;
-      int source = ii;
-      int tag    = ii + 1;
-      SU2_MPI::Irecv(&(renumbRecv[ll]), count, MPI_UNSIGNED_LONG, source, tag,
-                     SU2_MPI::GetComm(), &(recv_req[iMessage+nRecvs]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking sends of the renumbered ID. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Send[ii+1] > nElem_Send[ii])) {
-      int ll = nElem_Send[ii];
-      int kk = nElem_Send[ii+1] - nElem_Send[ii];
-      int count  = kk;
-      int dest = ii;
-      int tag    = rank + 1;
-      SU2_MPI::Isend(&(renumbSend[ll]), count, MPI_UNSIGNED_LONG, dest, tag,
-                     SU2_MPI::GetComm(), &(send_req[iMessage+nSends]));
-      iMessage++;
-    }
-  }
-
-#endif
-
   /*--- Load our own procs data into the buffers directly. ---*/
 
   mm = nElem_Recv[rank];
@@ -672,21 +538,6 @@ void CSurfaceFVMDataSorter::SortOutputData() {
   kk = nElem_Send[rank+1];
 
   for (int nn=ll; nn<kk; nn++, mm++) renumbRecv[mm] = renumbSend[nn];
-
-  /*--- Wait for the non-blocking sends and recvs to complete. ---*/
-
-#ifdef HAVE_MPI
-  number = 2*nSends;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, send_req, &ind, &status);
-
-  number = 2*nRecvs;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, recv_req, &ind, &status);
-
-  delete [] send_req;
-  delete [] recv_req;
-#endif
 
   /*-- Now update my local connectivitiy for the surface with the new
    numbering. Create a new mapping for global -> renumber for nodes. Note
@@ -874,46 +725,6 @@ void CSurfaceFVMDataSorter::SortOutputData() {
   delete [] idRecv;
   idRecv = new unsigned long[nElem_Recv[size]]();
 
-#ifdef HAVE_MPI
-  /*--- We need double the number of messages to send both the conn.
-   and the flags for the halo cells. ---*/
-
-  send_req = new SU2_MPI::Request[nSends];
-  recv_req = new SU2_MPI::Request[nRecvs];
-
-  /*--- Launch the non-blocking recv's for the connectivity. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Recv[ii+1] > nElem_Recv[ii])) {
-      int ll     = nElem_Recv[ii];
-      int kk     = nElem_Recv[ii+1] - nElem_Recv[ii];
-      int count  = kk;
-      int source = ii;
-      int tag    = ii + 1;
-      SU2_MPI::Irecv(&(idRecv[ll]), count, MPI_UNSIGNED_LONG, source, tag,
-                     SU2_MPI::GetComm(), &(recv_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking sends of the connectivity. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Send[ii+1] > nElem_Send[ii])) {
-      int ll = nElem_Send[ii];
-      int kk = nElem_Send[ii+1] - nElem_Send[ii];
-      int count  = kk;
-      int dest = ii;
-      int tag    = rank + 1;
-      SU2_MPI::Isend(&(idSend[ll]), count, MPI_UNSIGNED_LONG, dest, tag,
-                     SU2_MPI::GetComm(), &(send_req[iMessage]));
-      iMessage++;
-    }
-  }
-#endif
-
   /*--- Copy my own rank's data into the recv buffer directly. ---*/
 
   mm = nElem_Recv[rank];
@@ -923,19 +734,6 @@ void CSurfaceFVMDataSorter::SortOutputData() {
   for (int nn=ll; nn<kk; nn++, mm++) idRecv[mm] = idSend[nn];
 
   /*--- Wait for the non-blocking sends and recvs to complete. ---*/
-
-#ifdef HAVE_MPI
-  number = nSends;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, send_req, &ind, &status);
-
-  number = nRecvs;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, recv_req, &ind, &status);
-
-  delete [] send_req;
-  delete [] recv_req;
-#endif
 
   /*--- The procs holding the outlier grid nodes now have the global IDs
    that they need to have their renumbering shared. ---*/
@@ -951,46 +749,6 @@ void CSurfaceFVMDataSorter::SortOutputData() {
   /*--- Now simply reverse the last communication to give the renumbered IDs
    back to the owner of the outlier points. Note everything is flipped. ---*/
 
-#ifdef HAVE_MPI
-  /*--- We need double the number of messages to send both the conn.
-   and the flags for the halo cells. ---*/
-
-  send_req = new SU2_MPI::Request[nRecvs];
-  recv_req = new SU2_MPI::Request[nSends];
-
-  /*--- Launch the non-blocking sends of the connectivity. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Send[ii+1] > nElem_Send[ii])) {
-      int ll = nElem_Send[ii];
-      int kk = nElem_Send[ii+1] - nElem_Send[ii];
-      int count  = kk;
-      int dest = ii;
-      int tag    = ii + 1;
-      SU2_MPI::Irecv(&(idSend[ll]), count, MPI_UNSIGNED_LONG, dest, tag,
-                     SU2_MPI::GetComm(), &(recv_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking recv's for the connectivity. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Recv[ii+1] > nElem_Recv[ii])) {
-      int ll     = nElem_Recv[ii];
-      int kk     = nElem_Recv[ii+1] - nElem_Recv[ii];
-      int count  = kk;
-      int source = ii;
-      int tag    = rank + 1;
-      SU2_MPI::Isend(&(idRecv[ll]), count, MPI_UNSIGNED_LONG, source, tag,
-                     SU2_MPI::GetComm(), &(send_req[iMessage]));
-      iMessage++;
-    }
-  }
-#endif
-
   /*--- Copy my own rank's data into the recv buffer directly. ---*/
 
   mm = nElem_Send[rank];
@@ -999,20 +757,6 @@ void CSurfaceFVMDataSorter::SortOutputData() {
 
   for (int nn=ll; nn<kk; nn++, mm++) idSend[mm] = idRecv[nn];
 
-  /*--- Wait for the non-blocking sends and recvs to complete. ---*/
-
-#ifdef HAVE_MPI
-  number = nRecvs;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, send_req, &ind, &status);
-
-  number = nSends;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, recv_req, &ind, &status);
-
-  delete [] send_req;
-  delete [] recv_req;
-#endif
 
   /*--- Add the renumbering for the outliers to the map from before carrying
    the global -> renumber transformation. Note that by construction,
@@ -1114,12 +858,6 @@ void CSurfaceFVMDataSorter::SortSurfaceConnectivity(CConfig *config, CGeometry *
   unsigned long iMarker;
 
   int *Conn_Elem  = nullptr;
-
-#ifdef HAVE_MPI
-  SU2_MPI::Request *send_req, *recv_req;
-  SU2_MPI::Status status;
-  int ind;
-#endif
 
   /*--- Store the local number of this element type and the number of nodes
    per this element type. In serial, this will be the total number of this
@@ -1330,78 +1068,6 @@ void CSurfaceFVMDataSorter::SortSurfaceConnectivity(CConfig *config, CGeometry *
 
   auto haloRecv = new unsigned short[nElem_Recv[size]] ();
 
-#ifdef HAVE_MPI
-  /*--- We need double the number of messages to send both the conn.
-   and the flags for the halo cells. ---*/
-
-  send_req = new SU2_MPI::Request[2*nSends];
-  recv_req = new SU2_MPI::Request[2*nRecvs];
-
-  /*--- Launch the non-blocking recv's for the connectivity. ---*/
-
-  unsigned long iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Recv[ii+1] > nElem_Recv[ii])) {
-      int ll     = NODES_PER_ELEMENT*nElem_Recv[ii];
-      int kk     = nElem_Recv[ii+1] - nElem_Recv[ii];
-      int count  = NODES_PER_ELEMENT*kk;
-      int source = ii;
-      int tag    = ii + 1;
-      SU2_MPI::Irecv(&(connRecv[ll]), count, MPI_UNSIGNED_LONG, source, tag,
-                     SU2_MPI::GetComm(), &(recv_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking sends of the connectivity. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Send[ii+1] > nElem_Send[ii])) {
-      int ll = NODES_PER_ELEMENT*nElem_Send[ii];
-      int kk = nElem_Send[ii+1] - nElem_Send[ii];
-      int count  = NODES_PER_ELEMENT*kk;
-      int dest = ii;
-      int tag    = rank + 1;
-      SU2_MPI::Isend(&(connSend[ll]), count, MPI_UNSIGNED_LONG, dest, tag,
-                     SU2_MPI::GetComm(), &(send_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Repeat the process to communicate the halo flags. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Recv[ii+1] > nElem_Recv[ii])) {
-      int ll     = nElem_Recv[ii];
-      int kk     = nElem_Recv[ii+1] - nElem_Recv[ii];
-      int count  = kk;
-      int source = ii;
-      int tag    = ii + 1;
-      SU2_MPI::Irecv(&(haloRecv[ll]), count, MPI_UNSIGNED_SHORT, source, tag,
-                     SU2_MPI::GetComm(), &(recv_req[iMessage+nRecvs]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking sends of the halo flags. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Send[ii+1] > nElem_Send[ii])) {
-      int ll = nElem_Send[ii];
-      int kk = nElem_Send[ii+1] - nElem_Send[ii];
-      int count  = kk;
-      int dest   = ii;
-      int tag    = rank + 1;
-      SU2_MPI::Isend(&(haloSend[ll]), count, MPI_UNSIGNED_SHORT, dest, tag,
-                     SU2_MPI::GetComm(), &(send_req[iMessage+nSends]));
-      iMessage++;
-    }
-  }
-#endif
-
   /*--- Copy my own rank's data into the recv buffer directly. ---*/
 
   int mm = NODES_PER_ELEMENT*nElem_Recv[rank];
@@ -1415,21 +1081,6 @@ void CSurfaceFVMDataSorter::SortSurfaceConnectivity(CConfig *config, CGeometry *
   kk = nElem_Send[rank+1];
 
   for (int nn=ll; nn<kk; nn++, mm++) haloRecv[mm] = haloSend[nn];
-
-  /*--- Wait for the non-blocking sends and recvs to complete. ---*/
-
-#ifdef HAVE_MPI
-  int number = 2*nSends;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, send_req, &ind, &status);
-
-  number = 2*nRecvs;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, recv_req, &ind, &status);
-
-  delete [] send_req;
-  delete [] recv_req;
-#endif
 
   /*--- Store the connectivity for this rank in the proper data
    structure before post-processing below. Note that we add 1 here

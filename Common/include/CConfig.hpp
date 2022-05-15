@@ -46,10 +46,6 @@
 #include "option_structure.hpp"
 #include "containers/container_decorators.hpp"
 
-#ifdef HAVE_CGNS
-#include "cgnslib.h"
-#endif
-
 using namespace std;
 
 /*!
@@ -7194,48 +7190,6 @@ public:
    * \return Current number of non-physical reconstructions for 2nd-order upwinding.
    */
   unsigned long GetNonphysical_Reconstr(void) const { return Nonphys_Reconstr; }
-
-  /*!
-   * \brief Start the timer for profiling subroutines.
-   * \param[in] val_start_time - the value of the start time.
-   */
-  void Tick(double *val_start_time);
-
-  /*!
-   * \brief Stop the timer for profiling subroutines and store results.
-   * \param[in] val_start_time - the value of the start time.
-   * \param[in] val_function_name - string for the name of the profiled subroutine.
-   * \param[in] val_group_id - string for the name of the profiled subroutine.
-   */
-  void Tock(double val_start_time, string val_function_name, int val_group_id);
-
-  /*!
-   * \brief Write a CSV file containing the results of the profiling.
-   */
-  void SetProfilingCSV(void);
-
-  /*!
-   * \brief Start the timer for profiling subroutines.
-   * \param[in] val_start_time - the value of the start time.
-   */
-  void GEMM_Tick(double *val_start_time) const;
-
-  /*!
-   * \brief Stop the timer for the GEMM profiling and store results.
-   * \param[in] val_start_time - The value of the start time.
-   * \param[in] M, N, K        - Matrix size of the GEMM call.
-   */
-  void GEMM_Tock(double val_start_time, int M, int N, int K) const;
-
-  /*!
-   * \brief Write a CSV file containing the results of the profiling.
-   */
-  void GEMMProfilingCSV(void);
-
-  /*!
-   * \brief Set multizone properties.
-   */
-  void SetMultizone(const CConfig *driver_config, const CConfig* const* config_container);
 
   /*!
    * \brief Get the verbosity level of the console output.

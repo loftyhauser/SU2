@@ -160,13 +160,6 @@ void computeGradientsLeastSquares(CSolver* solver,
 
   const size_t nPointDomain = geometry.GetnPointDomain();
 
-#ifdef HAVE_OMP
-  constexpr size_t OMP_MAX_CHUNK = 512;
-
-  size_t chunkSize = computeStaticChunkSize(nPointDomain,
-                     omp_get_max_threads(), OMP_MAX_CHUNK);
-#endif
-
   /*--- First loop over non-halo points of the grid. ---*/
 
   SU2_OMP_FOR_DYN(chunkSize)

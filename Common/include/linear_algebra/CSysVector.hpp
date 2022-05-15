@@ -43,17 +43,8 @@
  * CSysVector and do not have the same work scheduling must use a
  * SU2_OMP_BARRIER before using the vector.
  */
-#ifdef HAVE_OMP
-#ifdef HAVE_OMP_SIMD
-#define CSYSVEC_PARFOR SU2_OMP_FOR_(simd schedule(static,omp_chunk_size) SU2_NOWAIT)
-#else
-#define CSYSVEC_PARFOR SU2_OMP_FOR_(schedule(static,omp_chunk_size) SU2_NOWAIT)
-#endif
 #define END_CSYSVEC_PARFOR END_SU2_OMP_FOR
-#else
 #define CSYSVEC_PARFOR SU2_OMP_SIMD
-#define END_CSYSVEC_PARFOR
-#endif
 
 /*!
  * \class CSysVector
@@ -315,16 +306,6 @@ class CSysVector : public VecExpr::CVecExpr<CSysVector<ScalarType>, ScalarType> 
     /*--- Update shared variable with "our" partial sum. ---*/
     atomicAdd(sum, dotRes);
 
-#ifdef HAVE_MPI
-    /*--- Reduce across all mpi ranks, only master thread communicates. ---*/
-    SU2_OMP_BARRIER
-    SU2_OMP_MASTER {
-      sum = dotRes;
-      const auto mpi_type = (sizeof(ScalarType) < sizeof(double)) ? MPI_FLOAT : MPI_DOUBLE;
-      SelectMPIWrapper<ScalarType>::W::Allreduce(&sum, &dotRes, 1, mpi_type, MPI_SUM, SU2_MPI::GetComm());
-    }
-    END_SU2_OMP_MASTER
-#endif
     /*--- Make view of result consistent across threads. ---*/
     SU2_OMP_BARRIER
 

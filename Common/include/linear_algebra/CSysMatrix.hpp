@@ -116,18 +116,6 @@ private:
   mutable vector<vector<ScalarType> > LineletInvDiag;      /*!< \brief Inverse of the diagonal blocks of the tri-diag system (working memory). */
   mutable vector<vector<ScalarType> > LineletVector;       /*!< \brief Solution and RHS of the tri-diag system (working memory). */
 
-#ifdef USE_MKL
-  using gemm_t = typename mkl_jit_wrapper<ScalarType>::gemm_t;
-  void * MatrixMatrixProductJitter;              /*!< \brief Jitter handle for MKL JIT based GEMM. */
-  gemm_t MatrixMatrixProductKernel;              /*!< \brief MKL JIT based GEMM kernel. */
-  void * MatrixVectorProductJitterBetaZero;      /*!< \brief Jitter handle for MKL JIT based GEMV. */
-  gemm_t MatrixVectorProductKernelBetaZero;      /*!< \brief MKL JIT based GEMV kernel. */
-  void * MatrixVectorProductJitterBetaOne;       /*!< \brief Jitter handle for MKL JIT based GEMV with BETA=1.0. */
-  gemm_t MatrixVectorProductKernelBetaOne;       /*!< \brief MKL JIT based GEMV kernel with BETA=1.0. */
-  void * MatrixVectorProductJitterAlphaMinusOne; /*!< \brief Jitter handle for MKL JIT based GEMV with ALPHA=-1.0 and BETA=1.0. */
-  gemm_t MatrixVectorProductKernelAlphaMinusOne; /*!< \brief MKL JIT based GEMV kernel with ALPHA=-1.0 and BETA=1.0. */
-#endif
-
   /*!
    * \brief Auxilary object to wrap the edge map pointer used in fast block updates, i.e. without linear searches.
    */

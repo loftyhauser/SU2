@@ -63,12 +63,6 @@ void computeGradientsGreenGauss(CSolver* solver,
 {
   const size_t nPointDomain = geometry.GetnPointDomain();
 
-#ifdef HAVE_OMP
-  constexpr size_t OMP_MAX_CHUNK = 512;
-
-  const auto chunkSize = computeStaticChunkSize(nPointDomain, omp_get_max_threads(), OMP_MAX_CHUNK);
-#endif
-
   /*--- For each (non-halo) volume integrate over its faces (edges). ---*/
 
   SU2_OMP_FOR_DYN(chunkSize)

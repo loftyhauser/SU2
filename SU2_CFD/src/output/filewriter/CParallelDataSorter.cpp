@@ -103,79 +103,6 @@ void CParallelDataSorter::SortOutputData() {
 
   vector<unsigned long> idRecv(nPoint_Recv[size], 0);
 
-#ifdef HAVE_MPI
-  /*--- NOTE: This function calls MPI routines directly, instead of via SU2_MPI::,
-   * because it communicates passivedoubles and not AD types. This avoids some
-   * creative C++ to communicate AD types and then convert to passive. ---*/
-
-  /*--- We need double the number of messages to send both the conn. and the global IDs. ---*/
-
-  auto send_req = new MPI_Request[2*nSends];
-  auto recv_req = new MPI_Request[2*nRecvs];
-
-  unsigned long iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nPoint_Recv[ii+1] > nPoint_Recv[ii])) {
-      int ll     = VARS_PER_POINT*nPoint_Recv[ii];
-      int kk     = nPoint_Recv[ii+1] - nPoint_Recv[ii];
-      int count  = VARS_PER_POINT*kk;
-      int source = ii;
-      int tag    = ii + 1;
-      MPI_Irecv(&(dataBuffer[ll]), count, MPI_DOUBLE, source, tag,
-                SU2_MPI::GetComm(), &(recv_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking sends of the connectivity. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nPoint_Send[ii+1] > nPoint_Send[ii])) {
-      int ll = VARS_PER_POINT*nPoint_Send[ii];
-      int kk = nPoint_Send[ii+1] - nPoint_Send[ii];
-      int count  = VARS_PER_POINT*kk;
-      int dest   = ii;
-      int tag    = rank + 1;
-      MPI_Isend(&(connSend[ll]), count, MPI_DOUBLE, dest, tag,
-                SU2_MPI::GetComm(), &(send_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Repeat the process to communicate the global IDs. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nPoint_Recv[ii+1] > nPoint_Recv[ii])) {
-      int ll     = nPoint_Recv[ii];
-      int kk     = nPoint_Recv[ii+1] - nPoint_Recv[ii];
-      int count  = kk;
-      int source = ii;
-      int tag    = ii + 1;
-      MPI_Irecv(&(idRecv[ll]), count, MPI_UNSIGNED_LONG, source, tag,
-                SU2_MPI::GetComm(), &(recv_req[iMessage+nRecvs]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking sends of the global IDs. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nPoint_Send[ii+1] > nPoint_Send[ii])) {
-      int ll = nPoint_Send[ii];
-      int kk = nPoint_Send[ii+1] - nPoint_Send[ii];
-      int count  = kk;
-      int dest   = ii;
-      int tag    = rank + 1;
-      MPI_Isend(&(idSend[ll]), count, MPI_UNSIGNED_LONG, dest, tag,
-                SU2_MPI::GetComm(), &(send_req[iMessage+nSends]));
-      iMessage++;
-    }
-  }
-#endif
-
   /*--- Copy my own rank's data into the recv buffer directly. ---*/
 
   int mm = VARS_PER_POINT*nPoint_Recv[rank];
@@ -189,24 +116,6 @@ void CParallelDataSorter::SortOutputData() {
   kk = nPoint_Send[rank+1];
 
   for (int nn=ll; nn<kk; nn++, mm++) idRecv[mm] = idSend[nn];
-
-  /*--- Wait for the non-blocking sends and recvs to complete. ---*/
-
-#ifdef HAVE_MPI
-  MPI_Status status;
-  int ind;
-
-  int number = 2*nSends;
-  for (int ii = 0; ii < number; ii++)
-    MPI_Waitany(number, send_req, &ind, &status);
-
-  number = 2*nRecvs;
-  for (int ii = 0; ii < number; ii++)
-    MPI_Waitany(number, recv_req, &ind, &status);
-
-  delete [] send_req;
-  delete [] recv_req;
-#endif
 
   /*--- Reorder the data in the buffer. ---*/
 

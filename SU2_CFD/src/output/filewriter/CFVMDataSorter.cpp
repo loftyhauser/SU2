@@ -130,12 +130,6 @@ void CFVMDataSorter::SortVolumetricConnectivity(CConfig *config,
 
   int *Conn_Elem  = nullptr;
 
-#ifdef HAVE_MPI
-  SU2_MPI::Request *send_req, *recv_req;
-  SU2_MPI::Status status;
-  int ind;
-#endif
-
   /*--- Store the local number of this element type and the number of nodes
    per this element type. In serial, this will be the total number of this
    element type in the entire mesh. In parallel, it is the number on only
@@ -344,75 +338,6 @@ void CFVMDataSorter::SortVolumetricConnectivity(CConfig *config,
 
   auto haloRecv = new unsigned short[nElem_Cum[size]]();
 
-#ifdef HAVE_MPI
-
-  send_req = new SU2_MPI::Request[2*nSends];
-  recv_req = new SU2_MPI::Request[2*nRecvs];
-
-  /*--- Launch the non-blocking recv's for the connectivity. ---*/
-
-  unsigned long iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Cum[ii+1] > nElem_Cum[ii])) {
-      int ll     = NODES_PER_ELEMENT*nElem_Cum[ii];
-      int kk     = nElem_Cum[ii+1] - nElem_Cum[ii];
-      int count  = NODES_PER_ELEMENT*kk;
-      int source = ii;
-      int tag    = ii + 1;
-      SU2_MPI::Irecv(&(connRecv[ll]), count, MPI_UNSIGNED_LONG, source, tag,
-                     SU2_MPI::GetComm(), &(recv_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking sends of the connectivity. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Send[ii+1] > nElem_Send[ii])) {
-      int ll = NODES_PER_ELEMENT*nElem_Send[ii];
-      int kk = nElem_Send[ii+1] - nElem_Send[ii];
-      int count  = NODES_PER_ELEMENT*kk;
-      int dest = ii;
-      int tag    = rank + 1;
-      SU2_MPI::Isend(&(connSend[ll]), count, MPI_UNSIGNED_LONG, dest, tag,
-                     SU2_MPI::GetComm(), &(send_req[iMessage]));
-      iMessage++;
-    }
-  }
-
-  /*--- Repeat the process to communicate the halo flags. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Cum[ii+1] > nElem_Cum[ii])) {
-      int ll     = nElem_Cum[ii];
-      int kk     = nElem_Cum[ii+1] - nElem_Cum[ii];
-      int count  = kk;
-      int source = ii;
-      int tag    = ii + 1;
-      SU2_MPI::Irecv(&(haloRecv[ll]), count, MPI_UNSIGNED_SHORT, source, tag,
-                     SU2_MPI::GetComm(), &(recv_req[iMessage+nRecvs]));
-      iMessage++;
-    }
-  }
-
-  /*--- Launch the non-blocking sends of the halo flags. ---*/
-
-  iMessage = 0;
-  for (int ii=0; ii<size; ii++) {
-    if ((ii != rank) && (nElem_Send[ii+1] > nElem_Send[ii])) {
-      int ll = nElem_Send[ii];
-      int kk = nElem_Send[ii+1] - nElem_Send[ii];
-      int count  = kk;
-      int dest   = ii;
-      int tag    = rank + 1;
-      SU2_MPI::Isend(&(haloSend[ll]), count, MPI_UNSIGNED_SHORT, dest, tag,
-                     SU2_MPI::GetComm(), &(send_req[iMessage+nSends]));
-      iMessage++;
-    }
-  }
-#endif
 
   /*--- Copy my own rank's data into the recv buffer directly. ---*/
 
@@ -427,21 +352,6 @@ void CFVMDataSorter::SortVolumetricConnectivity(CConfig *config,
   kk = nElem_Send[rank+1];
 
   for (int nn=ll; nn<kk; nn++, mm++) haloRecv[mm] = haloSend[nn];
-
-  /*--- Wait for the non-blocking sends and recvs to complete. ---*/
-
-#ifdef HAVE_MPI
-  int number = 2*nSends;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, send_req, &ind, &status);
-
-  number = 2*nRecvs;
-  for (int ii = 0; ii < number; ii++)
-    SU2_MPI::Waitany(number, recv_req, &ind, &status);
-
-  delete [] send_req;
-  delete [] recv_req;
-#endif
 
   /*--- Store the connectivity for this rank in the proper data
    structure before post-processing below. Note that we add 1 here

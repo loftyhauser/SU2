@@ -78,10 +78,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
 
   Paraview_File.close();
 
-#ifdef HAVE_MPI
-  SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
-
   /*--- Each processor opens the file. ---*/
 
   Paraview_File.open(val_filename.c_str(), ios::out | ios::app);
@@ -102,9 +98,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
     }
 
     Paraview_File.flush();
-#ifdef HAVE_MPI
-    SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
   }
 
   /*--- Reduce the total number of each element. ---*/
@@ -127,9 +120,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
   }
 
   Paraview_File.flush();
-#ifdef HAVE_MPI
-  SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
 
   /*--- Write connectivity data. ---*/
 
@@ -199,9 +189,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
       }
 
     }    Paraview_File.flush();
-#ifdef HAVE_MPI
-    SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
   }
 
   if (rank == MASTER_NODE) {
@@ -212,9 +199,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
   }
 
   Paraview_File.flush();
-#ifdef HAVE_MPI
-  SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
 
   for (iProcessor = 0; iProcessor < size; iProcessor++) {
     if (rank == iProcessor) {
@@ -227,9 +211,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
       for (iElem = 0; iElem < nParallel_Pyra; iElem++) Paraview_File << "14\t";
     }
     Paraview_File.flush();
-#ifdef HAVE_MPI
-    SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
   }
 
   if (rank == MASTER_NODE) {
@@ -239,9 +220,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
   }
 
   Paraview_File.flush();
-#ifdef HAVE_MPI
-  SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
 
   unsigned short varStart = 2;
   if (nDim == 3) varStart++;
@@ -266,9 +244,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
       output_variable = false;
       //skip
       Paraview_File.flush();
-#ifdef HAVE_MPI
-      SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
       VarCounter++;
     }
     found = fieldNames[iField].find("_z");
@@ -276,9 +251,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
       output_variable = false;
       //skip
       Paraview_File.flush();
-#ifdef HAVE_MPI
-      SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
       VarCounter++;
     }
 
@@ -291,9 +263,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
       }
 
       Paraview_File.flush();
-#ifdef HAVE_MPI
-      SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
 
       /*--- Write surface and volumetric point coordinates. ---*/
 
@@ -310,9 +279,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
         }
 
         Paraview_File.flush();
-#ifdef HAVE_MPI
-        SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
       }
 
       VarCounter++;
@@ -326,9 +292,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
       }
 
       Paraview_File.flush();
-#ifdef HAVE_MPI
-      SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
 
       /*--- Write surface and volumetric point coordinates. ---*/
 
@@ -343,9 +306,6 @@ void CParaviewFileWriter::Write_Data(string val_filename){
 
         }
         Paraview_File.flush();
-#ifdef HAVE_MPI
-        SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
       }
 
       VarCounter++;

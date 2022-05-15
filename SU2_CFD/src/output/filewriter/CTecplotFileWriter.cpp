@@ -120,10 +120,6 @@ void CTecplotFileWriter::Write_Data(string val_filename){
     Tecplot_File.close();
   }
 
-#ifdef HAVE_MPI
-  SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
-
   /*--- Each processor opens the file. ---*/
 
   Tecplot_File.open(val_filename.c_str(), ios::out | ios::app);
@@ -144,9 +140,6 @@ void CTecplotFileWriter::Write_Data(string val_filename){
     }
 
     Tecplot_File.flush();
-#ifdef HAVE_MPI
-    SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
   }
 
 
@@ -206,9 +199,6 @@ void CTecplotFileWriter::Write_Data(string val_filename){
 
     }
     Tecplot_File.flush();
-#ifdef HAVE_MPI
-    SU2_MPI::Barrier(SU2_MPI::GetComm());
-#endif
   }
 
   Tecplot_File.close();

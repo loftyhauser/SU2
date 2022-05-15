@@ -92,7 +92,6 @@ FORCEINLINE void CSysMatrix<TYPE>::NAME(const TYPE *matrix, const TYPE *vector, 
 
 #define MATVECPROD_SIGNATURE(NAME) template<class ScalarType> __MATVECPROD_SIGNATURE__(ScalarType,NAME)
 
-#if !defined(USE_MKL)
 MATVECPROD_SIGNATURE( MatrixVectorProduct ) {
   /*---
    Without MKL (default) picture copying the body of gemv_impl
@@ -114,30 +113,6 @@ FORCEINLINE void CSysMatrix<ScalarType>::MatrixMatrixProduct(const ScalarType *m
                                                              const ScalarType *matrix_b, ScalarType *product) const {
   gemm_impl<ScalarType>(nVar, matrix_a, matrix_b, product);
 }
-#else
-MATVECPROD_SIGNATURE( MatrixVectorProduct ) {
-  /*--- With MKL we use the just-in-time kernels instead of the naive implementation. ---*/
-  MatrixVectorProductKernelBetaZero(MatrixVectorProductJitterBetaZero, const_cast<ScalarType*>(vector),
-                                    const_cast<ScalarType*>(matrix), product );
-}
-
-MATVECPROD_SIGNATURE( MatrixVectorProductAdd ) {
-  MatrixVectorProductKernelBetaOne(MatrixVectorProductJitterBetaOne, const_cast<ScalarType*>(vector),
-                                   const_cast<ScalarType*>(matrix), product );
-}
-
-MATVECPROD_SIGNATURE( MatrixVectorProductSub ) {
-  MatrixVectorProductKernelAlphaMinusOne(MatrixVectorProductJitterAlphaMinusOne, const_cast<ScalarType*>(vector),
-                                         const_cast<ScalarType*>(matrix), product );
-}
-
-template<class ScalarType>
-FORCEINLINE void CSysMatrix<ScalarType>::MatrixMatrixProduct(const ScalarType *matrix_a,
-                                                             const ScalarType *matrix_b, ScalarType *product) const {
-  MatrixMatrixProductKernel(MatrixMatrixProductJitter, const_cast<ScalarType*>(matrix_a),
-                            const_cast<ScalarType*>(matrix_b), product );
-}
-#endif
 
 #undef MATVECPROD_SIGNATURE
 #undef __MATVECPROD_SIGNATURE__

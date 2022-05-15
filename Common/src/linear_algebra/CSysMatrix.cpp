@@ -57,13 +57,6 @@ CSysMatrix<ScalarType>::CSysMatrix() :
 
   invM              = nullptr;
 
-#ifdef USE_MKL
-  MatrixMatrixProductJitter              = nullptr;
-  MatrixVectorProductJitterBetaOne       = nullptr;
-  MatrixVectorProductJitterBetaZero      = nullptr;
-  MatrixVectorProductJitterAlphaMinusOne = nullptr;
-#endif
-
 }
 
 template<class ScalarType>
@@ -73,13 +66,6 @@ CSysMatrix<ScalarType>::~CSysMatrix(void) {
   MemoryAllocation::aligned_free(ILU_matrix);
   MemoryAllocation::aligned_free(matrix);
   MemoryAllocation::aligned_free(invM);
-
-#ifdef USE_MKL
-  mkl_jit_destroy( MatrixMatrixProductJitter );
-  mkl_jit_destroy( MatrixVectorProductJitterBetaZero );
-  mkl_jit_destroy( MatrixVectorProductJitterBetaOne );
-  mkl_jit_destroy( MatrixVectorProductJitterAlphaMinusOne );
-#endif
 
 }
 
@@ -203,27 +189,6 @@ void CSysMatrix<ScalarType>::Initialize(unsigned long npoint, unsigned long npoi
       omp_partitions[part++] = iPoint;
   }
   omp_partitions[omp_num_parts] = nPointDomain;
-
-  /*--- Generate MKL Kernels ---*/
-
-#ifdef USE_MKL
-  using mkl = mkl_jit_wrapper<ScalarType>;
-  mkl::create_gemm(&MatrixMatrixProductJitter, MKL_ROW_MAJOR, MKL_NOTRANS,
-                   MKL_NOTRANS, nVar, nVar, nVar, 1.0, nVar, nVar, 0.0, nVar);
-  MatrixMatrixProductKernel = mkl::get_gemm(MatrixMatrixProductJitter);
-
-  mkl::create_gemm(&MatrixVectorProductJitterBetaZero, MKL_COL_MAJOR,
-                   MKL_NOTRANS, MKL_NOTRANS, 1, nVar, nEqn, 1.0, 1, nEqn, 0.0, 1);
-  MatrixVectorProductKernelBetaZero = mkl::get_gemm(MatrixVectorProductJitterBetaZero);
-
-  mkl::create_gemm(&MatrixVectorProductJitterBetaOne, MKL_COL_MAJOR,
-                   MKL_NOTRANS, MKL_NOTRANS, 1, nVar, nEqn, 1.0, 1, nEqn, 1.0, 1);
-  MatrixVectorProductKernelBetaOne = mkl::get_gemm(MatrixVectorProductJitterBetaOne);
-
-  mkl::create_gemm(&MatrixVectorProductJitterAlphaMinusOne, MKL_COL_MAJOR,
-                   MKL_NOTRANS, MKL_NOTRANS, 1, nVar, nEqn, -1.0, 1, nEqn, 1.0, 1);
-  MatrixVectorProductKernelAlphaMinusOne = mkl::get_gemm(MatrixVectorProductJitterAlphaMinusOne);
-#endif
 
 }
 
@@ -474,11 +439,6 @@ void CSysMatrixComms::Complete(CSysVector<T>& x, CGeometry *geometry,
    Note that this should be satisfied, as we have received all of the
    data in the loop above at this point. ---*/
 
-#ifdef HAVE_MPI
-  SU2_OMP_MASTER
-  SU2_MPI::Waitall(geometry->nP2PSend, geometry->req_P2PSend, MPI_STATUS_IGNORE);
-  END_SU2_OMP_MASTER
-#endif
   SU2_OMP_BARRIER
 
 }

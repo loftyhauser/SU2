@@ -102,8 +102,6 @@ void CBaselineSolver::SetOutputVariables(CGeometry *geometry, CConfig *config) {
     int nVar_Buf = 5;
     int var_buf[5];
 
-#ifndef HAVE_MPI
-
     /*--- Serial binary input. ---*/
 
     FILE *fhw;
@@ -141,92 +139,6 @@ void CBaselineSolver::SetOutputVariables(CGeometry *geometry, CConfig *config) {
      restart file (without including the PointID) ---*/
 
     nVar = var_buf[1];
-#else
-
-    /*--- Parallel binary input using MPI I/O. ---*/
-
-    MPI_File fhw;
-    int ierr;
-    MPI_Offset disp;
-    unsigned short iVar;
-    unsigned long index, iChar;
-    string field_buf;
-    char str_buf[CGNS_STRING_SIZE];
-
-    /*--- All ranks open the file using MPI. ---*/
-
-    ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
-
-    /*--- Error check opening the file. ---*/
-
-    if (ierr) {
-      SU2_MPI::Error(string("Unable to open SU2 restart file ") + string(fname), CURRENT_FUNCTION);
-    }
-
-    /*--- First, read the number of variables and points (i.e., cols and rows),
-     which we will need in order to read the file later. Also, read the
-     variable string names here. Only the master rank reads the header. ---*/
-
-    if (rank == MASTER_NODE) {
-      MPI_File_read(fhw, var_buf, nVar_Buf, MPI_INT, MPI_STATUS_IGNORE);
-    }
-
-    /*--- Broadcast the number of variables to all procs and store more clearly. ---*/
-
-    SU2_MPI::Bcast(var_buf, nVar_Buf, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
-
-    /*--- Check that this is an SU2 binary file. SU2 binary files
-     have the hex representation of "SU2" as the first int in the file. ---*/
-
-    if (var_buf[0] != 535532) {
-      SU2_MPI::Error(string("File ") + string(fname) + string(" is not a binary SU2 restart file.\n") +
-                     string("SU2 reads/writes binary restart files by default.\n") +
-                     string("Note that backward compatibility for ASCII restart files is\n") +
-                     string("possible with the READ_BINARY_RESTART option."), CURRENT_FUNCTION);
-    }
-
-
-
-    /*--- Set the number of variables, one per field in the
-     restart file (without including the PointID) ---*/
-
-    nVar = var_buf[1];
-
-    /*--- Read the variable names from the file. Note that we are adopting a
-     fixed length of 33 for the string length to match with CGNS. This is
-     needed for when we read the strings later. ---*/
-
-    char *mpi_str_buf = new char[nVar*CGNS_STRING_SIZE];
-    if (rank == MASTER_NODE) {
-      disp = nVar_Buf*sizeof(int);
-      MPI_File_read_at(fhw, disp, mpi_str_buf, nVar*CGNS_STRING_SIZE,
-                       MPI_CHAR, MPI_STATUS_IGNORE);
-    }
-
-    /*--- Broadcast the string names of the variables. ---*/
-
-    SU2_MPI::Bcast(mpi_str_buf, nVar*CGNS_STRING_SIZE, MPI_CHAR,
-                   MASTER_NODE, SU2_MPI::GetComm());
-
-    fields.push_back("Point_ID");
-
-    for (iVar = 0; iVar < nVar; iVar++) {
-      index = iVar*CGNS_STRING_SIZE;
-      field_buf.append("\"");
-      for (iChar = 0; iChar < (unsigned long)CGNS_STRING_SIZE; iChar++) {
-        str_buf[iChar] = mpi_str_buf[index + iChar];
-      }
-      field_buf.append(str_buf);
-      field_buf.append("\"");
-      fields.push_back(field_buf.c_str());
-      field_buf.clear();
-    }
-
-    /*--- All ranks close the file after writing. ---*/
-
-    MPI_File_close(&fhw);
-
-#endif
   } else {
 
     /*--- Multizone problems require the number of the zone to be appended. ---*/
@@ -239,7 +151,6 @@ void CBaselineSolver::SetOutputVariables(CGeometry *geometry, CConfig *config) {
     strcpy(fname, filename.c_str());
     int magic_number;
 
-#ifndef HAVE_MPI
 
     /*--- Serial binary input. ---*/
 
@@ -272,45 +183,6 @@ void CBaselineSolver::SetOutputVariables(CGeometry *geometry, CConfig *config) {
 
     fclose(fhw);
 
-#else
-
-    /*--- Parallel binary input using MPI I/O. ---*/
-
-    MPI_File fhw;
-    int ierr;
-
-    /*--- All ranks open the file using MPI. ---*/
-
-    ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
-
-    /*--- Error check opening the file. ---*/
-
-    if (ierr) {
-      SU2_MPI::Error(string("Unable to open SU2 restart file ") + string(fname), CURRENT_FUNCTION);
-    }
-
-    /*--- Have the master attempt to read the magic number. ---*/
-
-    if (rank == MASTER_NODE)
-      MPI_File_read(fhw, &magic_number, 1, MPI_INT, MPI_STATUS_IGNORE);
-
-    /*--- Broadcast the number of variables to all procs and store clearly. ---*/
-
-    SU2_MPI::Bcast(&magic_number, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
-
-    /*--- Check that this is an SU2 binary file. SU2 binary files
-     have the hex representation of "SU2" as the first int in the file. ---*/
-
-    if (magic_number == 535532) {
-      SU2_MPI::Error(string("File ") + string(fname) + string(" is a binary SU2 restart file, expected ASCII.\n") +
-                     string("SU2 reads/writes binary restart files by default.\n") +
-                     string("Note that backward compatibility for ASCII restart files is\n") +
-                     string("possible with the READ_BINARY_RESTART option."), CURRENT_FUNCTION);
-    }
-
-    MPI_File_close(&fhw);
-
-#endif
 
     /*--- Open the restart file ---*/
 

@@ -78,23 +78,10 @@ protected:
    */
   CParallelDataSorter* dataSorter;
 
-#ifdef HAVE_MPI
-  /*!
-   * \brief The displacement that every process has in the current file view
-   */
-  MPI_Offset disp;
-
-  /*!
-   * \brief The file handle for writing
-   */
-  MPI_File fhw;
-#else
-
   /*!
    * \brief The file handle for writing
    */
   FILE* fhw;
-#endif
 
 public:
   /*!

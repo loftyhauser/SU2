@@ -90,12 +90,6 @@ void computeLimiters_impl(CSolver* solver,
                         (kindPeriodicComm1 != PERIODIC_NONE) &&
                         (config.GetnMarker_Periodic() > 0);
 
-#ifdef HAVE_OMP
-  constexpr size_t OMP_MAX_CHUNK = 512;
-
-  const auto chunkSize = computeStaticChunkSize(nPointDomain, omp_get_max_threads(), OMP_MAX_CHUNK);
-#endif
-
   /*--- If limiters are frozen do not record the computation ---*/
   bool wasActive = false;
 

@@ -38,29 +38,7 @@ CScalarSolver<VariableType>::CScalarSolver(CGeometry* geometry, CConfig* config,
   nVertex.resize(nMarker);
   for (unsigned long iMarker = 0; iMarker < nMarker; iMarker++) nVertex[iMarker] = geometry->nVertex[iMarker];
 
-#ifdef HAVE_OMP
-  /*--- Get the edge coloring, see notes in CEulerSolver's constructor. ---*/
-  su2double parallelEff = 1.0;
-  const auto& coloring = geometry->GetEdgeColoring(&parallelEff);
-
-  ReducerStrategy = parallelEff < COLORING_EFF_THRESH;
-
-  if (ReducerStrategy && (coloring.getOuterSize() > 1)) geometry->SetNaturalEdgeColoring();
-
-  if (!coloring.empty()) {
-    auto groupSize = ReducerStrategy ? 1ul : geometry->GetEdgeColorGroupSize();
-    auto nColor = coloring.getOuterSize();
-    EdgeColoring.reserve(nColor);
-
-    for (auto iColor = 0ul; iColor < nColor; ++iColor)
-      EdgeColoring.emplace_back(coloring.innerIdx(iColor), coloring.getNumNonZeros(iColor), groupSize);
-  }
-
-  nPoint = geometry->GetnPoint();
-  omp_chunk_size = computeStaticChunkSize(nPoint, omp_get_max_threads(), OMP_MAX_SIZE);
-#else
   EdgeColoring[0] = DummyGridColor<>(geometry->GetnEdge());
-#endif
 
   /*--- Initialize lower and upper limits for solution clipping. Solvers might overwrite these values. ---*/
   for (unsigned int iVar = 0; iVar < MAXNVAR; iVar++) {

@@ -1014,21 +1014,9 @@ void CSolver::CompletePeriodicComms(CGeometry *geometry,
       /*--- For efficiency, recv the messages dynamically based on
        the order they arrive. ---*/
 
-#ifdef HAVE_MPI
-      /*--- Once we have recv'd a message, get the source rank. ---*/
-      int ind;
-      SU2_OMP_MASTER
-      SU2_MPI::Waitany(geometry->nPeriodicRecv,
-                       geometry->req_PeriodicRecv,
-                       &ind, &status);
-      END_SU2_OMP_MASTER
-      SU2_OMP_BARRIER
-      source = status.MPI_SOURCE;
-#else
       /*--- For serial calculations, we know the rank. ---*/
       source = rank;
       SU2_OMP_BARRIER
-#endif
 
       /*--- We know the offsets based on the source rank. ---*/
 
@@ -1275,13 +1263,6 @@ void CSolver::CompletePeriodicComms(CGeometry *geometry,
      Note that this should be satisfied, as we have received all of the
      data in the loop above at this point. ---*/
 
-#ifdef HAVE_MPI
-    SU2_OMP_MASTER
-    SU2_MPI::Waitall(geometry->nPeriodicSend,
-                     geometry->req_PeriodicSend,
-                     MPI_STATUS_IGNORE);
-    END_SU2_OMP_MASTER
-#endif
     SU2_OMP_BARRIER
   }
 
@@ -1640,11 +1621,6 @@ void CSolver::CompleteComms(CGeometry *geometry,
      Note that this should be satisfied, as we have received all of the
      data in the loop above at this point. ---*/
 
-#ifdef HAVE_MPI
-    SU2_OMP_MASTER
-    SU2_MPI::Waitall(geometry->nP2PSend, geometry->req_P2PSend, MPI_STATUS_IGNORE);
-    END_SU2_OMP_MASTER
-#endif
     SU2_OMP_BARRIER
   }
 
@@ -2429,8 +2405,6 @@ void CSolver::Read_SU2_Restart_ASCII(CGeometry *geometry, const CConfig *config,
   strcpy(fname, val_filename.c_str());
   int magic_number;
 
-#ifndef HAVE_MPI
-
   /*--- Serial binary input. ---*/
 
   FILE *fhw;
@@ -2462,46 +2436,6 @@ void CSolver::Read_SU2_Restart_ASCII(CGeometry *geometry, const CConfig *config,
 
   fclose(fhw);
 
-#else
-
-  /*--- Parallel binary input using MPI I/O. ---*/
-
-  MPI_File fhw;
-  int ierr;
-
-  /*--- All ranks open the file using MPI. ---*/
-
-  ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
-
-  /*--- Error check opening the file. ---*/
-
-  if (ierr) {
-    SU2_MPI::Error(string("SU2 ASCII restart file ") + string(fname) + string(" not found.\n") + error_string,
-                   CURRENT_FUNCTION);
-  }
-
-  /*--- Have the master attempt to read the magic number. ---*/
-
-  if (rank == MASTER_NODE)
-    MPI_File_read(fhw, &magic_number, 1, MPI_INT, MPI_STATUS_IGNORE);
-
-  /*--- Broadcast the number of variables to all procs and store clearly. ---*/
-
-  SU2_MPI::Bcast(&magic_number, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
-
-  /*--- Check that this is an SU2 binary file. SU2 binary files
-   have the hex representation of "SU2" as the first int in the file. ---*/
-
-  if (magic_number == 535532) {
-    SU2_MPI::Error(string("File ") + string(fname) + string(" is a binary SU2 restart file, expected ASCII.\n") +
-                   string("SU2 reads/writes binary restart files by default.\n") +
-                   string("Note that backward compatibility for ASCII restart files is\n") +
-                   string("possible with the READ_BINARY_RESTART option."), CURRENT_FUNCTION);
-  }
-
-  MPI_File_close(&fhw);
-
-#endif
 
   /*--- Open the restart file ---*/
 
@@ -2580,8 +2514,6 @@ void CSolver::Read_SU2_Restart_Binary(CGeometry *geometry, const CConfig *config
   Restart_Vars = new int[nRestart_Vars];
   fields.clear();
 
-#ifndef HAVE_MPI
-
   /*--- Serial binary input. ---*/
 
   FILE *fhw;
@@ -2645,157 +2577,6 @@ void CSolver::Read_SU2_Restart_Binary(CGeometry *geometry, const CConfig *config
 
   fclose(fhw);
 
-#else
-
-  /*--- Parallel binary input using MPI I/O. ---*/
-
-  MPI_File fhw;
-  SU2_MPI::Status status;
-  MPI_Datatype etype, filetype;
-  MPI_Offset disp;
-
-  /*--- All ranks open the file using MPI. ---*/
-
-  int ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
-
-  if (ierr) SU2_MPI::Error(string("Unable to open SU2 restart file ") + string(fname), CURRENT_FUNCTION);
-
-  /*--- First, read the number of variables and points (i.e., cols and rows),
-   which we will need in order to read the file later. Also, read the
-   variable string names here. Only the master rank reads the header. ---*/
-
-  if (rank == MASTER_NODE)
-    MPI_File_read(fhw, Restart_Vars, nRestart_Vars, MPI_INT, MPI_STATUS_IGNORE);
-
-  /*--- Broadcast the number of variables to all procs and store clearly. ---*/
-
-  SU2_MPI::Bcast(Restart_Vars, nRestart_Vars, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
-
-  /*--- Check that this is an SU2 binary file. SU2 binary files
-   have the hex representation of "SU2" as the first int in the file. ---*/
-
-  if (Restart_Vars[0] != 535532) {
-    SU2_MPI::Error(string("File ") + string(fname) + string(" is not a binary SU2 restart file.\n") +
-                   string("SU2 reads/writes binary restart files by default.\n") +
-                   string("Note that backward compatibility for ASCII restart files is\n") +
-                   string("possible with the READ_BINARY_RESTART option."), CURRENT_FUNCTION);
-  }
-
-  /*--- Store the number of fields and points to be read for clarity. ---*/
-
-  const unsigned long nFields = Restart_Vars[1];
-  const unsigned long nPointFile = Restart_Vars[2];
-
-  /*--- Read the variable names from the file. Note that we are adopting a
-   fixed length of 33 for the string length to match with CGNS. This is
-   needed for when we read the strings later. ---*/
-
-  char *mpi_str_buf = new char[nFields*CGNS_STRING_SIZE];
-  if (rank == MASTER_NODE) {
-    disp = nRestart_Vars*sizeof(int);
-    MPI_File_read_at(fhw, disp, mpi_str_buf, nFields*CGNS_STRING_SIZE,
-                     MPI_CHAR, MPI_STATUS_IGNORE);
-  }
-
-  /*--- Broadcast the string names of the variables. ---*/
-
-  SU2_MPI::Bcast(mpi_str_buf, nFields*CGNS_STRING_SIZE, MPI_CHAR,
-                 MASTER_NODE, SU2_MPI::GetComm());
-
-  /*--- Now parse the string names and load into the config class in case
-   we need them for writing visualization files (SU2_SOL). ---*/
-
-  fields.push_back("Point_ID");
-  for (auto iVar = 0u; iVar < nFields; iVar++) {
-    const auto index = iVar*CGNS_STRING_SIZE;
-    string field_buf("\"");
-    for (int iChar = 0; iChar < CGNS_STRING_SIZE; iChar++) {
-      str_buf[iChar] = mpi_str_buf[index + iChar];
-    }
-    field_buf.append(str_buf);
-    field_buf.append("\"");
-    fields.push_back(field_buf.c_str());
-  }
-
-  /*--- Free string buffer memory. ---*/
-
-  delete [] mpi_str_buf;
-
-  /*--- We're writing only su2doubles in the data portion of the file. ---*/
-
-  etype = MPI_DOUBLE;
-
-  /*--- We need to ignore the 4 ints describing the nVar_Restart and nPoints,
-   along with the string names of the variables. ---*/
-
-  disp = nRestart_Vars*sizeof(int) + CGNS_STRING_SIZE*nFields*sizeof(char);
-
-  /*--- Define a derived datatype for this rank's set of non-contiguous data
-   that will be placed in the restart. Here, we are collecting each one of the
-   points which are distributed throughout the file in blocks of nVar_Restart data. ---*/
-
-  int nBlock;
-  int *blocklen = nullptr;
-  MPI_Aint *displace = nullptr;
-
-  if (nPointFile == geometry->GetGlobal_nPointDomain() ||
-      config->GetKind_SU2() == SU2_COMPONENT::SU2_SOL) {
-    /*--- No interpolation, each rank reads the indices it needs. ---*/
-    nBlock = geometry->GetnPointDomain();
-
-    blocklen = new int[nBlock];
-    displace = new MPI_Aint[nBlock];
-    int counter = 0;
-    for (auto iPoint_Global = 0ul; iPoint_Global < geometry->GetGlobal_nPointDomain(); ++iPoint_Global) {
-      if (geometry->GetGlobal_to_Local_Point(iPoint_Global) > -1) {
-        blocklen[counter] = nFields;
-        displace[counter] = iPoint_Global*nFields*sizeof(passivedouble);
-        counter++;
-      }
-    }
-  }
-  else {
-    /*--- Interpolation required, read large blocks of data. ---*/
-    nBlock = 1;
-
-    blocklen = new int[nBlock];
-    displace = new MPI_Aint[nBlock];
-
-    const auto partitioner = CLinearPartitioner(nPointFile,0);
-
-    blocklen[0] = nFields*partitioner.GetSizeOnRank(rank);
-    displace[0] = nFields*partitioner.GetFirstIndexOnRank(rank)*sizeof(passivedouble);;
-  }
-
-  MPI_Type_create_hindexed(nBlock, blocklen, displace, MPI_DOUBLE, &filetype);
-  MPI_Type_commit(&filetype);
-
-  /*--- Set the view for the MPI file write, i.e., describe the location in
-   the file that this rank "sees" for writing its piece of the restart file. ---*/
-
-  MPI_File_set_view(fhw, disp, etype, filetype, (char*)"native", MPI_INFO_NULL);
-
-  /*--- For now, create a temp 1D buffer to read the data from file. ---*/
-
-  const int bufSize = nBlock*blocklen[0];
-  Restart_Data = new passivedouble[bufSize];
-
-  /*--- Collective call for all ranks to read from their view simultaneously. ---*/
-
-  MPI_File_read_all(fhw, Restart_Data, bufSize, MPI_DOUBLE, &status);
-
-  /*--- All ranks close the file after writing. ---*/
-
-  MPI_File_close(&fhw);
-
-  /*--- Free the derived datatype and release temp memory. ---*/
-
-  MPI_Type_free(&filetype);
-
-  delete [] blocklen;
-  delete [] displace;
-
-#endif
 
   if (nPointFile != geometry->GetGlobal_nPointDomain() &&
       config->GetKind_SU2() != SU2_COMPONENT::SU2_SOL) {

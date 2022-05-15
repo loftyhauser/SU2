@@ -48,19 +48,6 @@
 #define PRAGMIZE(X) _Pragma(#X)
 #endif
 
-#if defined(HAVE_OMP)
-#include <omp.h>
-
-#if defined(HAVE_OPDI)
-#include "opdi/backend/macro/macroBackend.hpp"
-#include "codi/externals/codiOpdiTool.hpp"
-#include "opdi.hpp"
-#endif
-
-/*--- The generic start of OpenMP constructs. ---*/
-#define SU2_OMP(ARGS) PRAGMIZE(omp ARGS)
-
-#else // Compile without OpenMP
 #include <ctime>
 
 /*--- Disable pragmas to quiet compilation warnings. ---*/
@@ -109,20 +96,6 @@ inline void omp_set_lock(omp_lock_t*){}
 inline void omp_unset_lock(omp_lock_t*){}
 inline void omp_destroy_lock(omp_lock_t*){}
 
-#endif // end OpenMP detection
-
-/*--- Initialization and finalization ---*/
-
-void omp_initialize();
-void omp_finalize();
-
-/*--- Detect SIMD support (version 4+, after Jul 2013). ---*/
-#ifdef _OPENMP
-#if _OPENMP >= 201307
-#define HAVE_OMP_SIMD
-#define SU2_OMP_SIMD PRAGMIZE(omp simd)
-#endif
-#endif
 #ifndef SU2_OMP_SIMD
 #define SU2_OMP_SIMD
 #endif
@@ -132,8 +105,6 @@ void omp_finalize();
 /*--- Convenience macros (do not use excessive nesting). ---*/
 
 #define SU2_OMP_ATOMIC SU2_OMP(atomic)
-
-#ifndef HAVE_OPDI
 
 #define SU2_OMP_MASTER SU2_OMP(master)
 #define SU2_OMP_BARRIER SU2_OMP(barrier)
@@ -153,29 +124,6 @@ void omp_finalize();
 #define END_SU2_OMP_CRITICAL
 #define END_SU2_OMP_PARALLEL
 #define END_SU2_OMP_FOR
-
-#else
-
-#define SU2_OMP_MASTER OPDI_MASTER()
-#define SU2_OMP_BARRIER OPDI_BARRIER()
-#define SU2_OMP_CRITICAL OPDI_CRITICAL()
-
-#define SU2_OMP_PARALLEL OPDI_PARALLEL()
-#define SU2_OMP_PARALLEL_(ARGS) OPDI_PARALLEL(ARGS)
-#define SU2_OMP_PARALLEL_ON(NTHREADS) OPDI_PARALLEL(num_threads(NTHREADS))
-
-#define SU2_OMP_FOR_(ARGS) OPDI_FOR(ARGS)
-#define SU2_OMP_FOR_DYN(CHUNK) OPDI_FOR(schedule(dynamic,CHUNK))
-#define SU2_OMP_FOR_STAT(CHUNK) OPDI_FOR(schedule(static,CHUNK))
-
-#define SU2_NOWAIT OPDI_NOWAIT
-
-#define END_SU2_OMP_MASTER OPDI_END_MASTER
-#define END_SU2_OMP_CRITICAL OPDI_END_CRITICAL
-#define END_SU2_OMP_PARALLEL OPDI_END_PARALLEL
-#define END_SU2_OMP_FOR OPDI_END_FOR
-
-#endif
 
 /*--- Convenience functions (e.g. to compute chunk sizes). ---*/
 

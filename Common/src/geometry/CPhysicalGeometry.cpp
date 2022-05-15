@@ -2039,15 +2039,8 @@ void CPhysicalGeometry::LoadPoints(CConfig *config, CGeometry *geometry) {
   unsigned long Local_nPoint = nPoint;
   unsigned long Local_nPointDomain = nPointDomain;
 
-#ifdef HAVE_MPI
-  SU2_MPI::Allreduce(&Local_nPoint, &Global_nPoint, 1,
-                     MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
-  SU2_MPI::Allreduce(&Local_nPointDomain, &Global_nPointDomain, 1,
-                     MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
-#else
   Global_nPoint = Local_nPoint;
   Global_nPointDomain = Local_nPointDomain;
-#endif
 
   if ((rank == MASTER_NODE) && (size > SINGLE_NODE))
     cout << Global_nPoint << " vertices including ghost points. " << endl;
@@ -2359,34 +2352,12 @@ void CPhysicalGeometry::LoadVolumeElements(CConfig *config, CGeometry *geometry)
   nelem_prism    = iElemPris;
   nelem_pyramid  = iElemPyra;
 
-#ifdef HAVE_MPI
-  unsigned long Local_nElemTri     = nelem_triangle;
-  unsigned long Local_nElemQuad    = nelem_quad;
-  unsigned long Local_nElemTet     = nelem_tetra;
-  unsigned long Local_nElemHex     = nelem_hexa;
-  unsigned long Local_nElemPrism   = nelem_prism;
-  unsigned long Local_nElemPyramid = nelem_pyramid;
-
-  SU2_MPI::Allreduce(&Local_nElemTri, &Global_nelem_triangle, 1,
-                     MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
-  SU2_MPI::Allreduce(&Local_nElemQuad, &Global_nelem_quad, 1,
-                     MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
-  SU2_MPI::Allreduce(&Local_nElemTet, &Global_nelem_tetra, 1,
-                     MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
-  SU2_MPI::Allreduce(&Local_nElemHex, &Global_nelem_hexa, 1,
-                     MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
-  SU2_MPI::Allreduce(&Local_nElemPrism, &Global_nelem_prism, 1,
-                     MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
-  SU2_MPI::Allreduce(&Local_nElemPyramid, &Global_nelem_pyramid, 1,
-                     MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
-#else
   Global_nelem_triangle = nelem_triangle;
   Global_nelem_quad     = nelem_quad;
   Global_nelem_tetra    = nelem_tetra;
   Global_nelem_hexa     = nelem_hexa;
   Global_nelem_prism    = nelem_prism;
   Global_nelem_pyramid  = nelem_pyramid;
-#endif
 
   /*--- Print information about the elements to the console ---*/
 
@@ -2919,71 +2890,6 @@ unsigned long CPhysicalGeometry::GetLinearPartition(unsigned long val_global_ind
 }
 
 void CPhysicalGeometry::SortAdjacency(const CConfig *config) {
-
-#ifdef HAVE_MPI
-#ifdef HAVE_PARMETIS
-
-  if ((rank == MASTER_NODE) && (size > SINGLE_NODE))
-    cout << "Executing the partitioning functions." << endl;
-
-  /*--- Post process the adjacency information in order to get it into the
-   CSR format before sending the data to ParMETIS. We need to remove
-   repeats and adjust the size of the array for each local node. ---*/
-
-  if ((rank == MASTER_NODE) && (size > SINGLE_NODE))
-    cout << "Building the graph adjacency structure." << endl;
-
-  /*--- Create a partitioner object so we can transform the global
-   index values stored in the elements to a local index. ---*/
-
-  CLinearPartitioner pointPartitioner(Global_nPointDomain,0);
-
-  /*--- We can already create the array that indexes the adjacency. ---*/
-
-  xadj.resize(pointPartitioner.GetSizeOnRank(rank)+1);
-  xadj[0] = 0;
-
-  /*--- Here, we transfer the adjacency information from a multi-dim vector
-   on a node-by-node basis into a single vector container. First, we sort
-   the entries and remove the duplicates we find for each node, then we
-   copy it into the single vect and clear memory from the multi-dim vec. ---*/
-
-  unsigned long total_adj_size = 0;
-  for (auto& neighbors : adj_nodes) {
-    /*--- For each point, sort the adjacency in ascending order
-     so that we can remove duplicates and complete the size for
-     unique set of adjacent nodes for that point. ---*/
-
-    sort(neighbors.begin(), neighbors.end());
-    auto it = unique(neighbors.begin(), neighbors.end());
-    const auto local_size = it - neighbors.begin();
-    neighbors.resize(local_size);
-    total_adj_size += local_size;
-  }
-
-  /*--- Now that we know the size, create the final adjacency array. This
-   is the array that we will feed to ParMETIS for partitioning. ---*/
-
-  adjacency.resize(0);
-  adjacency.reserve(total_adj_size);
-
-  unsigned long iPoint = 0;
-  for (const auto& neighbors : adj_nodes) {
-    /*--- Move the sorted adjacency into a 1-D vector for all
-     points for loading into ParMETIS for partitioning next. ---*/
-    for (auto jPoint : neighbors) adjacency.push_back(jPoint);
-
-    /*--- Increment the starting index for the next point (CSR). ---*/
-    xadj[iPoint+1] = xadj[iPoint] + neighbors.size();
-    ++iPoint;
-  }
-
-  /*--- Force free the entire old multi-dim. adjacency vector. ---*/
-
-  decltype(adj_nodes)().swap(adj_nodes);
-
-#endif
-#endif
 
 }
 
@@ -3834,218 +3740,6 @@ void CPhysicalGeometry::LoadUnpartitionedSurfaceElements(CConfig        *config,
 }
 
 void CPhysicalGeometry::PrepareAdjacency(const CConfig *config) {
-
-#ifdef HAVE_MPI
-#ifdef HAVE_PARMETIS
-
-  /*--- Resize the vector for the adjacency information (ParMETIS). ---*/
-
-  adj_nodes.clear();
-  adj_nodes.resize(nPoint);
-
-  /*--- Create a partitioner object so we can transform the global
-   index values stored in the elements to a local index. ---*/
-
-  CLinearPartitioner pointPartitioner(Global_nPointDomain,0);
-  const unsigned long firstIndex = pointPartitioner.GetFirstIndexOnRank(rank);
-
-  /*--- Loop over all elements that are now loaded and store adjacency. ---*/
-
-  for (unsigned long iElem = 0; iElem < nElem; iElem++) {
-
-    /*--- Store the connectivity for this element more easily. ---*/
-    unsigned long connectivity[8] = {0};
-    for (unsigned long iNode = 0; iNode < elem[iElem]->GetnNodes(); iNode++) {
-      connectivity[iNode] = elem[iElem]->GetNode(iNode);
-    }
-
-    /*--- Instantiate this element and build adjacency structure. ---*/
-
-    switch(elem[iElem]->GetVTK_Type()) {
-
-      case TRIANGLE:
-
-        /*--- Decide whether we need to store the adjacency for any nodes
-         in the current element, i.e., check if any of the nodes have a
-         global index value within the range of our linear partitioning. ---*/
-
-        for (unsigned long iNode = 0; iNode < N_POINTS_TRIANGLE; iNode++) {
-
-          const long local_index = connectivity[iNode]-firstIndex;
-
-          if ((local_index >= 0) && (local_index < (long)nPoint)) {
-
-            /*--- This node is within our linear partition.
-             Add the neighboring nodes to this nodes' adjacency list. ---*/
-
-            for (unsigned long jNode = 0; jNode < N_POINTS_TRIANGLE; jNode++) {
-
-              /*--- Build adjacency assuming the VTK connectivity ---*/
-
-              if (iNode != jNode)
-              adj_nodes[local_index].push_back(connectivity[jNode]);
-            }
-          }
-        }
-
-        break;
-
-      case QUADRILATERAL:
-
-        /*--- Decide whether we need to store the adjacency for any nodes
-         in the current element, i.e., check if any of the nodes have a
-         global index value within the range of our linear partitioning. ---*/
-
-        for (unsigned long iNode = 0; iNode < N_POINTS_QUADRILATERAL; iNode++) {
-
-          const long local_index = connectivity[iNode]-firstIndex;
-
-          if ((local_index >= 0) && (local_index < (long)nPoint)) {
-
-            /*--- This node is within our linear partition.
-             Add the neighboring nodes to this nodes' adjacency list. ---*/
-
-            /*--- Build adjacency assuming the VTK connectivity ---*/
-
-            adj_nodes[local_index].push_back(connectivity[(iNode+1)%4]);
-            adj_nodes[local_index].push_back(connectivity[(iNode+3)%4]);
-          }
-        }
-
-        break;
-
-      case TETRAHEDRON:
-
-        /*--- Decide whether we need to store the adjacency for any nodes
-         in the current element, i.e., check if any of the nodes have a
-         global index value within the range of our linear partitioning. ---*/
-
-        for (unsigned long iNode = 0; iNode < N_POINTS_TETRAHEDRON; iNode++) {
-
-          const long local_index = connectivity[iNode]-firstIndex;
-
-          if ((local_index >= 0) && (local_index < (long)nPoint)) {
-
-            /*--- This node is within our linear partition.
-             Add the neighboring nodes to this nodes' adjacency list. ---*/
-
-            for (unsigned long jNode = 0; jNode < N_POINTS_TETRAHEDRON; jNode++) {
-
-              /*--- Build adjacency assuming the VTK connectivity ---*/
-
-              if (iNode != jNode)
-              adj_nodes[local_index].push_back(connectivity[jNode]);
-            }
-          }
-        }
-
-        break;
-
-      case HEXAHEDRON:
-
-        /*--- Decide whether we need to store the adjacency for any nodes
-         in the current element, i.e., check if any of the nodes have a
-         global index value within the range of our linear partitioning. ---*/
-
-        for (unsigned long iNode = 0; iNode < N_POINTS_HEXAHEDRON; iNode++) {
-
-          const long local_index = connectivity[iNode]-firstIndex;
-
-          if ((local_index >= 0) && (local_index < (long)nPoint)) {
-
-            /*--- This node is within our linear partition.
-             Add the neighboring nodes to this nodes' adjacency list. ---*/
-
-            /*--- Build adjacency assuming the VTK connectivity ---*/
-
-            if (iNode < 4) {
-              adj_nodes[local_index].push_back(connectivity[(iNode+1)%4]);
-              adj_nodes[local_index].push_back(connectivity[(iNode+3)%4]);
-            } else {
-              adj_nodes[local_index].push_back(connectivity[(iNode-3)%4+4]);
-              adj_nodes[local_index].push_back(connectivity[(iNode-1)%4+4]);
-            }
-            adj_nodes[local_index].push_back(connectivity[(iNode+4)%8]);
-          }
-        }
-
-        break;
-
-      case PRISM:
-
-        /*--- Decide whether we need to store the adjacency for any nodes
-         in the current element, i.e., check if any of the nodes have a
-         global index value within the range of our linear partitioning. ---*/
-
-        for (unsigned long iNode = 0; iNode < N_POINTS_PRISM; iNode++) {
-
-          const long local_index = connectivity[iNode]-firstIndex;
-
-          if ((local_index >= 0) && (local_index < (long)nPoint)) {
-
-            /*--- This node is within our linear partition.
-             Add the neighboring nodes to this nodes' adjacency list. ---*/
-
-            /*--- Build adjacency assuming the VTK connectivity ---*/
-
-            if (iNode < 3) {
-              adj_nodes[local_index].push_back(connectivity[(iNode+1)%3]);
-              adj_nodes[local_index].push_back(connectivity[(iNode+2)%3]);
-            } else {
-              adj_nodes[local_index].push_back(connectivity[(iNode-2)%3+3]);
-              adj_nodes[local_index].push_back(connectivity[(iNode-1)%3+3]);
-            }
-            adj_nodes[local_index].push_back(connectivity[(iNode+3)%6]);
-          }
-        }
-
-        break;
-
-      case PYRAMID:
-
-        /*--- Decide whether we need to store the adjacency for any nodes
-         in the current element, i.e., check if any of the nodes have a
-         global index value within the range of our linear partitioning. ---*/
-
-        for (unsigned long iNode = 0; iNode < N_POINTS_PYRAMID; iNode++) {
-
-          const long local_index = connectivity[iNode]-firstIndex;
-
-          if ((local_index >= 0) && (local_index < (long)nPoint)) {
-
-            /*--- This node is within our linear partition.
-             Add the neighboring nodes to this nodes' adjacency list. ---*/
-
-            /*--- Build adjacency assuming the VTK connectivity ---*/
-
-            if (iNode < 4) {
-              adj_nodes[local_index].push_back(connectivity[(iNode+1)%4]);
-              adj_nodes[local_index].push_back(connectivity[(iNode+3)%4]);
-              adj_nodes[local_index].push_back(connectivity[4]);
-            } else {
-              adj_nodes[local_index].push_back(connectivity[0]);
-              adj_nodes[local_index].push_back(connectivity[1]);
-              adj_nodes[local_index].push_back(connectivity[2]);
-              adj_nodes[local_index].push_back(connectivity[3]);
-            }
-          }
-        }
-
-        break;
-
-      default:
-        SU2_MPI::Error("Element type not supported!", CURRENT_FUNCTION);
-        break;
-    }
-  }
-
-  /*--- Prepare the adjacency information that ParMETIS will need for
-   completing the graph partitioning in parallel. ---*/
-
-  SortAdjacency(config);
-
-#endif
-#endif
 
 }
 
@@ -6247,90 +5941,6 @@ void CPhysicalGeometry::SetBoundTecPlot(char mesh_filename[MAX_STRING_SIZE], boo
 
 }
 
-void CPhysicalGeometry::SetColorGrid_Parallel(const CConfig *config) {
-
-  /*--- We need to have parallel support with MPI and have the ParMETIS
-   library compiled and linked for parallel graph partitioning. ---*/
-
-#if defined(HAVE_MPI) && defined(HAVE_PARMETIS)
-
-  /*--- Only call ParMETIS if we have more than one rank to avoid errors ---*/
-
-  if (size == SINGLE_NODE) return;
-
-  MPI_Comm comm = SU2_MPI::GetComm();
-
-  /*--- Linear partitioner object to help prepare parmetis data. ---*/
-
-  CLinearPartitioner pointPartitioner(Global_nPointDomain,0);
-
-  /*--- Some recommended defaults for the various ParMETIS options. ---*/
-
-  idx_t wgtflag = 2;
-  idx_t numflag = 0;
-  idx_t ncon    = 1;
-  real_t ubvec  = 1.0 + config->GetParMETIS_Tolerance();
-  idx_t nparts  = size;
-  idx_t options[METIS_NOPTIONS];
-  METIS_SetDefaultOptions(options);
-  options[1] = 0;
-
-  /*--- Fill the necessary ParMETIS input data arrays. ---*/
-
-  vector<real_t> tpwgts(size, 1.0/size);
-
-  vector<idx_t> vtxdist(size+1);
-  vtxdist[0] = 0;
-  for (int i = 0; i < size; i++) {
-    vtxdist[i+1] = pointPartitioner.GetLastIndexOnRank(i);
-  }
-
-  /*--- For most FVM-type operations the amount of work is proportional to the
-   * number of edges, for a few however it is proportional to the number of points.
-   * Therefore, for (static) load balancing we consider a weighted function of points
-   * and number of edges (or neighbors) per point, giving more importance to the latter
-   * skews the partitioner towards evenly distributing the total number of edges. ---*/
-
-  const auto wp = config->GetParMETIS_PointWeight();
-  const auto we = config->GetParMETIS_EdgeWeight();
-
-  vector<idx_t> vwgt(nPoint);
-  for (unsigned long iPoint = 0; iPoint < nPoint; ++iPoint) {
-    vwgt[iPoint] = wp + we * (xadj[iPoint+1] - xadj[iPoint]);
-  }
-
-  /*--- Create some structures that ParMETIS needs to output the partitioning. ---*/
-
-  idx_t edgecut;
-  vector<idx_t> part(nPoint);
-
-  /*--- Calling ParMETIS ---*/
-
-  if (rank == MASTER_NODE) cout << "Calling ParMETIS...";
-  auto err = ParMETIS_V3_PartKway(vtxdist.data(), xadj.data(), adjacency.data(), vwgt.data(),
-                                  nullptr, &wgtflag, &numflag, &ncon, &nparts, tpwgts.data(),
-                                  &ubvec, options, &edgecut, part.data(), &comm);
-  if (err != METIS_OK) SU2_MPI::Error("Partitioning failed.", CURRENT_FUNCTION);
-  if (rank == MASTER_NODE) {
-    cout << " graph partitioning complete (" << edgecut << " edge cuts)." << endl;
-  }
-
-  /*--- Store the results of the partitioning (note that this is local
-   since each processor is calling ParMETIS in parallel and storing the
-   results for its initial piece of the grid. ---*/
-
-  for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++) {
-    nodes->SetColor(iPoint, part[iPoint]);
-  }
-
-  /*--- Force free the connectivity. ---*/
-
-  decltype(xadj)().swap(xadj);
-  decltype(adjacency)().swap(adjacency);
-
-#endif
-}
-
 void CPhysicalGeometry::ComputeMeshQualityStatistics(const CConfig *config) {
 
   /*--- Resize our vectors for the 3 metrics: orthogonality, aspect
@@ -6851,8 +6461,6 @@ void CPhysicalGeometry::SetSensitivity(CConfig *config) {
     passivedouble Restart_Meta_Passive[8] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
     su2double Restart_Meta[8] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 
-#ifndef HAVE_MPI
-
     /*--- Serial binary input. ---*/
 
     FILE *fhw;
@@ -6934,175 +6542,6 @@ void CPhysicalGeometry::SetSensitivity(CConfig *config) {
 
     fclose(fhw);
 
-#else
-
-    /*--- Parallel binary input using MPI I/O. ---*/
-
-    MPI_File fhw;
-    SU2_MPI::Status status;
-    MPI_Datatype etype, filetype;
-    MPI_Offset disp;
-    unsigned long iPoint_Global, iChar;
-    string field_buf;
-
-    int ierr;
-
-    /*--- All ranks open the file using MPI. ---*/
-
-    ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
-
-    /*--- Error check opening the file. ---*/
-
-    if (ierr) {
-      SU2_MPI::Error(string("Unable to open SU2 restart file ") + string(fname), CURRENT_FUNCTION);
-    }
-
-    /*--- First, read the number of variables and points (i.e., cols and rows),
-     which we will need in order to read the file later. Also, read the
-     variable string names here. Only the master rank reads the header. ---*/
-
-    if (rank == MASTER_NODE)
-      MPI_File_read(fhw, Restart_Vars, nRestart_Vars, MPI_INT, MPI_STATUS_IGNORE);
-
-    /*--- Broadcast the number of variables to all procs and store clearly. ---*/
-
-    SU2_MPI::Bcast(Restart_Vars, nRestart_Vars, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
-
-    /*--- Check that this is an SU2 binary file. SU2 binary files
-     have the hex representation of "SU2" as the first int in the file. ---*/
-
-    if (Restart_Vars[0] != 535532) {
-
-      SU2_MPI::Error(string("File ") + string(fname) + string(" is not a binary SU2 restart file.\n") +
-                     string("SU2 reads/writes binary restart files by default.\n") +
-                     string("Note that backward compatibility for ASCII restart files is\n") +
-                     string("possible with the READ_BINARY_RESTART option."), CURRENT_FUNCTION);
-    }
-
-    /*--- Store the number of fields for simplicity. ---*/
-
-    nFields = Restart_Vars[1];
-
-    /*--- Read the variable names from the file. Note that we are adopting a
-     fixed length of 33 for the string length to match with CGNS. This is
-     needed for when we read the strings later. ---*/
-
-    char *mpi_str_buf = new char[nFields*CGNS_STRING_SIZE];
-    if (rank == MASTER_NODE) {
-      disp = nRestart_Vars*sizeof(int);
-      MPI_File_read_at(fhw, disp, mpi_str_buf, nFields*CGNS_STRING_SIZE,
-                       MPI_CHAR, MPI_STATUS_IGNORE);
-    }
-
-    /*--- Broadcast the string names of the variables. ---*/
-
-    SU2_MPI::Bcast(mpi_str_buf, nFields*CGNS_STRING_SIZE, MPI_CHAR,
-                   MASTER_NODE, SU2_MPI::GetComm());
-
-    /*--- Now parse the string names and load into the config class in case
-     we need them for writing visualization files (SU2_SOL). ---*/
-
-    config->fields.push_back("Point_ID");
-    for (iVar = 0; iVar < nFields; iVar++) {
-      index = iVar*CGNS_STRING_SIZE;
-      for (iChar = 0; iChar < (unsigned long)CGNS_STRING_SIZE; iChar++) {
-        str_buf[iChar] = mpi_str_buf[index + iChar];
-      }
-      field_buf.append(str_buf);
-      config->fields.push_back(field_buf.c_str());
-      field_buf.clear();
-    }
-
-    /*--- Free string buffer memory. ---*/
-
-    delete [] mpi_str_buf;
-
-    /*--- We're writing only su2doubles in the data portion of the file. ---*/
-
-    etype = MPI_DOUBLE;
-
-    /*--- We need to ignore the 4 ints describing the nVar_Restart and nPoints,
-     along with the string names of the variables. ---*/
-
-    disp = nRestart_Vars*sizeof(int) + CGNS_STRING_SIZE*nFields*sizeof(char);
-
-    /*--- Define a derived datatype for this rank's set of non-contiguous data
-     that will be placed in the restart. Here, we are collecting each one of the
-     points which are distributed throughout the file in blocks of nVar_Restart data. ---*/
-
-    int *blocklen = new int[GetnPointDomain()];
-    MPI_Aint *displace = new MPI_Aint[GetnPointDomain()];
-
-    counter = 0;
-    for (iPoint_Global = 0; iPoint_Global < GetGlobal_nPointDomain(); iPoint_Global++ ) {
-      if (GetGlobal_to_Local_Point(iPoint_Global) > -1) {
-        blocklen[counter] = nFields;
-        displace[counter] = iPoint_Global*nFields*sizeof(passivedouble);
-        counter++;
-      }
-    }
-    MPI_Type_create_hindexed(GetnPointDomain(), blocklen, displace, MPI_DOUBLE, &filetype);
-    MPI_Type_commit(&filetype);
-
-    /*--- Set the view for the MPI file write, i.e., describe the location in
-     the file that this rank "sees" for writing its piece of the restart file. ---*/
-
-    MPI_File_set_view(fhw, disp, etype, filetype, (char*)"native", MPI_INFO_NULL);
-
-    /*--- For now, create a temp 1D buffer to read the data from file. ---*/
-
-    Restart_Data = new passivedouble[nFields*GetnPointDomain()];
-
-    /*--- Collective call for all ranks to read from their view simultaneously. ---*/
-
-    MPI_File_read_all(fhw, Restart_Data, nFields*GetnPointDomain(), MPI_DOUBLE, &status);
-
-    /*--- Free the derived datatype. ---*/
-
-    MPI_Type_free(&filetype);
-
-    /*--- Reset the file view before writing the metadata. ---*/
-
-    MPI_File_set_view(fhw, 0, MPI_BYTE, MPI_BYTE, (char*)"native", MPI_INFO_NULL);
-
-    /*--- Access the metadata. ---*/
-
-    if (rank == MASTER_NODE) {
-
-      /*--- External iteration. ---*/
-      disp = (nRestart_Vars*sizeof(int) + nFields*CGNS_STRING_SIZE*sizeof(char) +
-              nFields*Restart_Vars[2]*sizeof(passivedouble));
-      MPI_File_read_at(fhw, disp, &Restart_Iter, 1, MPI_INT, MPI_STATUS_IGNORE);
-
-      /*--- Additional doubles for AoA, AoS, etc. ---*/
-
-      disp = (nRestart_Vars*sizeof(int) + nFields*CGNS_STRING_SIZE*sizeof(char) +
-              nFields*Restart_Vars[2]*sizeof(passivedouble) + 1*sizeof(int));
-      MPI_File_read_at(fhw, disp, Restart_Meta_Passive, 8, MPI_DOUBLE, MPI_STATUS_IGNORE);
-
-    }
-
-    /*--- Communicate metadata. ---*/
-
-    SU2_MPI::Bcast(&Restart_Iter, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
-
-    /*--- Copy to a su2double structure (because of the SU2_MPI::Bcast
-              doesn't work with passive data)---*/
-
-    for (unsigned short iVar = 0; iVar < 8; iVar++)
-      Restart_Meta[iVar] = Restart_Meta_Passive[iVar];
-
-    SU2_MPI::Bcast(Restart_Meta, 8, MPI_DOUBLE, MASTER_NODE, SU2_MPI::GetComm());
-
-    /*--- All ranks close the file after writing. ---*/
-
-    MPI_File_close(&fhw);
-
-    delete [] blocklen;
-    delete [] displace;
-
-#endif
-
     std::vector<string>::iterator itx = std::find(config->fields.begin(), config->fields.end(), "Sensitivity_x");
     std::vector<string>::iterator ity = std::find(config->fields.begin(), config->fields.end(), "Sensitivity_y");
     std::vector<string>::iterator itz = std::find(config->fields.begin(), config->fields.end(), "Sensitivity_z");
@@ -7168,8 +6607,6 @@ void CPhysicalGeometry::SetSensitivity(CConfig *config) {
     strcpy(fname, filename.c_str());
     int magic_number;
 
-#ifndef HAVE_MPI
-
     /*--- Serial binary input. ---*/
 
     FILE *fhw;
@@ -7201,46 +6638,6 @@ void CPhysicalGeometry::SetSensitivity(CConfig *config) {
 
     fclose(fhw);
 
-#else
-
-    /*--- Parallel binary input using MPI I/O. ---*/
-
-    MPI_File fhw;
-    int ierr;
-
-    /*--- All ranks open the file using MPI. ---*/
-
-    ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
-
-    /*--- Error check opening the file. ---*/
-
-    if (ierr) {
-      SU2_MPI::Error(string("Unable to open SU2 restart file ") + string(fname), CURRENT_FUNCTION);
-    }
-
-    /*--- Have the master attempt to read the magic number. ---*/
-
-    if (rank == MASTER_NODE)
-      MPI_File_read(fhw, &magic_number, 1, MPI_INT, MPI_STATUS_IGNORE);
-
-    /*--- Broadcast the number of variables to all procs and store clearly. ---*/
-
-    SU2_MPI::Bcast(&magic_number, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
-
-    /*--- Check that this is an SU2 binary file. SU2 binary files
-     have the hex representation of "SU2" as the first int in the file. ---*/
-
-    if (magic_number == 535532) {
-
-      SU2_MPI::Error(string("File ") + string(fname) + string(" is a binary SU2 restart file, expected ASCII.\n") +
-                     string("SU2 reads/writes binary restart files by default.\n") +
-                     string("Note that backward compatibility for ASCII restart files is\n") +
-                     string("possible with the READ_BINARY_RESTART option."), CURRENT_FUNCTION);
-    }
-
-    MPI_File_close(&fhw);
-
-#endif
 
   restart_file.open(filename.data(), ios::in);
   if (restart_file.fail()) {

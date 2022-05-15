@@ -27,11 +27,6 @@
 
 #include "../include/SU2_CFD.hpp"
 
-/* LIBXSMM include files, if supported. */
-#ifdef HAVE_LIBXSMM
-#include "libxsmm.h"
-#endif
-
 /* Include file, needed for the runtime NaN catching. You also have to include feenableexcept(...) below. */
 //#include <fenv.h>
 
@@ -56,30 +51,13 @@ int main(int argc, char *argv[]) {
 
   CLI11_PARSE(app, argc, argv)
 
-  /*--- OpenMP initialization ---*/
-
-  omp_initialize();
-
-  omp_set_num_threads(num_threads);
-
   /*--- MPI initialization, and buffer setting ---*/
 
-#if defined(HAVE_OMP) && defined(HAVE_MPI)
-  int required = use_thread_mult? MPI_THREAD_MULTIPLE : MPI_THREAD_FUNNELED;
-  int provided;
-  SU2_MPI::Init_thread(&argc, &argv, required, &provided);
-#else
   SU2_MPI::Init(&argc, &argv);
-#endif
   SU2_MPI::Comm MPICommunicator = SU2_MPI::GetComm();
 
   /*--- Uncomment the following line if runtime NaN catching is desired. ---*/
   // feenableexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO );
-
-  /*--- Initialize libxsmm, if supported. ---*/
-#ifdef HAVE_LIBXSMM
-  libxsmm_init();
-#endif
 
   /*--- Create a pointer to the main SU2 Driver ---*/
 
@@ -127,16 +105,8 @@ int main(int argc, char *argv[]) {
 
   delete driver;
 
-  /*---Finalize libxsmm, if supported. ---*/
-#ifdef HAVE_LIBXSMM
-  libxsmm_finalize();
-#endif
-
   /*--- Finalize MPI parallelization. ---*/
   SU2_MPI::Finalize();
-
-  /*--- Finalize OpenMP. ---*/
-  omp_finalize();
 
   return EXIT_SUCCESS;
 
