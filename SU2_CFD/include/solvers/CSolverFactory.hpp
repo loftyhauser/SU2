@@ -74,18 +74,6 @@ private:
   static std::map<const CSolver*, SolverMetaData> allocatedSolvers;
 
   /*!
-   * \brief Create a turbulent solver
-   * \param[in] kindTurbModel - Kind of turbulent solver
-   * \param[in] solver        - The solver container (used to call preprocessing of the flow solver)
-   * \param[in] geometry      - The geometry definition
-   * \param[in] config        - The configuration
-   * \param[in] iMGLevel      - The multigrid level
-   * \param[in] adjoint       - Boolean indicating whether a primal or adjoint solver should be allocated
-   * \return                  - A pointer to the allocated turbulent solver
-   */
-  static CSolver* CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **solver, CGeometry *geometry, CConfig *config, int iMGLevel, int adjoint);
-
-  /*!
    * \brief Create a flow solver
    * \param[in] kindFlowSolver - Kind of flow solver
    * \param[in] solver         - The solver container

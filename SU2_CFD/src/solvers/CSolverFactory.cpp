@@ -28,10 +28,6 @@
 #include "../../include/solvers/CSolver.hpp"
 #include "../../include/solvers/CSolverFactory.hpp"
 #include "../../include/solvers/CEulerSolver.hpp"
-#include "../../include/solvers/CNSSolver.hpp"
-#include "../../include/solvers/CTurbSASolver.hpp"
-#include "../../include/solvers/CTurbSSTSolver.hpp"
-#include "../../include/solvers/CTransLMSolver.hpp"
 #include "../../include/solvers/CTemplateSolver.hpp"
 #include "../../include/solvers/CBaselineSolver.hpp"
 
@@ -97,17 +93,11 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
 
   CSolver *genericSolver = nullptr;
 
-  TURB_MODEL kindTurbModel = config->GetKind_Turb_Model();
-
   SolverMetaData metaData;
 
   metaData.solverType = kindSolver;
 
   switch (kindSolver) {
-    case SUB_SOLVER_TYPE::DISC_ADJ_TURB:
-      genericSolver = CreateTurbSolver(kindTurbModel, solver, geometry, config, iMGLevel, true);
-      metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
-      break;
     case SUB_SOLVER_TYPE::BASELINE:
       genericSolver = new CBaselineSolver(geometry, config);
       metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
@@ -119,16 +109,6 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
         metaData.integrationType = INTEGRATION_TYPE::MULTIGRID;
       else
         metaData.integrationType = INTEGRATION_TYPE::NEWTON;
-      break;
-    case SUB_SOLVER_TYPE::TRANSITION:
-      genericSolver = new CTransLMSolver(geometry, config, iMGLevel);
-      metaData.integrationType = INTEGRATION_TYPE::SINGLEGRID;
-      break;
-    case SUB_SOLVER_TYPE::TURB:
-    case SUB_SOLVER_TYPE::TURB_SA:
-    case SUB_SOLVER_TYPE::TURB_SST:
-      genericSolver = CreateTurbSolver(kindTurbModel, solver, geometry, config, iMGLevel, false);
-      metaData.integrationType = INTEGRATION_TYPE::SINGLEGRID;
       break;
     case SUB_SOLVER_TYPE::TEMPLATE:
       genericSolver = new CTemplateSolver(geometry, config);
@@ -146,32 +126,6 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
 
 }
 
-CSolver* CSolverFactory::CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **solver, CGeometry *geometry, CConfig *config, int iMGLevel, int adjoint){
-
-  CSolver *turbSolver = nullptr;
-
-  if (!adjoint){
-    switch (TurbModelFamily(kindTurbModel)) {
-      case TURB_FAMILY::SA:
-        turbSolver = new CTurbSASolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
-        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-        turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
-        break;
-      case TURB_FAMILY::KW:
-        turbSolver = new CTurbSSTSolver(geometry, config, iMGLevel);
-        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-        turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
-        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-        break;
-      case TURB_FAMILY::NONE:
-        SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=NONE.", CURRENT_FUNCTION);
-        break;
-    }
-  }
-
-  return turbSolver;
-}
-
 CSolver* CSolverFactory::CreateFlowSolver(SUB_SOLVER_TYPE kindFlowSolver, CSolver **solver,  CGeometry *geometry, CConfig *config, int iMGLevel){
 
   CSolver *flowSolver = nullptr;
@@ -180,9 +134,6 @@ CSolver* CSolverFactory::CreateFlowSolver(SUB_SOLVER_TYPE kindFlowSolver, CSolve
     case SUB_SOLVER_TYPE::EULER:
       flowSolver = new CEulerSolver(geometry, config, iMGLevel);
       flowSolver->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-      break;
-    case SUB_SOLVER_TYPE::NAVIER_STOKES:
-      flowSolver = new CNSSolver(geometry, config, iMGLevel);
       break;
     default:
       SU2_MPI::Error("Flow solver not found", CURRENT_FUNCTION);

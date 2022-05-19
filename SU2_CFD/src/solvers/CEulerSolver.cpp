@@ -26,15 +26,13 @@
  */
 
 #include "../../include/solvers/CEulerSolver.hpp"
-#include "../../include/variables/CNSVariable.hpp"
 #include "../../../Common/include/toolboxes/geometry_toolbox.hpp"
 #include "../../../Common/include/toolboxes/printing_toolbox.hpp"
 #include "../../include/fluid/CIdealGas.hpp"
 #include "../../include/fluid/CVanDerWaalsGas.hpp"
 #include "../../include/fluid/CPengRobinson.hpp"
 #include "../../include/numerics_simd/CNumericsSIMD.hpp"
-#include "../../include/limiters/CLimiterDetails.hpp"
-
+#include "../../include/solvers/CFVMFlowSolverBase.inl"
 
 CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config,
                            unsigned short iMesh, const bool navier_stokes) :
@@ -262,11 +260,7 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config,
 
   /*--- Initialize the solution to the far-field state everywhere. ---*/
 
-  if (navier_stokes) {
-    nodes = new CNSVariable(Density_Inf, Velocity_Inf, Energy_Inf, nPoint, nDim, nVar, config);
-  } else {
-    nodes = new CEulerVariable(Density_Inf, Velocity_Inf, Energy_Inf, nPoint, nDim, nVar, config);
-  }
+  nodes = new CEulerVariable(Density_Inf, Velocity_Inf, Energy_Inf, nPoint, nDim, nVar, config);
   SetBaseClassPointerToNodes();
 
   /*--- Check that the initial solution is physical, report any non-physical nodes ---*/

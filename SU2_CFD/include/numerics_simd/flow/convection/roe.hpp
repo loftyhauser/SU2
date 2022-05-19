@@ -240,7 +240,6 @@ public:
 
     /*--- Dissipation terms. ---*/
 
-    Double dissipation = roeDissipation(iPoint, jPoint, typeDissip, solution);
 
     for (size_t iVar = 0; iVar < nVar; ++iVar) {
       for (size_t jVar = 0; jVar < nVar; ++jVar) {
@@ -251,7 +250,7 @@ public:
           projModJacTensor += pMat(iVar,kVar) * lambda(kVar) * pMatInv(kVar,jVar);
         }
 
-        Double dDdU = projModJacTensor * (1-kappa) * area * dissipation;
+        Double dDdU = projModJacTensor * (1-kappa) * area;
 
         /*--- Update flux and Jacobians. ---*/
 

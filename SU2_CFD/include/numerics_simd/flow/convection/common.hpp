@@ -30,7 +30,6 @@
 #include "../../CNumericsSIMD.hpp"
 #include "../../util.hpp"
 #include "../variables.hpp"
-#include "../../../variables/CNSVariable.hpp"
 
 /*!
  * \brief Unlimited reconstruction.
@@ -315,58 +314,6 @@ FORCEINLINE MatrixDbl<nDim+2> inviscidProjJac(Double gamma, RandomAccessIterator
   jac(nDim+1,nDim+1) = scale * gamma * projVel;
 
   return jac;
-}
-
-/*!
- * \brief (Low) Dissipation coefficient for Roe schemes.
- */
-template<class VariableType>
-FORCEINLINE Double roeDissipation(Int iPoint,
-                                  Int jPoint,
-                                  ENUM_ROELOWDISS type,
-                                  const VariableType& solution) {
-  if (type == NO_ROELOWDISS) {
-    return 1.0;
-  }
-
-  const auto& sol = static_cast<const CNSVariable&>(solution);
-  const auto& sensor = sol.GetSensor();
-  const auto& dissip = sol.GetRoe_Dissipation();
-
-  const Double si = gatherVariables(iPoint, sensor);
-  const Double sj = gatherVariables(jPoint, sensor);
-  const Double avgSensor = 0.5 * (si + sj);
-
-  const Double di = gatherVariables(iPoint, dissip);
-  const Double dj = gatherVariables(jPoint, dissip);
-  const Double avgDissip = 0.5 * (di + dj);
-
-  /*--- A minimum level of upwinding is used to enhance stability. ---*/
-  constexpr passivedouble minDissip = 0.05;
-
-  switch (type) {
-    case FD:
-    case FD_DUCROS: {
-      Double d = max(minDissip, 1.0 - avgDissip);
-
-      if (type == FD_DUCROS) {
-        /*--- See Jonhsen et al. JCP 229 (2010) pag. 1234 ---*/
-        d = max(d, 0.05 + 0.95*(avgSensor > 0.65));
-      }
-      return d;
-    }
-    case NTS:
-      return max(minDissip, avgDissip);
-
-    case NTS_DUCROS:
-      /*--- See Xiao et al. INT J HEAT FLUID FL 51 (2015) pag. 141
-       * https://doi.org/10.1016/j.ijheatfluidflow.2014.10.007 ---*/
-      return max(minDissip, avgSensor+avgDissip - avgSensor*avgDissip);
-
-    default:
-      assert(false);
-      return 1.0;
-  }
 }
 
 /*!
