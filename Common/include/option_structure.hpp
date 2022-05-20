@@ -227,30 +227,12 @@ static const MapType<std::string, AVERAGE_TYPE> Average_Map = {
 enum class MAIN_SOLVER {
   NONE,                        /*!< \brief Definition of no solver. */
   EULER,                       /*!< \brief Definition of the Euler's solver. */
-  NAVIER_STOKES,               /*!< \brief Definition of the Navier-Stokes' solver. */
-  RANS,                        /*!< \brief Definition of the Reynolds-averaged Navier-Stokes' (RANS) solver. */
-  ADJ_EULER,                   /*!< \brief Definition of the continuous adjoint Euler's solver. */
-  ADJ_NAVIER_STOKES,           /*!< \brief Definition of the continuous adjoint Navier-Stokes' solver. */
-  ADJ_RANS,                    /*!< \brief Definition of the continuous adjoint Reynolds-averaged Navier-Stokes' (RANS) solver. */
   TEMPLATE_SOLVER,             /*!< \brief Definition of template solver. */
-  DISC_ADJ_EULER,              /*!< \brief Definition of the discrete adjoint Euler solver. */
-  DISC_ADJ_RANS,               /*!< \brief Definition of the discrete adjoint Reynolds-averaged Navier-Stokes' (RANS) solver. */
-  DISC_ADJ_NAVIER_STOKES,      /*!< \brief Definition of the discrete adjoint Navier-Stokes' solver. */
-  MULTIPHYSICS,
 };
 static const MapType<std::string, MAIN_SOLVER> Solver_Map = {
   MakePair("NONE", MAIN_SOLVER::NONE)
   MakePair("EULER", MAIN_SOLVER::EULER)
-  MakePair("NAVIER_STOKES", MAIN_SOLVER::NAVIER_STOKES)
-  MakePair("RANS", MAIN_SOLVER::RANS)
-  MakePair("ADJ_EULER", MAIN_SOLVER::ADJ_EULER)
-  MakePair("ADJ_NAVIER_STOKES", MAIN_SOLVER::ADJ_NAVIER_STOKES)
-  MakePair("ADJ_RANS", MAIN_SOLVER::ADJ_RANS )
-  MakePair("DISC_ADJ_EULER", MAIN_SOLVER::DISC_ADJ_EULER)
-  MakePair("DISC_ADJ_RANS", MAIN_SOLVER::DISC_ADJ_RANS)
-  MakePair("DISC_ADJ_NAVIERSTOKES", MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES)
   MakePair("TEMPLATE_SOLVER", MAIN_SOLVER::TEMPLATE_SOLVER)
-  MakePair("MULTIPHYSICS", MAIN_SOLVER::MULTIPHYSICS)
 };
 
 /*!

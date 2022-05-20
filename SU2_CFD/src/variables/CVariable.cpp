@@ -116,14 +116,3 @@ void CVariable::Restore_BGSSolution_k() {
 
 void CVariable::SetExternalZero() { parallelSet(External.size(), 0.0, External.data()); }
 
-void CVariable::RegisterSolution(bool input) {
-  RegisterContainer(input, Solution, input? AD_InputIndex : AD_OutputIndex);
-}
-
-void CVariable::RegisterSolution_time_n() {
-  RegisterContainer(true, Solution_time_n);
-}
-
-void CVariable::RegisterSolution_time_n1() {
-  RegisterContainer(true, Solution_time_n1);
-}

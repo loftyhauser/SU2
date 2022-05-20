@@ -3261,8 +3261,7 @@ public:
    */
   bool GetFluidProblem(void) const {
     switch (Kind_Solver) {
-      case MAIN_SOLVER::EULER : case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::RANS:
-      case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
+      case MAIN_SOLVER::EULER :
         return true;
       default:
         return false;

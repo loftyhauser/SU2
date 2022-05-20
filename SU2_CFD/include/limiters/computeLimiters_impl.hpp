@@ -90,9 +90,6 @@ void computeLimiters_impl(CSolver* solver,
                         (kindPeriodicComm1 != PERIODIC_NONE) &&
                         (config.GetnMarker_Periodic() > 0);
 
-  /*--- If limiters are frozen do not record the computation ---*/
-  bool wasActive = false;
-
   CLimiterDetails<LimiterKind> limiterDetails;
 
   limiterDetails.preprocess(geometry, config, varBegin, varEnd, field);

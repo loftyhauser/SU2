@@ -124,11 +124,6 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
 
   /*--- Before we proceed with the zone loop we have to compute the wall distances.
      * This computation depends on all zones at once. ---*/
-  if (rank == MASTER_NODE)
-    cout << "Computing wall distances." << endl;
-
-  CGeometry::ComputeWallDistance(config_container, geometry_container);
-
   for (iZone = 0; iZone < nZone; iZone++) {
 
     for (iInst = 0; iInst < nInst[iZone]; iInst++){
@@ -170,11 +165,6 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
 
     }
 
-  }
-
-  /*! --- Compute the wall distance again to correctly compute the derivatives if we are running direct diff mode --- */
-  if (driver_config->GetDirectDiff() == D_DESIGN){
-    CGeometry::ComputeWallDistance(config_container, geometry_container);
   }
 
   PythonInterface_Preprocessing(config_container, geometry_container, solver_container);
@@ -846,8 +836,7 @@ void CDriver::Solver_Restart(CSolver ***solver, CGeometry **geometry,
   /*--- Restart adjoint solvers. ---*/
 
   if (restart) {
-    if ((config->GetKind_Solver() == MAIN_SOLVER::TEMPLATE_SOLVER) ||
-        (config->GetKind_Solver() == MAIN_SOLVER::ADJ_RANS && !config->GetFrozen_Visc_Cont())) {
+    if ((config->GetKind_Solver() == MAIN_SOLVER::TEMPLATE_SOLVER) && !config->GetFrozen_Visc_Cont()) {
       SU2_MPI::Error("A restart capability has not been implemented yet for this solver.\n"
                      "Please set RESTART_SOL= NO and try again.", CURRENT_FUNCTION);
     }
@@ -1024,9 +1013,7 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   nVar_Template         = 0,
   nVar_Flow             = 0,
   nVar_Trans            = 0,
-  nVar_Turb             = 0,
-  nVar_Adj_Flow         = 0,
-  nVar_Adj_Turb         = 0;
+  nVar_Turb             = 0;
 
   numerics = new CNumerics***[config->GetnMGLevels()+1] ();
 
@@ -1047,28 +1034,7 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
       template_solver = true; break;
 
     case MAIN_SOLVER::EULER:
-    case MAIN_SOLVER::DISC_ADJ_EULER:
       euler = compressible = true; break;
-
-    case MAIN_SOLVER::NAVIER_STOKES:
-    case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:
-      ns = compressible = true; break;
-
-    case MAIN_SOLVER::RANS:
-    case MAIN_SOLVER::DISC_ADJ_RANS:
-      ns = compressible = turbulent = true;
-      transition = (config->GetKind_Trans_Model() == TURB_TRANS_MODEL::LM); break;
-
-    case MAIN_SOLVER::ADJ_EULER:
-      adj_euler = euler = compressible = true; break;
-
-    case MAIN_SOLVER::ADJ_NAVIER_STOKES:
-      adj_ns = ns = compressible = true;
-      turbulent = (config->GetKind_Turb_Model() != TURB_MODEL::NONE); break;
-
-    case MAIN_SOLVER::ADJ_RANS:
-      adj_ns = ns = compressible = turbulent = true;
-      adj_turb = !config->GetFrozen_Visc_Cont(); break;
 
     default:
       break;
@@ -1085,12 +1051,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   if (ns)           nVar_Flow = solver[MESH_0][FLOW_SOL]->GetnVar();
   if (turbulent)    nVar_Turb = solver[MESH_0][TURB_SOL]->GetnVar();
   if (transition)   nVar_Trans = solver[MESH_0][TRANS_SOL]->GetnVar();
-
-  /*--- Number of variables for adjoint problem ---*/
-
-  if (adj_euler)    nVar_Adj_Flow = solver[MESH_0][ADJFLOW_SOL]->GetnVar();
-  if (adj_ns)       nVar_Adj_Flow = solver[MESH_0][ADJFLOW_SOL]->GetnVar();
-  if (adj_turb)     nVar_Adj_Turb = solver[MESH_0][ADJTURB_SOL]->GetnVar();
 
   /*--- Definition of the Class for the numerical method:
     numerics_container[INSTANCE_LEVEL][MESH_LEVEL][EQUATION][EQ_TERM] ---*/
@@ -1582,7 +1542,7 @@ void CFluidDriver::Preprocess(unsigned long Iter) {
 
 void CFluidDriver::Run() {
 
-  unsigned short iZone, jZone, checkConvergence;
+  unsigned short iZone, checkConvergence;
   unsigned long IntIter, nIntIter;
   bool unsteady;
 
@@ -1658,11 +1618,8 @@ bool CFluidDriver::Monitor(unsigned long ExtIter) {
    convergence criteria, and set StopCalc to true, if so. ---*/
 
   switch (config_container[ZONE_0]->GetKind_Solver()) {
-    case MAIN_SOLVER::EULER: case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::RANS:
+    case MAIN_SOLVER::EULER: 
       StopCalc = integration_container[ZONE_0][INST_0][FLOW_SOL]->GetConvergence(); break;
-    case MAIN_SOLVER::ADJ_EULER: case MAIN_SOLVER::ADJ_NAVIER_STOKES: case MAIN_SOLVER::ADJ_RANS:
-    case MAIN_SOLVER::DISC_ADJ_EULER: case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES: case MAIN_SOLVER::DISC_ADJ_RANS:
-      StopCalc = integration_container[ZONE_0][INST_0][ADJFLOW_SOL]->GetConvergence(); break;
     default:
       break;
   }

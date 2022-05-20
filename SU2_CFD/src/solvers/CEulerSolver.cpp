@@ -1534,7 +1534,6 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
 
   /*--- For hybrid parallel AD, pause preaccumulation if there is shared reading of
   * variables, otherwise switch to the faster adjoint evaluation mode. ---*/
-  bool pausePreacc = false;
 
   /*--- Loop over edge colors. ---*/
   for (auto color : EdgeColoring)
@@ -1811,7 +1810,6 @@ void CEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_contain
   /*--- Pick one numerics object per thread. ---*/
   CNumerics* numerics = numerics_container[SOURCE_FIRST_TERM + omp_get_thread_num()*MAX_TERMS];
 
-  unsigned short iVar;
   unsigned long iPoint;
 
   if (body_force) {
@@ -3993,7 +3991,6 @@ void CEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_container,
   unsigned short iDim;
   unsigned long iVertex, iPoint, Point_Normal;
 
-  su2double *GridVel;
   su2double Area, UnitNormal[MAXNDIM] = {0.0};
   su2double Density, Pressure, Energy,  Velocity[MAXNDIM] = {0.0};
   su2double Density_Bound, Pressure_Bound, Vel_Bound[MAXNDIM] = {0.0};
@@ -4246,7 +4243,7 @@ void CEulerSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container,
   su2double *Velocity_i, Velocity2_i, Enthalpy_i, Energy_i, StaticEnergy_i, Density_i, Kappa_i, Chi_i, Pressure_i, SoundSpeed_i;
   su2double ProjVelocity_i;
   su2double **P_Tensor, **invP_Tensor, *Lambda_i, **Jacobian_b, **Jacobian_i, **DubDu, *dw, *u_e, *u_i, *u_b;
-  su2double *gridVel, *Residual;
+  su2double *Residual;
   su2double *V_boundary, *V_domain, *S_boundary, *S_domain;
 
   bool implicit             = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);

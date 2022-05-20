@@ -96,7 +96,7 @@ CNumerics::ResidualType<> CUpwRoeBase_Flow::ComputeResidual(const CConfig* confi
   implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
 
   unsigned short iVar, jVar, iDim;
-  su2double ProjGridVel = 0.0, Energy_i, Energy_j;
+  su2double Energy_i, Energy_j;
 
   /*--- Face area (norm or the normal vector) and unit normal ---*/
 

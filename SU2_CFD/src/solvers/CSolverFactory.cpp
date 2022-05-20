@@ -46,41 +46,6 @@ CSolver** CSolverFactory::CreateSolverContainer(MAIN_SOLVER kindMainSolver, CCon
     case MAIN_SOLVER::EULER:
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::EULER, solver, geometry, config, iMGLevel);
       break;
-    case MAIN_SOLVER::NAVIER_STOKES:
-      solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::RANS:
-      solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[TURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::ADJ_EULER:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::EULER, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::CONT_ADJ_EULER, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::ADJ_NAVIER_STOKES:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::CONT_ADJ_NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::ADJ_RANS:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::CONT_ADJ_NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[TURB_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
-      solver[ADJTURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::CONT_ADJ_TURB, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_EULER:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::EULER, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FLOW, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FLOW, solver, geometry, config, iMGLevel);
-      break;
-    case MAIN_SOLVER::DISC_ADJ_RANS:
-      solver[FLOW_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::NAVIER_STOKES, solver, geometry, config, iMGLevel);
-      solver[ADJFLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_FLOW, solver, geometry, config, iMGLevel);
-      solver[TURB_SOL]    = CreateSubSolver(SUB_SOLVER_TYPE::TURB, solver, geometry, config, iMGLevel);
-      solver[ADJTURB_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::DISC_ADJ_TURB, solver, geometry, config, iMGLevel);
-      break;
      default:
       solver = nullptr;
   }
@@ -103,7 +68,6 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
       metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
       break;
     case SUB_SOLVER_TYPE::EULER:
-    case SUB_SOLVER_TYPE::NAVIER_STOKES:
       genericSolver = CreateFlowSolver(kindSolver, solver, geometry, config, iMGLevel);
       if (!config->GetNewtonKrylov() || config->GetDiscrete_Adjoint() || config->GetContinuous_Adjoint())
         metaData.integrationType = INTEGRATION_TYPE::MULTIGRID;

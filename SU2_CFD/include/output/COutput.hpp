@@ -36,7 +36,6 @@
 #include <vector>
 
 #include "../../../Common/include/toolboxes/printing_toolbox.hpp"
-#include "tools/CWindowingTools.hpp"
 #include "../../../Common/include/option_structure.hpp"
 
 class CGeometry;
@@ -155,9 +154,6 @@ protected:
   PrintingToolbox::CTablePrinter* fileWritingTable;     //!< File writing header
   std::string multiZoneHeaderString;                    //!< Multizone header string
   bool headerNeeded;                                    //!< Boolean that stores whether a screen header is needed
-
-  //! Structure to store the value of the running averages
-  map<string, CWindowedAverage> windowedTimeAverages;
 
   //! Structure to store the value initial residuals for relative residual computation
   std::map<string, su2double> initialResiduals;

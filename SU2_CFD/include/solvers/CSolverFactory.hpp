@@ -38,9 +38,6 @@ enum class SUB_SOLVER_TYPE {
   CONT_ADJ_TURB,           /*!< \brief Continuous Adjoint Turbulent solver  */
   BASELINE,                /*!< \brief Baseline solver  */
   TEMPLATE,                /*!< \brief Template solver  */
-  DISC_ADJ_FLOW,           /*!< \brief Discrete adjoint flow solver */
-  DISC_ADJ_TURB,           /*!< \brief Discrete adjoint turbulence solver */
-  DISC_ADJ_HEAT,           /*!< \brief Discrete adjoint heat solver */
   EULER,                   /*!< \brief Compressible Euler solver */
   NAVIER_STOKES,           /*!< \brief Compressible Navier-Stokes solver */
   TRANSITION,              /*!< \brief Transition model solver*/

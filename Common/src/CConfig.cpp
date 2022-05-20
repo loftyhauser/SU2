@@ -2580,60 +2580,8 @@ void CConfig::SetnZone(){
 
   /*--- Just as a clarification --- */
 
-  if (Multizone_Problem == NO && Kind_Solver != MAIN_SOLVER::MULTIPHYSICS){
+  if (Multizone_Problem == NO){
     nZone = 1;
-  }
-
-  if (Kind_Solver == MAIN_SOLVER::MULTIPHYSICS){
-    Multizone_Problem = YES;
-    if (nConfig_Files == 0){
-      SU2_MPI::Error("CONFIG_LIST must be provided if PHYSICAL_PROBLEM=MULTIPHYSICS", CURRENT_FUNCTION);
-    }
-  }
-
-  if (Multizone_Problem == YES){
-
-    /*--- Some basic multizone checks ---*/
-
-    if (nMarker_ZoneInterface % 2 != 0){
-      SU2_MPI::Error("Number of markers in MARKER_ZONE_INTERFACE must be a multiple of 2", CURRENT_FUNCTION);
-    }
-
-    SinglezoneDriver  = NO;
-
-    if (Multizone_Mesh){
-
-      /*--- Get the number of zones from the mesh file --- */
-
-      nZone = GetnZone(Mesh_FileName, Mesh_FileFormat);
-
-      /*--- If config list is set, make sure number matches number of zones in mesh file --- */
-
-      if (nConfig_Files != 0 && (nZone != nConfig_Files)){
-        SU2_MPI::Error("Number of CONFIG_LIST must match number of zones in mesh file.", CURRENT_FUNCTION);
-      }
-    } else {
-
-      /*--- Number of zones is determined from the number of config files provided --- */
-
-      if (nConfig_Files == 0){
-        SU2_MPI::Error("If MULTIZONE_MESH is set to YES, you must provide a list of config files using CONFIG_LIST option", CURRENT_FUNCTION);
-      }
-      nZone = nConfig_Files;
-
-    }
-
-    /*--- Check if subconfig files exist --- */
-
-    if (nConfig_Files != 0){
-      for (unsigned short iConfig = 0; iConfig < nConfig_Files; iConfig++){
-        ifstream f(Config_Filenames[iConfig].c_str());
-        if (!f.good()){
-          SU2_MPI::Error("Config file " + Config_Filenames[iConfig] + " defined in CONFIG_FILES does not exist", CURRENT_FUNCTION);
-        }
-      }
-    }
-
   }
 
 }
@@ -2719,13 +2667,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     }
   }
 
-  if (Kind_Solver == MAIN_SOLVER::NAVIER_STOKES && Kind_Turb_Model != TURB_MODEL::NONE){
-    SU2_MPI::Error("KIND_TURB_MODEL must be NONE if SOLVER= NAVIER_STOKES", CURRENT_FUNCTION);
-  }
-  if (Kind_Solver == MAIN_SOLVER::RANS && Kind_Turb_Model == TURB_MODEL::NONE){
-    SU2_MPI::Error("A turbulence model must be specified with KIND_TURB_MODEL if SOLVER= RANS", CURRENT_FUNCTION);
-  }
-
   /*--- Check if turbulence model can be used for AXISYMMETRIC case---*/
   if (Axisymmetric && Kind_Turb_Model != TURB_MODEL::NONE && Kind_Turb_Model != TURB_MODEL::SST && Kind_Turb_Model != TURB_MODEL::SST_SUST){
     SU2_MPI::Error("Axisymmetry is currently only supported for KIND_TURB_MODEL chosen as SST or SST_SUST", CURRENT_FUNCTION);
@@ -2744,13 +2685,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
           (Kind_WallFunctions[iMarker] == WALL_FUNCTIONS::SCALABLE_FUNCTION) ||
           (Kind_WallFunctions[iMarker] == WALL_FUNCTIONS::NONEQUILIBRIUM_MODEL))
         SU2_MPI::Error(string("For RANS problems, use NONE, STANDARD_WALL_FUNCTION or EQUILIBRIUM_WALL_MODEL.\n"), CURRENT_FUNCTION);
-
-      if (Kind_WallFunctions[iMarker] == WALL_FUNCTIONS::STANDARD_FUNCTION) {
-        if (!((Kind_Solver == MAIN_SOLVER::RANS) ))
-          SU2_MPI::Error(string("Wall model STANDARD_FUNCTION only available for RANS or INC_RANS.\n"), CURRENT_FUNCTION);
-        if (nRough_Wall != 0)
-          SU2_MPI::Error(string("Wall model STANDARD_FUNCTION and WALL_ROUGHNESS migh not be compatible. Checking required!\n"), CURRENT_FUNCTION);
-      }
 
     }
   }
@@ -2942,9 +2876,7 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   if ((ContinuousAdjoint && !MG_AdjointFlow) ||
       (TimeMarching == TIME_MARCHING::TIME_STEPPING)) { nMGLevels = 0; }
 
-  if (Kind_Solver == MAIN_SOLVER::EULER ||
-      Kind_Solver == MAIN_SOLVER::NAVIER_STOKES ||
-      Kind_Solver == MAIN_SOLVER::RANS){
+  if (Kind_Solver == MAIN_SOLVER::EULER){
     Kind_Regime = ENUM_REGIME::COMPRESSIBLE;
   }  else {
     Kind_Regime = ENUM_REGIME::NO_FLOW;
@@ -2993,13 +2925,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   if (!ideal_gas) {
     if (Kind_Upwind_Flow != ROE && Kind_Upwind_Flow != HLLC && Kind_Centered_Flow != JST) {
       SU2_MPI::Error("Only ROE Upwind, HLLC Upwind scheme, and JST scheme can be used for Non-Ideal Compressible Fluids", CURRENT_FUNCTION);
-    }
-  }
-
-    /*--- Check for Boundary condition option agreement ---*/
-  if (Kind_InitOption == REYNOLDS){
-    if ((Kind_Solver == MAIN_SOLVER::NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::RANS) && Reynolds <=0){
-      SU2_MPI::Error("Reynolds number required for NAVIER_STOKES and RANS !!", CURRENT_FUNCTION);
     }
   }
 
@@ -3106,10 +3031,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
 
   FinestMesh = MESH_0;
   if (MGCycle == FULLMG_CYCLE) FinestMesh = nMGLevels;
-
-  if ((Kind_Solver == MAIN_SOLVER::NAVIER_STOKES) &&
-      (Kind_Turb_Model != TURB_MODEL::NONE))
-    Kind_Solver = MAIN_SOLVER::RANS;
 
   if (Kind_Solver == MAIN_SOLVER::EULER)
     Kind_Turb_Model = TURB_MODEL::NONE;
@@ -3244,12 +3165,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
 
   if (Restart) MGCycle = V_CYCLE;
 
-  if (ContinuousAdjoint) {
-    if (Kind_Solver == MAIN_SOLVER::EULER) Kind_Solver = MAIN_SOLVER::ADJ_EULER;
-    if (Kind_Solver == MAIN_SOLVER::NAVIER_STOKES) Kind_Solver = MAIN_SOLVER::ADJ_NAVIER_STOKES;
-    if (Kind_Solver == MAIN_SOLVER::RANS) Kind_Solver = MAIN_SOLVER::ADJ_RANS;
-  }
-
   nCFL = nMGLevels+1;
   CFL = new su2double[nCFL];
   CFL[0] = CFLFineGrid;
@@ -3369,13 +3284,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   if ((Kind_SU2 == SU2_COMPONENT::SU2_CFD) && (Kind_Solver == MAIN_SOLVER::NONE)) {
     SU2_MPI::Error("PHYSICAL_PROBLEM must be set in the configuration file", CURRENT_FUNCTION);
   }
-
-  /*--- Set a flag for viscous simulations ---*/
-
-  Viscous = (( Kind_Solver == MAIN_SOLVER::NAVIER_STOKES          ) ||
-             ( Kind_Solver == MAIN_SOLVER::ADJ_NAVIER_STOKES      ) ||
-             ( Kind_Solver == MAIN_SOLVER::RANS                   ) ||
-             ( Kind_Solver == MAIN_SOLVER::ADJ_RANS               ));
 
   /*--- To avoid boundary intersections, let's add a small constant to the planes. ---*/
 
@@ -3499,12 +3407,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   /* --- Set Finite Difference mode to false by default --- */
 
   Finite_Difference_Mode = false;
-
-  /* --- Throw error if UQ used for any turbulence model other that SST --- */
-
-  if (Kind_Solver == MAIN_SOLVER::RANS && Kind_Turb_Model != TURB_MODEL::SST && Kind_Turb_Model != TURB_MODEL::SST_SUST && using_uq){
-    SU2_MPI::Error("UQ capabilities only implemented for NAVIER_STOKES solver SST turbulence model", CURRENT_FUNCTION);
-  }
 
   /* --- Throw error if invalid componentiality used --- */
 
@@ -3704,11 +3606,7 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   /*--- Check the conductivity model. Deactivate the turbulent component
    if we are not running RANS. ---*/
 
-  if ((Kind_Solver != MAIN_SOLVER::RANS) &&
-      (Kind_Solver != MAIN_SOLVER::ADJ_RANS) &&
-      (Kind_Solver != MAIN_SOLVER::DISC_ADJ_RANS)){
     Kind_ConductivityModel_Turb = CONDUCTIVITYMODEL_TURB::NONE;
-  }
 
   /* Set a default for the size of the RECTANGLE / BOX grid sizes. */
 
@@ -4317,67 +4215,17 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
      cout <<"based on the physical case: ";
     }
     switch (Kind_Solver) {
-      case MAIN_SOLVER::EULER:     case MAIN_SOLVER::DISC_ADJ_EULER:
+      case MAIN_SOLVER::EULER:
         if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) cout << "Compressible Euler equations." << endl;
-        break;
-      case MAIN_SOLVER::NAVIER_STOKES:     case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:
-        if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) cout << "Compressible Laminar Navier-Stokes' equations." << endl;
-        break;
-      case MAIN_SOLVER::RANS:     case MAIN_SOLVER::DISC_ADJ_RANS:
-        if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) cout << "Compressible RANS equations." << endl;
-        cout << "Turbulence model: ";
-        switch (Kind_Turb_Model) {
-          case TURB_MODEL::NONE: break;
-          case TURB_MODEL::SA:        cout << "Spalart Allmaras" << endl; break;
-          case TURB_MODEL::SA_NEG:    cout << "Negative Spalart Allmaras" << endl; break;
-          case TURB_MODEL::SA_E:      cout << "Edwards Spalart Allmaras" << endl; break;
-          case TURB_MODEL::SA_COMP:   cout << "Compressibility Correction Spalart Allmaras" << endl; break;
-          case TURB_MODEL::SA_E_COMP: cout << "Compressibility Correction Edwards Spalart Allmaras" << endl; break;
-          case TURB_MODEL::SST:       cout << "Menter's SST"     << endl; break;
-          case TURB_MODEL::SST_SUST:  cout << "Menter's SST with sustaining terms" << endl; break;
-        }
-        if (QCR) cout << "Using Quadratic Constitutive Relation, 2000 version (QCR2000)" << endl;
-        if (Kind_Trans_Model == TURB_TRANS_MODEL::BC) cout << "Using the revised BC transition model (2020)" << endl;
-        cout << "Hybrid RANS/LES: ";
-        switch (Kind_HybridRANSLES){
-          case NO_HYBRIDRANSLES: cout <<  "No Hybrid RANS/LES" << endl; break;
-          case SA_DES:   cout << "Detached Eddy Simulation (DES97) " << endl; break;
-          case SA_DDES:  cout << "Delayed Detached Eddy Simulation (DDES) with Standard SGS" << endl; break;
-          case SA_ZDES:  cout << "Delayed Detached Eddy Simulation (DDES) with Vorticity-based SGS" << endl; break;
-          case SA_EDDES: cout << "Delayed Detached Eddy Simulation (DDES) with Shear-layer Adapted SGS" << endl; break;
-        }
-        if (using_uq){
-          cout << "Perturbing Reynold's Stress Matrix towards "<< eig_val_comp << " component turbulence"<< endl;
-          if (uq_permute) cout << "Permuting eigenvectors" << endl;
-        }
-        break;
-      case MAIN_SOLVER::ADJ_EULER: cout << "Continuous Euler adjoint equations." << endl; break;
-      case MAIN_SOLVER::ADJ_NAVIER_STOKES:
-        if (Frozen_Visc_Cont)
-          cout << "Continuous Navier-Stokes adjoint equations with frozen (laminar) viscosity." << endl;
-        else
-          cout << "Continuous Navier-Stokes adjoint equations." << endl;
-        break;
-      case MAIN_SOLVER::ADJ_RANS:
-        if (Frozen_Visc_Cont)
-          cout << "Continuous RANS adjoint equations with frozen (laminar and eddy) viscosity." << endl;
-        else
-          cout << "Continuous RANS adjoint equations." << endl;
-        break;
-      case MAIN_SOLVER::MULTIPHYSICS:
-        cout << "Multiphysics solver" << endl;
         break;
       default:
         SU2_MPI::Error("No valid solver was chosen", CURRENT_FUNCTION);
 
     }
 
-    if ((Kind_Regime == ENUM_REGIME::COMPRESSIBLE)) {
+    if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) {
       cout << "Mach number: " << Mach <<"."<< endl;
       cout << "Angle of attack (AoA): " << AoA <<" deg, and angle of sideslip (AoS): " << AoS <<" deg."<< endl;
-      if ((Kind_Solver == MAIN_SOLVER::NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::ADJ_NAVIER_STOKES) ||
-          (Kind_Solver == MAIN_SOLVER::RANS) || (Kind_Solver == MAIN_SOLVER::ADJ_RANS))
-        cout << "Reynolds number: " << Reynolds <<". Reference length "  << Length_Reynolds << "." << endl;
       if (Fixed_CL_Mode) {
         cout << "Fixed CL mode, target value: " << Target_CL << "." << endl;
       }
@@ -4398,9 +4246,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
     else {
         cout << "No restart solution, use the values at infinity (freestream)." << endl;
     }
-
-    if (ContinuousAdjoint)
-      cout << "Read flow solution from: " << Solution_FileName << "." << endl;
 
       if (Kind_Regime == ENUM_REGIME::COMPRESSIBLE) {
         if (Ref_NonDim == DIMENSIONAL) { cout << "Dimensional simulation." << endl; }
@@ -4756,8 +4601,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
 
     if (SmoothNumGrid) cout << "There are some smoothing iterations on the grid coordinates." << endl;
 
-    if ((Kind_Solver == MAIN_SOLVER::EULER)          || (Kind_Solver == MAIN_SOLVER::NAVIER_STOKES)          || (Kind_Solver == MAIN_SOLVER::RANS) ||
-        (Kind_Solver == MAIN_SOLVER::DISC_ADJ_EULER) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS) ) {
+    if (Kind_Solver == MAIN_SOLVER::EULER) {
 
       if (Kind_ConvNumScheme_Flow == SPACE_CENTERED) {
         if (Kind_Centered_Flow == LAX) {
@@ -4789,9 +4633,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
         if (Kind_Upwind_Flow == AUSMPLUSUP2) cout << "AUSM+-up2 solver for the flow inviscid terms."<< endl;
         if (Kind_Upwind_Flow == AUSMPWPLUS)  cout << "AUSMPWPLUS solver for the flow inviscid terms."<< endl;
 
-        if (Kind_Solver == MAIN_SOLVER::EULER         || Kind_Solver == MAIN_SOLVER::DISC_ADJ_EULER ||
-            Kind_Solver == MAIN_SOLVER::NAVIER_STOKES || Kind_Solver == MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES ||
-            Kind_Solver == MAIN_SOLVER::RANS          || Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS) {
+        if (Kind_Solver == MAIN_SOLVER::EULER) {
           switch (Kind_RoeLowDiss) {
             case NO_ROELOWDISS: cout << "Standard Roe without low-dissipation function."<< endl; break;
             case NTS: cout << "Roe with NTS low-dissipation function."<< endl; break;
@@ -4809,75 +4651,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
 
       }
 
-    }
-
-    if ((Kind_Solver == MAIN_SOLVER::RANS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS)) {
-      if (Kind_ConvNumScheme_Turb == SPACE_UPWIND) {
-        if (Kind_Upwind_Turb == SCALAR_UPWIND) cout << "Scalar upwind solver for the turbulence model." << endl;
-        if (MUSCL_Turb) {
-          PrintLimiterInfo(Kind_SlopeLimit_Turb);
-        } else {
-          cout << "First order integration in space." << endl;
-        }
-      }
-    }
-
-    if ((Kind_Solver == MAIN_SOLVER::ADJ_EULER) || (Kind_Solver == MAIN_SOLVER::ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::ADJ_RANS)) {
-
-      if (Kind_ConvNumScheme_AdjFlow == SPACE_CENTERED) {
-        if (Kind_Centered_AdjFlow == JST) {
-          cout << "Jameson-Schmidt-Turkel scheme for the adjoint inviscid terms."<< endl;
-          cout << "JST viscous coefficients (1st, 2nd, & 4th): " << Kappa_1st_AdjFlow
-          << ", " << Kappa_2nd_AdjFlow << ", " << Kappa_4th_AdjFlow <<"."<< endl;
-          cout << "The method includes a grid stretching correction (p = 0.3)."<< endl;
-          cout << "Second order integration." << endl;
-        }
-        if (Kind_Centered_AdjFlow == LAX) {
-          cout << "Lax-Friedrich scheme for the adjoint inviscid terms."<< endl;
-          cout << "First order integration." << endl;
-        }
-      }
-
-      if (Kind_ConvNumScheme_AdjFlow == SPACE_UPWIND) {
-        if (Kind_Upwind_AdjFlow == ROE) cout << "Roe (with entropy fix = "<< EntropyFix_Coeff <<") solver for the adjoint inviscid terms."<< endl;
-        if (MUSCL_AdjFlow) {
-          PrintLimiterInfo(Kind_SlopeLimit_AdjFlow);
-        } else {
-          cout << "First order integration." << endl;
-        }
-      }
-
-      cout << "The reference sharp edge distance is: " << AdjSharp_LimiterCoeff*RefElemLength*Venkat_LimiterCoeff <<". "<< endl;
-
-    }
-
-    if ((Kind_Solver == MAIN_SOLVER::ADJ_RANS) && (!Frozen_Visc_Cont)) {
-      if (Kind_ConvNumScheme_AdjTurb == SPACE_UPWIND) {
-        if (Kind_Upwind_Turb == SCALAR_UPWIND) cout << "Scalar upwind solver for the adjoint turbulence model." << endl;
-        if (MUSCL_AdjTurb) {
-          PrintLimiterInfo(Kind_SlopeLimit_AdjTurb);
-        } else {
-          cout << "First order integration." << endl;
-        }
-      }
-    }
-
-    if ((Kind_Solver == MAIN_SOLVER::NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::RANS) ||
-        (Kind_Solver == MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS)) {
-        cout << "Average of gradients with correction (viscous flow terms)." << endl;
-    }
-
-    if ((Kind_Solver == MAIN_SOLVER::ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::ADJ_RANS)) {
-      cout << "Average of gradients with correction (viscous adjoint terms)." << endl;
-    }
-
-    if ((Kind_Solver == MAIN_SOLVER::RANS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS)) {
-      cout << "Average of gradients with correction (viscous turbulence terms)." << endl;
-    }
-
-    if ((Kind_Solver == MAIN_SOLVER::ADJ_RANS) && (!Frozen_Visc_Cont)) {
-      cout << "Average of gradients with correction (2nd order) for computation of adjoint viscous turbulence terms." << endl;
-      if (Kind_TimeIntScheme_AdjTurb == EULER_IMPLICIT) cout << "Euler implicit method for the turbulent adjoint equation." << endl;
     }
 
         switch (Kind_Gradient_Method_Recon) {
@@ -4919,8 +4692,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
         break;
     }
 
-    if ((Kind_Solver == MAIN_SOLVER::EULER) || (Kind_Solver == MAIN_SOLVER::NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::RANS) ||
-        (Kind_Solver == MAIN_SOLVER::DISC_ADJ_EULER) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS)) {
+    if (Kind_Solver == MAIN_SOLVER::EULER)  {
       switch (Kind_TimeIntScheme_Flow) {
         case RUNGE_KUTTA_EXPLICIT:
           cout << "Runge-Kutta explicit method for the flow equations." << endl;
@@ -4973,22 +4745,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
       }
     }
 
-    if ((Kind_Solver == MAIN_SOLVER::ADJ_EULER) || (Kind_Solver == MAIN_SOLVER::ADJ_NAVIER_STOKES) || (Kind_Solver == MAIN_SOLVER::ADJ_RANS)) {
-      switch (Kind_TimeIntScheme_AdjFlow) {
-        case RUNGE_KUTTA_EXPLICIT:
-          cout << "Runge-Kutta explicit method for the adjoint equations." << endl;
-          cout << "Number of steps: " << nRKStep << endl;
-          cout << "Alpha coefficients: ";
-          for (unsigned short iRKStep = 0; iRKStep < nRKStep; iRKStep++) {
-            cout << "\t" << RK_Alpha_Step[iRKStep];
-          }
-          cout << endl;
-          break;
-        case EULER_EXPLICIT: cout << "Euler explicit method for the adjoint equations." << endl; break;
-        case EULER_IMPLICIT: cout << "Euler implicit method for the adjoint equations." << endl; break;
-      }
-    }
-
     if (nMGLevels !=0) {
 
       if (MGCycle == V_CYCLE) cout << "V Multigrid Cycle, with " << nMGLevels << " multigrid levels."<< endl;
@@ -5025,9 +4781,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
         cout << endl;
       }
 
-    if ((Kind_Solver == MAIN_SOLVER::RANS) || (Kind_Solver == MAIN_SOLVER::DISC_ADJ_RANS))
-      if (Kind_TimeIntScheme_Turb == EULER_IMPLICIT)
-        cout << "Euler implicit time integration for the turbulence model." << endl;
   }
 
   if (val_software == SU2_COMPONENT::SU2_CFD) {
@@ -6133,8 +5886,6 @@ unsigned short CConfig::GetContainerPosition(unsigned short val_eqsystem) {
     case RUNTIME_FLOW_SYS:      return FLOW_SOL;
     case RUNTIME_TURB_SYS:      return TURB_SOL;
     case RUNTIME_TRANS_SYS:     return TRANS_SOL;
-    case RUNTIME_ADJFLOW_SYS:   return ADJFLOW_SOL;
-    case RUNTIME_ADJTURB_SYS:   return ADJTURB_SOL;
     case RUNTIME_MULTIGRID_SYS: return 0;
   }
   return 0;
@@ -6171,61 +5922,10 @@ void CConfig::SetGlobalParam(MAIN_SOLVER val_solver,
     }
   };
 
-  auto SetTurbParam = [&]() {
-    if (val_system == RUNTIME_TURB_SYS) {
-      SetKind_ConvNumScheme(Kind_ConvNumScheme_Turb, Kind_Centered_Turb,
-                            Kind_Upwind_Turb, Kind_SlopeLimit_Turb,
-                            MUSCL_Turb, NONE);
-      SetKind_TimeIntScheme(Kind_TimeIntScheme_Turb);
-    }
-  };
-
-  auto SetAdjFlowParam = [&]() {
-    if (val_system == RUNTIME_ADJFLOW_SYS) {
-      SetKind_ConvNumScheme(Kind_ConvNumScheme_AdjFlow, Kind_Centered_AdjFlow,
-                            Kind_Upwind_AdjFlow, Kind_SlopeLimit_AdjFlow,
-                            MUSCL_AdjFlow, NONE);
-      SetKind_TimeIntScheme(Kind_TimeIntScheme_AdjFlow);
-    }
-  };
-
   switch (val_solver) {
     case MAIN_SOLVER::EULER:
       SetFlowParam();
       break;
-    case MAIN_SOLVER::NAVIER_STOKES:
-      SetFlowParam();
-
-      break;
-    case MAIN_SOLVER::RANS:
-      SetFlowParam();
-      SetTurbParam();
-
-      if (val_system == RUNTIME_TRANS_SYS) {
-        SetKind_ConvNumScheme(Kind_ConvNumScheme_Turb, Kind_Centered_Turb,
-                              Kind_Upwind_Turb, Kind_SlopeLimit_Turb,
-                              MUSCL_Turb, NONE);
-        SetKind_TimeIntScheme(Kind_TimeIntScheme_Turb);
-      }
-      break;
-    case MAIN_SOLVER::ADJ_EULER:
-    case MAIN_SOLVER::ADJ_NAVIER_STOKES:
-      SetFlowParam();
-      SetAdjFlowParam();
-      break;
-    case MAIN_SOLVER::ADJ_RANS:
-      SetFlowParam();
-      SetTurbParam();
-      SetAdjFlowParam();
-
-      if (val_system == RUNTIME_ADJTURB_SYS) {
-        SetKind_ConvNumScheme(Kind_ConvNumScheme_AdjTurb, Kind_Centered_AdjTurb,
-                              Kind_Upwind_AdjTurb, Kind_SlopeLimit_AdjTurb,
-                              MUSCL_AdjTurb, NONE);
-        SetKind_TimeIntScheme(Kind_TimeIntScheme_AdjTurb);
-      }
-      break;
-
     default:
       break;
   }

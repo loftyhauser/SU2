@@ -37,7 +37,6 @@
 #include "../../include/output/filewriter/CParaviewXMLFileWriter.hpp"
 #include "../../include/output/filewriter/CParaviewVTMFileWriter.hpp"
 #include "../../include/output/filewriter/CTecplotFileWriter.hpp"
-#include "../../include/output/filewriter/CCSVFileWriter.hpp"
 #include "../../include/output/filewriter/CSU2FileWriter.hpp"
 #include "../../include/output/filewriter/CSU2BinaryFileWriter.hpp"
 #include "../../include/output/filewriter/CSU2MeshFileWriter.hpp"
@@ -1527,7 +1526,7 @@ void COutput::PreprocessVolumeOutput(CConfig *config){
 void COutput::LoadDataIntoSorter(CConfig* config, CGeometry* geometry, CSolver** solver){
 
   unsigned short iMarker = 0;
-  unsigned long iPoint = 0, jPoint = 0;
+  unsigned long iPoint = 0;
   unsigned long iVertex = 0;
 
   /*--- Reset the offset cache and index --- */
@@ -1703,23 +1702,6 @@ void COutput::Postprocess_HistoryData(CConfig *config){
 
     }
 
-    if (currentField.fieldType == HistoryFieldType::COEFFICIENT){
-      if (config->GetTime_Domain()){
-        auto it = windowedTimeAverages.find(fieldIdentifier);
-        if (it == windowedTimeAverages.end()) {
-          it = windowedTimeAverages.insert({fieldIdentifier, CWindowedAverage(config->GetKindWindow())}).first;
-        }
-        auto& timeAverage = it->second;
-        timeAverage.addValue(currentField.value,config->GetTimeIter(), config->GetStartWindowIteration()); //Collecting Values for Windowing
-        SetHistoryOutputValue("TAVG_" + fieldIdentifier, timeAverage.GetVal());
-        if (config->GetDirectDiff() != NO_DERIVATIVE) {
-          SetHistoryOutputValue("D_TAVG_" + fieldIdentifier, SU2_TYPE::GetDerivative(timeAverage.GetVal()));
-        }
-      }
-      if (config->GetDirectDiff() != NO_DERIVATIVE){
-        SetHistoryOutputValue("D_" + fieldIdentifier, SU2_TYPE::GetDerivative(currentField.value));
-      }
-    }
   }
 
   map<string, pair<su2double, int> >::iterator it = Average.begin();

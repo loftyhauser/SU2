@@ -21,14 +21,12 @@ su2_cfd_src += files(['output/COutputFactory.cpp',
                       'output/filewriter/CParaviewFileWriter.cpp',
                       'output/filewriter/CParaviewBinaryFileWriter.cpp',
                       'output/filewriter/CTecplotFileWriter.cpp',
-                      'output/filewriter/CCSVFileWriter.cpp',
                       'output/filewriter/CSTLFileWriter.cpp',
                       'output/filewriter/CSU2FileWriter.cpp',
                       'output/filewriter/CSU2BinaryFileWriter.cpp',
                       'output/filewriter/CParaviewXMLFileWriter.cpp',
                       'output/filewriter/CParaviewVTMFileWriter.cpp',
-                      'output/filewriter/CSU2MeshFileWriter.cpp',
-                      'output/tools/CWindowingTools.cpp'])
+                      'output/filewriter/CSU2MeshFileWriter.cpp'])
 
 su2_cfd_src += files(['variables/CScalarVariable.cpp',
                       'variables/CBaselineVariable.cpp',

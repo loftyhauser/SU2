@@ -3065,7 +3065,7 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, const CConfig *config)
 
 void CSolver::RegisterVertexTractions(CGeometry *geometry, const CConfig *config){
 
-  unsigned short iMarker, iDim;
+  unsigned short iMarker;
   unsigned long iVertex, iPoint;
 
   /*--- Loop over all the markers ---*/

@@ -226,16 +226,10 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
   unsigned short iDim, iVar;
   bool adjoint = ( config->GetContinuous_Adjoint() || config->GetDiscrete_Adjoint() );
   unsigned short iInst = config->GetiInst();
-  bool steady_restart = config->GetSteadyRestart();
-  TURB_MODEL turb_model = config->GetKind_Turb_Model();
 
   su2double *Coord = new su2double [nDim];
   for (iDim = 0; iDim < nDim; iDim++)
     Coord[iDim] = 0.0;
-
-  /*--- Skip coordinates ---*/
-
-  unsigned short skipVars = geometry[iInst]->GetnDim();
 
   /*--- Retrieve filename from config ---*/
 

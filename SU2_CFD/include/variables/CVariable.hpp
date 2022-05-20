@@ -116,16 +116,6 @@ protected:
     assert(false && "A base method of CVariable was used, but it should have been overridden by the derived class.");
   }
 
-  void RegisterContainer(bool input, su2activematrix& variable, su2matrix<int>* ad_index = nullptr) {
-    const auto nPoint = variable.rows();
-    SU2_OMP_FOR_STAT(roundUpDiv(nPoint,omp_get_num_threads()))
-    END_SU2_OMP_FOR
-  }
-
-  void RegisterContainer(bool input, su2activematrix& variable, su2matrix<int>& ad_index) {
-    RegisterContainer(input, variable, &ad_index);
-  }
-
 public:
   /*--- Disable copy and assignment. ---*/
   CVariable(const CVariable&) = delete;

@@ -129,7 +129,7 @@ public:
 
     /*--- Grid motion. ---*/
 
-    Double projGridVel = 0.0, projVel = roeAvg.projVel;
+    Double projVel = roeAvg.projVel;
 
     /*--- Convective eigenvalues. ---*/
 

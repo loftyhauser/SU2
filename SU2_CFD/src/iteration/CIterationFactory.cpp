@@ -39,13 +39,13 @@ CIteration* CIterationFactory::CreateIteration(MAIN_SOLVER kindSolver, const CCo
 
   switch (kindSolver) {
 
-    case MAIN_SOLVER::EULER: case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::RANS:
+    case MAIN_SOLVER::EULER:
         if (rank == MASTER_NODE)
           cout << "Euler/Navier-Stokes/RANS fluid iteration." << endl;
         iteration = new CFluidIteration(config);
       break;
 
-    case MAIN_SOLVER::NONE: case MAIN_SOLVER::TEMPLATE_SOLVER: case MAIN_SOLVER::MULTIPHYSICS:
+    case MAIN_SOLVER::NONE: case MAIN_SOLVER::TEMPLATE_SOLVER:
       SU2_MPI::Error("No iteration found for specified solver.", CURRENT_FUNCTION);
       break;
   }

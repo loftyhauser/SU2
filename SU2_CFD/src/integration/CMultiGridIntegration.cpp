@@ -42,11 +42,6 @@ void CMultiGridIntegration::MultiGrid_Iteration(CGeometry ****geometry,
   bool direct;
   switch (config[iZone]->GetKind_Solver()) {
     case MAIN_SOLVER::EULER:
-    case MAIN_SOLVER::NAVIER_STOKES:
-    case MAIN_SOLVER::RANS:
-    case MAIN_SOLVER::DISC_ADJ_EULER:
-    case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:
-    case MAIN_SOLVER::DISC_ADJ_RANS:
       direct = true;
       break;
     default:
@@ -552,7 +547,7 @@ void CMultiGridIntegration::SetRestricted_Solution(unsigned short RunTime_EqSyst
   unsigned long iVertex, Point_Fine, Point_Coarse;
   unsigned short iMarker, iVar, iChildren;
   su2double Area_Parent, Area_Children;
-  const su2double *Solution_Fine = nullptr, *Grid_Vel = nullptr;
+  const su2double *Solution_Fine = nullptr;
 
   const unsigned short Solver_Position = config->GetContainerPosition(RunTime_EqSystem);
   const unsigned short nVar = sol_coarse->GetnVar();

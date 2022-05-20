@@ -888,16 +888,6 @@ public:
 
   /*!
    * \brief A virtual member.
-   */
-  virtual void Compute_Fuselage(CConfig *config, bool original_surface,
-                                su2double &Fuselage_Volume, su2double &Fuselage_WettedArea,
-                                su2double &Fuselage_MinWidth, su2double &Fuselage_MaxWidth,
-                                su2double &Fuselage_MinWaterLineWidth, su2double &Fuselage_MaxWaterLineWidth,
-                                su2double &Fuselage_MinHeight, su2double &Fuselage_MaxHeight,
-                                su2double &Fuselage_MaxCurvature) {}
-
-  /*!
-   * \brief A virtual member.
    * \param[in] config - Definition of the particular problem.
    */
   inline virtual void FindNormal_Neighbor(const CConfig *config) {}
@@ -1299,13 +1289,6 @@ public:
    *  \param[in] val - new value for the wall distance at all points.
    */
   virtual void SetWallDistance(su2double val) {}
-
-  /*!
-   * \brief Compute the distances to the closest vertex on viscous walls over the entire domain
-   * \param[in] config_container - Definition of the particular problem.
-   * \param[in] geometry_container - Geometrical definition of the problem.
-   */
-  static void ComputeWallDistance(const CConfig * const *config_container, CGeometry ****geometry_container);
 
   /*!
    * \brief Set the amount of nonconvex elements in the mesh.

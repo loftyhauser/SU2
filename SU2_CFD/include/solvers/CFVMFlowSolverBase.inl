@@ -662,7 +662,6 @@ void CFVMFlowSolverBase<V, R>::LoadRestart_impl(CGeometry **geometry, CSolver **
   /*--- Restart the solution from file information ---*/
 
   const string restart_filename = config->GetFilename(config->GetSolution_FileName(), "", iter);
-  const bool static_fsi = ((config->GetTime_Marching() == TIME_MARCHING::STEADY) && config->GetFSI_Simulation());
 
   /*--- To make this routine safe to call in parallel most of it can only be executed by one thread. ---*/
   SU2_OMP_MASTER {
@@ -680,8 +679,6 @@ void CFVMFlowSolverBase<V, R>::LoadRestart_impl(CGeometry **geometry, CSolver **
     } else {
       Read_SU2_Restart_ASCII(geometry[MESH_0], config, restart_filename);
     }
-
-    bool steady_restart = config->GetSteadyRestart();
 
     /*--- Load data from the restart into correct containers. ---*/
 
@@ -770,10 +767,6 @@ void CFVMFlowSolverBase<V, R>::LoadRestart_impl(CGeometry **geometry, CSolver **
     }
   }
 
-  /*--- Update the old geometry (coordinates n and n-1) in dual time-stepping strategy. ---*/
-  const bool dual_time = ((config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST) ||
-                          (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND));
-
   /*--- Go back to single threaded execution. ---*/
   SU2_OMP_MASTER
   {
@@ -806,9 +799,6 @@ void CFVMFlowSolverBase<V, R>::SetInitialCondition(CGeometry **geometry, CSolver
   /*--- Start OpenMP parallel region. ---*/
 
   SU2_OMP_PARALLEL {
-
-  unsigned long iPoint;
-  unsigned short iMesh;
 
   /*--- The value of the solution for the first iteration of the dual time ---*/
 
@@ -1290,10 +1280,6 @@ void CFVMFlowSolverBase<V, R>::EdgeFluxResidual(const CGeometry *geometry,
     InstantiateEdgeNumerics(solvers, config);
   }
 
-  /*--- For hybrid parallel AD, pause preaccumulation if there is shared reading of
-  * variables, otherwise switch to the faster adjoint evaluation mode. ---*/
-  bool pausePreacc = false;
-
   /*--- Loop over edge colors. ---*/
   for (auto color : EdgeColoring) {
     /*--- Chunk size is at least OMP_MIN_SIZE and a multiple of the color group size. ---*/
@@ -1348,13 +1334,11 @@ void CFVMFlowSolverBase<V, FlowRegime>::SetResidual_DualTime(CGeometry *geometry
                                                              unsigned short RunTime_EqSystem) {
   /*--- Local variables ---*/
 
-  unsigned short iVar, iMarker, iDim, iNeigh;
-  unsigned long iPoint, jPoint, iEdge, iVertex;
+  unsigned short iVar;
+  unsigned long iPoint;
 
   const su2double *U_time_nM1 = nullptr, *U_time_n = nullptr, *U_time_nP1 = nullptr;
-  su2double Volume_nM1, Volume_nP1, TimeStep;
-  const su2double *Normal = nullptr, *GridVel_i = nullptr, *GridVel_j = nullptr;
-  su2double Residual_GCL;
+  su2double Volume_nP1, TimeStep;
 
   const bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
   const bool first_order = (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST);

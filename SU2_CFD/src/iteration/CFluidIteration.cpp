@@ -50,8 +50,6 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
                               CSolver***** solver, CNumerics****** numerics, CConfig** config,
                               unsigned short val_iZone, unsigned short val_iInst) {
 
-  const bool frozen_visc = (config[val_iZone]->GetContinuous_Adjoint() && config[val_iZone]->GetFrozen_Visc_Cont()) ||
-                           (config[val_iZone]->GetDiscrete_Adjoint() && config[val_iZone]->GetFrozen_Visc_Disc());
   const bool disc_adj = (config[val_iZone]->GetDiscrete_Adjoint());
 
   /* --- Setting up iteration values depending on if this is a
@@ -63,18 +61,7 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
 
   switch (config[val_iZone]->GetKind_Solver()) {
     case MAIN_SOLVER::EULER:
-    case MAIN_SOLVER::DISC_ADJ_EULER:
       main_solver = MAIN_SOLVER::EULER;
-      break;
-
-    case MAIN_SOLVER::NAVIER_STOKES:
-    case MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES:
-      main_solver = MAIN_SOLVER::NAVIER_STOKES;
-      break;
-
-    case MAIN_SOLVER::RANS:
-    case MAIN_SOLVER::DISC_ADJ_RANS:
-      main_solver = MAIN_SOLVER::RANS;
       break;
 
     default:
@@ -86,24 +73,6 @@ void CFluidIteration::Iterate(COutput* output, CIntegration**** integration, CGe
 
   integration[val_iZone][val_iInst][FLOW_SOL]->MultiGrid_Iteration(geometry, solver, numerics, config, RUNTIME_FLOW_SYS,
                                                                    val_iZone, val_iInst);
-
-  /*--- If the flow integration is not fully coupled, run the various single grid integrations. ---*/
-
-  if ((main_solver == MAIN_SOLVER::RANS) && !frozen_visc) {
-    /*--- Solve the turbulence model ---*/
-
-    config[val_iZone]->SetGlobalParam(main_solver, RUNTIME_TURB_SYS);
-    integration[val_iZone][val_iInst][TURB_SOL]->SingleGrid_Iteration(geometry, solver, numerics, config,
-                                                                      RUNTIME_TURB_SYS, val_iZone, val_iInst);
-
-    /*--- Solve transition model ---*/
-
-    if (config[val_iZone]->GetKind_Trans_Model() == TURB_TRANS_MODEL::LM) {
-      config[val_iZone]->SetGlobalParam(main_solver, RUNTIME_TRANS_SYS);
-      integration[val_iZone][val_iInst][TRANS_SOL]->SingleGrid_Iteration(geometry, solver, numerics, config,
-                                                                         RUNTIME_TRANS_SYS, val_iZone, val_iInst);
-    }
-  }
 
   /*--- Adapt the CFL number using an exponential progression with under-relaxation approach. ---*/
 
@@ -137,15 +106,6 @@ void CFluidIteration::Update(COutput* output, CIntegration**** integration, CGeo
                                                                         config[val_iZone], iMesh);
 
       integration[val_iZone][val_iInst][FLOW_SOL]->SetConvergence(false);
-    }
-
-    /*--- Update dual time solver for the turbulence model ---*/
-
-    if ((config[val_iZone]->GetKind_Solver() == MAIN_SOLVER::RANS) || (config[val_iZone]->GetKind_Solver() == MAIN_SOLVER::DISC_ADJ_RANS)) {
-      integration[val_iZone][val_iInst][TURB_SOL]->SetDualTime_Solver(geometry[val_iZone][val_iInst][MESH_0],
-                                                                      solver[val_iZone][val_iInst][MESH_0][TURB_SOL],
-                                                                      config[val_iZone], MESH_0);
-      integration[val_iZone][val_iInst][TURB_SOL]->SetConvergence(false);
     }
 
     /*--- Update dual time solver for the transition model ---*/

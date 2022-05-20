@@ -1556,12 +1556,6 @@ void CFlowOutput::WriteMetaData(const CConfig *config){
     meta_file <<"INITIAL_BCTHRUST= " << config->GetInitial_BCThrust() << endl;
 
 
-    if (( config->GetKind_Solver() == MAIN_SOLVER::DISC_ADJ_EULER ||
-          config->GetKind_Solver() == MAIN_SOLVER::DISC_ADJ_NAVIER_STOKES ||
-          config->GetKind_Solver() == MAIN_SOLVER::DISC_ADJ_RANS )) {
-      meta_file << "SENS_AOA=" << GetHistoryFieldValue("SENS_AOA") * PI_NUMBER / 180.0 << endl;
-    }
-
     if(config->GetKind_Streamwise_Periodic() == ENUM_STREAMWISE_PERIODIC::MASSFLOW) {
       meta_file << "STREAMWISE_PERIODIC_PRESSURE_DROP=" << GetHistoryFieldValue("STREAMWISE_DP") << endl;
     }
@@ -1795,37 +1789,6 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
   switch (Kind_Solver) {
     case MAIN_SOLVER::EULER:
       if (compressible) file << "Compressible Euler equations.\n";
-      break;
-    case MAIN_SOLVER::NAVIER_STOKES:
-      if (compressible) file << "Compressible Laminar Navier-Stokes' equations.\n";
-      break;
-    case MAIN_SOLVER::RANS:
-      if (compressible) file << "Compressible RANS equations.\n";
-      file << "Turbulence model: ";
-      switch (Kind_Turb_Model) {
-        case TURB_MODEL::NONE: break;
-        case TURB_MODEL::SA:
-          file << "Spalart Allmaras\n";
-          break;
-        case TURB_MODEL::SA_NEG:
-          file << "Negative Spalart Allmaras\n";
-          break;
-        case TURB_MODEL::SA_E:
-          file << "Edwards Spalart Allmaras\n";
-          break;
-        case TURB_MODEL::SA_COMP:
-          file << "Compressibility Correction Spalart Allmaras\n";
-          break;
-        case TURB_MODEL::SA_E_COMP:
-          file << "Compressibility Correction Edwards Spalart Allmaras\n";
-          break;
-        case TURB_MODEL::SST:
-          file << "Menter's SST\n";
-          break;
-        case TURB_MODEL::SST_SUST:
-          file << "Menter's SST with sustaining terms\n";
-          break;
-      }
       break;
     default:
       break;

@@ -45,6 +45,3 @@ CMeshVariable::CMeshVariable(unsigned long npoint, unsigned long ndim, CConfig *
   }
 }
 
-void CMeshVariable::Register_MeshCoord() {
-  RegisterContainer(true, Mesh_Coord);
-}

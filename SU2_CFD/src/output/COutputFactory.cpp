@@ -34,7 +34,7 @@ COutput* COutputFactory::CreateOutput(MAIN_SOLVER kindSolver, CConfig* config, i
   COutput* output = nullptr;
 
   switch(kindSolver){
-    case MAIN_SOLVER::EULER: case MAIN_SOLVER::NAVIER_STOKES: case MAIN_SOLVER::RANS:
+    case MAIN_SOLVER::EULER:
       output = new CFlowCompOutput(config, nDim);
       break;
     default:

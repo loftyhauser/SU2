@@ -829,16 +829,6 @@ unsigned long CSysSolve<ScalarType>::Solve(CSysMatrix<ScalarType> & Jacobian, co
   bool ScreenOutput;
 
   switch (lin_sol_mode) {
-    /*--- Mesh Deformation mode ---*/
-    case LINEAR_SOLVER_MODE::MESH_DEFORM: {
-      KindSolver   = config->GetKind_Deform_Linear_Solver();
-      KindPrecond  = config->GetKind_Deform_Linear_Solver_Prec();
-      MaxIter      = config->GetDeform_Linear_Solver_Iter();
-      SolverTol    = SU2_TYPE::GetValue(config->GetDeform_Linear_Solver_Error());
-      ScreenOutput = config->GetDeform_Output();
-      break;
-    }
-
     /*--- Gradient Smoothing mode ---*/
     case LINEAR_SOLVER_MODE::GRADIENT_MODE: {
       KindSolver   = config->GetKind_Grad_Linear_Solver();
