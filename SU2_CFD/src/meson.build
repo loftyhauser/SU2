@@ -45,7 +45,6 @@ su2_cfd_src += files(['solvers/CSolverFactory.cpp',
 
 su2_cfd_src += files(['numerics/CNumerics.cpp',
                       'numerics/template.cpp',
-                      'numerics/transition.cpp',
                       'numerics/flow/convection/roe.cpp',
                       'numerics/flow/convection/fvs.cpp',
                       'numerics/flow/convection/cusp.cpp',
@@ -53,7 +52,6 @@ su2_cfd_src += files(['numerics/CNumerics.cpp',
                       'numerics/flow/convection/ausm_slau.cpp',
                       'numerics/flow/flow_diffusion.cpp',
                       'numerics/flow/flow_sources.cpp',
-                      'numerics/scalar/scalar_sources.cpp',
                       'numerics/CGradSmoothing.cpp'])
 
 su2_cfd_src += files(['../include/numerics_simd/CNumericsSIMD.cpp'])
