@@ -275,11 +275,6 @@ class CFVMFlowSolverBase : public CSolver {
   void SumEdgeFluxes(const CGeometry* geometry);
 
   /*!
-   * \brief Computes and sets the required auxilliary vars (and gradients) for axisymmetric flow.
-   */
-  void ComputeAxisymmetricAuxGradients(CGeometry *geometry, const CConfig* config);
-
-  /*!
    * \brief Instantiate a SIMD numerics object.
    */
   inline virtual void InstantiateEdgeNumerics(const CSolver* const* solvers, const CConfig* config) {}

@@ -551,7 +551,6 @@ class CSourcePieceWise_TurbSST final : public CNumerics {
  private:
   const FlowIndices idx; /*!< \brief Object to manage the access to the flow primitives. */
   const bool sustaining_terms = false;
-  const bool axisymmetric = false;
 
   /*--- Closure constants ---*/
   const su2double sigma_k_1, sigma_k_2, sigma_w_1, sigma_w_2, beta_1, beta_2, beta_star, a1, alfa_1, alfa_2;
@@ -583,35 +582,6 @@ class CSourcePieceWise_TurbSST final : public CNumerics {
     return sqrt(2.0 * perturbedStrainMag);
   }
 
-  /*!
-   * \brief Add contribution due to axisymmetric formulation to 2D residual
-   */
-  inline void ResidualAxisymmetric(su2double alfa_blended, su2double zeta) {
-    if (Coord_i[1] < EPS) return;
-
-    const su2double yinv = 1.0 / Coord_i[1];
-    const su2double rhov = Density_i * V_i[idx.Velocity() + 1];
-    const su2double& k = ScalarVar_i[0];
-    const su2double& w = ScalarVar_i[1];
-
-    /*--- Compute blended constants ---*/
-    const su2double sigma_k_i = F1_i * sigma_k_1 + (1.0 - F1_i) * sigma_k_2;
-    const su2double sigma_w_i = F1_i * sigma_w_1 + (1.0 - F1_i) * sigma_w_2;
-
-    /*--- Production ---*/
-    const su2double pk_axi = max(
-        0.0, 2.0 / 3.0 * rhov * k * ((2.0 * yinv * V_i[idx.Velocity() + 1] - PrimVar_Grad_i[idx.Velocity()+1][1] - PrimVar_Grad_i[idx.Velocity()][0]) / zeta - 1.0));
-    const su2double pw_axi = alfa_blended * zeta / k * pk_axi;
-
-    /*--- Convection-Diffusion ---*/
-    const su2double cdk_axi = rhov * k - (Laminar_Viscosity_i + sigma_k_i * Eddy_Viscosity_i) * ScalarVar_Grad_i[0][1];
-    const su2double cdw_axi = rhov * w - (Laminar_Viscosity_i + sigma_w_i * Eddy_Viscosity_i) * ScalarVar_Grad_i[1][1];
-
-    /*--- Add terms to the residuals ---*/
-    Residual[0] += yinv * Volume * (pk_axi - cdk_axi);
-    Residual[1] += yinv * Volume * (pw_axi - cdw_axi);
-  }
-
  public:
   /*!
    * \brief Constructor of the class.
@@ -626,7 +596,6 @@ class CSourcePieceWise_TurbSST final : public CNumerics {
       : CNumerics(val_nDim, 2, config),
         idx(val_nDim, 1),
         sustaining_terms(config->GetKind_Turb_Model() == TURB_MODEL::SST_SUST),
-        axisymmetric(config->GetAxisymmetric()),
         sigma_k_1(constants[0]),
         sigma_k_2(constants[1]),
         sigma_w_1(constants[2]),
@@ -737,10 +706,6 @@ class CSourcePieceWise_TurbSST final : public CNumerics {
       /*--- Cross diffusion ---*/
 
       Residual[1] += (1.0 - F1_i) * CDkw_i * Volume;
-
-      /*--- Contribution due to 2D axisymmetric formulation ---*/
-
-      if (axisymmetric) ResidualAxisymmetric(alfa_blended, zeta);
 
       /*--- Implicit part ---*/
 

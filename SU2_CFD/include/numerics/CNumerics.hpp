@@ -1188,13 +1188,6 @@ public:
                                               su2double &gamma_sep) { }
 
   /*!
-   * \brief Residual for source term integration.
-   * \param[out] val_residual - Pointer to the source residual containing chemistry terms.
-   * \param[in] config - Definition of the particular problem.
-   */
-  inline virtual ResidualType<> ComputeAxisymmetric(const CConfig* config) { return ResidualType<>(nullptr,nullptr,nullptr); }
-
-  /*!
    * \overload For numerics classes that store the residual/flux and Jacobians internally.
    * \param[in] config - Definition of the particular problem.
    * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.

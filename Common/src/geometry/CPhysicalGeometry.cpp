@@ -4060,8 +4060,6 @@ void CPhysicalGeometry::SetPositive_ZArea(CConfig *config) {
   TotalMinCoordZ = 1E10, TotalMaxCoordX = -1E10, TotalMaxCoordY = -1E10, TotalMaxCoordZ = -1E10;
   su2double TotalPositiveXArea = 0.0, TotalPositiveYArea = 0.0, TotalPositiveZArea = 0.0, TotalWettedArea = 0.0, AxiFactor;
 
-  const bool axisymmetric = config->GetAxisymmetric();
-
   PositiveXArea = 0.0;
   PositiveYArea = 0.0;
   PositiveZArea = 0.0;
@@ -4083,8 +4081,7 @@ void CPhysicalGeometry::SetPositive_ZArea(CConfig *config) {
           CoordY = nodes->GetCoord(iPoint, 1);
           if (nDim == 3) CoordZ = nodes->GetCoord(iPoint, 2);
 
-          if (axisymmetric) AxiFactor = 2.0*PI_NUMBER*nodes->GetCoord(iPoint, 1);
-          else AxiFactor = 1.0;
+          AxiFactor = 1.0;
 
           WettedArea += AxiFactor * GeometryToolbox::Norm(nDim, Normal);
 
@@ -4153,7 +4150,7 @@ void CPhysicalGeometry::SetPositive_ZArea(CConfig *config) {
   if (rank == MASTER_NODE) {
 
     cout << "Wetted area = "<< TotalWettedArea;
-    if (D3 || axisymmetric) cout << A << ".\n";
+    if (D3) cout << A << ".\n";
     else cout << L << ".\n";
 
     cout << "Area projection in the x-plane = "<< TotalPositiveXArea << (D3? A : L);

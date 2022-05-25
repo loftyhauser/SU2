@@ -61,12 +61,6 @@ CEulerVariable::CEulerVariable(su2double density, const su2double *velocity, su2
   }
 
   Secondary.resize(nPoint,nSecondaryVar) = su2double(0.0);
-
-  if (config->GetAxisymmetric()){
-    nAuxVar = 3;
-    Grad_AuxVar.resize(nPoint,nAuxVar,nDim,0.0);
-    AuxVar.resize(nPoint,nAuxVar) = su2double(0.0);
-  }
 }
 
 bool CEulerVariable::SetPrimVar(unsigned long iPoint, CFluidModel *FluidModel) {

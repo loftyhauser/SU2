@@ -1404,7 +1404,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::Pressure_Forces(const CGeometry* geometr
   su2double RefArea = config->GetRefArea();
   su2double RefLength = config->GetRefLength();
   auto Origin = config->GetRefOriginMoment(0);
-  bool axisymmetric = config->GetAxisymmetric();
 
   SetReferenceValues(*config);
 
@@ -1485,12 +1484,7 @@ void CFVMFlowSolverBase<V, FlowRegime>::Pressure_Forces(const CGeometry* geometr
             MomentDist[iDim] = Coord[iDim] - Origin[iDim];
           }
 
-          /*--- Axisymmetric simulations ---*/
-
-          if (axisymmetric)
-            AxiFactor = 2.0 * PI_NUMBER * geometry->nodes->GetCoord(iPoint, 1);
-          else
-            AxiFactor = 1.0;
+          AxiFactor = 1.0;
 
           /*--- Force computation, note the minus sign due to the
            orientation of the normal (outward) ---*/
@@ -1653,7 +1647,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::Momentum_Forces(const CGeometry* geometr
   su2double Beta = config->GetAoS() * PI_NUMBER / 180.0;
   su2double RefLength = config->GetRefLength();
   auto Origin = config->GetRefOriginMoment(0);
-  bool axisymmetric = config->GetAxisymmetric();
 
   const su2double factor = 1.0 / AeroCoeffForceRef;
 
@@ -1707,12 +1700,7 @@ void CFVMFlowSolverBase<V, FlowRegime>::Momentum_Forces(const CGeometry* geometr
             MassFlow -= Normal[iDim] * Velocity[iDim] * Density;
           }
 
-          /*--- Axisymmetric simulations ---*/
-
-          if (axisymmetric)
-            AxiFactor = 2.0 * PI_NUMBER * geometry->nodes->GetCoord(iPoint, 1);
-          else
-            AxiFactor = 1.0;
+          AxiFactor = 1.0;
 
           /*--- Force computation, note the minus sign due to the
            orientation of the normal (outward) ---*/
@@ -1876,7 +1864,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::Friction_Forces(const CGeometry* geometr
 
   const su2double Prandtl_Lam = config->GetPrandtl_Lam();
   const bool QCR = config->GetQCR();
-  const bool axisymmetric = config->GetAxisymmetric();
   const bool roughwall = (config->GetnRoughWall() > 0);
 
   const su2double factor = 1.0 / AeroCoeffForceRef;
@@ -2023,12 +2010,7 @@ void CFVMFlowSolverBase<V, FlowRegime>::Friction_Forces(const CGeometry* geometr
        halo cells (for visualization purposes), but not the forces ---*/
 
       if ((geometry->nodes->GetDomain(iPoint)) && (Monitoring == YES)) {
-        /*--- Axisymmetric simulations ---*/
-
-        if (axisymmetric)
-          AxiFactor = 2.0 * PI_NUMBER * geometry->nodes->GetCoord(iPoint, 1);
-        else
-          AxiFactor = 1.0;
+        AxiFactor = 1.0;
 
         /*--- Force computation ---*/
 
@@ -2299,31 +2281,3 @@ su2double CFVMFlowSolverBase<V,R>::EvaluateCommonObjFunc(const CConfig& config) 
   return objFun;
 }
 
-template <class V, ENUM_REGIME FlowRegime>
-void CFVMFlowSolverBase<V, FlowRegime>::ComputeAxisymmetricAuxGradients(CGeometry *geometry, const CConfig* config) {
-
-  /*--- Loop through all points to set the auxvargrad --*/
-  SU2_OMP_FOR_STAT(omp_chunk_size)
-  for (auto iPoint = 0ul; iPoint < nPoint; iPoint++) {
-    su2double yCoord          = geometry->nodes->GetCoord(iPoint, 1);
-    su2double yVelocity       = nodes->GetVelocity(iPoint,1);
-    su2double xVelocity       = nodes->GetVelocity(iPoint,0);
-    su2double Total_Viscosity = nodes->GetLaminarViscosity(iPoint) + nodes->GetEddyViscosity(iPoint);
-
-    if (yCoord > EPS){
-      su2double nu_v_on_y = Total_Viscosity*yVelocity/yCoord;
-      nodes->SetAuxVar(iPoint, 0, nu_v_on_y);
-      nodes->SetAuxVar(iPoint, 1, nu_v_on_y*yVelocity);
-      nodes->SetAuxVar(iPoint, 2, nu_v_on_y*xVelocity);
-    }
-  }
-  END_SU2_OMP_FOR
-
-  /*--- Compute the auxiliary variable gradient with GG or WLS. ---*/
-  if (config->GetKind_Gradient_Method() == GREEN_GAUSS) {
-    SetAuxVar_Gradient_GG(geometry, config);
-  }
-  if (config->GetKind_Gradient_Method() == WEIGHTED_LEAST_SQUARES) {
-    SetAuxVar_Gradient_LS(geometry, config);
-  }
-}
