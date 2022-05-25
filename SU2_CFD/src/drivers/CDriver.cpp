@@ -45,10 +45,8 @@
 #include "../../include/numerics/flow/convection/cusp.hpp"
 #include "../../include/numerics/flow/convection/hllc.hpp"
 #include "../../include/numerics/flow/convection/ausm_slau.hpp"
-#include "../../include/numerics/flow/flow_diffusion.hpp"
 #include "../../include/numerics/flow/flow_sources.hpp"
 #include "../../include/numerics/scalar/scalar_convection.hpp"
-#include "../../include/numerics/scalar/scalar_diffusion.hpp"
 
 #include "../../include/integration/CIntegrationFactory.hpp"
 
@@ -948,7 +946,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   const int source_second_term = SOURCE_SECOND_TERM + offset;
 
   const int conv_bound_term = CONV_BOUND_TERM + offset;
-  const int visc_bound_term = VISC_BOUND_TERM + offset;
 
   /*--- Solver definition for the template problem ---*/
   if (template_solver) {
@@ -1113,33 +1110,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
       default:
         SU2_MPI::Error("Invalid convective scheme for the Euler / Navier-Stokes equations.", CURRENT_FUNCTION);
         break;
-    }
-
-    /*--- Definition of the viscous scheme for each equation and mesh level ---*/
-    if (compressible) {
-      if (ideal_gas) {
-
-        /*--- Compressible flow Ideal gas ---*/
-        numerics[MESH_0][FLOW_SOL][visc_term] = new CAvgGrad_Flow(nDim, nVar_Flow, true, config);
-        for (iMGlevel = 1; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-          numerics[iMGlevel][FLOW_SOL][visc_term] = new CAvgGrad_Flow(nDim, nVar_Flow, false, config);
-
-        /*--- Definition of the boundary condition method ---*/
-        for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-          numerics[iMGlevel][FLOW_SOL][visc_bound_term] = new CAvgGrad_Flow(nDim, nVar_Flow, false, config);
-
-      } else {
-
-        /*--- Compressible flow Real gas ---*/
-        numerics[MESH_0][FLOW_SOL][visc_term] = new CGeneralAvgGrad_Flow(nDim, nVar_Flow, true, config);
-        for (iMGlevel = 1; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-          numerics[iMGlevel][FLOW_SOL][visc_term] = new CGeneralAvgGrad_Flow(nDim, nVar_Flow, false, config);
-
-        /*--- Definition of the boundary condition method ---*/
-        for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
-          numerics[iMGlevel][FLOW_SOL][visc_bound_term] = new CGeneralAvgGrad_Flow(nDim, nVar_Flow, false, config);
-
-      }
     }
 
     /*--- Definition of the source term integration scheme for each equation and mesh level ---*/

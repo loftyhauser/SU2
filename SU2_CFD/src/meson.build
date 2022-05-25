@@ -50,7 +50,6 @@ su2_cfd_src += files(['numerics/CNumerics.cpp',
                       'numerics/flow/convection/cusp.cpp',
                       'numerics/flow/convection/hllc.cpp',
                       'numerics/flow/convection/ausm_slau.cpp',
-                      'numerics/flow/flow_diffusion.cpp',
                       'numerics/flow/flow_sources.cpp'])
 
 su2_cfd_src += files(['../include/numerics_simd/CNumericsSIMD.cpp'])
