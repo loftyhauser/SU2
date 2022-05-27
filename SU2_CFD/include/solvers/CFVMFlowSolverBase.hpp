@@ -323,25 +323,20 @@ class CFVMFlowSolverBase : public CSolver {
    * \param[in] iMesh - Index of the mesh in multigrid computations.
    * \param[in] Iteration - Value of the current iteration.
    * \tparam SoundSpeedFunc - Function object to compute speed of sound.
-   * \tparam LambdaViscFunc - Function object to compute the viscous lambda.
    * \note Both functors need to implement (nodes,iPoint,jPoint) for edges, and (nodes,iPoint) for vertices.
    */
-  template<class SoundSpeedFunc, class LambdaViscFunc>
+  template<class SoundSpeedFunc>
   FORCEINLINE void SetTime_Step_impl(const SoundSpeedFunc& soundSpeed,
-                                     const LambdaViscFunc& lambdaVisc,
                                      CGeometry *geometry,
                                      CSolver **solver_container,
                                      CConfig *config,
                                      unsigned short iMesh,
                                      unsigned long Iteration) {
 
-    const bool viscous       = config->GetViscous();
     const bool implicit      = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
     const bool time_stepping = (config->GetTime_Marching() == TIME_MARCHING::TIME_STEPPING);
     const bool dual_time     = (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST) ||
                                (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND);
-    const su2double K_v = 0.25;
-
     /*--- Init thread-shared variables to compute min/max values.
      *    Critical sections are used for this instead of reduction
      *    clauses for compatibility with OpenMP 2.0 (Windows...). ---*/
@@ -356,9 +351,6 @@ class CFVMFlowSolverBase : public CSolver {
       /*--- Set maximum eigenvalues to zero. ---*/
 
       nodes->SetMax_Lambda_Inv(iPoint,0.0);
-
-      if (viscous)
-        nodes->SetMax_Lambda_Visc(iPoint,0.0);
 
       /*--- Loop over the neighbors of point i. ---*/
 
@@ -380,12 +372,6 @@ class CFVMFlowSolverBase : public CSolver {
         su2double Lambda = fabs(Mean_ProjVel) + Mean_SoundSpeed;
         nodes->AddMax_Lambda_Inv(iPoint,Lambda);
 
-        /*--- Viscous contribution ---*/
-
-        if (!viscous) continue;
-
-        Lambda = lambdaVisc(*nodes, iPoint, jPoint) * Area2;
-        nodes->AddMax_Lambda_Visc(iPoint, Lambda);
       }
 
     }
@@ -420,12 +406,6 @@ class CFVMFlowSolverBase : public CSolver {
           su2double Lambda = fabs(ProjVel) + SoundSpeed;
           nodes->AddMax_Lambda_Inv(iPoint, Lambda);
 
-          /*--- Viscous contribution ---*/
-
-          if (!viscous) continue;
-
-          Lambda = lambdaVisc(*nodes,iPoint) * Area2;
-          nodes->AddMax_Lambda_Visc(iPoint, Lambda);
         }
         END_SU2_OMP_FOR
       }
@@ -443,11 +423,6 @@ class CFVMFlowSolverBase : public CSolver {
 
         if (Vol != 0.0) {
           su2double Local_Delta_Time = nodes->GetLocalCFL(iPoint)*Vol / nodes->GetMax_Lambda_Inv(iPoint);
-
-          if(viscous) {
-            su2double dt_visc = nodes->GetLocalCFL(iPoint)*K_v*Vol*Vol / nodes->GetMax_Lambda_Visc(iPoint);
-            Local_Delta_Time = min(Local_Delta_Time, dt_visc);
-          }
 
           minDt = min(minDt, Local_Delta_Time);
           maxDt = max(maxDt, Local_Delta_Time);

@@ -32,8 +32,6 @@
 
 #include "../../../Common/include/CConfig.hpp"
 #include "../../../Common/include/basic_types/datatype_structure.hpp"
-#include "CConductivityModel.hpp"
-#include "CViscosityModel.hpp"
 
 using namespace std;
 
@@ -60,16 +58,6 @@ class CFluidModel {
   su2double dsdP_rho{0.0};     /*!< \brief DsDp_rho. */
   su2double Cp{0.0};           /*!< \brief Specific Heat Capacity at constant pressure. */
   su2double Cv{0.0};           /*!< \brief Specific Heat Capacity at constant volume. */
-  su2double Mu{0.0};           /*!< \brief Laminar viscosity. */
-  su2double Mu_Turb{0.0};      /*!< \brief Eddy viscosity provided by a turbulence model. */
-  su2double dmudrho_T{0.0};    /*!< \brief Partial derivative of viscosity w.r.t. density. */
-  su2double dmudT_rho{0.0};    /*!< \brief Partial derivative of viscosity w.r.t. temperature. */
-  su2double Kt{0.0};           /*!< \brief Thermal conductivity. */
-  su2double dktdrho_T{0.0};    /*!< \brief Partial derivative of conductivity w.r.t. density. */
-  su2double dktdT_rho{0.0};    /*!< \brief Partial derivative of conductivity w.r.t. temperature. */
-
-  unique_ptr<CViscosityModel> LaminarViscosity;       /*!< \brief Laminar Viscosity Model */
-  unique_ptr<CConductivityModel> ThermalConductivity; /*!< \brief Thermal Conductivity Model */
 
  public:
   virtual ~CFluidModel() {}
@@ -120,31 +108,6 @@ class CFluidModel {
   su2double GetCv() const { return Cv; }
 
   /*!
-   * \brief Get fluid dynamic viscosity.
-   */
-  su2double GetLaminarViscosity() {
-    LaminarViscosity->SetViscosity(Temperature, Density);
-    Mu = LaminarViscosity->GetViscosity();
-    LaminarViscosity->SetDerViscosity(Temperature, Density);
-    dmudrho_T = LaminarViscosity->Getdmudrho_T();
-    dmudT_rho = LaminarViscosity->GetdmudT_rho();
-    return Mu;
-  }
-
-  /*!
-   * \brief Get fluid thermal conductivity.
-   */
-
-  su2double GetThermalConductivity() {
-    ThermalConductivity->SetConductivity(Temperature, Density, Mu, Mu_Turb, Cp);
-    Kt = ThermalConductivity->GetConductivity();
-    ThermalConductivity->SetDerConductivity(Temperature, Density, dmudrho_T, dmudT_rho, Cp);
-    dktdrho_T = ThermalConductivity->Getdktdrho_T();
-    dktdT_rho = ThermalConductivity->GetdktdT_rho();
-    return Kt;
-  }
-
-  /*!
    * \brief Get fluid pressure partial derivative.
    */
   su2double GetdPdrho_e() const { return dPdrho_e; }
@@ -185,39 +148,9 @@ class CFluidModel {
   su2double GetdsdP_rho() const { return dsdP_rho; }
 
   /*!
-   * \brief Get fluid dynamic viscosity partial derivative.
-   */
-  su2double Getdmudrho_T() { return LaminarViscosity->Getdmudrho_T(); }
-
-  /*!
-   * \brief Get fluid dynamic viscosity partial derivative.
-   */
-  su2double GetdmudT_rho() { return LaminarViscosity->GetdmudT_rho(); }
-
-  /*!
-   * \brief Get fluid thermal conductivity partial derivative.
-   */
-  su2double Getdktdrho_T() const { return dktdrho_T; }
-
-  /*!
-   * \brief Get fluid thermal conductivity partial derivative.
-   */
-  su2double GetdktdT_rho() const { return dktdT_rho; }
-
-  /*!
    * \brief Set specific heat Cp model.
    */
   virtual void SetCpModel(const CConfig* config) {}
-
-  /*!
-   * \brief Set viscosity model.
-   */
-  void SetLaminarViscosityModel(const CConfig* config);
-
-  /*!
-   * \brief Set thermal conductivity model.
-   */
-  void SetThermalConductivityModel(const CConfig* config);
 
   /*!
    * \brief virtual member that would be different for each gas model implemented
@@ -292,10 +225,5 @@ class CFluidModel {
    * \param[in] T - Temperature value at the point.
    */
   virtual void SetTDState_T(su2double val_Temperature) {}
-
-  /*!
-   * \brief Set fluid eddy viscosity provided by a turbulence model needed for computing effective thermal conductivity.
-   */
-  void SetEddyViscosity(su2double val_Mu_Turb) { Mu_Turb = val_Mu_Turb; }
 
 };
