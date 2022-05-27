@@ -3,8 +3,7 @@ su2_cfd_src = files(['python_wrapper_structure.cpp',
                      'CMarkerProfileReaderFVM.cpp'])
 
 su2_cfd_src += files(['fluid/CFluidModel.cpp',
-                      'fluid/CIdealGas.cpp',
-                      'fluid/CVanDerWaalsGas.cpp'])
+                      'fluid/CIdealGas.cpp'])
 
 su2_cfd_src += files(['output/COutputFactory.cpp',
                       'output/CFlowCompOutput.cpp',

@@ -29,7 +29,6 @@
 #include "../../../Common/include/toolboxes/geometry_toolbox.hpp"
 #include "../../../Common/include/toolboxes/printing_toolbox.hpp"
 #include "../../include/fluid/CIdealGas.hpp"
-#include "../../include/fluid/CVanDerWaalsGas.hpp"
 #include "../../include/numerics_simd/CNumericsSIMD.hpp"
 #include "../../include/solvers/CFVMFlowSolverBase.inl"
 
@@ -677,12 +676,6 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
       auxFluidModel = new CIdealGas(Gamma, config->GetGas_Constant());
       break;
 
-    case VW_GAS:
-
-      auxFluidModel = new CVanDerWaalsGas(Gamma, config->GetGas_Constant(),
-                 config->GetPressure_Critical(), config->GetTemperature_Critical());
-      break;
-
     default:
       SU2_MPI::Error("Unknown fluid model.", CURRENT_FUNCTION);
       break;
@@ -903,12 +896,6 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
         FluidModel[thread] = new CIdealGas(Gamma, Gas_ConstantND);
         break;
 
-      case VW_GAS:
-        FluidModel[thread] = new CVanDerWaalsGas(Gamma, Gas_ConstantND,
-                                                 config->GetPressure_Critical() / config->GetPressure_Ref(),
-                                                 config->GetTemperature_Critical() / config->GetTemperature_Ref());
-        break;
-
     }
 
     GetFluidModel()->SetEnergy_Prho(Pressure_FreeStreamND, Density_FreeStreamND);
@@ -1048,18 +1035,8 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
     case IDEAL_GAS:
       ModelTable << "IDEAL_GAS";
       break;
-    case VW_GAS:
-      ModelTable << "VW_GAS";
-      break;
     }
 
-    if (config->GetKind_FluidModel() == VW_GAS){
-        NonDimTable << "Critical Pressure" << config->GetPressure_Critical() << config->GetPressure_Ref() << Unit.str() << config->GetPressure_Critical() /config->GetPressure_Ref();
-        Unit.str("");
-        Unit << "K";
-        NonDimTable << "Critical Temperature" << config->GetTemperature_Critical() << config->GetTemperature_Ref() << Unit.str() << config->GetTemperature_Critical() /config->GetTemperature_Ref();
-        Unit.str("");
-    }
     NonDimTable.PrintFooter();
 
     NonDimTableOut <<"-- Initial and free-stream conditions:"<< endl;

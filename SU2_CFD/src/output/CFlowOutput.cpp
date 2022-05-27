@@ -1847,19 +1847,6 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
         file << "Specific Heat Ratio: " << config->GetGamma() << "\n";
         break;
 
-      case VW_GAS:
-        file << "Fluid Model: Van der Waals \n";
-        file << "Specific gas constant: " << config->GetGas_Constant() << " N.m/kg.K.\n";
-        file << "Specific gas constant (non-dim): " << config->GetGas_ConstantND() << "\n";
-        file << "Specific Heat Ratio: " << config->GetGamma() << "\n";
-        file << "Critical Pressure:   " << config->GetPressure_Critical() << " Pa.\n";
-        file << "Critical Temperature:  " << config->GetTemperature_Critical() << " K.\n";
-        file << "Critical Pressure (non-dim):   " << config->GetPressure_Critical() / config->GetPressure_Ref()
-             << "\n";
-        file << "Critical Temperature (non-dim) :  "
-             << config->GetTemperature_Critical() / config->GetTemperature_Ref() << "\n";
-        break;
-
     }
 
     if (viscous) {

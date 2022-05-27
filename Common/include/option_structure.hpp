@@ -451,12 +451,10 @@ static const MapType<std::string, ENUM_SPACE> Space_Map = {
 enum ENUM_FLUIDMODEL {
   STANDARD_AIR = 0,       /*!< \brief Standard air gas model. */
   IDEAL_GAS = 1,          /*!< \brief Ideal gas model. */
-  VW_GAS = 2,             /*!< \brief Van Der Waals gas model. */
 };
 static const MapType<std::string, ENUM_FLUIDMODEL> FluidModel_Map = {
   MakePair("STANDARD_AIR", STANDARD_AIR)
   MakePair("IDEAL_GAS", IDEAL_GAS)
-  MakePair("VW_GAS", VW_GAS)
 };
 
 /*!
