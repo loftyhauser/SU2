@@ -28,8 +28,7 @@ su2_cfd_src += files(['output/COutputFactory.cpp',
                       'output/filewriter/CParaviewVTMFileWriter.cpp',
                       'output/filewriter/CSU2MeshFileWriter.cpp'])
 
-su2_cfd_src += files(['variables/CScalarVariable.cpp',
-                      'variables/CBaselineVariable.cpp',
+su2_cfd_src += files(['variables/CBaselineVariable.cpp',
                       'variables/CMeshVariable.cpp',
                       'variables/CMeshBoundVariable.cpp',
                       'variables/CMeshElement.cpp',
