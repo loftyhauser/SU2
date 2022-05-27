@@ -28,7 +28,6 @@ su2_cfd_src += files(['output/COutputFactory.cpp',
                       'output/filewriter/CSU2MeshFileWriter.cpp'])
 
 su2_cfd_src += files(['variables/CMeshVariable.cpp',
-                      'variables/CMeshBoundVariable.cpp',
                       'variables/CVariable.cpp',
                       'variables/CFlowVariable.cpp',
                       'variables/CEulerVariable.cpp'])

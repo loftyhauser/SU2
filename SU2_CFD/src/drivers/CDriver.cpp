@@ -323,8 +323,6 @@ void CDriver::Postprocessing() {
   delete [] geometry_container;
   if (rank == MASTER_NODE) cout << "Deleted CGeometry container." << endl;
 
-  if (rank == MASTER_NODE) cout << "Deleted CFreeFormDefBox class." << endl;
-
   /*--- Deallocate config container ---*/
   if (config_container!= nullptr) {
     for (iZone = 0; iZone < nZone; iZone++)
