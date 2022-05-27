@@ -30,7 +30,6 @@
 #include "../../../Common/include/toolboxes/printing_toolbox.hpp"
 #include "../../include/fluid/CIdealGas.hpp"
 #include "../../include/fluid/CVanDerWaalsGas.hpp"
-#include "../../include/fluid/CPengRobinson.hpp"
 #include "../../include/numerics_simd/CNumericsSIMD.hpp"
 #include "../../include/solvers/CFVMFlowSolverBase.inl"
 
@@ -684,12 +683,6 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
                  config->GetPressure_Critical(), config->GetTemperature_Critical());
       break;
 
-    case PR_GAS:
-
-      auxFluidModel = new CPengRobinson(Gamma, config->GetGas_Constant(), config->GetPressure_Critical(),
-                                        config->GetTemperature_Critical(), config->GetAcentric_Factor());
-      break;
-
     default:
       SU2_MPI::Error("Unknown fluid model.", CURRENT_FUNCTION);
       break;
@@ -916,12 +909,6 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
                                                  config->GetTemperature_Critical() / config->GetTemperature_Ref());
         break;
 
-      case PR_GAS:
-        FluidModel[thread] = new CPengRobinson(Gamma, Gas_ConstantND,
-                                               config->GetPressure_Critical() / config->GetPressure_Ref(),
-                                               config->GetTemperature_Critical() / config->GetTemperature_Ref(),
-                                               config->GetAcentric_Factor());
-        break;
     }
 
     GetFluidModel()->SetEnergy_Prho(Pressure_FreeStreamND, Density_FreeStreamND);
@@ -1064,12 +1051,9 @@ void CEulerSolver::SetNondimensionalization(CConfig *config, unsigned short iMes
     case VW_GAS:
       ModelTable << "VW_GAS";
       break;
-    case PR_GAS:
-      ModelTable << "PR_GAS";
-      break;
     }
 
-    if (config->GetKind_FluidModel() == VW_GAS || config->GetKind_FluidModel() == PR_GAS){
+    if (config->GetKind_FluidModel() == VW_GAS){
         NonDimTable << "Critical Pressure" << config->GetPressure_Critical() << config->GetPressure_Ref() << Unit.str() << config->GetPressure_Critical() /config->GetPressure_Ref();
         Unit.str("");
         Unit << "K";

@@ -452,15 +452,11 @@ enum ENUM_FLUIDMODEL {
   STANDARD_AIR = 0,       /*!< \brief Standard air gas model. */
   IDEAL_GAS = 1,          /*!< \brief Ideal gas model. */
   VW_GAS = 2,             /*!< \brief Van Der Waals gas model. */
-  PR_GAS = 3,             /*!< \brief Perfect Real gas model. */
-  CONSTANT_DENSITY = 4,   /*!< \brief Constant density gas model. */
 };
 static const MapType<std::string, ENUM_FLUIDMODEL> FluidModel_Map = {
   MakePair("STANDARD_AIR", STANDARD_AIR)
   MakePair("IDEAL_GAS", IDEAL_GAS)
   MakePair("VW_GAS", VW_GAS)
-  MakePair("PR_GAS", PR_GAS)
-  MakePair("CONSTANT_DENSITY", CONSTANT_DENSITY)
 };
 
 /*!

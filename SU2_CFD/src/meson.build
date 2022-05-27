@@ -4,7 +4,6 @@ su2_cfd_src = files(['python_wrapper_structure.cpp',
 
 su2_cfd_src += files(['fluid/CFluidModel.cpp',
                       'fluid/CIdealGas.cpp',
-                      'fluid/CPengRobinson.cpp',
                       'fluid/CVanDerWaalsGas.cpp'])
 
 su2_cfd_src += files(['output/COutputFactory.cpp',

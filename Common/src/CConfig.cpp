@@ -2588,8 +2588,7 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
 
   unsigned short iCFL, iMarker;
   bool ideal_gas = ((Kind_FluidModel == STANDARD_AIR) ||
-                    (Kind_FluidModel == IDEAL_GAS) ||
-                    (Kind_FluidModel == CONSTANT_DENSITY));
+                    (Kind_FluidModel == IDEAL_GAS));
   bool standard_air = ((Kind_FluidModel == STANDARD_AIR));
 
   if (nZone > 1){
