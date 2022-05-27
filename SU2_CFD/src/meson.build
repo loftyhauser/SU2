@@ -8,7 +8,6 @@ su2_cfd_src += files(['fluid/CFluidModel.cpp',
                       'fluid/CVanDerWaalsGas.cpp'])
 
 su2_cfd_src += files(['output/COutputFactory.cpp',
-                      'output/CBaselineOutput.cpp',
                       'output/CFlowCompOutput.cpp',
                       'output/CFVMOutput.cpp',
                       'output/CFlowOutput.cpp',
@@ -28,8 +27,7 @@ su2_cfd_src += files(['output/COutputFactory.cpp',
                       'output/filewriter/CParaviewVTMFileWriter.cpp',
                       'output/filewriter/CSU2MeshFileWriter.cpp'])
 
-su2_cfd_src += files(['variables/CBaselineVariable.cpp',
-                      'variables/CMeshVariable.cpp',
+su2_cfd_src += files(['variables/CMeshVariable.cpp',
                       'variables/CMeshBoundVariable.cpp',
                       'variables/CMeshElement.cpp',
                       'variables/CVariable.cpp',
@@ -37,7 +35,6 @@ su2_cfd_src += files(['variables/CBaselineVariable.cpp',
                       'variables/CEulerVariable.cpp'])
 
 su2_cfd_src += files(['solvers/CSolverFactory.cpp',
-                      'solvers/CBaselineSolver.cpp',
                       'solvers/CEulerSolver.cpp',
                       'solvers/CSolver.cpp',
                       'solvers/CTemplateSolver.cpp'])

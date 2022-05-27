@@ -29,7 +29,6 @@
 #include "../../include/solvers/CSolverFactory.hpp"
 #include "../../include/solvers/CEulerSolver.hpp"
 #include "../../include/solvers/CTemplateSolver.hpp"
-#include "../../include/solvers/CBaselineSolver.hpp"
 
 map<const CSolver*, SolverMetaData> CSolverFactory::allocatedSolvers;
 
@@ -63,10 +62,6 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
   metaData.solverType = kindSolver;
 
   switch (kindSolver) {
-    case SUB_SOLVER_TYPE::BASELINE:
-      genericSolver = new CBaselineSolver(geometry, config);
-      metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
-      break;
     case SUB_SOLVER_TYPE::EULER:
       genericSolver = CreateFlowSolver(kindSolver, solver, geometry, config, iMGLevel);
       if (!config->GetNewtonKrylov() || config->GetDiscrete_Adjoint() || config->GetContinuous_Adjoint())
