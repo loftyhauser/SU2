@@ -46,7 +46,6 @@
 #include "../../include/numerics/flow/convection/hllc.hpp"
 #include "../../include/numerics/flow/convection/ausm_slau.hpp"
 #include "../../include/numerics/flow/flow_sources.hpp"
-#include "../../include/numerics/scalar/scalar_convection.hpp"
 
 #include "../../include/integration/CIntegrationFactory.hpp"
 
