@@ -28,7 +28,6 @@
 #include "../../include/solvers/CSolver.hpp"
 #include "../../include/solvers/CSolverFactory.hpp"
 #include "../../include/solvers/CEulerSolver.hpp"
-#include "../../include/solvers/CTemplateSolver.hpp"
 
 map<const CSolver*, SolverMetaData> CSolverFactory::allocatedSolvers;
 
@@ -39,9 +38,6 @@ CSolver** CSolverFactory::CreateSolverContainer(MAIN_SOLVER kindMainSolver, CCon
   solver = new CSolver*[MAX_SOLS]();
 
   switch (kindMainSolver) {
-    case MAIN_SOLVER::TEMPLATE_SOLVER:
-      solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::TEMPLATE, solver, geometry, config, iMGLevel);
-      break;
     case MAIN_SOLVER::EULER:
       solver[FLOW_SOL] = CreateSubSolver(SUB_SOLVER_TYPE::EULER, solver, geometry, config, iMGLevel);
       break;
@@ -68,10 +64,6 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
         metaData.integrationType = INTEGRATION_TYPE::MULTIGRID;
       else
         metaData.integrationType = INTEGRATION_TYPE::NEWTON;
-      break;
-    case SUB_SOLVER_TYPE::TEMPLATE:
-      genericSolver = new CTemplateSolver(geometry, config);
-      metaData.integrationType = INTEGRATION_TYPE::SINGLEGRID;
       break;
     default:
       SU2_MPI::Error("No proper allocation found for requested sub solver", CURRENT_FUNCTION);

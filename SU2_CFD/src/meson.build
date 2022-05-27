@@ -36,8 +36,7 @@ su2_cfd_src += files(['variables/CMeshVariable.cpp',
 
 su2_cfd_src += files(['solvers/CSolverFactory.cpp',
                       'solvers/CEulerSolver.cpp',
-                      'solvers/CSolver.cpp',
-                      'solvers/CTemplateSolver.cpp'])
+                      'solvers/CSolver.cpp'])
 
 su2_cfd_src += files(['numerics/CNumerics.cpp',
                       'numerics/template.cpp',
