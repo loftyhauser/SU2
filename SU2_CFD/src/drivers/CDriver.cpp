@@ -45,7 +45,6 @@
 #include "../../include/numerics/flow/convection/cusp.hpp"
 #include "../../include/numerics/flow/convection/hllc.hpp"
 #include "../../include/numerics/flow/convection/ausm_slau.hpp"
-#include "../../include/numerics/flow/flow_sources.hpp"
 
 #include "../../include/integration/CIntegrationFactory.hpp"
 
@@ -1112,18 +1111,7 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
     /*--- Definition of the source term integration scheme for each equation and mesh level ---*/
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
 
-      if (config->GetBody_Force() == YES) {
-          numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceBodyForce(nDim, nVar_Flow, config);
-      }
-      else if (config->GetRotating_Frame() == YES) {
-        numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceRotatingFrame_Flow(nDim, nVar_Flow, config);
-      }
-      else if (config->GetGravityForce() == YES) {
-        numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceGravity(nDim, nVar_Flow, config);
-      }
-      else {
         numerics[iMGlevel][FLOW_SOL][source_first_term] = new CSourceNothing(nDim, nVar_Flow, config);
-      }
 
       /*--- At the moment it is necessary to have the RHT equation in order to have a volumetric heat source. ---*/
         numerics[iMGlevel][FLOW_SOL][source_second_term] = new CSourceNothing(nDim, nVar_Flow, config);

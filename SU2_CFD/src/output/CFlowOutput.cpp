@@ -704,30 +704,6 @@ void CFlowOutput::SetVolumeOutputFields_ScalarLimiter(const CConfig* config) {
     }
   }
 
-  if (config->GetKind_Turb_Model() != TURB_MODEL::NONE) {
-    AddVolumeOutput("EDDY_VISCOSITY", "Eddy_Viscosity", "PRIMITIVE", "Turbulent eddy viscosity");
-  }
-
-  if (config->GetKind_Trans_Model() == TURB_TRANS_MODEL::BC) {
-    AddVolumeOutput("INTERMITTENCY", "gamma_BC", "INTERMITTENCY", "Intermittency");
-  }
-
-  // Hybrid RANS-LES
-  if (config->GetKind_HybridRANSLES() != NO_HYBRIDRANSLES) {
-    AddVolumeOutput("DES_LENGTHSCALE", "DES_LengthScale", "DDES", "DES length scale value");
-    AddVolumeOutput("WALL_DISTANCE", "Wall_Distance", "DDES", "Wall distance value");
-  }
-
-  if (config->GetViscous()) {
-    if (nDim == 3) {
-      AddVolumeOutput("VORTICITY_X", "Vorticity_x", "VORTEX_IDENTIFICATION", "x-component of the vorticity vector");
-      AddVolumeOutput("VORTICITY_Y", "Vorticity_y", "VORTEX_IDENTIFICATION", "y-component of the vorticity vector");
-      AddVolumeOutput("VORTICITY_Z", "Vorticity_z", "VORTEX_IDENTIFICATION", "z-component of the vorticity vector");
-    } else {
-      AddVolumeOutput("VORTICITY", "Vorticity", "VORTEX_IDENTIFICATION", "Value of the vorticity");
-    }
-    AddVolumeOutput("Q_CRITERION", "Q_Criterion", "VORTEX_IDENTIFICATION", "Value of the Q-Criterion");
-  }
 }
 
 void CFlowOutput::LoadVolumeData_Scalar(const CConfig* config, const CSolver* const* solver, const CGeometry* geometry,
@@ -736,17 +712,6 @@ void CFlowOutput::LoadVolumeData_Scalar(const CConfig* config, const CSolver* co
   const auto* Node_Flow = solver[FLOW_SOL]->GetNodes();
   const auto* Node_Turb = (config->GetKind_Turb_Model() != TURB_MODEL::NONE) ? turb_solver->GetNodes() : nullptr;
   const auto* Node_Geo = geometry->nodes;
-
-  if (config->GetViscous()) {
-    if (nDim == 3){
-      SetVolumeOutputValue("VORTICITY_X", iPoint, Node_Flow->GetVorticity(iPoint)[0]);
-      SetVolumeOutputValue("VORTICITY_Y", iPoint, Node_Flow->GetVorticity(iPoint)[1]);
-      SetVolumeOutputValue("VORTICITY_Z", iPoint, Node_Flow->GetVorticity(iPoint)[2]);
-    } else {
-      SetVolumeOutputValue("VORTICITY", iPoint, Node_Flow->GetVorticity(iPoint)[2]);
-    }
-    SetVolumeOutputValue("Q_CRITERION", iPoint, GetQ_Criterion(Node_Flow->GetVelocityGradient(iPoint)));
-  }
 
   const bool limiter = (config->GetKind_SlopeLimit_Turb() != LIMITER::NONE);
 
@@ -1552,10 +1517,7 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
 
   const bool compressible = (config->GetKind_Regime() == ENUM_REGIME::COMPRESSIBLE);
   const bool unsteady = config->GetTime_Domain();
-  const bool viscous = config->GetViscous();
   const bool gravity = config->GetGravityForce();
-  const TURB_MODEL Kind_Turb_Model = config->GetKind_Turb_Model();
-  const bool turbulent = Kind_Turb_Model != TURB_MODEL::NONE;
   const bool fixed_cl = config->GetFixed_CL_Mode();
   const auto Kind_Solver = config->GetKind_Solver();
   const auto Ref_NonDim = config->GetRef_NonDim();
@@ -1782,9 +1744,6 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
     file << "Mach number: " << config->GetMach() << ".\n";
     file << "Angle of attack (AoA): " << config->GetAoA() << " deg, and angle of sideslip (AoS): " << config->GetAoS()
          << " deg.\n";
-    if (viscous)
-      file << "Reynolds number: " << config->GetReynolds() << ".\n";
-
     if (fixed_cl) {
       file << "Simulation at a cte. CL: " << config->GetTarget_CL() << ".\n";
       file << "Approx. Delta CL / Delta AoA: " << config->GetdCL_dAlpha() << " (1/deg).\n";
@@ -1817,16 +1776,10 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
     }
     file << "\n\nProblem definition:\n\n";
 
-    if (viscous) {
-      file << "Viscous flow: Computing pressure using the ideal gas law\n";
-      file << "based on the free-stream temperature and a density computed\n";
-      file << "from the Reynolds number.\n";
-    } else {
-      file << "Inviscid flow: Computing density based on free-stream\n";
-      file << "temperature and pressure using the ideal gas law.\n";
-    }
+    file << "Inviscid flow: Computing density based on free-stream\n";
+    file << "temperature and pressure using the ideal gas law.\n";
 
-      file << "Force coefficients computed using free-stream values.\n";
+    file << "Force coefficients computed using free-stream values.\n";
 
     file << "-- Input conditions:\n";
 
@@ -1847,65 +1800,6 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
         file << "Specific Heat Ratio: " << config->GetGamma() << "\n";
         break;
 
-    }
-
-    if (viscous) {
-      switch (config->GetKind_ViscosityModel()) {
-        case VISCOSITYMODEL::CONSTANT:
-          file << "Viscosity Model: CONSTANT_VISCOSITY  \n";
-          file << "Laminar Viscosity: " << config->GetMu_Constant();
-          if (si_units) file << " N.s/m^2.\n";
-          else file << " lbf.s/ft^2.\n";
-          file << "Laminar Viscosity (non-dim): " << config->GetMu_ConstantND() << "\n";
-          break;
-
-        case VISCOSITYMODEL::SUTHERLAND:
-          file << "Viscosity Model: SUTHERLAND \n";
-          file << "Ref. Laminar Viscosity: " << config->GetMu_Ref();
-          if (si_units) file << " N.s/m^2.\n";
-          else file << " lbf.s/ft^2.\n";
-          file << "Ref. Temperature: " << config->GetMu_Temperature_Ref();
-          if (si_units) file << " K.\n";
-          else file << " R.\n";
-          file << "Sutherland Constant: " << config->GetMu_S();
-          if (si_units) file << " K.\n";
-          else file << " R.\n";
-          file << "Laminar Viscosity (non-dim): " << config->GetMu_ConstantND() << "\n";
-          file << "Ref. Temperature (non-dim): " << config->GetMu_Temperature_RefND() << "\n";
-          file << "Sutherland constant (non-dim): " << config->GetMu_SND() << "\n";
-          break;
-
-        default:
-          break;
-      }
-      switch (config->GetKind_ConductivityModel()) {
-        case CONDUCTIVITYMODEL::CONSTANT_PRANDTL:
-          file << "Conductivity Model: CONSTANT_PRANDTL \n";
-          file << "Prandtl: " << config->GetPrandtl_Lam() << "\n";
-          break;
-
-        case CONDUCTIVITYMODEL::CONSTANT:
-          file << "Conductivity Model: CONSTANT \n";
-          file << "Molecular Conductivity: " << config->GetThermal_Conductivity_Constant() << " W/m^2.K.\n";
-          file << "Molecular Conductivity (non-dim): " << config->GetThermal_Conductivity_ConstantND() << "\n";
-          break;
-
-        default:
-          break;
-      }
-
-      if (turbulent) {
-        switch (config->GetKind_ConductivityModel_Turb()) {
-          case CONDUCTIVITYMODEL_TURB::CONSTANT_PRANDTL:
-            file << "Turbulent Conductivity Model: CONSTANT_PRANDTL \n";
-            file << "Turbulent Prandtl: " << config->GetPrandtl_Turb() << "\n";
-            break;
-          case CONDUCTIVITYMODEL_TURB::NONE:
-            file << "Turbulent Conductivity Model: NONE \n";
-            file << "No turbulent component in effective thermal conductivity.\n";
-            break;
-        }
-      }
     }
 
     file << "Free-stream static pressure: " << config->GetPressure_FreeStream();
@@ -1949,20 +1843,6 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
     if (si_units) file << " m^2/s^2.\n";
     else file << " ft^2/s^2.\n";
 
-    if (viscous) {
-      file << "Free-stream viscosity: " << config->GetViscosity_FreeStream();
-      if (si_units) file << " N.s/m^2.\n";
-      else file << " lbf.s/ft^2.\n";
-      if (turbulent) {
-        file << "Free-stream turb. kinetic energy per unit mass: " << config->GetTke_FreeStream();
-        if (si_units) file << " m^2/s^2.\n";
-        else file << " ft^2/s^2.\n";
-        file << "Free-stream specific dissipation: " << config->GetOmega_FreeStream();
-        if (si_units) file << " 1/s.\n";
-        else file << " 1/s.\n";
-      }
-    }
-
     if (unsteady) {
       file << "Total time: " << config->GetTotal_UnstTime() << " s. Time step: " << config->GetDelta_UnstTime()
            << " s.\n";
@@ -1996,26 +1876,12 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
     if (si_units) file << " m^2/s^2.\n";
     else file << " ft^2/s^2.\n";
 
-    if (viscous) {
-      file << "Reference viscosity: " << config->GetViscosity_Ref();
-      if (si_units) file << " N.s/m^2.\n";
-      else file << " lbf.s/ft^2.\n";
-      file << "Reference conductivity: " << config->GetThermal_Conductivity_Ref();
-      if (si_units) file << " W/m^2.K.\n";
-      else file << " lbf/ft.s.R.\n";
-    }
-
     if (unsteady) file << "Reference time: " << config->GetTime_Ref() << " s.\n";
 
     /*--- Print out resulting non-dim values here. ---*/
 
     file << "-- Resulting non-dimensional state:\n";
     file << "Mach number (non-dim): " << config->GetMach() << "\n";
-    if (viscous) {
-      file << "Reynolds number (non-dim): " << config->GetReynolds() << ". Re length: " << config->GetLength_Reynolds();
-      if (si_units) file << " m.\n";
-      else file << " ft.\n";
-    }
     if (gravity) {
       file << "Froude number (non-dim): " << config->GetFroude() << "\n";
       file << "Lenght of the baseline wave (non-dim): " << 2.0 * PI_NUMBER * config->GetFroude() * config->GetFroude()
@@ -2036,14 +1902,6 @@ void CFlowOutput::WriteForcesBreakdown(const CConfig* config, const CSolver* flo
     }
     file << "Magnitude: " << config->GetModVel_FreeStreamND() << "\n";
     file << "Free-stream total energy per unit mass (non-dim): " << config->GetEnergy_FreeStreamND() << "\n";
-
-    if (viscous) {
-      file << "Free-stream viscosity (non-dim): " << config->GetViscosity_FreeStreamND() << "\n";
-      if (turbulent) {
-        file << "Free-stream turb. kinetic energy (non-dim): " << config->GetTke_FreeStreamND() << "\n";
-        file << "Free-stream specific dissipation (non-dim): " << config->GetOmega_FreeStreamND() << "\n";
-      }
-    }
 
     if (unsteady) {
       file << "Total time (non-dim): " << config->GetTotal_UnstTimeND() << "\n";
