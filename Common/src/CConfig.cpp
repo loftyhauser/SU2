@@ -649,8 +649,6 @@ void CConfig::SetPointersNull(void) {
   DoubleInfo_WallFunctions = nullptr;
   Kind_Wall                = nullptr;
 
-  Config_Filenames = nullptr;
-
   /*--- Marker Pointers ---*/
 
   Marker_Euler                = nullptr;    Marker_FarField             = nullptr;    Marker_Custom              = nullptr;
@@ -1885,10 +1883,6 @@ void CConfig::SetConfig_Options() {
   /*!\par CONFIG_CATEGORY: Multizone definition \ingroup Config*/
   /*--- Options related to multizone problems ---*/
 
-  /* DESCRIPTION List of config files for each zone in a multizone setup with SOLVER=MULTIPHYSICS
-   * Order here has to match the order in the meshfile if just one is used. */
-  addStringListOption("CONFIG_LIST", nConfig_Files, Config_Filenames);
-
   /* DESCRIPTION: Determines if the multizone problem is solved for time-domain. */
   addBoolOption("TIME_DOMAIN", Time_Domain, false);
   /* DESCRIPTION: Number of outer iterations in the multizone problem. */
@@ -2538,10 +2532,6 @@ void CConfig::SetHeader(SU2_COMPONENT val_software) const{
     cout << "|   \\__ \\ |_| |/ /                                                      |" << endl;
     switch (val_software) {
     case SU2_COMPONENT::SU2_CFD: cout << "|   |___/\\___//___|   Suite (Computational Fluid Dynamics Code)         |" << endl; break;
-    case SU2_COMPONENT::SU2_DEF: cout << "|   |___/\\___//___|   Suite (Mesh Deformation Code)                     |" << endl; break;
-    case SU2_COMPONENT::SU2_DOT: cout << "|   |___/\\___//___|   Suite (Gradient Projection Code)                  |" << endl; break;
-    case SU2_COMPONENT::SU2_GEO: cout << "|   |___/\\___//___|   Suite (Geometry Definition Code)                  |" << endl; break;
-    case SU2_COMPONENT::SU2_SOL: cout << "|   |___/\\___//___|   Suite (Solution Exporting Code)                   |" << endl; break;
     }
 
     cout << "|                                                                       |" << endl;
@@ -2938,12 +2928,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     SU2_MPI::Error("ITER must not be used when running multizone and/or unsteady problems.\n"
                    "Use TIME_ITER, OUTER_ITER or INNER_ITER to specify number of time iterations,\n"
                    "outer iterations or inner iterations, respectively.", CURRENT_FUNCTION);
-  }
-
-  /*--- The Line Search should be applied only in the deformation stage. ---*/
-
-  if (Kind_SU2 != SU2_COMPONENT::SU2_DEF) {
-    Opt_RelaxFactor = 1.0;
   }
 
   /*--- In case the moment origin coordinates have not been declared in the
@@ -3562,9 +3546,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
    force the projected surface sensitivity file to be written. ---*/
 
   Wrt_Projected_Sensitivity = false;
-  if ((Kind_SU2 == SU2_COMPONENT::SU2_DOT) && (Design_Variable[0] == SURFACE_FILE)) {
-    Wrt_Projected_Sensitivity = true;
-  }
 
   /*--- Delay the output until exit for minimal communication mode. ---*/
 
@@ -4163,7 +4144,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
   iMarker_Outlet, iMarker_Isothermal, iMarker_HeatFlux, iMarker_HeatTransfer,
   iMarker_EngineInflow, iMarker_EngineExhaust, iMarker_Displacement, iMarker_Damper,
   iMarker_Load, iMarker_FlowLoad, iMarker_Internal, iMarker_Monitoring,
-  iMarker_Designing, iMarker_GeoEval, iMarker_Plotting, iMarker_Analyze, iMarker_DV, iDV_Value,
+  iMarker_Designing, iMarker_Plotting, iMarker_Analyze, iMarker_DV,
   iMarker_ZoneInterface, iMarker_PyCustom, iMarker_Load_Dir, iMarker_Disp_Dir, iMarker_Load_Sine, iMarker_Clamped,
   iMarker_Moving, iMarker_Supersonic_Inlet, iMarker_Supersonic_Outlet, iMarker_ActDiskInlet,
   iMarker_ActDiskOutlet,
@@ -4330,199 +4311,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
 
   }
 
-  if (val_software == SU2_COMPONENT::SU2_GEO) {
-    if (nMarker_GeoEval != 0) {
-      cout << "Surface(s) where the geometrical based functions is evaluated: ";
-      for (iMarker_GeoEval = 0; iMarker_GeoEval < nMarker_GeoEval; iMarker_GeoEval++) {
-        cout << Marker_GeoEval[iMarker_GeoEval];
-        if (iMarker_GeoEval < nMarker_GeoEval-1) cout << ", ";
-        else cout <<".";
-      }
-      cout<< endl;
-    }
-  }
-
   cout << "Input mesh file name: " << Mesh_FileName << endl;
-
-  if (val_software == SU2_COMPONENT::SU2_DOT) {
-    if (DiscreteAdjoint) {
-      cout << "Input sensitivity file name: " << GetObjFunc_Extension(Solution_AdjFileName) << "." << endl;
-    }else {
-    cout << "Input sensitivity file name: " << SurfAdjCoeff_FileName << "." << endl;
-  }
-  }
-
-  if (val_software == SU2_COMPONENT::SU2_DEF) {
-    cout << endl <<"---------------- Grid deformation parameters ( Zone "  << iZone << " )  ----------------" << endl;
-    cout << "Grid deformation using a linear elasticity method." << endl;
-
-    if (Hold_GridFixed == YES) cout << "Hold some regions of the mesh fixed (hardcode implementation)." << endl;
-  }
-
-  if (val_software == SU2_COMPONENT::SU2_DOT) {
-  cout << endl <<"-------------- Surface deformation parameters ( Zone "  << iZone << " ) ----------------" << endl;
-  }
-
-  if (((val_software == SU2_COMPONENT::SU2_DEF) || (val_software == SU2_COMPONENT::SU2_DOT)) && (Design_Variable[0] != NO_DEFORMATION)) {
-
-    for (unsigned short iDV = 0; iDV < nDV; iDV++) {
-
-
-      if ((Design_Variable[iDV] != NO_DEFORMATION) &&
-          (Design_Variable[iDV] != FFD_SETTING) &&
-          (Design_Variable[iDV] != SCALE_GRID) &&
-          (Design_Variable[iDV] != TRANSLATE_GRID) &&
-          (Design_Variable[iDV] != ROTATE_GRID) &&
-          (Design_Variable[iDV] != SURFACE_FILE)) {
-
-        if (iDV == 0)
-          cout << "Design variables definition (markers <-> value <-> param):" << endl;
-
-        switch (Design_Variable[iDV]) {
-          case FFD_CONTROL_POINT_2D:  cout << "FFD 2D (control point) <-> "; break;
-          case FFD_CAMBER_2D:         cout << "FFD 2D (camber) <-> "; break;
-          case FFD_THICKNESS_2D:      cout << "FFD 2D (thickness) <-> "; break;
-          case FFD_TWIST_2D:          cout << "FFD 2D (twist) <-> "; break;
-          case HICKS_HENNE:           cout << "Hicks Henne <-> " ; break;
-          case SURFACE_BUMP:          cout << "Surface bump <-> " ; break;
-          case ANGLE_OF_ATTACK:       cout << "Angle of attack <-> " ; break;
-          case CST:                   cout << "Kulfan parameter number (CST) <-> " ; break;
-          case TRANSLATION:           cout << "Translation design variable."; break;
-          case SCALE:                 cout << "Scale design variable."; break;
-          case NACA_4DIGITS:          cout << "NACA four digits <-> "; break;
-          case PARABOLIC:             cout << "Parabolic <-> "; break;
-          case AIRFOIL:               cout << "Airfoil <-> "; break;
-          case FFD_CONTROL_POINT:     cout << "FFD (control point) <-> "; break;
-          case FFD_NACELLE:           cout << "FFD (nacelle) <-> "; break;
-          case FFD_GULL:              cout << "FFD (gull) <-> "; break;
-          case FFD_TWIST:             cout << "FFD (twist) <-> "; break;
-          case FFD_ROTATION:          cout << "FFD (rotation) <-> "; break;
-          case FFD_CONTROL_SURFACE:   cout << "FFD (control surface) <-> "; break;
-          case FFD_CAMBER:            cout << "FFD (camber) <-> "; break;
-          case FFD_THICKNESS:         cout << "FFD (thickness) -> "; break;
-          case FFD_ANGLE_OF_ATTACK:   cout << "FFD (angle of attack) <-> "; break;
-        }
-
-        for (iMarker_DV = 0; iMarker_DV < nMarker_DV; iMarker_DV++) {
-          cout << Marker_DV[iMarker_DV];
-          if (iMarker_DV < nMarker_DV-1) cout << ", ";
-          else cout << " <-> ";
-        }
-
-        for (iDV_Value = 0; iDV_Value < nDV_Value[iDV]; iDV_Value++) {
-          cout << DV_Value[iDV][iDV_Value];
-          if (iDV_Value != nDV_Value[iDV]-1) cout << ", ";
-        }
-        cout << " <-> ";
-
-        if ((Design_Variable[iDV] == NO_DEFORMATION) ||
-            (Design_Variable[iDV] == FFD_SETTING) ||
-            (Design_Variable[iDV] == SCALE) ) nParamDV = 0;
-        if (Design_Variable[iDV] == ANGLE_OF_ATTACK) nParamDV = 1;
-        if ((Design_Variable[iDV] == FFD_CAMBER_2D) ||
-            (Design_Variable[iDV] == FFD_THICKNESS_2D) ||
-            (Design_Variable[iDV] == HICKS_HENNE) ||
-            (Design_Variable[iDV] == PARABOLIC) ||
-            (Design_Variable[iDV] == AIRFOIL) ||
-            (Design_Variable[iDV] == FFD_GULL) ||
-            (Design_Variable[iDV] == FFD_ANGLE_OF_ATTACK) ) nParamDV = 2;
-        if ((Design_Variable[iDV] ==  TRANSLATION) ||
-            (Design_Variable[iDV] ==  NACA_4DIGITS) ||
-            (Design_Variable[iDV] ==  CST) ||
-            (Design_Variable[iDV] ==  SURFACE_BUMP) ||
-            (Design_Variable[iDV] ==  FFD_CAMBER) ||
-            (Design_Variable[iDV] ==  FFD_TWIST_2D) ||
-            (Design_Variable[iDV] ==  FFD_THICKNESS) ) nParamDV = 3;
-        if (Design_Variable[iDV] == FFD_CONTROL_POINT_2D) nParamDV = 5;
-        if (Design_Variable[iDV] == ROTATION) nParamDV = 6;
-        if ((Design_Variable[iDV] ==  FFD_CONTROL_POINT) ||
-            (Design_Variable[iDV] ==  FFD_ROTATION) ||
-            (Design_Variable[iDV] ==  FFD_CONTROL_SURFACE) ) nParamDV = 7;
-        if (Design_Variable[iDV] == FFD_TWIST) nParamDV = 8;
-
-
-      }
-
-      else if (Design_Variable[iDV] == NO_DEFORMATION) {
-        cout << "No deformation of the numerical grid. Just output .su2 file." << endl;
-      }
-
-      else if (Design_Variable[iDV] == SCALE_GRID) {
-        nParamDV = 0;
-        cout << "Scaling of the volume grid by a constant factor." << endl;
-      }
-
-      else if (Design_Variable[iDV] == TRANSLATE_GRID) {
-        nParamDV = 3;
-        cout << "Rigid translation of the volume grid." << endl;
-      }
-
-      else if (Design_Variable[iDV] == ROTATE_GRID) {
-        nParamDV = 6;
-        cout << "Rigid rotation of the volume grid." << endl;
-      }
-
-
-      else cout << endl;
-
-    }
-  }
-
-  if (((val_software == SU2_COMPONENT::SU2_CFD) && ( ContinuousAdjoint || DiscreteAdjoint)) || (val_software == SU2_COMPONENT::SU2_DOT)) {
-
-    cout << endl <<"---------------- Design problem definition  ( Zone "  << iZone << " ) ------------------" << endl;
-    if (nObj==1) {
-      switch (Kind_ObjFunc[0]) {
-        case DRAG_COEFFICIENT:           cout << "CD objective function";
-          if (Fixed_CL_Mode) {           cout << " using fixed CL mode, dCD/dCL = " << dCD_dCL << "." << endl; }
-          else {                         cout << "." << endl; }
-          break;
-        case LIFT_COEFFICIENT:           cout << "CL objective function." << endl; break;
-        case MOMENT_X_COEFFICIENT:       cout << "CMx objective function" << endl;
-          if (Fixed_CL_Mode) {           cout << " using fixed CL mode, dCMx/dCL = " << dCMx_dCL << "." << endl; }
-          else {                         cout << "." << endl; }
-          break;
-        case MOMENT_Y_COEFFICIENT:       cout << "CMy objective function" << endl;
-          if (Fixed_CL_Mode) {           cout << " using fixed CL mode, dCMy/dCL = " << dCMy_dCL << "." << endl; }
-          else {                         cout << "." << endl; }
-          break;
-        case MOMENT_Z_COEFFICIENT:       cout << "CMz objective function" << endl;
-          if (Fixed_CL_Mode) {           cout << " using fixed CL mode, dCMz/dCL = " << dCMz_dCL << "." << endl; }
-          else {                         cout << "." << endl; }
-          break;
-        case INVERSE_DESIGN_PRESSURE:    cout << "Inverse design (Cp) objective function." << endl; break;
-        case INVERSE_DESIGN_HEATFLUX:    cout << "Inverse design (Heat Flux) objective function." << endl; break;
-        case SIDEFORCE_COEFFICIENT:      cout << "Side force objective function." << endl; break;
-        case EFFICIENCY:                 cout << "CL/CD objective function." << endl; break;
-        case EQUIVALENT_AREA:            cout << "Equivalent area objective function. CD weight: " << WeightCd <<"."<< endl;  break;
-        case NEARFIELD_PRESSURE:         cout << "Nearfield pressure objective function. CD weight: " << WeightCd <<"."<< endl;  break;
-        case FORCE_X_COEFFICIENT:        cout << "X-force objective function." << endl; break;
-        case FORCE_Y_COEFFICIENT:        cout << "Y-force objective function." << endl; break;
-        case FORCE_Z_COEFFICIENT:        cout << "Z-force objective function." << endl; break;
-        case THRUST_COEFFICIENT:         cout << "Thrust objective function." << endl; break;
-        case TORQUE_COEFFICIENT:         cout << "Torque efficiency objective function." << endl; break;
-        case TOTAL_HEATFLUX:             cout << "Total heat flux objective function." << endl; break;
-        case MAXIMUM_HEATFLUX:           cout << "Maximum heat flux objective function." << endl; break;
-        case FIGURE_OF_MERIT:            cout << "Rotor Figure of Merit objective function." << endl; break;
-        case SURFACE_TOTAL_PRESSURE:     cout << "Average total pressure objective function." << endl; break;
-        case SURFACE_STATIC_PRESSURE:    cout << "Average static pressure objective function." << endl; break;
-        case SURFACE_STATIC_TEMPERATURE: cout << "Average static temperature objective function." << endl; break;
-        case SURFACE_MASSFLOW:           cout << "Mass flow rate objective function." << endl; break;
-        case SURFACE_MACH:               cout << "Mach number objective function." << endl; break;
-        case CUSTOM_OBJFUNC:             cout << "Custom objective function." << endl; break;
-        case REFERENCE_GEOMETRY:         cout << "Target geometry objective function." << endl; break;
-        case REFERENCE_NODE:             cout << "Target node displacement objective function." << endl; break;
-        case VOLUME_FRACTION:            cout << "Volume fraction objective function." << endl; break;
-        case TOPOL_DISCRETENESS:         cout << "Topology discreteness objective function." << endl; break;
-        case TOPOL_COMPLIANCE:           cout << "Topology compliance objective function." << endl; break;
-        case STRESS_PENALTY:             cout << "Stress penalty objective function." << endl; break;
-      }
-    }
-    else {
-      cout << "Weighted sum objective function." << endl;
-    }
-
-  }
 
   if (val_software == SU2_COMPONENT::SU2_CFD) {
 
@@ -4839,22 +4628,6 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
       cout << "Surface adjoint file name: " << SurfAdjCoeff_FileName << "." << endl;
     }
 
-  }
-
-  if (val_software == SU2_COMPONENT::SU2_SOL) {
-    switch (Tab_FileFormat) {
-      case TAB_OUTPUT::TAB_CSV: cout << "The tabular file format is CSV (.csv)." << endl; break;
-      case TAB_OUTPUT::TAB_TECPLOT: cout << "The tabular file format is Tecplot (.dat)." << endl; break;
-    }
-    cout << "Flow variables file name: " << Volume_FileName << "." << endl;
-  }
-
-  if (val_software == SU2_COMPONENT::SU2_DOT) {
-    if (DiscreteAdjoint) {
-      cout << "Output Volume Sensitivity file name: " << VolSens_FileName << ". " << endl;
-      cout << "Output Surface Sensitivity file name: " << SurfSens_FileName << ". " << endl;
-    }
-    cout << "Output gradient file name: " << ObjFunc_Grad_FileName << ". " << endl;
   }
 
   cout << endl <<"------------- Config File Boundary Information ( Zone "  << iZone << " ) ---------------" << endl;

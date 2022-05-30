@@ -619,8 +619,6 @@ private:
   *Marker_WallFunctions,              /*!< \brief Markers for which wall functions must be applied. */
   *Marker_SobolevBC;                  /*!< \brief Markers in the gradient solver */
 
-  unsigned short  nConfig_Files;          /*!< \brief Number of config files for multiphysics problems. */
-  string *Config_Filenames;               /*!< \brief List of names for configuration files. */
   WALL_FUNCTIONS  *Kind_WallFunctions;        /*!< \brief The kind of wall function to use for the corresponding markers. */
   unsigned short  **IntInfo_WallFunctions;    /*!< \brief Additional integer information for the wall function markers. */
   su2double       **DoubleInfo_WallFunctions; /*!< \brief Additional double information for the wall function markers. */
@@ -7687,18 +7685,6 @@ public:
   void GetTopology_Optim_Projection(ENUM_PROJECTION_FUNCTION &type, su2double &param) const {
     type = top_optim_proj_type;  param = top_optim_proj_param;
   }
-
-  /*!
-   * \brief Get the filenames of the individual config files
-   * \return File name of the config file for zone "index"
-   */
-  string GetConfigFilename(unsigned short index) const { return Config_Filenames[index]; }
-
-  /*!
-   * \brief Get the number of config files
-   * \return Number of config filenames in CONFIG_LIST
-   */
-  unsigned short GetnConfigFiles(void) const { return nConfig_Files; }
 
   /*!
    * \brief Check if the multizone problem is solved for time domain.

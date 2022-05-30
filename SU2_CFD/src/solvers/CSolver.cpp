@@ -2578,8 +2578,7 @@ void CSolver::Read_SU2_Restart_Binary(CGeometry *geometry, const CConfig *config
   fclose(fhw);
 
 
-  if (nPointFile != geometry->GetGlobal_nPointDomain() &&
-      config->GetKind_SU2() != SU2_COMPONENT::SU2_SOL) {
+  if (nPointFile != geometry->GetGlobal_nPointDomain()) {
     InterpolateRestartData(geometry, config);
   }
 }

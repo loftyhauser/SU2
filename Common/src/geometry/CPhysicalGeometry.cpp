@@ -62,8 +62,8 @@ CPhysicalGeometry::CPhysicalGeometry(CConfig *config, unsigned short val_iZone, 
 
   string text_line, Marker_Tag;
   ifstream mesh_file;
-  unsigned short iDim, iMarker, iNodes;
-  unsigned long iPoint, iElem_Bound;
+  unsigned short iDim;
+  unsigned long iPoint;
   nZone = val_nZone;
   ofstream boundary_file;
   string Grid_Marker;
@@ -99,60 +99,6 @@ CPhysicalGeometry::CPhysicalGeometry(CConfig *config, unsigned short val_iZone, 
         }
       }
     }
-
-  }
-
-  /*--- If SU2_DEF then write a file with the boundary information ---*/
-
-  if ((config->GetKind_SU2() == SU2_COMPONENT::SU2_DEF) && (rank == MASTER_NODE)) {
-
-    string str = "boundary.dat";
-
-    str = config->GetMultizone_FileName(str, val_iZone, ".dat");
-
-    /*--- Open .su2 grid file ---*/
-
-    boundary_file.open(str.c_str(), ios::out);
-
-    /*--- Loop through and write the boundary info ---*/
-
-    boundary_file << "NMARK= " << nMarker << endl;
-
-    for (iMarker = 0; iMarker < nMarker; iMarker++) {
-
-      Grid_Marker = config->GetMarker_All_TagBound(iMarker);
-      boundary_file << "MARKER_TAG= " << Grid_Marker << endl;
-      boundary_file << "MARKER_ELEMS= " << nElem_Bound[iMarker]<< endl;
-      boundary_file << "SEND_TO= " << config->GetMarker_All_SendRecv(iMarker) << endl;
-      if (nDim == 2) {
-        for (iElem_Bound = 0; iElem_Bound < nElem_Bound[iMarker]; iElem_Bound++) {
-          boundary_file << bound[iMarker][iElem_Bound]->GetVTK_Type() << "\t" ;
-          for (iNodes = 0; iNodes < bound[iMarker][iElem_Bound]->GetnNodes(); iNodes++)
-            boundary_file << bound[iMarker][iElem_Bound]->GetNode(iNodes) << "\t" ;
-
-          if (bound[iMarker][iElem_Bound]->GetVTK_Type() == VERTEX) {
-            boundary_file << bound[iMarker][iElem_Bound]->GetRotation_Type() << "\t";
-          }
-          boundary_file << iElem_Bound << endl;
-        }
-      }
-
-      if (nDim == 3) {
-        for (iElem_Bound = 0; iElem_Bound < nElem_Bound[iMarker]; iElem_Bound++) {
-          boundary_file << bound[iMarker][iElem_Bound]->GetVTK_Type() << "\t" ;
-          for (iNodes = 0; iNodes < bound[iMarker][iElem_Bound]->GetnNodes(); iNodes++)
-            boundary_file << bound[iMarker][iElem_Bound]->GetNode(iNodes) << "\t" ;
-
-          if (bound[iMarker][iElem_Bound]->GetVTK_Type() == VERTEX) {
-            boundary_file << bound[iMarker][iElem_Bound]->GetRotation_Type() << "\t";
-          }
-          boundary_file << iElem_Bound << endl;
-        }
-      }
-
-    }
-
-    boundary_file.close();
 
   }
 

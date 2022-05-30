@@ -907,7 +907,7 @@ unsigned long CSysSolve<ScalarType>::Solve(CSysMatrix<ScalarType> & Jacobian, co
   if(TapeActive) {
 
     /*--- To keep the behavior of SU2_DOT, but not strictly required since jacobian is symmetric(?). ---*/
-    const bool RequiresTranspose = ((lin_sol_mode!=LINEAR_SOLVER_MODE::MESH_DEFORM) || (config->GetKind_SU2() == SU2_COMPONENT::SU2_DOT));
+    const bool RequiresTranspose = (lin_sol_mode!=LINEAR_SOLVER_MODE::MESH_DEFORM);
 
     if      (lin_sol_mode==LINEAR_SOLVER_MODE::MESH_DEFORM)   KindPrecond = config->GetKind_Deform_Linear_Solver_Prec();
     else if (lin_sol_mode==LINEAR_SOLVER_MODE::GRADIENT_MODE) KindPrecond  = config->GetKind_Grad_Linear_Solver_Prec();
