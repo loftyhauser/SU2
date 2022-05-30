@@ -32,8 +32,6 @@
 
 CFlowCompOutput::CFlowCompOutput(const CConfig *config, unsigned short nDim) : CFlowOutput(config, nDim, false) {
 
-  turb_model = config->GetKind_Turb_Model();
-
   /*--- Set the default history fields if nothing is set in the config file ---*/
 
   if (nRequestedHistoryFields == 0){
@@ -115,7 +113,6 @@ void CFlowCompOutput::SetHistoryOutputFields(CConfig *config){
   /// DESCRIPTION: Root-mean square residual of the energy.
   AddHistoryOutput("RMS_ENERGY",     "rms[RhoE]", ScreenOutputFormat::FIXED, "RMS_RES", "Root-mean square residual of the energy.", HistoryFieldType::RESIDUAL);
 
-  AddHistoryOutputFields_ScalarRMS_RES(config);
   /// END_GROUP
 
   /// BEGIN_GROUP: MAX_RES, DESCRIPTION: The maximum residuals of the SOLUTION variables.
@@ -130,7 +127,6 @@ void CFlowCompOutput::SetHistoryOutputFields(CConfig *config){
   /// DESCRIPTION: Maximum residual of the energy.
   AddHistoryOutput("MAX_ENERGY",     "max[RhoE]", ScreenOutputFormat::FIXED,   "MAX_RES", "Maximum residual of the energy.", HistoryFieldType::RESIDUAL);
 
-  AddHistoryOutputFields_ScalarMAX_RES(config);
   /// END_GROUP
 
   /// BEGIN_GROUP: BGS_RES, DESCRIPTION: The block Gauss Seidel residuals of the SOLUTION variables.
@@ -145,7 +141,6 @@ void CFlowCompOutput::SetHistoryOutputFields(CConfig *config){
   /// DESCRIPTION: Maximum residual of the energy.
   AddHistoryOutput("BGS_ENERGY",     "bgs[RhoE]", ScreenOutputFormat::FIXED,   "BGS_RES", "BGS residual of the energy.",  HistoryFieldType::RESIDUAL);
 
-  AddHistoryOutputFields_ScalarBGS_RES(config);
   /// END_GROUP
 
   vector<string> Marker_Monitoring;
@@ -156,7 +151,6 @@ void CFlowCompOutput::SetHistoryOutputFields(CConfig *config){
   /// DESCRIPTION: Linear solver iterations
   AddHistoryOutput("LINSOL_ITER", "Linear_Solver_Iterations", ScreenOutputFormat::INTEGER, "LINSOL", "Number of iterations of the linear solver.");
   AddHistoryOutput("LINSOL_RESIDUAL", "LinSolRes", ScreenOutputFormat::FIXED, "LINSOL", "Residual of the linear solver.");
-  AddHistoryOutputFields_ScalarLinsol(config);
 
   AddHistoryOutput("MIN_DELTA_TIME", "Min DT", ScreenOutputFormat::SCIENTIFIC, "CFL_NUMBER", "Current minimum local time step");
   AddHistoryOutput("MAX_DELTA_TIME", "Max DT", ScreenOutputFormat::SCIENTIFIC, "CFL_NUMBER", "Current maximum local time step");
@@ -212,16 +206,6 @@ void CFlowCompOutput::SetVolumeOutputFields(CConfig *config){
     AddVolumeOutput("MOMENTUM-Z", "Momentum_z", "SOLUTION", "z-component of the momentum vector");
   AddVolumeOutput("ENERGY",     "Energy",     "SOLUTION", "Energy");
 
-  SetVolumeOutputFields_ScalarSolution(config);
-
-  // Grid velocity
-  if (gridMovement){
-    AddVolumeOutput("GRID_VELOCITY-X", "Grid_Velocity_x", "GRID_VELOCITY", "x-component of the grid velocity vector");
-    AddVolumeOutput("GRID_VELOCITY-Y", "Grid_Velocity_y", "GRID_VELOCITY", "y-component of the grid velocity vector");
-    if (nDim == 3 )
-      AddVolumeOutput("GRID_VELOCITY-Z", "Grid_Velocity_z", "GRID_VELOCITY", "z-component of the grid velocity vector");
-  }
-
   // Primitive variables
   AddVolumeOutput("PRESSURE",    "Pressure",                "PRIMITIVE", "Pressure");
   AddVolumeOutput("TEMPERATURE", "Temperature",             "PRIMITIVE", "Temperature");
@@ -236,8 +220,6 @@ void CFlowCompOutput::SetVolumeOutputFields(CConfig *config){
     AddVolumeOutput("RES_MOMENTUM-Z", "Residual_Momentum_z", "RESIDUAL", "Residual of the z-momentum component");
   AddVolumeOutput("RES_ENERGY", "Residual_Energy", "RESIDUAL", "Residual of the energy");
 
-  SetVolumeOutputFields_ScalarResidual(config);
-
   if (config->GetKind_SlopeLimit_Flow() != LIMITER::NONE && config->GetKind_SlopeLimit_Flow() != LIMITER::VAN_ALBADA_EDGE) {
     AddVolumeOutput("LIMITER_VELOCITY-X", "Limiter_Velocity_x", "LIMITER", "Limiter value of the x-velocity");
     AddVolumeOutput("LIMITER_VELOCITY-Y", "Limiter_Velocity_y", "LIMITER", "Limiter value of the y-velocity");
@@ -248,8 +230,6 @@ void CFlowCompOutput::SetVolumeOutputFields(CConfig *config){
     AddVolumeOutput("LIMITER_DENSITY", "Limiter_Density", "LIMITER", "Limiter value of the density");
     AddVolumeOutput("LIMITER_ENTHALPY", "Limiter_Enthalpy", "LIMITER", "Limiter value of the enthalpy");
   }
-
-  SetVolumeOutputFields_ScalarLimiter(config);
 
   // Roe Low Dissipation
   if (config->GetKind_RoeLowDiss() != NO_ROELOWDISS) {
@@ -324,8 +304,6 @@ void CFlowCompOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolv
     SetVolumeOutputValue("ROE_DISSIPATION", iPoint, Node_Flow->GetRoe_Dissipation(iPoint));
   }
 
-  LoadVolumeData_Scalar(config, solver, geometry, iPoint);
-
   LoadCommonFVMOutputs(config, geometry, iPoint);
 
   if (config->GetTime_Domain()){
@@ -391,8 +369,6 @@ void CFlowCompOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CSol
     SetHistoryOutputValue("CHANGE_IN_AOA", config->GetAoA()-flow_solver->GetPrevious_AoA());
     SetHistoryOutputValue("CL_DRIVER_COMMAND", flow_solver->GetAoA_inc());
   }
-
-  LoadHistoryData_Scalar(config, solver);
 
   /*--- Set the analyse surface history values --- */
 

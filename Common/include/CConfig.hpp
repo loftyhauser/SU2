@@ -506,8 +506,6 @@ private:
   unsigned short Kind_DV_FEA;              /*!< \brief Kind of Design Variable for FEA problems.*/
 
   unsigned short nTurbVar;          /*!< \brief Number of Turbulence variables, i.e. 1 for SA-types, 2 for SST. */
-  TURB_MODEL Kind_Turb_Model;       /*!< \brief Turbulent model definition. */
-  TURB_TRANS_MODEL Kind_Trans_Model;  /*!< \brief Transition model definition. */
   unsigned short Kind_ActDisk, Kind_Engine_Inflow,
   *Kind_Data_Riemann;
   INLET_TYPE Kind_Inlet;
@@ -3798,18 +3796,6 @@ public:
    * \return Number of Turbulence Variables.
    */
   unsigned short GetnTurbVar(void) const { return nTurbVar; }
-
-  /*!
-   * \brief Get the kind of the turbulence model.
-   * \return Kind of the turbulence model.
-   */
-  TURB_MODEL GetKind_Turb_Model(void) const { return Kind_Turb_Model; }
-
-  /*!
-   * \brief Get the kind of the transition model.
-   * \return Kind of the transion model.
-   */
-  TURB_TRANS_MODEL GetKind_Trans_Model(void) const { return Kind_Trans_Model; }
 
   /*!
    * \brief Get the kind of time integration method.

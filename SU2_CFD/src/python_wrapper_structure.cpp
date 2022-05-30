@@ -567,7 +567,6 @@ void CDriver::ResetConvergence() {
 
     case MAIN_SOLVER::EULER:
       integration_container[iZone][INST_0][FLOW_SOL]->SetConvergence(false);
-      if(config_container[iZone]->GetKind_Trans_Model() == TURB_TRANS_MODEL::LM) integration_container[iZone][INST_0][TRANS_SOL]->SetConvergence(false);
       break;
 
     default:

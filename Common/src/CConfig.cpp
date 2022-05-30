@@ -853,10 +853,6 @@ void CConfig::SetConfig_Options() {
   const bool discAdjDefault = false;
   /*!\brief MATH_PROBLEM  \n DESCRIPTION: Mathematical problem \n  Options: DIRECT, ADJOINT \ingroup Config*/
   addMathProblemOption("MATH_PROBLEM", ContinuousAdjoint, false, DiscreteAdjoint, discAdjDefault, Restart_Flow, discAdjDefault);
-  /*!\brief KIND_TURB_MODEL \n DESCRIPTION: Specify turbulence model \n Options: see \link Turb_Model_Map \endlink \n DEFAULT: NONE \ingroup Config*/
-  addEnumOption("KIND_TURB_MODEL", Kind_Turb_Model, Turb_Model_Map, TURB_MODEL::NONE);
-  /*!\brief KIND_TRANS_MODEL \n DESCRIPTION: Specify transition model OPTIONS: see \link Trans_Model_Map \endlink \n DEFAULT: NONE \ingroup Config*/
-  addEnumOption("KIND_TRANS_MODEL", Kind_Trans_Model, Trans_Model_Map, TURB_TRANS_MODEL::NONE);
 
   /*!\brief KIND_MATRIX_COLORING \n DESCRIPTION: Specify the method for matrix coloring for Jacobian computations OPTIONS: see \link MatrixColoring_Map \endlink \n DEFAULT GREEDY_COLORING \ingroup Config*/
   addEnumOption("KIND_MATRIX_COLORING", Kind_Matrix_Coloring, MatrixColoring_Map, GREEDY_COLORING);
@@ -3024,9 +3020,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
   FinestMesh = MESH_0;
   if (MGCycle == FULLMG_CYCLE) FinestMesh = nMGLevels;
 
-  if (Kind_Solver == MAIN_SOLVER::EULER)
-    Kind_Turb_Model = TURB_MODEL::NONE;
-
   Kappa_2nd_Flow = jst_coeff[0];
   Kappa_4th_Flow = jst_coeff[1];
   Kappa_2nd_AdjFlow = jst_adj_coeff[0];
@@ -3337,14 +3330,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     }
 
     for (int i=0; i<7; ++i) eng_cyl[i] /= 12.0;
-  }
-
-  if ((Kind_Turb_Model != TURB_MODEL::SA) && (Kind_Trans_Model == TURB_TRANS_MODEL::BC)){
-    SU2_MPI::Error("BC transition model currently only available in combination with SA turbulence model!", CURRENT_FUNCTION);
-  }
-
-  if (Kind_Trans_Model == TURB_TRANS_MODEL::LM) {
-    SU2_MPI::Error("The LM transition model is under maintenance.", CURRENT_FUNCTION);
   }
 
   if(Turb_Fixed_Values && !OptionIsSet("TURB_FIXED_VALUES_DOMAIN")){
@@ -3683,16 +3668,6 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
 
   /*--- 0 in the config file means "disable" which can be done using a very large group. ---*/
   if (edgeColorGroupSize==0) edgeColorGroupSize = 1<<30;
-
-  /*--- Set number of Turbulence Variables. ---*/
-  switch (TurbModelFamily(Kind_Turb_Model)) {
-    case TURB_FAMILY::NONE:
-      nTurbVar = 0; break;
-    case TURB_FAMILY::SA:
-      nTurbVar = 1; break;
-    case TURB_FAMILY::KW:
-      nTurbVar = 2; break;
-  }
 
 }
 

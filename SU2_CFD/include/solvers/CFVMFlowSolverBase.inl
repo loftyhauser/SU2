@@ -350,11 +350,6 @@ void CFVMFlowSolverBase<V, R>::Viscous_Residual_impl(unsigned long iEdge, CGeome
                                                      CNumerics *numerics, CConfig *config) {
 
   const bool implicit  = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  const bool tkeNeeded = (config->GetKind_Turb_Model() == TURB_MODEL::SST) ||
-                         (config->GetKind_Turb_Model() == TURB_MODEL::SST_SUST);
-
-  CVariable* turbNodes = nullptr;
-  if (tkeNeeded) turbNodes = solver_container[TURB_SOL]->GetNodes();
 
   /*--- Points, coordinates and normal vector in edge ---*/
 
@@ -379,11 +374,6 @@ void CFVMFlowSolverBase<V, R>::Viscous_Residual_impl(unsigned long iEdge, CGeome
   numerics->SetPrimVarGradient(nodes->GetGradient_Primitive(iPoint),
                                nodes->GetGradient_Primitive(jPoint));
 
-  /*--- Turbulent kinetic energy. ---*/
-
-  if (tkeNeeded)
-    numerics->SetTurbKineticEnergy(turbNodes->GetSolution(iPoint,0),
-                                   turbNodes->GetSolution(jPoint,0));
 
   /*--- Wall shear stress values (wall functions) ---*/
 
@@ -733,9 +723,7 @@ void CFVMFlowSolverBase<V, R>::LoadRestart_impl(CGeometry **geometry, CSolver **
 
   /*--- For turbulent simulations the flow preprocessing is done by the turbulence solver
    *    after it loads its variables (they are needed to compute flow primitives). ---*/
-  if (config->GetKind_Turb_Model() == TURB_MODEL::NONE) {
     solver[MESH_0][FLOW_SOL]->Preprocessing(geometry[MESH_0], solver[MESH_0], config, MESH_0, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-  }
 
   /*--- Interpolate the solution down to the coarse multigrid levels ---*/
 
@@ -762,9 +750,7 @@ void CFVMFlowSolverBase<V, R>::LoadRestart_impl(CGeometry **geometry, CSolver **
     solver[iMesh][FLOW_SOL]->InitiateComms(geometry[iMesh], config, SOLUTION);
     solver[iMesh][FLOW_SOL]->CompleteComms(geometry[iMesh], config, SOLUTION);
 
-    if (config->GetKind_Turb_Model() == TURB_MODEL::NONE) {
       solver[iMesh][FLOW_SOL]->Preprocessing(geometry[iMesh], solver[iMesh], config, iMesh, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-    }
   }
 
   /*--- Go back to single threaded execution. ---*/
@@ -792,7 +778,6 @@ void CFVMFlowSolverBase<V, R>::SetInitialCondition(CGeometry **geometry, CSolver
                                                    CConfig *config, unsigned long TimeIter) {
 
   const bool restart = (config->GetRestart() || config->GetRestart_Flow());
-  const bool rans = (config->GetKind_Turb_Model() != TURB_MODEL::NONE);
   const bool dual_time = ((config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST) ||
                           (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND));
 
@@ -803,7 +788,7 @@ void CFVMFlowSolverBase<V, R>::SetInitialCondition(CGeometry **geometry, CSolver
   /*--- The value of the solution for the first iteration of the dual time ---*/
 
   if (dual_time && TimeIter == config->GetRestart_Iter()) {
-    PushSolutionBackInTime(TimeIter, restart, rans, solver_container, geometry, config);
+    PushSolutionBackInTime(TimeIter, restart, solver_container, geometry, config);
   }
 
   }
@@ -812,7 +797,7 @@ void CFVMFlowSolverBase<V, R>::SetInitialCondition(CGeometry **geometry, CSolver
 }
 
 template <class V, ENUM_REGIME R>
-void CFVMFlowSolverBase<V, R>::PushSolutionBackInTime(unsigned long TimeIter, bool restart, bool rans,
+void CFVMFlowSolverBase<V, R>::PushSolutionBackInTime(unsigned long TimeIter, bool restart,
                                                       CSolver*** solver_container, CGeometry** geometry,
                                                       CConfig* config) {
   /*--- Push back the initial condition to previous solution containers
@@ -821,10 +806,6 @@ void CFVMFlowSolverBase<V, R>::PushSolutionBackInTime(unsigned long TimeIter, bo
   for (unsigned short iMesh = 0; iMesh <= config->GetnMGLevels(); iMesh++) {
     solver_container[iMesh][FLOW_SOL]->GetNodes()->Set_Solution_time_n();
     solver_container[iMesh][FLOW_SOL]->GetNodes()->Set_Solution_time_n1();
-    if (rans) {
-      solver_container[iMesh][TURB_SOL]->GetNodes()->Set_Solution_time_n();
-      solver_container[iMesh][TURB_SOL]->GetNodes()->Set_Solution_time_n1();
-    }
 
   }
 
@@ -834,15 +815,10 @@ void CFVMFlowSolverBase<V, R>::PushSolutionBackInTime(unsigned long TimeIter, bo
 
     solver_container[MESH_0][FLOW_SOL]->LoadRestart(geometry, solver_container, config, TimeIter-1, true);
 
-    /*--- Load an additional restart file for the turbulence model. ---*/
-    if (rans)
-      solver_container[MESH_0][TURB_SOL]->LoadRestart(geometry, solver_container, config, TimeIter-1, false);
-
     /*--- Push back this new solution to time level N. ---*/
 
     for (unsigned short iMesh = 0; iMesh <= config->GetnMGLevels(); iMesh++) {
       solver_container[iMesh][FLOW_SOL]->GetNodes()->Set_Solution_time_n();
-      if (rans) solver_container[iMesh][TURB_SOL]->GetNodes()->Set_Solution_time_n();
 
       geometry[iMesh]->nodes->SetVolume_n();
     }
@@ -1067,15 +1043,6 @@ void CFVMFlowSolverBase<V, R>::BC_Sym_Plane(CGeometry* geometry, CSolver** solve
         /*--- Set the primitive gradients of the boundary and reflected state. ---*/
         visc_numerics->SetPrimVarGradient(nodes->GetGradient_Primitive(iPoint), CMatrixView<su2double>(Grad_Reflected));
 
-        /*--- Turbulent kinetic energy. ---*/
-        if ((config->GetKind_Turb_Model() == TURB_MODEL::SST) || (config->GetKind_Turb_Model() == TURB_MODEL::SST_SUST))
-          visc_numerics->SetTurbKineticEnergy(solver_container[TURB_SOL]->GetNodes()->GetSolution(iPoint, 0),
-                                              solver_container[TURB_SOL]->GetNodes()->GetSolution(iPoint, 0));
-
-        /*--- Compute and update residual. Note that the viscous shear stress tensor is computed in the
-              following routine based upon the velocity-component gradients. ---*/
-        auto residual = visc_numerics->ComputeResidual(config);
-
         LinSysRes.SubtractBlock(iPoint, residual);
 
         /*--- Jacobian contribution for implicit integration. ---*/
@@ -1106,11 +1073,10 @@ template <class V, ENUM_REGIME FlowRegime>
 void CFVMFlowSolverBase<V, FlowRegime>::BC_Fluid_Interface(CGeometry* geometry, CSolver** solver_container,
                                                            CNumerics* conv_numerics, CNumerics* visc_numerics,
                                                            CConfig* config) {
-  unsigned long iVertex, jVertex, iPoint, Point_Normal = 0;
+  unsigned long iVertex, jVertex, iPoint;
   unsigned short iDim, iVar, jVar, iMarker, nDonorVertex;
 
   bool implicit = (config->GetKind_TimeIntScheme() == EULER_IMPLICIT);
-  bool viscous = config->GetViscous();
 
   su2double Normal[MAXNDIM] = {0.0};
   su2double PrimVar_i[MAXNVAR] = {0.0};
@@ -1142,7 +1108,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::BC_Fluid_Interface(CGeometry* geometry, 
           /*--- Loop over the nDonorVertexes and compute the averaged flux ---*/
 
           for (jVertex = 0; jVertex < nDonorVertex; jVertex++) {
-            Point_Normal = geometry->vertex[iMarker][iVertex]->GetNormal_Neighbor();
 
             for (iVar = 0; iVar < nPrimVar; iVar++) {
               PrimVar_i[iVar] = nodes->GetPrimitive(iPoint, iVar);
@@ -1197,62 +1162,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::BC_Fluid_Interface(CGeometry* geometry, 
 
           if (implicit) Jacobian.AddBlock2Diag(iPoint, Jacobian_i);
 
-          if (viscous) {
-            /*--- Initialize Residual, this will serve to accumulate the average ---*/
-
-            for (iVar = 0; iVar < nVar; iVar++) {
-              Residual[iVar] = 0.0;
-              for (jVar = 0; jVar < nVar; jVar++) Jacobian_i[iVar][jVar] = 0.0;
-            }
-
-            /*--- Loop over the nDonorVertexes and compute the averaged flux ---*/
-
-            for (jVertex = 0; jVertex < nDonorVertex; jVertex++) {
-              PrimVar_j[nDim + 5] = GetSlidingState(iMarker, iVertex, nDim + 5, jVertex);
-              PrimVar_j[nDim + 6] = GetSlidingState(iMarker, iVertex, nDim + 6, jVertex);
-
-              /*--- Get the weight computed in the interpolator class for the j-th donor vertex ---*/
-
-              weight = GetSlidingState(iMarker, iVertex, nPrimVar, jVertex);
-
-              /*--- Set the normal vector and the coordinates ---*/
-
-              visc_numerics->SetNormal(Normal);
-              su2double Coord_Reflected[MAXNDIM];
-              GeometryToolbox::PointPointReflect(nDim, geometry->nodes->GetCoord(Point_Normal),
-                                                        geometry->nodes->GetCoord(iPoint), Coord_Reflected);
-              visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), Coord_Reflected);
-
-              /*--- Primitive variables, and gradient ---*/
-
-              visc_numerics->SetPrimitive(PrimVar_i, PrimVar_j);
-              visc_numerics->SetPrimVarGradient(nodes->GetGradient_Primitive(iPoint),
-                                                nodes->GetGradient_Primitive(iPoint));
-
-              /*--- Turbulent kinetic energy ---*/
-
-              if ((config->GetKind_Turb_Model() == TURB_MODEL::SST) || (config->GetKind_Turb_Model() == TURB_MODEL::SST_SUST))
-                visc_numerics->SetTurbKineticEnergy(solver_container[TURB_SOL]->GetNodes()->GetSolution(iPoint, 0),
-                                                    solver_container[TURB_SOL]->GetNodes()->GetSolution(iPoint, 0));
-
-              /*--- Compute and update residual ---*/
-
-              auto residual = visc_numerics->ComputeResidual(config);
-
-              /*--- Accumulate the residuals to compute the average ---*/
-
-              for (iVar = 0; iVar < nVar; iVar++) {
-                Residual[iVar] += weight * residual[iVar];
-                for (jVar = 0; jVar < nVar; jVar++) Jacobian_i[iVar][jVar] += weight * residual.jacobian_i[iVar][jVar];
-              }
-            }
-
-            LinSysRes.SubtractBlock(iPoint, Residual);
-
-            /*--- Jacobian contribution for implicit integration ---*/
-
-            if (implicit) Jacobian.SubtractBlock2Diag(iPoint, Jacobian_i);
-          }
         }
       }
       END_SU2_OMP_FOR
@@ -1837,332 +1746,6 @@ void CFVMFlowSolverBase<V, FlowRegime>::Momentum_Forces(const CGeometry* geometr
     SurfaceCoeff.CMy[iMarker_Monitoring] += SurfaceMntCoeff.CMy[iMarker_Monitoring];
     SurfaceCoeff.CMz[iMarker_Monitoring] += SurfaceMntCoeff.CMz[iMarker_Monitoring];
   }
-}
-
-template <class V, ENUM_REGIME FlowRegime>
-void CFVMFlowSolverBase<V, FlowRegime>::Friction_Forces(const CGeometry* geometry, const CConfig* config) {
-  /// TODO: Major cleanup needed.
-
-  if (!config->GetViscous()) return;
-
-  unsigned long iVertex, iPoint, iPointNormal;
-  unsigned short iMarker, iMarker_Monitoring, iDim, jDim;
-  su2double Viscosity = 0.0, Area, Density = 0.0, GradTemperature = 0.0, WallDistMod, FrictionVel,
-            UnitNormal[3] = {0.0}, TauElem[3] = {0.0}, Tau[3][3] = {{0.0}}, Cp,
-            thermal_conductivity, MaxNorm = 8.0, Grad_Vel[3][3] = {{0.0}}, Grad_Temp[3] = {0.0}, AxiFactor;
-  const su2double *Coord = nullptr, *Coord_Normal = nullptr, *Normal = nullptr;
-  const su2double minYPlus = config->GetwallModel_MinYPlus();
-
-  string Marker_Tag, Monitoring_Tag;
-
-  const su2double Alpha = config->GetAoA() * PI_NUMBER / 180.0;
-  const su2double Beta = config->GetAoS() * PI_NUMBER / 180.0;
-  const su2double RefLength = config->GetRefLength();
-  const su2double RefHeatFlux = config->GetHeat_Flux_Ref();
-  const su2double Gas_Constant = config->GetGas_ConstantND();
-  auto Origin = config->GetRefOriginMoment(0);
-
-  const su2double Prandtl_Lam = config->GetPrandtl_Lam();
-  const bool QCR = config->GetQCR();
-  const bool roughwall = (config->GetnRoughWall() > 0);
-
-  const su2double factor = 1.0 / AeroCoeffForceRef;
-  const su2double factorFric = config->GetRefArea() * factor;
-
-  /*--- Variables initialization ---*/
-
-  AllBoundViscCoeff.setZero();
-  SurfaceViscCoeff.setZero();
-
-  AllBound_HF_Visc = 0.0;
-  AllBound_MaxHF_Visc = 0.0;
-
-  for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++) {
-    Surface_HF_Visc[iMarker_Monitoring] = 0.0;
-    Surface_MaxHF_Visc[iMarker_Monitoring] = 0.0;
-  }
-
-  /*--- Loop over the Navier-Stokes markers ---*/
-
-  for (iMarker = 0; iMarker < nMarker; iMarker++) {
-
-    Marker_Tag = config->GetMarker_All_TagBound(iMarker);
-    if (!config->GetViscous_Wall(iMarker)) continue;
-
-    /*--- Obtain the origin for the moment computation for a particular marker ---*/
-
-    const auto Monitoring = config->GetMarker_All_Monitoring(iMarker);
-    if (Monitoring == YES) {
-      for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++) {
-        Monitoring_Tag = config->GetMarker_Monitoring_TagBound(iMarker_Monitoring);
-        if (Marker_Tag == Monitoring_Tag) Origin = config->GetRefOriginMoment(iMarker_Monitoring);
-      }
-    }
-
-    /*--- Forces initialization at each Marker ---*/
-
-    ViscCoeff.setZero(iMarker);
-
-    HF_Visc[iMarker] = 0.0;
-    MaxHF_Visc[iMarker] = 0.0;
-
-    su2double ForceViscous[MAXNDIM] = {0.0}, MomentViscous[MAXNDIM] = {0.0};
-    su2double MomentX_Force[MAXNDIM] = {0.0}, MomentY_Force[MAXNDIM] = {0.0}, MomentZ_Force[MAXNDIM] = {0.0};
-
-    /* --- check if wall functions are used --- */
-
-    const bool wallfunctions = (config->GetWallFunction_Treatment(Marker_Tag) != WALL_FUNCTIONS::NONE);
-
-    /*--- Loop over the vertices to compute the forces ---*/
-
-    for (iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++) {
-      iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-      iPointNormal = geometry->vertex[iMarker][iVertex]->GetNormal_Neighbor();
-
-      Coord = geometry->nodes->GetCoord(iPoint);
-      Coord_Normal = geometry->nodes->GetCoord(iPointNormal);
-
-      Normal = geometry->vertex[iMarker][iVertex]->GetNormal();
-
-      for (iDim = 0; iDim < nDim; iDim++) {
-        for (jDim = 0; jDim < nDim; jDim++) {
-          Grad_Vel[iDim][jDim] = nodes->GetGradient_Primitive(iPoint, prim_idx.Velocity() + iDim, jDim);
-        }
-        Grad_Temp[iDim] = nodes->GetGradient_Primitive(iPoint, prim_idx.Temperature(), iDim);
-      }
-
-      Viscosity = nodes->GetLaminarViscosity(iPoint);
-      if (roughwall) {
-        WALL_TYPE WallType;
-        su2double Roughness_Height;
-        tie(WallType, Roughness_Height) = config->GetWallRoughnessProperties(Marker_Tag);
-        if (WallType == WALL_TYPE::ROUGH) Viscosity += nodes->GetEddyViscosity(iPoint);
-      }
-      Density = nodes->GetDensity(iPoint);
-
-      Area = GeometryToolbox::Norm(nDim, Normal);
-      for (iDim = 0; iDim < nDim; iDim++) {
-        UnitNormal[iDim] = Normal[iDim] / Area;
-      }
-
-      /*--- Evaluate Tau ---*/
-      CNumerics::ComputeStressTensor(nDim, Tau, Grad_Vel, Viscosity);
-
-      /*--- If necessary evaluate the QCR contribution to Tau ---*/
-
-      if (QCR) CNumerics::AddQCR(nDim, Grad_Vel, Tau);
-
-      /*--- Project Tau in each surface element ---*/
-
-      for (iDim = 0; iDim < nDim; iDim++) {
-        TauElem[iDim] = 0.0;
-        for (jDim = 0; jDim < nDim; jDim++) {
-          TauElem[iDim] += Tau[iDim][jDim] * UnitNormal[jDim];
-        }
-      }
-
-      /*--- Compute wall shear stress (using the stress tensor). Compute wall skin friction coefficient, and heat flux
-       * on the wall ---*/
-
-      su2double TauTangent[MAXNDIM] = {0.0};
-      GeometryToolbox::TangentProjection(nDim, Tau, UnitNormal, TauTangent);
-
-      WallShearStress[iMarker][iVertex] = GeometryToolbox::Norm(int(MAXNDIM), TauTangent);
-
-      /*--- For wall functions, the wall stresses need to be scaled by the wallfunction stress Tau_Wall---*/
-      su2double Tau_Wall, scale;
-      if (wallfunctions && (YPlus[iMarker][iVertex] > minYPlus)){
-        Tau_Wall = nodes->GetTau_Wall(iPoint);
-        scale = Tau_Wall / WallShearStress[iMarker][iVertex];
-        for (iDim = 0; iDim < nDim; iDim++) {
-          TauTangent[iDim] *= scale;
-          TauElem[iDim] *= scale;
-        }
-
-        WallShearStress[iMarker][iVertex] = Tau_Wall;
-      }
-
-      for (iDim = 0; iDim < nDim; iDim++) {
-        CSkinFriction[iMarker](iVertex,iDim) = TauTangent[iDim] * factorFric;
-      }
-
-      WallDistMod = GeometryToolbox::Distance(nDim, Coord, Coord_Normal);
-
-      /*--- Compute non-dimensional velocity and y+ ---*/
-
-      FrictionVel = sqrt(fabs(WallShearStress[iMarker][iVertex]) / Density);
-
-      if (!wallfunctions) {
-        YPlus[iMarker][iVertex] = WallDistMod * FrictionVel / (Viscosity / Density);
-      }
-
-      /*--- Compute total and maximum heat flux on the wall ---*/
-
-        if (FlowRegime == ENUM_REGIME::COMPRESSIBLE) {
-          GradTemperature = -GeometryToolbox::DotProduct(nDim, Grad_Temp, UnitNormal);
-
-          Cp = (Gamma / Gamma_Minus_One) * Gas_Constant;
-          thermal_conductivity = Cp * Viscosity / Prandtl_Lam;
-        }
-        HeatFlux[iMarker][iVertex] = -thermal_conductivity * GradTemperature * RefHeatFlux;
-
-      /*--- Note that y+, and heat are computed at the
-       halo cells (for visualization purposes), but not the forces ---*/
-
-      if ((geometry->nodes->GetDomain(iPoint)) && (Monitoring == YES)) {
-        AxiFactor = 1.0;
-
-        /*--- Force computation ---*/
-
-        su2double Force[MAXNDIM] = {0.0}, MomentDist[MAXNDIM] = {0.0};
-        for (iDim = 0; iDim < nDim; iDim++) {
-          Force[iDim] = TauElem[iDim] * Area * factor * AxiFactor;
-          ForceViscous[iDim] += Force[iDim];
-          MomentDist[iDim] = Coord[iDim] - Origin[iDim];
-        }
-
-        /*--- Moment with respect to the reference axis ---*/
-
-        if (nDim == 3) {
-          MomentViscous[0] += (Force[2] * MomentDist[1] - Force[1] * MomentDist[2]) / RefLength;
-          MomentX_Force[1] += (-Force[1] * Coord[2]);
-          MomentX_Force[2] += (Force[2] * Coord[1]);
-
-          MomentViscous[1] += (Force[0] * MomentDist[2] - Force[2] * MomentDist[0]) / RefLength;
-          MomentY_Force[2] += (-Force[2] * Coord[0]);
-          MomentY_Force[0] += (Force[0] * Coord[2]);
-        }
-        MomentViscous[2] += (Force[1] * MomentDist[0] - Force[0] * MomentDist[1]) / RefLength;
-        MomentZ_Force[0] += (-Force[0] * Coord[1]);
-        MomentZ_Force[1] += (Force[1] * Coord[0]);
-
-        HF_Visc[iMarker] += HeatFlux[iMarker][iVertex] * Area;
-        MaxHF_Visc[iMarker] += pow(HeatFlux[iMarker][iVertex], MaxNorm);
-      }
-    }
-
-    /*--- Project forces and store the non-dimensional coefficients ---*/
-
-    if (Monitoring == YES) {
-      if (nDim == 2) {
-        ViscCoeff.CD[iMarker] = ForceViscous[0] * cos(Alpha) + ForceViscous[1] * sin(Alpha);
-        ViscCoeff.CL[iMarker] = -ForceViscous[0] * sin(Alpha) + ForceViscous[1] * cos(Alpha);
-        ViscCoeff.CEff[iMarker] = ViscCoeff.CL[iMarker] / (ViscCoeff.CD[iMarker] + EPS);
-        ViscCoeff.CFx[iMarker] = ForceViscous[0];
-        ViscCoeff.CFy[iMarker] = ForceViscous[1];
-        ViscCoeff.CMz[iMarker] = MomentViscous[2];
-        ViscCoeff.CoPx[iMarker] = MomentZ_Force[1];
-        ViscCoeff.CoPy[iMarker] = -MomentZ_Force[0];
-        ViscCoeff.CT[iMarker] = -ViscCoeff.CFx[iMarker];
-        ViscCoeff.CQ[iMarker] = -ViscCoeff.CMz[iMarker];
-        ViscCoeff.CMerit[iMarker] = ViscCoeff.CT[iMarker] / (ViscCoeff.CQ[iMarker] + EPS);
-        MaxHF_Visc[iMarker] = pow(MaxHF_Visc[iMarker], 1.0 / MaxNorm);
-      }
-      if (nDim == 3) {
-        ViscCoeff.CD[iMarker] = ForceViscous[0] * cos(Alpha) * cos(Beta) + ForceViscous[1] * sin(Beta) +
-                                ForceViscous[2] * sin(Alpha) * cos(Beta);
-        ViscCoeff.CL[iMarker] = -ForceViscous[0] * sin(Alpha) + ForceViscous[2] * cos(Alpha);
-        ViscCoeff.CSF[iMarker] = -ForceViscous[0] * sin(Beta) * cos(Alpha) + ForceViscous[1] * cos(Beta) -
-                                 ForceViscous[2] * sin(Beta) * sin(Alpha);
-        ViscCoeff.CEff[iMarker] = ViscCoeff.CL[iMarker] / (ViscCoeff.CD[iMarker] + EPS);
-        ViscCoeff.CFx[iMarker] = ForceViscous[0];
-        ViscCoeff.CFy[iMarker] = ForceViscous[1];
-        ViscCoeff.CFz[iMarker] = ForceViscous[2];
-        ViscCoeff.CMx[iMarker] = MomentViscous[0];
-        ViscCoeff.CMy[iMarker] = MomentViscous[1];
-        ViscCoeff.CMz[iMarker] = MomentViscous[2];
-        ViscCoeff.CoPx[iMarker] = -MomentY_Force[0];
-        ViscCoeff.CoPz[iMarker] = MomentY_Force[2];
-        ViscCoeff.CT[iMarker] = -ViscCoeff.CFz[iMarker];
-        ViscCoeff.CQ[iMarker] = -ViscCoeff.CMz[iMarker];
-        ViscCoeff.CMerit[iMarker] = ViscCoeff.CT[iMarker] / (ViscCoeff.CQ[iMarker] + EPS);
-        MaxHF_Visc[iMarker] = pow(MaxHF_Visc[iMarker], 1.0 / MaxNorm);
-      }
-
-      AllBoundViscCoeff.CD += ViscCoeff.CD[iMarker];
-      AllBoundViscCoeff.CL += ViscCoeff.CL[iMarker];
-      AllBoundViscCoeff.CSF += ViscCoeff.CSF[iMarker];
-      AllBoundViscCoeff.CFx += ViscCoeff.CFx[iMarker];
-      AllBoundViscCoeff.CFy += ViscCoeff.CFy[iMarker];
-      AllBoundViscCoeff.CFz += ViscCoeff.CFz[iMarker];
-      AllBoundViscCoeff.CMx += ViscCoeff.CMx[iMarker];
-      AllBoundViscCoeff.CMy += ViscCoeff.CMy[iMarker];
-      AllBoundViscCoeff.CMz += ViscCoeff.CMz[iMarker];
-      AllBoundViscCoeff.CoPx += ViscCoeff.CoPx[iMarker];
-      AllBoundViscCoeff.CoPy += ViscCoeff.CoPy[iMarker];
-      AllBoundViscCoeff.CoPz += ViscCoeff.CoPz[iMarker];
-      AllBoundViscCoeff.CT += ViscCoeff.CT[iMarker];
-      AllBoundViscCoeff.CQ += ViscCoeff.CQ[iMarker];
-      AllBound_HF_Visc += HF_Visc[iMarker];
-      AllBound_MaxHF_Visc += pow(MaxHF_Visc[iMarker], MaxNorm);
-
-      /*--- Compute the coefficients per surface ---*/
-
-      for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++) {
-        Monitoring_Tag = config->GetMarker_Monitoring_TagBound(iMarker_Monitoring);
-        Marker_Tag = config->GetMarker_All_TagBound(iMarker);
-        if (Marker_Tag == Monitoring_Tag) {
-          SurfaceViscCoeff.CL[iMarker_Monitoring] += ViscCoeff.CL[iMarker];
-          SurfaceViscCoeff.CD[iMarker_Monitoring] += ViscCoeff.CD[iMarker];
-          SurfaceViscCoeff.CSF[iMarker_Monitoring] += ViscCoeff.CSF[iMarker];
-          SurfaceViscCoeff.CEff[iMarker_Monitoring] = SurfaceViscCoeff.CL[iMarker_Monitoring] / (SurfaceViscCoeff.CD[iMarker_Monitoring] + EPS);
-          SurfaceViscCoeff.CFx[iMarker_Monitoring] += ViscCoeff.CFx[iMarker];
-          SurfaceViscCoeff.CFy[iMarker_Monitoring] += ViscCoeff.CFy[iMarker];
-          SurfaceViscCoeff.CFz[iMarker_Monitoring] += ViscCoeff.CFz[iMarker];
-          SurfaceViscCoeff.CMx[iMarker_Monitoring] += ViscCoeff.CMx[iMarker];
-          SurfaceViscCoeff.CMy[iMarker_Monitoring] += ViscCoeff.CMy[iMarker];
-          SurfaceViscCoeff.CMz[iMarker_Monitoring] += ViscCoeff.CMz[iMarker];
-          Surface_HF_Visc[iMarker_Monitoring] += HF_Visc[iMarker];
-          Surface_MaxHF_Visc[iMarker_Monitoring] += pow(MaxHF_Visc[iMarker], MaxNorm);
-        }
-      }
-    }
-  }
-
-  /*--- Update some global coeffients ---*/
-
-  AllBoundViscCoeff.CEff = AllBoundViscCoeff.CL / (AllBoundViscCoeff.CD + EPS);
-  AllBoundViscCoeff.CMerit = AllBoundViscCoeff.CT / (AllBoundViscCoeff.CQ + EPS);
-  AllBound_MaxHF_Visc = pow(AllBound_MaxHF_Visc, 1.0 / MaxNorm);
-
-  /*--- Update the total coefficients (note that all the nodes have the same value)---*/
-
-  TotalCoeff.CD += AllBoundViscCoeff.CD;
-  TotalCoeff.CL += AllBoundViscCoeff.CL;
-  TotalCoeff.CSF += AllBoundViscCoeff.CSF;
-  TotalCoeff.CEff = TotalCoeff.CL / (TotalCoeff.CD + EPS);
-  TotalCoeff.CFx += AllBoundViscCoeff.CFx;
-  TotalCoeff.CFy += AllBoundViscCoeff.CFy;
-  TotalCoeff.CFz += AllBoundViscCoeff.CFz;
-  TotalCoeff.CMx += AllBoundViscCoeff.CMx;
-  TotalCoeff.CMy += AllBoundViscCoeff.CMy;
-  TotalCoeff.CMz += AllBoundViscCoeff.CMz;
-  TotalCoeff.CoPx += AllBoundViscCoeff.CoPx;
-  TotalCoeff.CoPy += AllBoundViscCoeff.CoPy;
-  TotalCoeff.CoPz += AllBoundViscCoeff.CoPz;
-  TotalCoeff.CT += AllBoundViscCoeff.CT;
-  TotalCoeff.CQ += AllBoundViscCoeff.CQ;
-  TotalCoeff.CMerit = AllBoundViscCoeff.CT / (AllBoundViscCoeff.CQ + EPS);
-  Total_Heat = AllBound_HF_Visc;
-  Total_MaxHeat = AllBound_MaxHF_Visc;
-
-  /*--- Update the total coefficients per surface (note that all the nodes have the same value)---*/
-
-  for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++) {
-    SurfaceCoeff.CL[iMarker_Monitoring] += SurfaceViscCoeff.CL[iMarker_Monitoring];
-    SurfaceCoeff.CD[iMarker_Monitoring] += SurfaceViscCoeff.CD[iMarker_Monitoring];
-    SurfaceCoeff.CSF[iMarker_Monitoring] += SurfaceViscCoeff.CSF[iMarker_Monitoring];
-    SurfaceCoeff.CEff[iMarker_Monitoring] =
-        SurfaceCoeff.CL[iMarker_Monitoring] / (SurfaceCoeff.CD[iMarker_Monitoring] + EPS);
-    SurfaceCoeff.CFx[iMarker_Monitoring] += SurfaceViscCoeff.CFx[iMarker_Monitoring];
-    SurfaceCoeff.CFy[iMarker_Monitoring] += SurfaceViscCoeff.CFy[iMarker_Monitoring];
-    SurfaceCoeff.CFz[iMarker_Monitoring] += SurfaceViscCoeff.CFz[iMarker_Monitoring];
-    SurfaceCoeff.CMx[iMarker_Monitoring] += SurfaceViscCoeff.CMx[iMarker_Monitoring];
-    SurfaceCoeff.CMy[iMarker_Monitoring] += SurfaceViscCoeff.CMy[iMarker_Monitoring];
-    SurfaceCoeff.CMz[iMarker_Monitoring] += SurfaceViscCoeff.CMz[iMarker_Monitoring];
-  }
-
-
 }
 
 template<class V, ENUM_REGIME R>

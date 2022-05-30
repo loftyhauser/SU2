@@ -1223,15 +1223,6 @@ void CDriver::Print_DirectResidual(RECORDING kind_recording) {
             RMSTable << log10(solvers[FLOW_SOL]->GetRes_RMS(iVar));
         }
 
-        if (configs->GetKind_Turb_Model() != TURB_MODEL::NONE && !configs->GetFrozen_Visc_Disc()) {
-          for (unsigned short iVar = 0; iVar < solvers[TURB_SOL]->GetnVar(); iVar++) {
-            if (!addVals)
-              RMSTable.AddColumn("rms_Turb" + iVar_iZone2string(iVar, iZone), fieldWidth);
-            else
-              RMSTable << log10(solvers[TURB_SOL]->GetRes_RMS(iVar));
-          }
-        }
-
       }
         SU2_MPI::Error("Invalid KindSolver for SingleZone-Driver.", CURRENT_FUNCTION);
     } // loop iZone

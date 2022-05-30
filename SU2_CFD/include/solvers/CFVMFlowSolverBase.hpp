@@ -256,7 +256,7 @@ class CFVMFlowSolverBase : public CSolver {
   /*!
    * \brief Move solution to previous time levels (for restarts).
    */
-  void PushSolutionBackInTime(unsigned long TimeIter, bool restart, bool rans, CSolver*** solver_container,
+  void PushSolutionBackInTime(unsigned long TimeIter, bool restart, CSolver*** solver_container,
                               CGeometry** geometry, CConfig* config);
 
   /*!
@@ -2110,13 +2110,6 @@ class CFVMFlowSolverBase : public CSolver {
    * \param[in] config - Definition of the particular problem.
    */
   void Momentum_Forces(const CGeometry* geometry, const CConfig* config) final;
-
-  /*!
-   * \brief Compute the viscous forces and all the addimensional coefficients.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void Friction_Forces(const CGeometry* geometry, const CConfig* config) final;
 
   /*!
    * \brief Allocates the final pointer of SlidingState depending on how many donor vertex donate to it.

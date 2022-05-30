@@ -51,12 +51,9 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config,
 
   const auto nZone = geometry->GetnZone();
   const bool restart = (config->GetRestart() || config->GetRestart_Flow());
-  const bool rans = (config->GetKind_Turb_Model() != TURB_MODEL::NONE);
-  const auto direct_diff = config->GetDirectDiff();
   const bool dual_time = (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_1ST) ||
                          (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND);
   const bool time_stepping = (config->GetTime_Marching() == TIME_MARCHING::TIME_STEPPING);
-  const bool adjoint = config->GetContinuous_Adjoint() || config->GetDiscrete_Adjoint();
 
   int Unst_RestartIter = 0;
   unsigned long iPoint, iMarker, counter_local = 0, counter_global = 0;
@@ -160,7 +157,7 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config,
   /*--- Store the value of the primitive variables + 2 turb variables at the boundaries,
    used for IO with a donor cell ---*/
 
-  AllocVectorOfMatrices(nVertex, (rans? nPrimVar+2 : nPrimVar), DonorPrimVar);
+  AllocVectorOfMatrices(nVertex, nPrimVar, DonorPrimVar);
 
   /*--- Store the value of the characteristic primitive variables index at the boundaries ---*/
 
@@ -215,30 +212,6 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config,
   Density_Inf = config->GetDensity_FreeStreamND();
   Energy_Inf = config->GetEnergy_FreeStreamND();
   Mach_Inf = config->GetMach();
-
-  /*--- Initialize the secondary values for direct derivative approxiations ---*/
-
-  switch(direct_diff) {
-    case NO_DERIVATIVE:
-      /*--- Default ---*/
-      break;
-    case D_DENSITY:
-      SU2_TYPE::SetDerivative(Density_Inf, 1.0);
-      break;
-    case D_PRESSURE:
-      SU2_TYPE::SetDerivative(Pressure_Inf, 1.0);
-      break;
-    case D_TEMPERATURE:
-      SU2_TYPE::SetDerivative(Temperature_Inf, 1.0);
-      break;
-    case D_MACH: case D_AOA:
-    case D_SIDESLIP: case D_REYNOLDS:
-    case D_TURB2LAM: case D_DESIGN:
-      /*--- Already done in postprocessing of config ---*/
-      break;
-    default:
-      break;
-  }
 
   SetReferenceValues(*config);
 
@@ -351,11 +324,8 @@ void CEulerSolver::Set_MPI_ActDisk(CSolver **solver_container, CGeometry *geomet
   long iGlobalIndex, iGlobal;
   unsigned short iVar, iMarker, jMarker;
   long nDomain = 0, iDomain, jDomain;
-  //bool ActDisk_Perimeter;
-  bool rans = (config->GetKind_Turb_Model() != TURB_MODEL::NONE) && (solver_container[TURB_SOL] != nullptr);
 
   unsigned short nPrimVar_ = nPrimVar;
-  if (rans) nPrimVar_ += 2; // Add two extra variables for the turbulence.
 
   /*--- MPI status and request arrays for non-blocking communications ---*/
 
@@ -505,10 +475,6 @@ void CEulerSolver::Set_MPI_ActDisk(CSolver **solver_container, CGeometry *geomet
 
             for (iVar = 0; iVar < nPrimVar; iVar++) {
               Buffer_Send_PrimVar[(nPrimVar_)*(PointTotal_Counter+iPointTotal)+iVar] = nodes->GetPrimitive(iPoint,iVar);
-            }
-            if (rans) {
-              Buffer_Send_PrimVar[(nPrimVar_)*(PointTotal_Counter+iPointTotal)+nPrimVar] = solver_container[TURB_SOL]->GetNodes()->GetSolution(iPoint,0);
-              Buffer_Send_PrimVar[(nPrimVar_)*(PointTotal_Counter+iPointTotal)+(nPrimVar+1)] = 0.0;
             }
 
             iGlobalIndex = geometry->nodes->GetGlobalIndex(iPoint);

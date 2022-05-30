@@ -108,15 +108,6 @@ void CFluidIteration::Update(COutput* output, CIntegration**** integration, CGeo
       integration[val_iZone][val_iInst][FLOW_SOL]->SetConvergence(false);
     }
 
-    /*--- Update dual time solver for the transition model ---*/
-
-    if (config[val_iZone]->GetKind_Trans_Model() == TURB_TRANS_MODEL::LM) {
-      integration[val_iZone][val_iInst][TRANS_SOL]->SetDualTime_Solver(geometry[val_iZone][val_iInst][MESH_0],
-                                                                       solver[val_iZone][val_iInst][MESH_0][TRANS_SOL],
-                                                                       config[val_iZone], MESH_0);
-      integration[val_iZone][val_iInst][TRANS_SOL]->SetConvergence(false);
-    }
-
   }
 }
 

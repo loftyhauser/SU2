@@ -68,59 +68,11 @@ protected:
   void SetAnalyzeSurface(const CSolver* const* solver, const CGeometry *geometry, CConfig *config, bool output);
 
   /*!
-   * \brief Add scalar (turbulence) history fields for the Residual RMS (FVMComp, FVMInc, FVMNEMO).
-   */
-  void AddHistoryOutputFields_ScalarRMS_RES(const CConfig* config);
-
-  /*!
-   * \brief Add scalar (turbulence) history fields for the max Residual (FVMComp, FVMInc, FVMNEMO).
-   */
-  void AddHistoryOutputFields_ScalarMAX_RES(const CConfig* config);
-
-  /*!
-   * \brief Add scalar (turbulence) history fields for the BGS Residual (FVMComp, FVMInc, FVMNEMO).
-   */
-  void AddHistoryOutputFields_ScalarBGS_RES(const CConfig* config);
-
-  /*!
-   * \brief Add scalar (turbulence) history fields for the linear solver (FVMComp, FVMInc, FVMNEMO).
-   */
-  void AddHistoryOutputFields_ScalarLinsol(const CConfig* config);
-
-  /*!
-   * \brief Set all scalar (turbulence) history field values.
-   */
-  void LoadHistoryData_Scalar(const CConfig* config, const CSolver* const* solver);
-
-  /*!
-   * \brief Add scalar (turbulence) volume solution fields for a point (FVMComp, FVMInc, FVMNEMO).
+   * \brief Add scalar (turbulence/species) volume solution fields for a point (FVMComp, FVMInc, FVMNEMO).
    * \note The order of fields in restart files is fixed. Therefore the split-up.
    * \param[in] config - Definition of the particular problem.
    */
   void SetVolumeOutputFields_ScalarSolution(const CConfig* config);
-
-  /*!
-   * \brief Add scalar (turbulence) volume solution fields for a point (FVMComp, FVMInc, FVMNEMO).
-   * \note The order of fields in restart files is fixed. Therefore the split-up.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void SetVolumeOutputFields_ScalarResidual(const CConfig* config);
-
-  /*!
-   * \brief Add scalar (turbulence) volume limiter fields (and more) for a point (FVMComp, FVMInc, FVMNEMO).
-   * \param[in] config - Definition of the particular problem.
-   */
-  void SetVolumeOutputFields_ScalarLimiter(const CConfig* config);
-
-  /*!
-   * \brief Set all scalar (turbulence) volume field values for a point.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] solver - The container holding all solution data.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] iPoint - Index of the point.
-   */
-  void LoadVolumeData_Scalar(const CConfig* config, const CSolver* const* solver, const CGeometry* geometry,
-                             const unsigned long iPoint);
 
   /*!
    * \brief Add aerodynamic coefficients as output fields
