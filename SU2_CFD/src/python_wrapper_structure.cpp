@@ -209,23 +209,6 @@ bool CDriver::IsAHaloNode(unsigned short iMarker, unsigned long iVertex) const {
 
 }
 
-vector<passivedouble> CDriver::GetInitialMeshCoord(unsigned short iMarker, unsigned long iVertex) const {
-
-  vector<su2double> coord(3,0.0);
-  vector<passivedouble> coord_passive(3, 0.0);
-
-  auto iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNode();
-  for (auto iDim = 0 ; iDim < nDim ; iDim++){
-   coord[iDim] = solver_container[ZONE_0][INST_0][MESH_0][MESH_SOL]->GetNodes()->GetMesh_Coord(iPoint,iDim);
-  }
-
-  coord_passive[0] = SU2_TYPE::GetValue(coord[0]);
-  coord_passive[1] = SU2_TYPE::GetValue(coord[1]);
-  coord_passive[2] = SU2_TYPE::GetValue(coord[2]);
-
-  return coord_passive;
-}
-
 vector<passivedouble> CDriver::GetVertexNormal(unsigned short iMarker, unsigned long iVertex, bool unitNormal) const {
 
   su2double *Normal;
@@ -574,32 +557,6 @@ void CDriver::ResetConvergence() {
     }
   }
 
-}
-
-void CSinglezoneDriver::SetInitialMesh() {
-
-  SU2_OMP_PARALLEL {
-    // Overwrite fictious velocities
-    for (iMesh = 0u; iMesh <= config_container[ZONE_0]->GetnMGLevels(); iMesh++) {
-      SU2_OMP_FOR_STAT(roundUpDiv(geometry_container[ZONE_0][INST_0][iMesh]->GetnPoint(),omp_get_max_threads()))
-      for (unsigned long iPoint = 0; iPoint < geometry_container[ZONE_0][INST_0][iMesh]->GetnPoint(); iPoint++) {
-
-        /*--- Overwrite fictitious velocities ---*/
-        su2double Grid_Vel[3] = {0.0, 0.0, 0.0};
-
-        /*--- Set the grid velocity for this coarse node. ---*/
-        geometry_container[ZONE_0][INST_0][iMesh]->nodes->SetGridVel(iPoint, Grid_Vel);
-      }
-      END_SU2_OMP_FOR
-      /*--- Push back the volume. ---*/
-      geometry_container[ZONE_0][INST_0][iMesh]->nodes->SetVolume_n();
-      geometry_container[ZONE_0][INST_0][iMesh]->nodes->SetVolume_nM1();
-    }
-    /*--- Push back the solution so that there is no fictious velocity at the next step. ---*/
-    solver_container[ZONE_0][INST_0][MESH_0][MESH_SOL]->GetNodes()->Set_Solution_time_n();
-    solver_container[ZONE_0][INST_0][MESH_0][MESH_SOL]->GetNodes()->Set_Solution_time_n1();
-  }
-  END_SU2_OMP_PARALLEL
 }
 
 void CDriver::BoundaryConditionsUpdate(){

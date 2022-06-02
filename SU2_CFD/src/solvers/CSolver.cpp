@@ -1659,7 +1659,6 @@ void CSolver::AdaptCFLNumber(CGeometry **geometry,
     /* Store the mean flow, and turbulence solvers more clearly. */
 
     CSolver *solverFlow = solver_container[iMesh][FLOW_SOL];
-    CSolver *solverTurb = solver_container[iMesh][TURB_SOL];
 
     /* Compute the reduction factor for CFLs on the coarse levels. */
 
@@ -1674,7 +1673,6 @@ void CSolver::AdaptCFLNumber(CGeometry **geometry,
      solver residual within the specified number of linear iterations. */
 
     su2double linResTurb = 0.0;
-    if ((iMesh == MESH_0) && solverTurb) linResTurb = solverTurb->GetResLinSolver();
 
     /* Max linear residual between flow and turbulence. */
     const su2double linRes = max(solverFlow->GetResLinSolver(), linResTurb);
@@ -1703,11 +1701,6 @@ void CSolver::AdaptCFLNumber(CGeometry **geometry,
       New_Func = 0.0;
       for (unsigned short iVar = 0; iVar < solverFlow->GetnVar(); iVar++) {
         New_Func += log10(solverFlow->GetRes_RMS(iVar));
-      }
-      if ((iMesh == MESH_0) && solverTurb) {
-        for (unsigned short iVar = 0; iVar < solverTurb->GetnVar(); iVar++) {
-          New_Func += log10(solverTurb->GetRes_RMS(iVar));
-        }
       }
 
       /* Compute the difference in the nonlinear residuals between the
@@ -1775,8 +1768,6 @@ void CSolver::AdaptCFLNumber(CGeometry **geometry,
 
       su2double underRelaxationFlow = solverFlow->GetNodes()->GetUnderRelaxation(iPoint);
       su2double underRelaxationTurb = 1.0;
-      if ((iMesh == MESH_0) && solverTurb)
-        underRelaxationTurb = solverTurb->GetNodes()->GetUnderRelaxation(iPoint);
       const su2double underRelaxation = min(underRelaxationFlow,underRelaxationTurb);
 
       /* If we apply a small under-relaxation parameter for stability,
@@ -1815,9 +1806,6 @@ void CSolver::AdaptCFLNumber(CGeometry **geometry,
 
       CFL *= CFLFactor;
       solverFlow->GetNodes()->SetLocalCFL(iPoint, CFL);
-      if ((iMesh == MESH_0) && solverTurb) {
-        solverTurb->GetNodes()->SetLocalCFL(iPoint, CFL);
-      }
 
       /* Store min and max CFL for reporting on the fine grid. */
 

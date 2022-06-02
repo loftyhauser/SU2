@@ -326,11 +326,6 @@ public:
   virtual void Output(unsigned long TimeIter){ }
 
   /*!
-   * \brief Perform a mesh deformation as initial condition.
-   */
-  virtual void SetInitialMesh() { }
-
-  /*!
    * \brief Process the boundary conditions and update the multigrid structure.
    */
   void BoundaryConditionsUpdate();
@@ -430,14 +425,6 @@ public:
    * \return Vertex global index.
    */
   unsigned long GetVertexGlobalIndex(unsigned short iMarker, unsigned long iVertex) const;
-
-  /*!
-   * \brief Get undeformed coordinates from the mesh solver.
-   * \param[in] iMarker - Marker identifier.
-   * \param[in] iVertex - Vertex identifier.
-   * \return x,y,z coordinates of the vertex.
-   */
-  vector<passivedouble> GetInitialMeshCoord(unsigned short iMarker, unsigned long iVertex) const;
 
   /*!
    * \brief Get the temperature at a vertex on a specified marker.

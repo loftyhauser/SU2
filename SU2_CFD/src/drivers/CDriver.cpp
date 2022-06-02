@@ -457,12 +457,6 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, 
 
   geometry[MESH_0]->SetPositive_ZArea(config);
 
-  /*--- Set the actuator disk boundary conditions, if necessary. ---*/
-
-  for (iMesh = 0; iMesh <= config->GetnMGLevels(); iMesh++) {
-    geometry[iMesh]->MatchActuator_Disk(config);
-  }
-
   /*--- If we have any periodic markers in this calculation, we must
        match the periodic points found on both sides of the periodic BC.
        Note that the current implementation requires a 1-to-1 matching of
@@ -770,7 +764,6 @@ void CDriver::Inlet_Preprocessing(CSolver ***solver, CGeometry **geometry,
     for (unsigned short iMesh = 0; iMesh <= config->GetnMGLevels(); iMesh++) {
       for(unsigned short iMarker=0; iMarker < config->GetnMarker_All(); iMarker++) {
         if (solver[iMesh][FLOW_SOL]) solver[iMesh][FLOW_SOL]->SetUniformInlet(config, iMarker);
-        if (solver[iMesh][TURB_SOL]) solver[iMesh][TURB_SOL]->SetUniformInlet(config, iMarker);
       }
     }
 
@@ -807,7 +800,7 @@ void CDriver::Solver_Restart(CSolver ***solver, CGeometry **geometry,
       if (sol && !sol->GetAdjoint()) {
         /*--- Note that the mesh solver always loads the most recent file (and not -2). ---*/
         SU2_OMP_PARALLEL_(if(sol->GetHasHybridParallel()))
-        sol->LoadRestart(geometry, solver, config, val_iter + (iSol==MESH_SOL && dt_step_2nd), update_geo);
+        sol->LoadRestart(geometry, solver, config, val_iter, update_geo);
         END_SU2_OMP_PARALLEL
       }
     }

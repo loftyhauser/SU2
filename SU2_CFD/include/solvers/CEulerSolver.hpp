@@ -63,18 +63,6 @@ protected:
   InverseDesign = 0.0;           /*!< \brief Inverse design functional for each boundary. */
   vector<vector<unsigned long> > DonorGlobalIndex;  /*!< \brief Value of the donor global index. */
   vector<su2activematrix> DonorPrimVar;       /*!< \brief Value of the donor variables at each boundary. */
-  vector<vector<su2double> > ActDisk_DeltaP;  /*!< \brief Value of the Delta P. */
-  vector<vector<su2double> > ActDisk_DeltaT;  /*!< \brief Value of the Delta T. */
-
-  su2activevector
-  ActDisk_R;         /*!< \brief Value of the actuator disk Radius. */
-  su2activematrix
-  ActDisk_C,         /*!< \brief Value of the actuator disk Center. */
-  ActDisk_Axis;      /*!< \brief Value of the actuator disk Axis. */
-  vector<vector<su2double> > ActDisk_Fa; /*!< \brief Value of the actuator disk Axial Force per Unit Area. */
-  vector<vector<su2double> > ActDisk_Fx; /*!< \brief Value of the actuator disk X component of the radial and tangential forces per Unit Area resultant. */
-  vector<vector<su2double> > ActDisk_Fy; /*!< \brief Value of the actuator disk Y component of the radial and tangential forces per Unit Area resultant. */
-  vector<vector<su2double> > ActDisk_Fz; /*!< \brief Value of the actuator disk Z component of the radial and tangential forces per Unit Area resultant. */
 
   su2double
   Total_CL_Prev = 0.0,        /*!< \brief Total lift coefficient for all the boundaries (fixed lift mode). */
@@ -139,43 +127,6 @@ protected:
    * \param[in] config - Definition of the particular problem.
    */
   void SetUpwind_Ducros_Sensor(CGeometry *geometry, CConfig *config);
-
-  /*!
-   * \brief Compute the Fan face Mach number.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solution - Container vector with all the solutions.
-   */
-  void GetPower_Properties(CGeometry *geometry, CConfig *config,
-                           unsigned short iMesh, bool Output);
-
-  /*!
-   * \brief Parallelization of Undivided Laplacian.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] config - Definition of the particular problem.
-   */
-  void Set_MPI_ActDisk(CSolver **solver_container, CGeometry *geometry, CConfig *config);
-
-  /*!
-   * \brief Update the AoA and freestream velocity at the farfield.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver_container - Container vector with all the solutions.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] iMesh - current mesh level for the multigrid.
-   * \param[in] Output - boolean to determine whether to print output.
-   */
-  void SetActDisk_BCThrust(CGeometry *geometry, CSolver **solver_container,
-                           CConfig *config, unsigned short iMesh, bool Output);
-
-  /*!
-   * \brief Read the actuator disk input file for the VARIABLE_LOAD type.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver_container - Container vector with all the solutions.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] iMesh - current mesh level for the multigrid.
-   * \param[in] Output - boolean to determine whether to print output.
-   */
-  void ReadActDisk_InputFile(CGeometry *geometry, CSolver **solver_container,
-                           CConfig *config, unsigned short iMesh, bool Output);
 
   /*!
    * \brief Compute the max eigenvalue.
@@ -392,14 +343,6 @@ public:
                          su2double delta, su2activematrix& preconditioner) const;
 
   /*!
-   * \author H. Kline
-   * \brief Compute weighted-sum "combo" objective output
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] solver - Container vector with all the solutions.
-   */
-  void Evaluate_ObjFunc(const CConfig *config, CSolver **solver) override;
-
-  /*!
    * \brief Impose the far-field boundary condition using characteristics.
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] solver_container - Container vector with all the solutions.
@@ -414,74 +357,6 @@ public:
                     CNumerics *visc_numerics,
                     CConfig *config,
                     unsigned short val_marker) final;
-
-  /*!
-   * \brief Impose the engine inflow boundary condition.
-    * \param[in] geometry - Geometrical definition of the problem.
-    * \param[in] solver_container - Container vector with all the solutions.
-    * \param[in] conv_numerics - Description of the numerical method.
-    * \param[in] visc_numerics - Description of the numerical method.
-    * \param[in] config - Definition of the particular problem.
-    * \param[in] val_marker - Surface marker where the boundary condition is applied.
-    */
-  void BC_ActDisk_Inlet(CGeometry *geometry,
-                        CSolver **solver_container,
-                        CNumerics *conv_numerics,
-                        CNumerics *visc_numerics,
-                        CConfig *config,
-                        unsigned short val_marker) final;
-
-  /*!
-   * \brief Impose the engine exhaust boundary condition.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver_container - Container vector with all the solutions.
-   * \param[in] conv_numerics - Description of the numerical method.
-   * \param[in] visc_numerics - Description of the numerical method.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_marker - Surface marker where the boundary condition is applied.
-   */
-  void BC_ActDisk_Outlet(CGeometry *geometry,
-                         CSolver **solver_container,
-                         CNumerics *conv_numerics,
-                         CNumerics *visc_numerics,
-                         CConfig *config,
-                         unsigned short val_marker) final;
-
-  /*!
-   * \brief Impose an actuator disk inlet boundary condition.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver_container - Container vector with all the solutions.
-   * \param[in] conv_numerics - Description of the numerical method.
-   * \param[in] visc_numerics - Description of the numerical method.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_marker - Surface marker where the boundary condition is applied.
-   * \param[in] val_inlet_surface - Boolean for whether val_marker is an inlet
-   */
-  void BC_ActDisk(CGeometry *geometry,
-                  CSolver **solver_container,
-                  CNumerics *conv_numerics,
-                  CNumerics *visc_numerics,
-                  CConfig *config,
-                  unsigned short val_marker,
-                  bool val_inlet_surface) final;
-
-  /*!
-   * \brief Impose an actuator disk with variable load boundary condition.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver_container - Container vector with all the solutions.
-   * \param[in] conv_numerics - Description of the numerical method.
-   * \param[in] visc_numerics - Description of the numerical method.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_marker - Surface marker where the boundary condition is applied.
-   * \param[in] val_inlet_surface - Boolean for whether val_marker is an inlet
-   */
-  void BC_ActDisk_VariableLoad(CGeometry *geometry,
-                               CSolver **solver_container,
-                               CNumerics *conv_numerics,
-                               CNumerics *visc_numerics,
-                               CConfig *config,
-                               unsigned short val_marker,
-                               bool val_inlet_surface);
 
   /*!
    * \author: G.Gori, S.Vitale, M.Pini, A.Guardone, P.Colonna

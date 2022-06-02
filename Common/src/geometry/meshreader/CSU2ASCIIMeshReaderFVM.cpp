@@ -437,11 +437,6 @@ void CSU2ASCIIMeshReaderFVM::ReadSurfaceElementConnectivity(const bool single_pa
         }
 
         if (duplicate) {
-          for (unsigned short i = 0; i < nPointsElem; i++) {
-            if (ActDisk_Bool[connectivity[i]]) {
-              connectivity[i] = ActDiskPoint_Back[connectivity[i]];
-            }
-          }
           surfaceElementConnectivity[iMarker + 1].push_back(0);
           surfaceElementConnectivity[iMarker + 1].push_back(VTK_Type);
           for (unsigned short i = 0; i < N_POINTS_HEXAHEDRON; i++) {

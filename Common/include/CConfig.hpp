@@ -84,9 +84,7 @@ private:
   su2double *PressureLimits,
   *DensityLimits,
   *TemperatureLimits;             /*!< \brief Limits for the primitive variables */
-  bool ActDisk_DoubleSurface;     /*!< \brief actuator disk double surface  */
   bool Engine_HalfModel;          /*!< \brief only half model is in the computational grid  */
-  bool ActDisk_SU2_DEF;           /*!< \brief actuator disk double surface  */
   unsigned short nFFD_Iter;       /*!< \brief Iteration for the point inversion problem. */
   unsigned short FFD_Blending;    /*!< \brief Kind of FFD Blending function. */
   su2double FFD_Tol;              /*!< \brief Tolerance in the point inversion problem. */
@@ -134,18 +132,14 @@ private:
   TIME_MARCHING TimeMarching;        /*!< \brief Steady or unsteady (time stepping or dual time stepping) computation. */
   unsigned short Dynamic_Analysis;   /*!< \brief Static or dynamic structural analysis. */
   su2double FixAzimuthalLine;        /*!< \brief Fix an azimuthal line due to misalignments of the nearfield. */
-  su2double **DV_Value;              /*!< \brief Previous value of the design variable. */
   su2double Venkat_LimiterCoeff;     /*!< \brief Limiter coefficient */
   unsigned long LimiterIter;         /*!< \brief Freeze the value of the limiter after a number of iterations */
   su2double AdjSharp_LimiterCoeff;   /*!< \brief Coefficient to identify the limit of a sharp edge. */
   unsigned short SystemMeasurements; /*!< \brief System of measurements. */
   ENUM_REGIME Kind_Regime;           /*!< \brief Kind of flow regime: in/compressible. */
-  unsigned short *Kind_ObjFunc;      /*!< \brief Kind of objective function. */
-  su2double *Weight_ObjFunc;         /*!< \brief Weight applied to objective function. */
   unsigned short Kind_SensSmooth;    /*!< \brief Kind of sensitivity smoothing technique. */
   unsigned short Continuous_Eqns;    /*!< \brief Which equations to treat continuously (Hybrid adjoint)*/
   unsigned short Discrete_Eqns;      /*!< \brief Which equations to treat discretely (Hybrid adjoint). */
-  unsigned short *Design_Variable;   /*!< \brief Kind of design variable. */
   su2double Delta_UnstTime,          /*!< \brief Time step for unsteady computations. */
   Delta_UnstTimeND;                  /*!< \brief Time step for unsteady computations (non dimensional). */
   su2double Delta_DynTime,        /*!< \brief Time step for dynamic structural computations. */
@@ -162,8 +156,6 @@ private:
   nMarker_PerBound,               /*!< \brief Number of periodic boundary markers. */
   nMarker_Shroud,                 /*!< \brief Number of shroud markers to set grid velocity to 0.*/
   nMarker_NearFieldBound,         /*!< \brief Number of near field boundary markers. */
-  nMarker_ActDiskInlet,           /*!< \brief Number of actuator disk inlet markers. */
-  nMarker_ActDiskOutlet,          /*!< \brief Number of actuator disk outlet markers. */
   nMarker_Deform_Mesh_Sym_Plane,  /*!< \brief Number of markers with symmetric deformation */
   nMarker_Deform_Mesh,            /*!< \brief Number of deformable markers at the boundary. */
   nMarker_Fluid_Load,             /*!< \brief Number of markers in which the flow load is computed/employed. */
@@ -197,7 +189,6 @@ private:
   bool Inlet_From_File;         /*!< \brief True if the inlet profile is to be loaded from a file. */
   string Inlet_Filename;        /*!< \brief Filename specifying an inlet profile. */
   su2double Inlet_Matching_Tol; /*!< \brief Tolerance used when matching a point to a point from the inlet file. */
-  string ActDisk_FileName;      /*!< \brief Filename specifying an actuator disk. */
 
   string *Marker_Euler,           /*!< \brief Euler wall markers. */
   *Marker_FarField,               /*!< \brief Far field markers. */
@@ -211,8 +202,6 @@ private:
   *Marker_Fluid_Load,             /*!< \brief Markers in which the flow load is computed/employed. */
   *Marker_Fluid_InterfaceBound,   /*!< \brief Fluid interface markers. */
   *Marker_CHTInterface,           /*!< \brief Conjugate heat transfer interface markers. */
-  *Marker_ActDiskInlet,           /*!< \brief Actuator disk inlet markers. */
-  *Marker_ActDiskOutlet,          /*!< \brief Actuator disk outlet markers. */
   *Marker_Inlet,                  /*!< \brief Inlet flow markers. */
   *Marker_Riemann,                /*!< \brief Riemann markers. */
   *Marker_Shroud,                 /*!< \brief Shroud markers. */
@@ -291,34 +280,6 @@ private:
   su2double *Load_Sine_Frequency;            /*!< \brief Specified multiplier for load boundaries defined in cartesian coordinates. */
   su2double **Load_Sine_Dir;                 /*!< \brief Specified flow direction vector (unit vector) for inlet boundaries. */
   su2double *FlowLoad_Value;                 /*!< \brief Specified force for flow load boundaries. */
-  su2double *ActDiskInlet_MassFlow;          /*!< \brief Specified inlet mass flow for actuator disk. */
-  su2double *ActDiskInlet_Temperature;       /*!< \brief Specified inlet temperature for actuator disk. */
-  su2double *ActDiskInlet_TotalTemperature;  /*!< \brief Specified inlet total temperature for actuator disk. */
-  su2double *ActDiskInlet_Pressure;          /*!< \brief Specified inlet pressure for actuator disk. */
-  su2double *ActDiskInlet_TotalPressure;     /*!< \brief Specified inlet total pressure for actuator disk. */
-  su2double *ActDiskInlet_RamDrag;           /*!< \brief Specified inlet ram drag for actuator disk. */
-  su2double *ActDiskInlet_Force;             /*!< \brief Specified inlet force for actuator disk. */
-  su2double *ActDiskInlet_Power;             /*!< \brief Specified inlet power for actuator disk. */
-  su2double *ActDiskOutlet_MassFlow;         /*!< \brief Specified outlet mass flow for actuator disk. */
-  su2double *ActDiskOutlet_Temperature;      /*!< \brief Specified outlet temperature for actuator disk. */
-  su2double *ActDiskOutlet_TotalTemperature; /*!< \brief Specified outlet total temperatur for actuator disk. */
-  su2double *ActDiskOutlet_Pressure;         /*!< \brief Specified outlet pressure for actuator disk. */
-  su2double *ActDiskOutlet_TotalPressure;    /*!< \brief Specified outlet total pressure for actuator disk. */
-  su2double *ActDiskOutlet_GrossThrust;      /*!< \brief Specified outlet gross thrust for actuator disk. */
-  su2double *ActDiskOutlet_Force;            /*!< \brief Specified outlet force for actuator disk. */
-  su2double *ActDiskOutlet_Power;            /*!< \brief Specified outlet power for actuator disk. */
-  su2double **ActDisk_PressJump,
-  **ActDisk_TempJump,  **ActDisk_Omega;      /*!< \brief Specified deltas for actuator disk.*/
-  su2double *ActDisk_DeltaPress;             /*!< \brief Specified pressure delta for actuator disk. */
-  su2double *ActDisk_DeltaTemp;              /*!< \brief Specified temperature delta for actuator disk. */
-  su2double *ActDisk_TotalPressRatio;        /*!< \brief Specified tot. pres. ratio for actuator disk. */
-  su2double *ActDisk_TotalTempRatio;         /*!< \brief Specified tot. temp. ratio for actuator disk. */
-  su2double *ActDisk_StaticPressRatio;       /*!< \brief Specified press. ratio for actuator disk. */
-  su2double *ActDisk_StaticTempRatio;        /*!< \brief Specified temp. ratio for actuator disk. */
-  su2double *ActDisk_Power;                  /*!< \brief Specified power for actuator disk. */
-  su2double *ActDisk_MassFlow;               /*!< \brief Specified mass flow for actuator disk. */
-  su2double *ActDisk_Mach;                   /*!< \brief Specified mach for actuator disk. */
-  su2double *ActDisk_Force;                  /*!< \brief Specified force for actuator disk. */
   su2double *Outlet_MassFlow;                /*!< \brief Mass flow for outlet boundaries. */
   su2double *Outlet_Density;                 /*!< \brief Avg. density for outlet boundaries. */
   su2double *Outlet_Area;                    /*!< \brief Area for outlet boundaries. */
@@ -340,12 +301,6 @@ private:
   su2double *Surface_IDC;                    /*!< \brief Specified IDC for nacelle boundaries. */
   su2double *Surface_IDC_Mach;               /*!< \brief Specified IDC mach for nacelle boundaries. */
   su2double *Surface_IDR;                    /*!< \brief Specified surface IDR for nacelle boundaries. */
-  su2double *ActDisk_NetThrust;              /*!< \brief Specified net thrust for nacelle boundaries. */
-  su2double *ActDisk_BCThrust;               /*!< \brief Specified bc thrust for nacelle boundaries. */
-  su2double *ActDisk_BCThrust_Old;           /*!< \brief Specified old bc thrust for nacelle boundaries. */
-  su2double *ActDisk_GrossThrust;            /*!< \brief Specified gross thrust for nacelle boundaries. */
-  su2double *ActDisk_Area;                   /*!< \brief Specified area for nacelle boundaries. */
-  su2double *ActDisk_ReverseMassFlow;        /*!< \brief Specified fan face mach for nacelle boundaries. */
   su2double **Periodic_RotCenter;            /*!< \brief Rotational center for each periodic boundary. */
   su2double **Periodic_RotAngles;            /*!< \brief Rotation angles for each periodic boundary. */
   su2double **Periodic_Translation;          /*!< \brief Translation vector for each periodic boundary. */
@@ -406,16 +361,11 @@ private:
 
   bool ReorientElements;       /*!< \brief Flag for enabling element reorientation. */
   string CustomObjFunc;        /*!< \brief User-defined objective function. */
-  unsigned short nDV,                  /*!< \brief Number of design variables. */
-  nObj, nObjW;                         /*! \brief Number of objective functions. */
-  unsigned short* nDV_Value;           /*!< \brief Number of values for each design variable (might be different than 1 if we allow arbitrary movement). */
-  unsigned short nParamDV;             /*!< \brief Number of parameters of the design variable. */
   string DV_Filename;                  /*!< \brief Filename for providing surface positions from an external parameterization. */
   string DV_Unordered_Sens_Filename;   /*!< \brief Filename of volume sensitivities in an unordered ASCII format. */
   string DV_Sens_Filename;             /*!< \brief Filename of surface sensitivities written to an unordered ASCII format. */
   unsigned short
   Sensitivity_FileFormat;             /*!< \brief Format of the input volume sensitivity files (SU2_DOT). */
-  su2double **ParamDV;                /*!< \brief Parameters of the design variable. */
   unsigned short GeometryMode;        /*!< \brief Gemoetry mode (analysis or gradient computation). */
   unsigned short MGCycle;             /*!< \brief Kind of multigrid cycle. */
   unsigned short FinestMesh;          /*!< \brief Finest mesh for the full multigrid approach. */
@@ -432,9 +382,6 @@ private:
   su2double *LocationStations;        /*!< \brief Airfoil sections in wing slicing subroutine. */
 
   ENUM_MULTIZONE Kind_MZSolver;    /*!< \brief Kind of multizone solver.  */
-  VISCOSITYMODEL Kind_ViscosityModel; /*!< \brief Kind of the Viscosity Model*/
-  CONDUCTIVITYMODEL Kind_ConductivityModel; /*!< \brief Kind of the Thermal Conductivity Model */
-  CONDUCTIVITYMODEL_TURB Kind_ConductivityModel_Turb; /*!< \brief Kind of the Turbulent Thermal Conductivity Model */
   FREESTREAM_OPTION Kind_FreeStreamOption; /*!< \brief Kind of free stream option to choose if initializing with density or temperature  */
   MAIN_SOLVER Kind_Solver;         /*!< \brief Kind of solver: Euler, NS, Continuous adjoint, etc.  */
   LIMITER Kind_SlopeLimit,    /*!< \brief Global slope limiter. */
@@ -500,16 +447,11 @@ private:
 
   bool AD_Mode;             /*!< \brief Algorithmic Differentiation support. */
   bool AD_Preaccumulation;  /*!< \brief Enable or disable preaccumulation in the AD mode. */
-  STRUCT_COMPRESS Kind_Material_Compress;  /*!< \brief Determines if the material is compressible or incompressible (structural analysis). */
-  STRUCT_MODEL Kind_Material;              /*!< \brief Determines the material model to be used (structural analysis). */
-  STRUCT_DEFORMATION Kind_Struct_Solver;   /*!< \brief Determines the geometric condition (small or large deformations) for structural analysis. */
-  unsigned short Kind_DV_FEA;              /*!< \brief Kind of Design Variable for FEA problems.*/
 
   unsigned short nTurbVar;          /*!< \brief Number of Turbulence variables, i.e. 1 for SA-types, 2 for SST. */
-  unsigned short Kind_ActDisk, Kind_Engine_Inflow,
+  unsigned short Kind_Engine_Inflow,
   *Kind_Data_Riemann;
   INLET_TYPE Kind_Inlet;
-  WALL_TYPE *Kind_Wall;            /*!< \brief Type of wall treatment. */
   unsigned short nWall_Types;      /*!< \brief Number of wall treatment types listed. */
   su2double Linear_Solver_Error;   /*!< \brief Min error of the linear solver for the implicit formulation. */
   su2double Deform_Linear_Solver_Error;          /*!< \brief Min error of the linear solver for the implicit formulation. */
@@ -604,8 +546,6 @@ private:
   nMarker_Analyze,                    /*!< \brief Number of markers to analyze. */
   nMarker_Moving,                     /*!< \brief Number of markers in motion (DEFORMING, MOVING_WALL). */
   nMarker_PyCustom,                   /*!< \brief Number of markers that are customizable in Python. */
-  nMarker_DV,                         /*!< \brief Number of markers affected by the design variables. */
-  nMarker_WallFunctions,              /*!< \brief Number of markers for which wall functions must be applied. */
   nMarker_SobolevBC;                  /*!< \brief Number of markers treaded in the gradient problem. */
   string *Marker_Monitoring,          /*!< \brief Markers to monitor. */
   *Marker_Designing,                  /*!< \brief Markers to design. */
@@ -615,13 +555,8 @@ private:
   *Marker_ZoneInterface,              /*!< \brief Markers in the FSI interface. */
   *Marker_Moving,                     /*!< \brief Markers in motion (DEFORMING, MOVING_WALL). */
   *Marker_PyCustom,                   /*!< \brief Markers that are customizable in Python. */
-  *Marker_DV,                         /*!< \brief Markers affected by the design variables. */
-  *Marker_WallFunctions,              /*!< \brief Markers for which wall functions must be applied. */
   *Marker_SobolevBC;                  /*!< \brief Markers in the gradient solver */
 
-  WALL_FUNCTIONS  *Kind_WallFunctions;        /*!< \brief The kind of wall function to use for the corresponding markers. */
-  unsigned short  **IntInfo_WallFunctions;    /*!< \brief Additional integer information for the wall function markers. */
-  su2double       **DoubleInfo_WallFunctions; /*!< \brief Additional double information for the wall function markers. */
   unsigned short  *Marker_All_Monitoring,     /*!< \brief Global index for monitoring using the grid information. */
   *Marker_All_GeoEval,               /*!< \brief Global index for geometrical evaluation. */
   *Marker_All_Plotting,              /*!< \brief Global index for plotting using the grid information. */
@@ -654,7 +589,6 @@ private:
   unsigned short Mesh_FileFormat;     /*!< \brief Mesh input format. */
   TAB_OUTPUT Tab_FileFormat;          /*!< \brief Format of the output files. */
   unsigned short output_precision;    /*!< \brief <ofstream>.precision(value) for SU2_DOT and HISTORY output */
-  unsigned short ActDisk_Jump;        /*!< \brief Format of the output files. */
   unsigned long StartWindowIteration; /*!< \brief Starting Iteration for long time Windowing apporach . */
   unsigned short nCFL_AdaptParam;     /*!< \brief Number of CFL parameters provided in config. */
   bool CFL_Adapt;        /*!< \brief Use adaptive CFL number. */
@@ -741,7 +675,6 @@ private:
   Turb2LamViscRatio_FreeStream,    /*!< \brief Ratio of turbulent to laminar viscosity. */
   NuFactor_FreeStream,             /*!< \brief Ratio of turbulent to laminar viscosity. */
   NuFactor_Engine,                 /*!< \brief Ratio of turbulent to laminar viscosity at the engine. */
-  SecondaryFlow_ActDisk,           /*!< \brief Ratio of turbulent to laminar viscosity at the actuator disk. */
   Initial_BCThrust,                /*!< \brief Ratio of turbulent to laminar viscosity at the actuator disk. */
   Pressure_FreeStream,             /*!< \brief Total pressure of the fluid. */
   Pressure_Thermodynamic,          /*!< \brief Thermodynamic pressure of the fluid. */
@@ -886,7 +819,6 @@ private:
   bool DiscreteAdjoint;                /*!< \brief AD-based discrete adjoint mode. */
   su2double Const_DES;                 /*!< \brief Detached Eddy Simulation Constant. */
   WINDOW_FUNCTION Kind_WindowFct;      /*!< \brief Type of window (weight) function for objective functional. */
-  unsigned short Kind_HybridRANSLES;   /*!< \brief Kind of Hybrid RANS/LES. */
   unsigned short Kind_RoeLowDiss;      /*!< \brief Kind of Roe scheme with low dissipation for unsteady flows. */
   bool QCR;                    /*!< \brief Spalart-Allmaras with Quadratic Constitutive Relation, 2000 version (SA-QCR2000) . */
 
@@ -1108,14 +1040,6 @@ private:
   void addPeriodicOption(const string & name, unsigned short & nMarker_PerBound,
                          string* & Marker_PerBound, string* & Marker_PerDonor,
                          su2double** & RotCenter, su2double** & RotAngles, su2double** & Translation);
-
-  void addActDiskOption(const string & name,
-                        unsigned short & nMarker_ActDiskInlet, unsigned short & nMarker_ActDiskOutlet, string* & Marker_ActDiskInlet, string* & Marker_ActDiskOutlet,
-                        su2double** & ActDisk_PressJump, su2double** & ActDisk_TempJump, su2double** & ActDisk_Omega);
-
-  void addWallFunctionOption(const string &name,               unsigned short &list_size,
-                             string* &string_field,            WALL_FUNCTIONS* &val_Kind_WF,
-                             unsigned short** &val_IntInfo_WF, su2double** &val_DoubleInfo_WF);
 
   void addPythonOption(const string name);
 
@@ -1728,12 +1652,6 @@ public:
    * \brief Get the value of the non-dimensionalized actuator disk turbulence intensity.
    * \return Non-dimensionalized actuator disk intensity.
    */
-  su2double GetSecondaryFlow_ActDisk(void) const { return SecondaryFlow_ActDisk; }
-
-  /*!
-   * \brief Get the value of the non-dimensionalized actuator disk turbulence intensity.
-   * \return Non-dimensionalized actuator disk intensity.
-   */
   su2double GetInitial_BCThrust(void) const { return Initial_BCThrust; }
 
   /*!
@@ -1829,12 +1747,6 @@ public:
   su2double GetKnowles_N(void) const { return Knowles_N; }
 
   /*!
-   * \brief Get the kind of design variable for FEA.
-   * \return Value of the DE voltage.
-   */
-  unsigned short GetDV_FEA(void) const { return Kind_DV_FEA; }
-
-  /*!
    * \brief Get the ID of the reference node.
    * \return Number of FSI subiters.
    */
@@ -1909,24 +1821,6 @@ public:
    * \return Value of the Material Density.
    */
   su2double GetMaterialDensity(unsigned short id_val) const { return MaterialDensity[id_val]; }
-
-  /*!
-   * \brief Compressibility/incompressibility of the solids analysed using the structural solver.
-   * \return Compressible or incompressible.
-   */
-  STRUCT_COMPRESS GetMaterialCompressibility(void) const { return Kind_Material_Compress; }
-
-  /*!
-   * \brief Compressibility/incompressibility of the solids analysed using the structural solver.
-   * \return Compressible or incompressible.
-   */
-  STRUCT_MODEL GetMaterialModel(void) const { return Kind_Material; }
-
-  /*!
-   * \brief Geometric conditions for the structural solver.
-   * \return Small or large deformation structural analysis.
-   */
-  STRUCT_DEFORMATION GetGeometricConditions(void) const { return Kind_Struct_Solver; }
 
   /*!
    * \brief Get the reference length for computing moment (the default value is 1).
@@ -2456,38 +2350,6 @@ public:
   su2double GetMax_DeltaTime(void) const { return Max_DeltaTime; }
 
   /*!
-   * \brief Get a parameter of the particular design variable.
-   * \param[in] val_dv - Number of the design variable that we want to read.
-   * \param[in] val_param - Index of the parameter that we want to read.
-   * \return Design variable parameter.
-   */
-  su2double GetParamDV(unsigned short val_dv, unsigned short val_param) const { return ParamDV[val_dv][val_param]; }
-
-  /*!
-   * \brief Get the number of design variables.
-   * \return Number of the design variables.
-   */
-  unsigned short GetnDV(void) const { return nDV; }
-
-  /*!
-   * \brief Get the number of design variables.
-   * \return Number of the design variables.
-   */
-  unsigned short GetnDV_Value(unsigned short iDV) const { return nDV_Value[iDV]; }
-
-  /*!
-   * \brief Get the total number of design variables.
-   */
-  unsigned short GetnDV_Total(void) const {
-    if (!nDV_Value) return 0;
-    unsigned short sum = 0;
-    for (unsigned short iDV = 0; iDV < nDV; iDV++) {
-      sum += nDV_Value[iDV];
-    }
-    return sum;
-  }
-
-  /*!
    * \brief Get the required continuity level at the surface intersection with the FFD
    * \return Continuity level at the surface intersection.
    */
@@ -2629,18 +2491,6 @@ public:
    * \brief Get the total number of boundary markers.
    * \return Total number of boundary markers.
    */
-  unsigned short GetnMarker_ActDiskInlet(void) const { return nMarker_ActDiskInlet; }
-
-  /*!
-   * \brief Get the total number of boundary markers.
-   * \return Total number of boundary markers.
-   */
-  unsigned short GetnMarker_ActDiskOutlet(void) const { return nMarker_ActDiskOutlet; }
-
-  /*!
-   * \brief Get the total number of boundary markers.
-   * \return Total number of boundary markers.
-   */
   unsigned short GetnMarker_Outlet(void) const { return nMarker_Outlet; }
 
   /*!
@@ -2648,12 +2498,6 @@ public:
    * \return Total number of monitoring markers.
    */
   unsigned short GetnMarker_Monitoring(void) const { return nMarker_Monitoring; }
-
-  /*!
-   * \brief Get the total number of DV markers.
-   * \return Total number of DV markers.
-   */
-  unsigned short GetnMarker_DV(void) const { return nMarker_DV; }
 
   /*!
    * \brief Get the total number of moving markers.
@@ -2696,12 +2540,6 @@ public:
    * \return Total number of heat flux markers.
    */
   unsigned short GetnRoughWall(void) const { return nRough_Wall; }
-
-  /*!
-   * \brief Get the total number of objectives in kind_objective list
-   * \return Total number of objectives in kind_objective list
-   */
-  unsigned short GetnObj(void) const { return nObj;}
 
   /*!
    * \brief Stores the number of marker in the simulation.
@@ -2836,22 +2674,6 @@ public:
    *         has the marker <i>val_marker</i>.
    */
   string GetMarker_All_TagBound(unsigned short val_marker) const { return Marker_All_TagBound[val_marker]; }
-
-  /*!
-   * \brief Get the index of the surface defined in the geometry file.
-   * \param[in] val_marker - Value of the marker in which we are interested.
-   * \return Value of the index that is in the geometry file for the surface that
-   *         has the marker <i>val_marker</i>.
-   */
-  string GetMarker_ActDiskInlet_TagBound(unsigned short val_marker) const { return Marker_ActDiskInlet[val_marker]; }
-
-  /*!
-   * \brief Get the index of the surface defined in the geometry file.
-   * \param[in] val_marker - Value of the marker in which we are interested.
-   * \return Value of the index that is in the geometry file for the surface that
-   *         has the marker <i>val_marker</i>.
-   */
-  string GetMarker_ActDiskOutlet_TagBound(unsigned short val_marker) const { return Marker_ActDiskOutlet[val_marker]; }
 
   /*!
    * \brief Get the index of the surface defined in the geometry file.
@@ -3329,24 +3151,6 @@ public:
    * \return Critical pressure.
    */
   su2double GetAcentric_Factor(void) const { return Acentric_Factor; }
-
-  /*!
-   * \brief Get the value of the viscosity model.
-   * \return Viscosity model.
-   */
-  VISCOSITYMODEL GetKind_ViscosityModel() const { return Kind_ViscosityModel; }
-
-  /*!
-   * \brief Get the value of the thermal conductivity model.
-   * \return Conductivity model.
-   */
-  CONDUCTIVITYMODEL GetKind_ConductivityModel() const { return Kind_ConductivityModel; }
-
-  /*!
-   * \brief Get the value of the turbulent thermal conductivity model.
-   * \return Turbulent conductivity model.
-   */
-  CONDUCTIVITYMODEL_TURB GetKind_ConductivityModel_Turb() const { return Kind_ConductivityModel_Turb; }
 
   /*!
    * \brief Get the value of the constant viscosity.
@@ -4224,12 +4028,6 @@ public:
   string GetInlet_FileName(void) const { return Inlet_Filename; }
 
   /*!
-   * \brief Get name of the input file for the specified actuator disk.
-   * \return Name of the input file for the specified actuator disk.
-   */
-  string GetActDisk_FileName(void) const { return ActDisk_FileName; }
-
-  /*!
    * \brief Get the tolerance used for matching two points on a specified inlet
    * \return Tolerance used for matching a point to a specified inlet
    */
@@ -4283,12 +4081,6 @@ public:
   unsigned short GetKind_Engine_Inflow(void) const { return Kind_Engine_Inflow; }
 
   /*!
-   * \brief Get the kind of inlet boundary condition treatment (total conditions or mass flow).
-   * \return Kind of inlet boundary condition.
-   */
-  unsigned short GetKind_ActDisk(void) const { return Kind_ActDisk; }
-
-  /*!
    * \brief Set the kind of wall - rough or smooth.
    */
   void SetKindWall(string val_marker, unsigned short val_kindwall);
@@ -4317,34 +4109,6 @@ public:
    * \return <code>TRUE</code> means that only the points on the FFD box will be moved.
    */
   bool GetHold_GridFixed(void) const { return Hold_GridFixed; }
-
-  /*!
-   * \author H. Kline
-   * \brief Get the kind of objective function. There are several options: Drag coefficient,
-   *        Lift coefficient, efficiency, etc.
-   * \note The objective function will determine the boundary condition of the adjoint problem.
-   * \param[in] val_obj
-   * \return Kind of objective function.
-   */
-  unsigned short GetKind_ObjFunc(unsigned short val_obj = 0) const { return Kind_ObjFunc[val_obj]; }
-
-  /*!
-   * \author H. Kline
-   * \brief Get the weight of objective function. There are several options: Drag coefficient,
-   *        Lift coefficient, efficiency, etc.
-   * \note The objective function will determine the boundary condition of the adjoint problem.
-   * \return Weight of objective function.
-   */
-  su2double GetWeight_ObjFunc(unsigned short val_obj) const { return Weight_ObjFunc[val_obj]; }
-
-  /*!
-   * \author H. Kline
-   * \brief Set the weight of objective function. There are several options: Drag coefficient,
-   *        Lift coefficient, efficiency, etc.
-   * \note The objective function will determine the boundary condition of the adjoint problem.
-   * \return Weight of objective function.
-   */
-  void SetWeight_ObjFunc(unsigned short val_obj, su2double val) { Weight_ObjFunc[val_obj] = val; }
 
   /*!
    * \brief Get the user expression for the custom objective function.
@@ -4483,12 +4247,6 @@ public:
    * \return Output precision.
    */
   unsigned short GetOutput_Precision(void) const { return output_precision; }
-
-  /*!
-   * \brief Get the format of the output solution.
-   * \return Format of the output solution.
-   */
-  unsigned short GetActDisk_Jump(void) const { return ActDisk_Jump; }
 
   /*!
    * \brief Get the name of the file with the convergence history of the problem.
@@ -4635,13 +4393,6 @@ public:
   string GetUnsteady_FileName(string val_filename, int val_iter, string ext) const;
 
   /*!
-   * \brief Append the input filename string with the appropriate objective function extension.
-   * \param[in] val_filename - String value of the base filename.
-   * \return Name of the file with the appropriate objective function extension.
-   */
-  string GetObjFunc_Extension(string val_filename) const;
-
-  /*!
    * \brief Get functional that is going to be used to evaluate the residual flow convergence.
    * \return Functional that is going to be used to evaluate the residual flow convergence.
    */
@@ -4726,39 +4477,10 @@ public:
   bool GetSubsonicEngine(void) const { return SubsonicEngine; }
 
   /*!
-   * \brief Actuator disk defined with a double surface.
-   * \return <code>TRUE</code> if the elements must be divided; otherwise <code>FALSE</code>.
-   */
-  bool GetActDisk_DoubleSurface(void) const { return ActDisk_DoubleSurface; }
-
-  /*!
    * \brief Only halg of the engine is in the compputational grid.
    * \return <code>TRUE</code> if the engine is complete; otherwise <code>FALSE</code>.
    */
   bool GetEngine_HalfModel(void) const { return Engine_HalfModel; }
-
-  /*!
-   * \brief Actuator disk defined with a double surface.
-   * \return <code>TRUE</code> if the elements must be divided; otherwise <code>FALSE</code>.
-   */
-  bool GetActDisk_SU2_DEF(void) const { return ActDisk_SU2_DEF; }
-
-  /*!
-   * \brief Value of the design variable step, we use this value in design problems.
-   * \param[in] val_dv - Number of the design variable that we want to read.
-   * \param[in] val_val - Value of the design variable that we want to read.
-   * \return Design variable step.
-   */
-  su2double& GetDV_Value(unsigned short val_dv, unsigned short val_val = 0) { return DV_Value[val_dv][val_val]; }
-  const su2double& GetDV_Value(unsigned short val_dv, unsigned short val_val = 0) const { return DV_Value[val_dv][val_val]; }
-
-  /*!
-   * \brief Set the value of the design variable step, we use this value in design problems.
-   * \param[in] val_dv - Number of the design variable that we want to read.
-   * \param[in] val_ind - value of initial deformation.
-   * \param[in] val    - Value of the design variable.
-   */
-  void SetDV_Value(unsigned short val_dv, unsigned short val_ind, su2double val) { DV_Value[val_dv][val_ind] = val; }
 
   /*!
    * \brief Get the mach number based on the mesh velocity and freestream quantities.
@@ -5041,13 +4763,6 @@ public:
    * \return Change the index of the finest grid.
    */
   void SubtractFinestMesh(void) { FinestMesh = FinestMesh-1; }
-
-  /*!
-   * \brief Obtain the kind of design variable.
-   * \param[in] val_dv - Number of the design variable that we want to read.
-   * \return Design variable identification.
-   */
-  unsigned short GetDesign_Variable(unsigned short val_dv) const { return Design_Variable[val_dv]; }
 
   /*!
    * \brief Get the index in the config information of the marker <i>val_marker</i>.
@@ -5360,72 +5075,6 @@ public:
   unsigned short GetMarker_Periodic_Donor(string val_marker) const;
 
   /*!
-   * \brief Get the origin of the actuator disk.
-   */
-  su2double GetActDisk_NetThrust(string val_marker) const;
-
-  /*!
-   * \brief Get the origin of the actuator disk.
-   */
-  su2double GetActDisk_Power(string val_marker) const;
-
-  /*!
-   * \brief Get the origin of the actuator disk.
-   */
-  su2double GetActDisk_MassFlow(string val_marker) const;
-
-  /*!
-   * \brief Get the origin of the actuator disk.
-   */
-  su2double GetActDisk_Mach(string val_marker) const;
-
-  /*!
-   * \brief Get the origin of the actuator disk.
-   */
-  su2double GetActDisk_Force(string val_marker) const;
-
-  /*!
-   * \brief Get the origin of the actuator disk.
-   */
-  su2double GetActDisk_BCThrust(string val_marker) const;
-
-  /*!
-   * \brief Get the origin of the actuator disk.
-   */
-  su2double GetActDisk_BCThrust_Old(string val_marker) const;
-
-  /*!
-   * \brief Get the tip radius of th actuator disk.
-   */
-  su2double GetActDisk_Area(string val_marker) const;
-
-  /*!
-   * \brief Get the tip radius of th actuator disk.
-   */
-  su2double GetActDisk_ReverseMassFlow(string val_marker) const;
-
-  /*!
-   * \brief Get the thrust corffient of the actuator disk.
-   */
-  su2double GetActDisk_PressJump(string val_marker, unsigned short val_index) const;
-
-  /*!
-   * \brief Get the thrust corffient of the actuator disk.
-   */
-  su2double GetActDisk_TempJump(string val_marker, unsigned short val_index) const;
-
-  /*!
-   * \brief Get the rev / min of the actuator disk.
-   */
-  su2double GetActDisk_Omega(string val_marker, unsigned short val_index) const;
-
-  /*!
-   * \brief Get Actuator Disk Outlet for boundary <i>val_marker</i> (actuator disk inlet).
-   * \return Actuator Disk Outlet from the config information for the marker <i>val_marker</i>.
-   */
-  unsigned short GetMarker_CfgFile_ActDiskOutlet(string val_marker) const;
-
-  /*!
    * \brief Get Actuator Disk Outlet for boundary <i>val_marker</i> (actuator disk inlet).
    * \return Actuator Disk Outlet from the config information for the marker <i>val_marker</i>.
    */
@@ -5679,13 +5328,6 @@ public:
   su2double GetWall_HeatTransfer_Temperature(string val_index) const;
 
   /*!
-   * \brief Get the wall function treatment for the given boundary marker.
-   * \param[in] val_marker - String of the viscous wall marker.
-   * \return The type of wall function treatment.
-   */
-  WALL_FUNCTIONS GetWallFunction_Treatment(string val_marker) const;
-
-  /*!
    * \brief Get the additional integer info for the wall function treatment
             for the given boundary marker.
    * \param[in] val_marker - String of the viscous wall marker.
@@ -5700,13 +5342,6 @@ public:
    * \return Pointer to the double info for the given marker.
    */
   const su2double* GetWallFunction_DoubleInfo(string val_marker) const;
-
-  /*!
-   * \brief Get the type of wall and roughness height on a wall boundary (Heatflux or Isothermal).
-   * \param[in] val_index - Index corresponding to the boundary.
-   * \return The wall type and roughness height.
-   */
-  pair<WALL_TYPE,su2double> GetWallRoughnessProperties(string val_marker) const;
 
   /*!
    * \brief Get the target (pressure, massflow, etc) at an engine inflow boundary.
@@ -6064,258 +5699,6 @@ public:
    * \param[in] val_index - Index corresponding to the outlet boundary.
    * \return The outlet pressure.
    */
-  void SetActDiskInlet_Temperature(unsigned short val_marker, su2double val_actdisk_temp) { ActDiskInlet_Temperature[val_marker] = val_actdisk_temp; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskInlet_TotalTemperature(unsigned short val_marker, su2double val_actdisk_totaltemp) { ActDiskInlet_TotalTemperature[val_marker] = val_actdisk_totaltemp; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskInlet_Temperature(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskInlet_TotalTemperature(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskOutlet_Temperature(unsigned short val_marker, su2double val_actdisk_temp) { ActDiskOutlet_Temperature[val_marker] = val_actdisk_temp; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskOutlet_TotalTemperature(unsigned short val_marker, su2double val_actdisk_totaltemp) { ActDiskOutlet_TotalTemperature[val_marker] = val_actdisk_totaltemp; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskOutlet_Temperature(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskOutlet_TotalTemperature(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskInlet_MassFlow(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskInlet_MassFlow(unsigned short val_marker, su2double val_actdisk_massflow) { ActDiskInlet_MassFlow[val_marker] = val_actdisk_massflow; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskOutlet_MassFlow(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskOutlet_MassFlow(unsigned short val_marker, su2double val_actdisk_massflow) { ActDiskOutlet_MassFlow[val_marker] = val_actdisk_massflow; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskInlet_Pressure(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskInlet_TotalPressure(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_DeltaPress(unsigned short val_marker) const { return ActDisk_DeltaPress[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_DeltaTemp(unsigned short val_marker) const { return ActDisk_DeltaTemp[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_TotalPressRatio(unsigned short val_marker) const { return ActDisk_TotalPressRatio[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_TotalTempRatio(unsigned short val_marker) const { return ActDisk_TotalTempRatio[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_StaticPressRatio(unsigned short val_marker) const { return ActDisk_StaticPressRatio[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_StaticTempRatio(unsigned short val_marker) const { return ActDisk_StaticTempRatio[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_NetThrust(unsigned short val_marker) const { return ActDisk_NetThrust[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_BCThrust(unsigned short val_marker) const { return ActDisk_BCThrust[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_BCThrust_Old(unsigned short val_marker) const { return ActDisk_BCThrust_Old[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_GrossThrust(unsigned short val_marker) const { return ActDisk_GrossThrust[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_Area(unsigned short val_marker) const { return ActDisk_Area[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_ReverseMassFlow(unsigned short val_marker) const { return ActDisk_ReverseMassFlow[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskInlet_RamDrag(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskInlet_Force(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskInlet_Power(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskInlet_Pressure(unsigned short val_marker, su2double val_actdisk_press) { ActDiskInlet_Pressure[val_marker] = val_actdisk_press; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskInlet_TotalPressure(unsigned short val_marker, su2double val_actdisk_totalpress) { ActDiskInlet_TotalPressure[val_marker] = val_actdisk_totalpress; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_DeltaPress(unsigned short val_marker, su2double val_actdisk_deltapress) { ActDisk_DeltaPress[val_marker] = val_actdisk_deltapress; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_Power(unsigned short val_marker, su2double val_actdisk_power) { ActDisk_Power[val_marker] = val_actdisk_power; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_MassFlow(unsigned short val_marker, su2double val_actdisk_massflow) { ActDisk_MassFlow[val_marker] = val_actdisk_massflow; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_Mach(unsigned short val_marker, su2double val_actdisk_mach) { ActDisk_Mach[val_marker] = val_actdisk_mach; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_Force(unsigned short val_marker, su2double val_actdisk_force) { ActDisk_Force[val_marker] = val_actdisk_force; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
   su2double GetOutlet_MassFlow(string val_marker) const;
 
   /*!
@@ -6484,146 +5867,6 @@ public:
    * \param[in] val_index - Index corresponding to the outlet boundary.
    * \return The outlet pressure.
    */
-  void SetActDisk_DeltaTemp(unsigned short val_marker, su2double val_actdisk_deltatemp) { ActDisk_DeltaTemp[val_marker] = val_actdisk_deltatemp; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_TotalPressRatio(unsigned short val_marker, su2double val_actdisk_pressratio) { ActDisk_TotalPressRatio[val_marker] = val_actdisk_pressratio; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_TotalTempRatio(unsigned short val_marker, su2double val_actdisk_tempratio) { ActDisk_TotalTempRatio[val_marker] = val_actdisk_tempratio; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_StaticPressRatio(unsigned short val_marker, su2double val_actdisk_pressratio) { ActDisk_StaticPressRatio[val_marker] = val_actdisk_pressratio; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_StaticTempRatio(unsigned short val_marker, su2double val_actdisk_tempratio) { ActDisk_StaticTempRatio[val_marker] = val_actdisk_tempratio; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_NetThrust(unsigned short val_marker, su2double val_actdisk_netthrust) { ActDisk_NetThrust[val_marker] = val_actdisk_netthrust; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_BCThrust(string val_marker, su2double val_actdisk_bcthrust);
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_BCThrust(unsigned short val_marker, su2double val_actdisk_bcthrust) { ActDisk_BCThrust[val_marker] = val_actdisk_bcthrust; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_BCThrust_Old(string val_marker, su2double val_actdisk_bcthrust_old);
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_BCThrust_Old(unsigned short val_marker, su2double val_actdisk_bcthrust_old) { ActDisk_BCThrust_Old[val_marker] = val_actdisk_bcthrust_old; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_GrossThrust(unsigned short val_marker, su2double val_actdisk_grossthrust) { ActDisk_GrossThrust[val_marker] = val_actdisk_grossthrust; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDisk_Area(unsigned short val_marker, su2double val_actdisk_area) { ActDisk_Area[val_marker] = val_actdisk_area; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskInlet_ReverseMassFlow(unsigned short val_marker, su2double val_actdisk_area) { ActDisk_ReverseMassFlow[val_marker] = val_actdisk_area; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskInlet_RamDrag(unsigned short val_marker, su2double val_actdisk_ramdrag) { ActDiskInlet_RamDrag[val_marker] = val_actdisk_ramdrag; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskInlet_Force(unsigned short val_marker, su2double val_actdisk_force) { ActDiskInlet_Force[val_marker] = val_actdisk_force; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskInlet_Power(unsigned short val_marker, su2double val_actdisk_power) { ActDiskInlet_Power[val_marker] = val_actdisk_power; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_Power(unsigned short val_marker) const { return ActDisk_Power[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_MassFlow(unsigned short val_marker) const { return ActDisk_MassFlow[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_Mach(unsigned short val_marker) const { return ActDisk_Mach[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDisk_Force(unsigned short val_marker) const { return ActDisk_Force[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
   su2double GetSurface_DC60(unsigned short val_marker) const { return Surface_DC60[val_marker]; }
 
   /*!
@@ -6744,76 +5987,6 @@ public:
    * \return The outlet pressure.
    */
   su2double GetSurface_IDR(unsigned short val_marker) const { return Surface_IDR[val_marker]; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskOutlet_Pressure(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskOutlet_TotalPressure(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskOutlet_GrossThrust(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskOutlet_Force(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  su2double GetActDiskOutlet_Power(string val_marker) const;
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskOutlet_Pressure(unsigned short val_marker, su2double val_actdisk_press) { ActDiskOutlet_Pressure[val_marker] = val_actdisk_press; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskOutlet_TotalPressure(unsigned short val_marker, su2double val_actdisk_totalpress) { ActDiskOutlet_TotalPressure[val_marker] = val_actdisk_totalpress; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskOutlet_GrossThrust(unsigned short val_marker, su2double val_actdisk_grossthrust) { ActDiskOutlet_GrossThrust[val_marker] = val_actdisk_grossthrust; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskOutlet_Force(unsigned short val_marker, su2double val_actdisk_force) { ActDiskOutlet_Force[val_marker] = val_actdisk_force; }
-
-  /*!
-   * \brief Get the back pressure (static) at an outlet boundary.
-   * \param[in] val_index - Index corresponding to the outlet boundary.
-   * \return The outlet pressure.
-   */
-  void SetActDiskOutlet_Power(unsigned short val_marker, su2double val_actdisk_power) { ActDiskOutlet_Power[val_marker] = val_actdisk_power; }
 
   /*!
    * \brief Get the displacement value at an displacement boundary.
@@ -7594,27 +6767,10 @@ public:
   su2double GetRestart_Bandwidth_Agg(void) const { return Restart_Bandwidth_Agg; }
 
   /*!
-   * \brief Get the Kind of Hybrid RANS/LES.
-   * \return Value of Hybrid RANS/LES method.
-   */
-  unsigned short GetKind_HybridRANSLES(void) const { return Kind_HybridRANSLES; }
-
-  /*!
    * \brief Get the Kind of Roe Low Dissipation Scheme for Unsteady flows.
    * \return Value of Low dissipation approach.
    */
   unsigned short GetKind_RoeLowDiss(void) const { return Kind_RoeLowDiss; }
-
-  /*!
-   * \brief Get the DES Constant.
-   * \return Value of DES constant.
-   */
-  su2double GetConst_DES(void) const { return Const_DES; }
-
-  /*!
-   * \brief Get QCR (SA-QCR2000).
-   */
-  bool GetQCR(void) const { return QCR;}
 
   /*!
    * \brief Get if AD preaccumulation should be performed.

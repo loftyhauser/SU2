@@ -90,17 +90,11 @@ void CIntegration::Space_Integration(CGeometry *geometry,
       case EULER_WALL:
         solver_container[MainSolver]->BC_Euler_Wall(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);
         break;
-      case ACTDISK_INLET:
-        solver_container[MainSolver]->BC_ActDisk_Inlet(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);
-        break;
       case ENGINE_INFLOW:
         solver_container[MainSolver]->BC_Engine_Inflow(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);
         break;
       case INLET_FLOW:
         solver_container[MainSolver]->BC_Inlet(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);
-        break;
-      case ACTDISK_OUTLET:
-        solver_container[MainSolver]->BC_ActDisk_Outlet(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);
         break;
       case ENGINE_EXHAUST:
         solver_container[MainSolver]->BC_Engine_Exhaust(geometry, solver_container, conv_bound_numerics, visc_bound_numerics, config, iMarker);

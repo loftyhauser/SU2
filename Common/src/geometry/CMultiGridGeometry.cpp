@@ -775,26 +775,6 @@ void CMultiGridGeometry::SetVertex(const CGeometry *fine_grid, const CConfig *co
   }
 }
 
-void CMultiGridGeometry::MatchActuator_Disk(const CConfig *config) {
-
-  unsigned short iMarker;
-  unsigned long iVertex, iPoint;
-  int iProcessor = size;
-
-  for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-    if ((config->GetMarker_All_KindBC(iMarker) == ACTDISK_INLET) ||
-        (config->GetMarker_All_KindBC(iMarker) == ACTDISK_OUTLET)) {
-      for (iVertex = 0; iVertex < nVertex[iMarker]; iVertex++) {
-        iPoint = vertex[iMarker][iVertex]->GetNode();
-        if (nodes->GetDomain(iPoint)) {
-          vertex[iMarker][iVertex]->SetDonorPoint(iPoint, nodes->GetGlobalIndex(iPoint), iVertex, iMarker, iProcessor);
-        }
-      }
-    }
-  }
-
-}
-
 void CMultiGridGeometry::MatchPeriodic(const CConfig *config, unsigned short val_periodic) {
 
   unsigned short iMarker, iPeriodic, nPeriodic;

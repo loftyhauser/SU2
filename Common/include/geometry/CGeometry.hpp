@@ -590,12 +590,6 @@ public:
    * \brief A virtual member.
    * \param[in] config - Definition of the particular problem.
    */
-  inline virtual void MatchActuator_Disk(const CConfig *config) {}
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] config - Definition of the particular problem.
-   */
   inline virtual void MatchPeriodic(const CConfig *config, unsigned short val_periodic) {}
 
   /*!

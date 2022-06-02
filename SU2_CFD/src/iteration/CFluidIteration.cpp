@@ -101,10 +101,6 @@ void CFluidIteration::Update(COutput* output, CIntegration**** integration, CGeo
                                                                       solver[val_iZone][val_iInst][iMesh][FLOW_SOL],
                                                                       config[val_iZone], iMesh);
 
-      integration[val_iZone][val_iInst][FLOW_SOL]->SetDualTime_Geometry(geometry[val_iZone][val_iInst][iMesh],
-                                                                        solver[val_iZone][val_iInst][iMesh][MESH_SOL],
-                                                                        config[val_iZone], iMesh);
-
       integration[val_iZone][val_iInst][FLOW_SOL]->SetConvergence(false);
     }
 

@@ -88,11 +88,6 @@ public:
   void Output(unsigned long TimeIter) override;
 
   /*!
-   * \brief Perform a mesh deformation as initial condition.
-   */
-  void SetInitialMesh() override;
-
-  /*!
    * \brief Monitor
    * \param ExtIter
    */

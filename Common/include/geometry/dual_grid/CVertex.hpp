@@ -43,7 +43,6 @@ protected:
   su2double CartCoord[3] = {0.0};       /*!< \brief Vertex cartesians coordinates. */
   su2double VarCoord[3] = {0.0};        /*!< \brief Used for storing the coordinate variation due to a surface modification. */
   long PeriodicPoint[5] = {-1};         /*!< \brief Store the periodic point of a boundary (iProcessor, iPoint) */
-  bool ActDisk_Perimeter = false;       /*!< \brief Identify nodes at the perimeter of the actuator disk */
   short Rotation_Type;                  /*!< \brief Type of rotation associated with the vertex (MPI and periodic) */
   unsigned long Normal_Neighbor;        /*!< \brief Index of the closest neighbor. */
   su2double Basis_Function[3] = {0.0};  /*!< \brief Basis function values for interpolation across zones. */
@@ -247,13 +246,6 @@ public:
   }
 
   /*!
-   * \overload
-   * \param[in] val_periodicpoint - Value of periodic point of the vertex.
-   * \param[in] val_processor - Processor where the point belong.
-   */
-  inline void SetActDisk_Perimeter(bool val_actdisk_perimeter) { ActDisk_Perimeter = val_actdisk_perimeter; }
-
-  /*!
    * \brief Get the value of the periodic point of a vertex.
    * \return Value of the periodic point of a vertex.
    */
@@ -294,12 +286,6 @@ public:
    * \return Value of the periodic point of a vertex, and the domain.
    */
   inline long *GetPeriodicPointDomain(void) { return PeriodicPoint; }
-
-  /*!
-   * \brief Get the value of the periodic point of a vertex, and its somain
-   * \return Value of the periodic point of a vertex, and the domain.
-   */
-  inline bool GetActDisk_Perimeter(void) const { return ActDisk_Perimeter; }
 
   /*!
    * \brief Set the finite element basis functions needed for interpolation.

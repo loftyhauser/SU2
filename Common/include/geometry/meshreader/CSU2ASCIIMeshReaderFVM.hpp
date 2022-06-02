@@ -51,20 +51,11 @@ private:
 
   bool actuator_disk; /*!< \brief Boolean for whether we have an actuator disk to split. */
 
-  unsigned long ActDiskNewPoints = 0; /*!< \brief Total number of new grid points to add due to actuator disk splitting. */
-
   su2double Xloc = 0.0; /*!< \brief X-coordinate of the CG of the actuator disk surface. */
   su2double Yloc = 0.0; /*!< \brief X-coordinate of the CG of the actuator disk surface. */
   su2double Zloc = 0.0; /*!< \brief X-coordinate of the CG of the actuator disk surface. */
 
-  vector<bool> ActDisk_Bool; /*!< \brief Flag to identify the grid points on the actuator disk. */
-
-  vector<unsigned long> ActDiskPoint_Back; /*!< \brief Vector containing the global index for the new grid points added to the back of the actuator disk. */
   vector<unsigned long> VolumePoint_Inv; /*!< \brief Vector containing the inverse mapping from the global index to the added point index for the actuator disk. */
-
-  vector<su2double> CoordXActDisk; /*!< \brief X-coordinates of the new grid points added by splitting the actuator disk (size = ActDiskNewPoints). */
-  vector<su2double> CoordYActDisk; /*!< \brief Y-coordinates of the new grid points added by splitting the actuator disk (size = ActDiskNewPoints). */
-  vector<su2double> CoordZActDisk; /*!< \brief Z-coordinates of the new grid points added by splitting the actuator disk (size = ActDiskNewPoints). */
 
   vector<su2double> CoordXVolumePoint; /*!< \brief X-coordinates of the volume elements touching the actuator disk. */
   vector<su2double> CoordYVolumePoint; /*!< \brief Y-coordinates of the volume elements touching the actuator disk. */

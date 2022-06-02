@@ -244,46 +244,6 @@ static const MapType<std::string, ENUM_MULTIZONE> Multizone_Map = {
 };
 
 /*!
- * \brief Material geometric conditions
- */
-enum class STRUCT_DEFORMATION {
-  SMALL,       /*!< \brief Definition of linear elastic material. */
-  LARGE,       /*!< \brief Definition of Neo-Hookean material. */
-};
-static const MapType<std::string, STRUCT_DEFORMATION> Struct_Map = {
-  MakePair("SMALL_DEFORMATIONS", STRUCT_DEFORMATION::SMALL)
-  MakePair("LARGE_DEFORMATIONS", STRUCT_DEFORMATION::LARGE)
-};
-
-/*!
- * \brief Material model
- */
-enum class STRUCT_MODEL {
-  LINEAR_ELASTIC,   /*!< \brief Definition of linear elastic material. */
-  NEO_HOOKEAN,      /*!< \brief Definition of Neo-Hookean material. */
-  KNOWLES,          /*!< \brief Definition of Knowles stored-energy potential */
-  IDEAL_DE,         /*!< \brief Definition of ideal Dielectric Elastomer */
-};
-static const MapType<std::string, STRUCT_MODEL> Material_Map = {
-  MakePair("LINEAR_ELASTIC", STRUCT_MODEL::LINEAR_ELASTIC)
-  MakePair("NEO_HOOKEAN", STRUCT_MODEL::NEO_HOOKEAN)
-  MakePair("KNOWLES", STRUCT_MODEL::KNOWLES)
-  MakePair("IDEAL_DE", STRUCT_MODEL::IDEAL_DE)
-};
-
-/*!
- * \brief Material compressibility
- */
-enum class STRUCT_COMPRESS {
-  COMPRESSIBLE,     /*!< \brief Definition of compressible material. */
-  NEARLY_INCOMP,    /*!< \brief Definition of nearly incompressible material. */
-};
-static const MapType<std::string, STRUCT_COMPRESS> MatComp_Map = {
-  MakePair("COMPRESSIBLE", STRUCT_COMPRESS::COMPRESSIBLE)
-  MakePair("NEARLY_INCOMPRESSIBLE", STRUCT_COMPRESS::NEARLY_INCOMP)
-};
-
-/*!
  * \brief Types of interpolators
  */
 enum class INTERFACE_INTERPOLATOR {
@@ -384,16 +344,6 @@ enum RUNTIME_TYPE {
 };
 
 const int FLOW_SOL = 0;     /*!< \brief Position of the mean flow solution in the solver container array. */
-const int ADJFLOW_SOL = 1;  /*!< \brief Position of the continuous adjoint flow solution in the solver container array. */
-
-const int TURB_SOL = 2;     /*!< \brief Position of the turbulence model solution in the solver container array. */
-const int ADJTURB_SOL = 3;  /*!< \brief Position of the continuous adjoint turbulence solution in the solver container array. */
-
-const int TRANS_SOL = 4;    /*!< \brief Position of the transition model solution in the solver container array. */
-
-const int MESH_SOL = 9;      /*!< \brief Position of the mesh solver. */
-const int ADJMESH_SOL = 10;   /*!< \brief Position of the adjoint of the mesh solver. */
-
 
 const int TEMPLATE_SOL = 0; /*!< \brief Position of the template solution. */
 
@@ -404,10 +354,6 @@ const int SOURCE_SECOND_TERM = 3;  /*!< \brief Position of the second source ter
 const int CONV_BOUND_TERM = 4;     /*!< \brief Position of the convective boundary terms in the numerics container array. */
 const int VISC_BOUND_TERM = 5;     /*!< \brief Position of the viscous boundary terms in the numerics container array. */
 const int GRAD_TERM = 6;           /*!< \brief Position of the gradient smoothing terms in the numerics container array. */
-
-const int MAT_NHCOMP  = 2;   /*!< \brief Position of the Neo-Hookean compressible material model. */
-const int MAT_IDEALDE = 3;   /*!< \brief Position of the Ideal-DE material model. */
-const int MAT_KNOWLES = 4;   /*!< \brief Position of the Knowles material model. */
 
 /*!
  * \brief Types of finite elements (in 1D or 2D or 3D)
@@ -475,44 +421,6 @@ enum class FREESTREAM_OPTION {
 static const MapType<std::string, FREESTREAM_OPTION> FreeStreamOption_Map = {
   MakePair("TEMPERATURE_FS", FREESTREAM_OPTION::TEMPERATURE_FS)
   MakePair("DENSITY_FS", FREESTREAM_OPTION::DENSITY_FS)
-};
-
-/*!
- * \brief Types of viscosity model
- */
-enum class VISCOSITYMODEL {
-  CONSTANT, /*!< \brief Constant viscosity. */
-  SUTHERLAND, /*!< \brief Sutherlands Law viscosity. */
-};
-static const MapType<std::string, VISCOSITYMODEL> ViscosityModel_Map = {
-  MakePair("CONSTANT_VISCOSITY", VISCOSITYMODEL::CONSTANT)
-  MakePair("SUTHERLAND", VISCOSITYMODEL::SUTHERLAND)
-};
-
-/*!
- * \brief Types of thermal conductivity model
- */
-enum class CONDUCTIVITYMODEL {
-  CONSTANT, /*!< \brief Constant thermal conductivity. */
-  CONSTANT_PRANDTL, /*!< \brief Constant Prandtl number. */
-  POLYNOMIAL, /*!< \brief Polynomial thermal conductivity. */
-};
-static const MapType<std::string, CONDUCTIVITYMODEL> ConductivityModel_Map = {
-  MakePair("CONSTANT_CONDUCTIVITY", CONDUCTIVITYMODEL::CONSTANT)
-  MakePair("CONSTANT_PRANDTL", CONDUCTIVITYMODEL::CONSTANT_PRANDTL)
-  MakePair("POLYNOMIAL_CONDUCTIVITY", CONDUCTIVITYMODEL::POLYNOMIAL)
-};
-
-/*!
- * \brief Types of turbulent thermal conductivity model
- */
-enum class CONDUCTIVITYMODEL_TURB {
-  NONE, /*!< \brief No turbulent contribution to the effective thermal conductivity for RANS. */
-  CONSTANT_PRANDTL, /*!< \brief Include contribution to effective conductivity using constant turbulent Prandtl number for RANS. */
-};
-static const MapType<std::string, CONDUCTIVITYMODEL_TURB> TurbConductivityModel_Map = {
-  MakePair("NONE", CONDUCTIVITYMODEL_TURB::NONE)
-  MakePair("CONSTANT_PRANDTL_TURB", CONDUCTIVITYMODEL_TURB::CONSTANT_PRANDTL)
 };
 
 // If you add to ENUM_CENTERED, you must also add the option to ENUM_CONVECTIVE
@@ -617,91 +525,6 @@ static const MapType<std::string, LIMITER> Limiter_Map = {
 };
 
 /*!
- * \brief Types of turbulent models
- */
-enum class TURB_MODEL {
-  NONE,      /*!< \brief No turbulence model. */
-  SA,        /*!< \brief Kind of Turbulent model (Spalart-Allmaras). */
-  SA_NEG,    /*!< \brief Kind of Turbulent model (Spalart-Allmaras). */
-  SA_E,      /*!< \brief Kind of Turbulent model (Spalart-Allmaras Edwards). */
-  SA_COMP,   /*!< \brief Kind of Turbulent model (Spalart-Allmaras Compressibility Correction). */
-  SA_E_COMP, /*!< \brief Kind of Turbulent model (Spalart-Allmaras Edwards with Compressibility Correction). */
-  SST,       /*!< \brief Kind of Turbulence model (Menter SST). */
-  SST_SUST   /*!< \brief Kind of Turbulence model (Menter SST with sustaining terms for free-stream preservation). */
-};
-static const MapType<std::string, TURB_MODEL> Turb_Model_Map = {
-  MakePair("NONE", TURB_MODEL::NONE)
-  MakePair("SA", TURB_MODEL::SA)
-  MakePair("SA_NEG", TURB_MODEL::SA_NEG)
-  MakePair("SA_E", TURB_MODEL::SA_E)
-  MakePair("SA_COMP", TURB_MODEL::SA_COMP)
-  MakePair("SA_E_COMP", TURB_MODEL::SA_E_COMP)
-  MakePair("SST", TURB_MODEL::SST)
-  MakePair("SST_SUST", TURB_MODEL::SST_SUST)
-};
-
-/*!
- * \brief Families of turbulence models
- */
-enum class TURB_FAMILY {
-  NONE,   /*!< \brief No turbulence model. */
-  SA,     /*!< \brief Spalart-Allmaras variants. */
-  KW,     /*!< \brief k-w models. */
-};
-/*!
- * \brief Associate turb models with their family
- */
-inline TURB_FAMILY TurbModelFamily(TURB_MODEL model) {
-  switch (model) {
-    case TURB_MODEL::NONE:
-      return TURB_FAMILY::NONE;
-    case TURB_MODEL::SA:
-    case TURB_MODEL::SA_NEG:
-    case TURB_MODEL::SA_E:
-    case TURB_MODEL::SA_COMP:
-    case TURB_MODEL::SA_E_COMP:
-      return TURB_FAMILY::SA;
-    case TURB_MODEL::SST:
-    case TURB_MODEL::SST_SUST:
-      return TURB_FAMILY::KW;
-  }
-  return TURB_FAMILY::NONE;
-}
-
-/*!
- * \brief Types of transition models
- */
-enum class TURB_TRANS_MODEL {
-  NONE,  /*!< \brief No transition model. */
-  LM,    /*!< \brief Kind of transition model (Langtry-Menter (LM) for SST and Spalart-Allmaras). */
-  BC    /*!< \brief Kind of transition model (BAS-CAKMAKCIOGLU (BC) for Spalart-Allmaras). */
-};
-static const MapType<std::string, TURB_TRANS_MODEL> Trans_Model_Map = {
-  MakePair("NONE", TURB_TRANS_MODEL::NONE)
-  MakePair("LM", TURB_TRANS_MODEL::LM)
-  MakePair("BC", TURB_TRANS_MODEL::BC)
-};
-
-/*!
- * \brief Types of subgrid scale models
- */
-enum class TURB_SGS_MODEL {
-  NONE        , /*!< \brief No subgrid scale model. */
-  IMPLICIT_LES, /*!< \brief Implicit LES, i.e. no explicit SGS model. */
-  SMAGORINSKY , /*!< \brief Smagorinsky SGS model. */
-  WALE        , /*!< \brief Wall-Adapting Local Eddy-viscosity SGS model. */
-  VREMAN        /*!< \brief Vreman SGS model. */
-};
-static const MapType<std::string, TURB_SGS_MODEL> SGS_Model_Map = {
-  MakePair("NONE",         TURB_SGS_MODEL::NONE)
-  MakePair("IMPLICIT_LES", TURB_SGS_MODEL::IMPLICIT_LES)
-  MakePair("SMAGORINSKY",  TURB_SGS_MODEL::SMAGORINSKY)
-  MakePair("WALE",         TURB_SGS_MODEL::WALE)
-  MakePair("VREMAN",       TURB_SGS_MODEL::VREMAN)
-};
-
-
-/*!
  * \brief Types of window (weight) functions for cost functional
  */
 enum class WINDOW_FUNCTION {
@@ -715,24 +538,6 @@ static const MapType<std::string, WINDOW_FUNCTION> Window_Map = {
   MakePair("HANN", WINDOW_FUNCTION::HANN)
   MakePair("HANN_SQUARE", WINDOW_FUNCTION::HANN_SQUARE)
   MakePair("BUMP", WINDOW_FUNCTION::BUMP)
-};
-
-/*!
- * \brief Types of hybrid RANS/LES models
- */
-enum ENUM_HYBRIDRANSLES {
-  NO_HYBRIDRANSLES = 0,  /*!< \brief No turbulence model. */
-  SA_DES   = 1,          /*!< \brief Kind of Hybrid RANS/LES (SA - Detached Eddy Simulation (DES)). */
-  SA_DDES  = 2,          /*!< \brief Kind of Hybrid RANS/LES (SA - Delayed DES (DDES) with Delta_max SGS ). */
-  SA_ZDES  = 3,          /*!< \brief Kind of Hybrid RANS/LES (SA - Delayed DES (DDES) with Vorticity based SGS like Zonal DES). */
-  SA_EDDES = 4           /*!< \brief Kind of Hybrid RANS/LES (SA - Delayed DES (DDES) with Shear Layer Adapted SGS: Enhanced DDES). */
-};
-static const MapType<std::string, ENUM_HYBRIDRANSLES> HybridRANSLES_Map = {
-  MakePair("NONE", NO_HYBRIDRANSLES)
-  MakePair("SA_DES", SA_DES)
-  MakePair("SA_DDES", SA_DDES)
-  MakePair("SA_ZDES", SA_ZDES)
-  MakePair("SA_EDDES", SA_EDDES)
 };
 
 /*!
@@ -751,28 +556,6 @@ static const MapType<std::string, ENUM_ROELOWDISS> RoeLowDiss_Map = {
   MakePair("NTS", NTS)
   MakePair("NTS_DUCROS", NTS_DUCROS)
   MakePair("FD_DUCROS", FD_DUCROS)
-};
-
-/*!
- * \brief Types of wall functions.
- */
-enum class WALL_FUNCTIONS {
-  NONE                 ,   /*!< \brief No wall function treatment, integration to the wall. Default behavior. */
-  STANDARD_FUNCTION    ,   /*!< \brief Standard wall function. */
-  ADAPTIVE_FUNCTION    ,   /*!< \brief Adaptive wall function. Formulation depends on y+. */
-  SCALABLE_FUNCTION    ,   /*!< \brief Scalable wall function. */
-  EQUILIBRIUM_MODEL    ,   /*!< \brief Equilibrium wall model for LES. */
-  NONEQUILIBRIUM_MODEL ,   /*!< \brief Non-equilibrium wall model for LES. */
-  LOGARITHMIC_MODEL        /*!< \brief Logarithmic law-of-the-wall model for LES. */
-};
-static const MapType<std::string, WALL_FUNCTIONS> Wall_Functions_Map = {
-  MakePair("NO_WALL_FUNCTION",          WALL_FUNCTIONS::NONE)
-  MakePair("STANDARD_WALL_FUNCTION",    WALL_FUNCTIONS::STANDARD_FUNCTION)
-  MakePair("ADAPTIVE_WALL_FUNCTION",    WALL_FUNCTIONS::ADAPTIVE_FUNCTION)
-  MakePair("SCALABLE_WALL_FUNCTION",    WALL_FUNCTIONS::SCALABLE_FUNCTION)
-  MakePair("EQUILIBRIUM_WALL_MODEL",    WALL_FUNCTIONS::EQUILIBRIUM_MODEL)
-  MakePair("NONEQUILIBRIUM_WALL_MODEL", WALL_FUNCTIONS::NONEQUILIBRIUM_MODEL)
-  MakePair("LOGARITHMIC_WALL_MODEL",    WALL_FUNCTIONS::LOGARITHMIC_MODEL)
 };
 
 /*!
@@ -975,128 +758,6 @@ static const MapType<std::string, ENGINE_INFLOW_TYPE> Engine_Inflow_Map = {
 };
 
 /*!
- * \brief Types actuator disk boundary treatments
- */
-enum ACTDISK_TYPE {
-  VARIABLES_JUMP = 1,     /*!< \brief User specifies the variables jump. */
-  BC_THRUST = 2,          /*!< \brief User specifies the BC thrust. */
-  NET_THRUST = 3,         /*!< \brief User specifies the Net thrust. */
-  DRAG_MINUS_THRUST = 4,  /*!< \brief User specifies the D-T. */
-  MASSFLOW = 5,           /*!< \brief User specifies the massflow. */
-  POWER = 6,              /*!< \brief User specifies the power. */
-  VARIABLE_LOAD = 7       /*!< \brief User specifies the load distribution. */
-};
-static const MapType<std::string, ACTDISK_TYPE> ActDisk_Map = {
-  MakePair("VARIABLES_JUMP", VARIABLES_JUMP)
-  MakePair("BC_THRUST", BC_THRUST)
-  MakePair("NET_THRUST", NET_THRUST)
-  MakePair("DRAG_MINUS_THRUST", DRAG_MINUS_THRUST)
-  MakePair("MASSFLOW", MASSFLOW)
-  MakePair("POWER", POWER)
-  MakePair("VARIABLE_LOAD", VARIABLE_LOAD)
-};
-
-/*!
- * \brief types of wall boundary condition - smooth or rough
- */
-enum class WALL_TYPE {
-  SMOOTH,  /*!< \brief Smooth wall */
-  ROUGH,   /*!< \brief Rough wall */
-};
-static const MapType<std::string, WALL_TYPE> WallType_Map = {
-  MakePair("SMOOTH", WALL_TYPE::SMOOTH)
-  MakePair("ROUGH", WALL_TYPE::ROUGH)
-};
-
-/*!
- * \brief Types of objective functions
- */
-enum ENUM_OBJECTIVE {
-  DRAG_COEFFICIENT = 1,         /*!< \brief Drag objective function definition. */
-  LIFT_COEFFICIENT = 2,         /*!< \brief Lift objective function definition. */
-  SIDEFORCE_COEFFICIENT = 3,    /*!< \brief Side force objective function definition. */
-  EFFICIENCY = 4,               /*!< \brief Efficiency objective function definition. */
-  INVERSE_DESIGN_PRESSURE = 5,  /*!< \brief Pressure objective function definition (inverse design). */
-  INVERSE_DESIGN_HEATFLUX = 6,  /*!< \brief Heat flux objective function definition (inverse design). */
-  TOTAL_HEATFLUX = 7,           /*!< \brief Total heat flux. */
-  MAXIMUM_HEATFLUX = 8,         /*!< \brief Maximum heat flux. */
-  AVG_TEMPERATURE = 70,         /*!< \brief Total averaged temperature. */
-  MOMENT_X_COEFFICIENT = 9,     /*!< \brief Pitching moment objective function definition. */
-  MOMENT_Y_COEFFICIENT = 10,    /*!< \brief Rolling moment objective function definition. */
-  MOMENT_Z_COEFFICIENT = 11,    /*!< \brief Yawing objective function definition. */
-  EQUIVALENT_AREA = 12,         /*!< \brief Equivalent area objective function definition. */
-  NEARFIELD_PRESSURE = 13,      /*!< \brief NearField Pressure objective function definition. */
-  FORCE_X_COEFFICIENT = 14,     /*!< \brief X-direction force objective function definition. */
-  FORCE_Y_COEFFICIENT = 15,     /*!< \brief Y-direction force objective function definition. */
-  FORCE_Z_COEFFICIENT = 16,     /*!< \brief Z-direction force objective function definition. */
-  THRUST_COEFFICIENT = 17,      /*!< \brief Thrust objective function definition. */
-  TORQUE_COEFFICIENT = 18,      /*!< \brief Torque objective function definition. */
-  FIGURE_OF_MERIT = 19,         /*!< \brief Rotor Figure of Merit objective function definition. */
-  SURFACE_TOTAL_PRESSURE = 28,  /*!< \brief Total Pressure objective function definition. */
-  SURFACE_STATIC_PRESSURE = 29, /*!< \brief Static Pressure objective function definition. */
-  SURFACE_STATIC_TEMPERATURE = 57, /*!< \brief Static Temperature objective function definition. */
-  SURFACE_MASSFLOW = 30,        /*!< \brief Mass Flow Rate objective function definition. */
-  SURFACE_MACH = 51,            /*!< \brief Mach number objective function definition. */
-  SURFACE_UNIFORMITY = 52,      /*!< \brief Flow uniformity objective function definition. */
-  SURFACE_SECONDARY = 53,       /*!< \brief Secondary flow strength objective function definition. */
-  SURFACE_MOM_DISTORTION = 54,  /*!< \brief Momentum distortion objective function definition. */
-  SURFACE_SECOND_OVER_UNIFORM = 55, /*!< \brief Secondary over uniformity (relative secondary strength) objective function definition. */
-  SURFACE_PRESSURE_DROP = 56,   /*!< \brief Pressure drop objective function definition. */
-  CUSTOM_OBJFUNC = 31,          /*!< \brief Custom objective function definition. */
-  FLOW_ANGLE_OUT = 46,
-  MASS_FLOW_IN = 47,
-  ENTROPY_GENERATION = 50,
-  REFERENCE_GEOMETRY = 60,      /*!< \brief Norm of displacements with respect to target geometry. */
-  REFERENCE_NODE = 61,          /*!< \brief Objective function defined as the difference of a particular node respect to a reference position. */
-  VOLUME_FRACTION = 62,         /*!< \brief Volume average physical density, for material-based topology optimization applications. */
-  TOPOL_DISCRETENESS = 63,      /*!< \brief Measure of the discreteness of the current topology. */
-  TOPOL_COMPLIANCE = 64,        /*!< \brief Measure of the discreteness of the current topology. */
-  STRESS_PENALTY = 65,          /*!< \brief Penalty function of VM stresses above a maximum value. */
-};
-static const MapType<std::string, ENUM_OBJECTIVE> Objective_Map = {
-  MakePair("DRAG", DRAG_COEFFICIENT)
-  MakePair("LIFT", LIFT_COEFFICIENT)
-  MakePair("SIDEFORCE", SIDEFORCE_COEFFICIENT)
-  MakePair("EFFICIENCY", EFFICIENCY)
-  MakePair("INVERSE_DESIGN_PRESSURE", INVERSE_DESIGN_PRESSURE)
-  MakePair("INVERSE_DESIGN_HEATFLUX", INVERSE_DESIGN_HEATFLUX)
-  MakePair("MOMENT_X", MOMENT_X_COEFFICIENT)
-  MakePair("MOMENT_Y", MOMENT_Y_COEFFICIENT)
-  MakePair("MOMENT_Z", MOMENT_Z_COEFFICIENT)
-  MakePair("EQUIVALENT_AREA", EQUIVALENT_AREA)
-  MakePair("NEARFIELD_PRESSURE", NEARFIELD_PRESSURE)
-  MakePair("FORCE_X", FORCE_X_COEFFICIENT)
-  MakePair("FORCE_Y", FORCE_Y_COEFFICIENT)
-  MakePair("FORCE_Z", FORCE_Z_COEFFICIENT)
-  MakePair("THRUST", THRUST_COEFFICIENT)
-  MakePair("TORQUE", TORQUE_COEFFICIENT)
-  MakePair("TOTAL_HEATFLUX", TOTAL_HEATFLUX)
-  MakePair("MAXIMUM_HEATFLUX", MAXIMUM_HEATFLUX)
-  MakePair("AVG_TEMPERATURE", AVG_TEMPERATURE)
-  MakePair("FIGURE_OF_MERIT", FIGURE_OF_MERIT)
-  MakePair("SURFACE_TOTAL_PRESSURE", SURFACE_TOTAL_PRESSURE)
-  MakePair("SURFACE_STATIC_PRESSURE", SURFACE_STATIC_PRESSURE)
-  MakePair("SURFACE_STATIC_TEMPERATURE", SURFACE_STATIC_TEMPERATURE)
-  MakePair("SURFACE_MASSFLOW", SURFACE_MASSFLOW)
-  MakePair("SURFACE_MACH", SURFACE_MACH)
-  MakePair("SURFACE_UNIFORMITY", SURFACE_UNIFORMITY)
-  MakePair("SURFACE_SECONDARY", SURFACE_SECONDARY)
-  MakePair("SURFACE_MOM_DISTORTION", SURFACE_MOM_DISTORTION)
-  MakePair("SURFACE_SECOND_OVER_UNIFORM", SURFACE_SECOND_OVER_UNIFORM)
-  MakePair("SURFACE_PRESSURE_DROP", SURFACE_PRESSURE_DROP)
-  MakePair("CUSTOM_OBJFUNC", CUSTOM_OBJFUNC)
-  MakePair("FLOW_ANGLE_OUT", FLOW_ANGLE_OUT)
-  MakePair("MASS_FLOW_IN", MASS_FLOW_IN)
-  MakePair("ENTROPY_GENERATION",  ENTROPY_GENERATION)
-  MakePair("REFERENCE_GEOMETRY", REFERENCE_GEOMETRY)
-  MakePair("REFERENCE_NODE", REFERENCE_NODE)
-  MakePair("VOLUME_FRACTION", VOLUME_FRACTION)
-  MakePair("TOPOL_DISCRETENESS", TOPOL_DISCRETENESS)
-  MakePair("TOPOL_COMPLIANCE", TOPOL_COMPLIANCE)
-  MakePair("STRESS_PENALTY", STRESS_PENALTY)
-};
-
-/*!
  * \brief Types of input file formats
  */
 enum ENUM_INPUT {
@@ -1111,7 +772,6 @@ static const MapType<std::string, ENUM_INPUT> Input_Map = {
   MakePair("RECTANGLE", RECTANGLE)
   MakePair("BOX", BOX)
 };
-
 
 /*!
  * \brief Type of solution output file formats
@@ -1242,82 +902,6 @@ static const MapType<std::string, MG_CYCLE> MG_Cycle_Map = {
   MakePair("V_CYCLE", V_CYCLE)
   MakePair("W_CYCLE", W_CYCLE)
   MakePair("FULLMG_CYCLE", FULLMG_CYCLE)
-};
-
-/*!
- * \brief Types of design parameterizations
- */
-enum ENUM_PARAM {
-  NO_DEFORMATION = 0,         /*!< \brief No deformation. */
-  TRANSLATION = 1,            /*!< \brief Surface movement as design variable. */
-  ROTATION = 2,               /*!< \brief Surface rotation as design variable. */
-  SCALE = 3,                  /*!< \brief Surface rotation as design variable. */
-  FFD_SETTING = 10,           /*!< \brief No surface deformation. */
-  FFD_CONTROL_POINT = 11,     /*!< \brief Free form deformation for 3D design (change a control point). */
-  FFD_NACELLE = 12,           /*!< \brief Free form deformation for 3D design (change a control point). */
-  FFD_GULL = 13,              /*!< \brief Free form deformation for 3D design (change a control point). */
-  FFD_CAMBER = 14,            /*!< \brief Free form deformation for 3D design (camber change). */
-  FFD_TWIST = 15,             /*!< \brief Free form deformation for 3D design (change the twist angle of a section). */
-  FFD_THICKNESS = 16,         /*!< \brief Free form deformation for 3D design (thickness change). */
-  FFD_ROTATION = 18,          /*!< \brief Free form deformation for 3D design (rotation around a line). */
-  FFD_CONTROL_POINT_2D = 19,  /*!< \brief Free form deformation for 2D design (change a control point). */
-  FFD_CAMBER_2D = 20,         /*!< \brief Free form deformation for 3D design (camber change). */
-  FFD_THICKNESS_2D = 21,      /*!< \brief Free form deformation for 3D design (thickness change). */
-  FFD_TWIST_2D = 22,          /*!< \brief Free form deformation for 3D design (camber change). */
-  FFD_CONTROL_SURFACE = 23,   /*!< \brief Free form deformation for 3D design (control surface). */
-  FFD_ANGLE_OF_ATTACK = 24,   /*!< \brief Angle of attack for FFD problem. */
-  HICKS_HENNE = 30,           /*!< \brief Hicks-Henne bump function for airfoil deformation. */
-  PARABOLIC = 31,             /*!< \brief Parabolic airfoil definition as design variables. */
-  NACA_4DIGITS = 32,          /*!< \brief The four digits NACA airfoil family as design variables. */
-  AIRFOIL = 33,               /*!< \brief Airfoil definition as design variables. */
-  CST = 34,                   /*!< \brief CST method with Kulfan parameters for airfoil deformation. */
-  SURFACE_BUMP = 35,          /*!< \brief Surfacebump function for flat surfaces deformation. */
-  SURFACE_FILE = 36,          /*!< \brief Nodal coordinates for surface set using a file (external parameterization). */
-  DV_EFIELD = 40,             /*!< \brief Electric field in deformable membranes. */
-  DV_YOUNG = 41,
-  DV_POISSON = 42,
-  DV_RHO = 43,
-  DV_RHO_DL = 44,
-  TRANSLATE_GRID = 50,        /*!< \brief Translate the volume grid. */
-  ROTATE_GRID = 51,           /*!< \brief Rotate the volume grid */
-  SCALE_GRID = 52,            /*!< \brief Scale the volume grid. */
-  ANGLE_OF_ATTACK = 101       /*!< \brief Angle of attack for airfoils. */
-};
-static const MapType<std::string, ENUM_PARAM> Param_Map = {
-  MakePair("FFD_SETTING", FFD_SETTING)
-  MakePair("FFD_CONTROL_POINT_2D", FFD_CONTROL_POINT_2D)
-  MakePair("FFD_TWIST_2D", FFD_TWIST_2D)
-  MakePair("FFD_ANGLE_OF_ATTACK", FFD_ANGLE_OF_ATTACK)
-  MakePair("FFD_CAMBER_2D", FFD_CAMBER_2D)
-  MakePair("FFD_THICKNESS_2D", FFD_THICKNESS_2D)
-  MakePair("HICKS_HENNE", HICKS_HENNE)
-  MakePair("SURFACE_BUMP", SURFACE_BUMP)
-  MakePair("ANGLE_OF_ATTACK", ANGLE_OF_ATTACK)
-  MakePair("NACA_4DIGITS", NACA_4DIGITS)
-  MakePair("TRANSLATION", TRANSLATION)
-  MakePair("ROTATION", ROTATION)
-  MakePair("SCALE", SCALE)
-  MakePair("FFD_CONTROL_POINT", FFD_CONTROL_POINT)
-  MakePair("FFD_ROTATION", FFD_ROTATION)
-  MakePair("FFD_CONTROL_SURFACE", FFD_CONTROL_SURFACE)
-  MakePair("FFD_NACELLE", FFD_NACELLE)
-  MakePair("FFD_GULL", FFD_GULL)
-  MakePair("FFD_TWIST", FFD_TWIST)
-  MakePair("FFD_CAMBER", FFD_CAMBER)
-  MakePair("FFD_THICKNESS", FFD_THICKNESS)
-  MakePair("PARABOLIC", PARABOLIC)
-  MakePair("AIRFOIL", AIRFOIL)
-  MakePair("SURFACE_FILE", SURFACE_FILE)
-  MakePair("NO_DEFORMATION", NO_DEFORMATION)
-  MakePair("CST", CST)
-  MakePair("ELECTRIC_FIELD", DV_EFIELD)
-  MakePair("YOUNG_MODULUS", DV_YOUNG)
-  MakePair("POISSON_RATIO", DV_POISSON)
-  MakePair("STRUCTURAL_DENSITY", DV_RHO)
-  MakePair("DEAD_WEIGHT", DV_RHO_DL)
-  MakePair("TRANSLATE_GRID", TRANSLATE_GRID)
-  MakePair("ROTATE_GRID", ROTATE_GRID)
-  MakePair("SCALE_GRID", SCALE_GRID)
 };
 
 /*!

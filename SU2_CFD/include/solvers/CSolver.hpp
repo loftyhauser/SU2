@@ -736,14 +736,6 @@ public:
   inline virtual void Set_Heatflux_Areas(CGeometry *geometry, CConfig *config) { }
 
   /*!
-   * \author H. Kline
-   * \brief Compute weighted-sum "combo" objective output
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] solver - Container vector with all the solutions.
-   */
-  inline virtual void Evaluate_ObjFunc(const CConfig *config, CSolver **solver) {};
-
-  /*!
    * \brief A virtual member.
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] solver_container - Container vector with all the solutions.
@@ -878,65 +870,6 @@ public:
                                          CNumerics *visc_numerics,
                                          CConfig *config) { }
 
-  /*!
-   * \brief A virtual member.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver_container - Container vector with all the solutions.
-   * \param[in] conv_numerics - Description of the numerical method.
-   * \param[in] visc_numerics - Description of the numerical method.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_marker - Surface marker where the boundary condition is applied.
-   */
-  inline virtual void BC_ActDisk_Inlet(CGeometry *geometry,
-                                       CSolver **solver_container,
-                                       CNumerics *conv_numerics,
-                                       CNumerics *visc_numerics,
-                                       CConfig *config,
-                                       unsigned short val_marker) { }
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver_container - Container vector with all the solutions.
-   * \param[in] conv_numerics - Description of the numerical method.
-   * \param[in] visc_numerics - Description of the numerical method.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_marker - Surface marker where the boundary condition is applied.
-   */
-  inline virtual void BC_ActDisk_Outlet(CGeometry *geometry,
-                                        CSolver **solver_container,
-                                        CNumerics *conv_numerics,
-                                        CNumerics *visc_numerics,
-                                        CConfig *config,
-                                        unsigned short val_marker) { }
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver_container - Container vector with all the solutions.
-   * \param[in] conv_numerics - Description of the numerical method.
-   * \param[in] visc_numerics - Description of the numerical method.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_marker - Surface marker where the boundary condition is applied.
-   * \param[in] val_inlet_surface - Boolean for whether val_marker is an inlet
-   */
-  inline virtual void BC_ActDisk(CGeometry *geometry,
-                                 CSolver **solver_container,
-                                 CNumerics *conv_numerics,
-                                 CNumerics *visc_numerics,
-                                 CConfig *config,
-                                 unsigned short val_marker,
-                                 bool val_inlet_surface) { }
-
-  /*!
-   * \brief A virtual member.
-   * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] solver_container - Container vector with all the solutions.
-   * \param[in] conv_numerics - Description of the numerical method.
-   * \param[in] visc_numerics - Description of the numerical method.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_marker - Surface marker where the boundary condition is applied.
-   */
   inline virtual void BC_Isothermal_Wall(CGeometry *geometry,
                                          CSolver **solver_container,
                                          CNumerics *conv_numerics,

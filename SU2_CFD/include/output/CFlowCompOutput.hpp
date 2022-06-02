@@ -37,8 +37,6 @@ class CVariable;
  *  \date May 30, 2018.
  */
 class CFlowCompOutput final: public CFlowOutput {
-private:
-  TURB_MODEL turb_model; //!< Kind of turbulence model
 
 public:
   /*!

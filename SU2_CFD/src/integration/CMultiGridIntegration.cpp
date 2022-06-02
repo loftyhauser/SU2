@@ -598,10 +598,6 @@ void CMultiGridIntegration::SetRestricted_Solution(unsigned short RunTime_EqSyst
 
         }
 
-        if (Solver_Position == ADJFLOW_SOL) {
-          sol_coarse->GetNodes()->SetVelSolutionDVector(Point_Coarse);
-        }
-
       }
       END_SU2_OMP_FOR
     }
@@ -668,23 +664,6 @@ void CMultiGridIntegration::NonDimensional_Parameters(CGeometry **geometry, CSol
       solver_container[FinestMesh][FLOW_SOL]->Pressure_Forces(geometry[FinestMesh], config);
       solver_container[FinestMesh][FLOW_SOL]->Momentum_Forces(geometry[FinestMesh], config);
 
-      break;
-
-    case RUNTIME_ADJFLOW_SYS:
-
-      /*--- Calculate the inviscid and viscous sensitivities ---*/
-
-      solver_container[FinestMesh][ADJFLOW_SOL]->Inviscid_Sensitivity(geometry[FinestMesh], solver_container[FinestMesh],
-                                                 numerics_container[FinestMesh][ADJFLOW_SOL][CONV_BOUND_TERM], config);
-
-      solver_container[FinestMesh][ADJFLOW_SOL]->Viscous_Sensitivity(geometry[FinestMesh], solver_container[FinestMesh],
-                                                 numerics_container[FinestMesh][ADJFLOW_SOL][CONV_BOUND_TERM], config);
-
-      /*--- Smooth the inviscid and viscous sensitivities ---*/
-
-      if (config->GetKind_SensSmooth() != NONE)
-        solver_container[FinestMesh][ADJFLOW_SOL]->Smooth_Sensitivity(geometry[FinestMesh], solver_container[FinestMesh],
-                                                   numerics_container[FinestMesh][ADJFLOW_SOL][CONV_BOUND_TERM], config);
       break;
   }
   END_SU2_OMP_MASTER

@@ -77,7 +77,6 @@ protected:
   const su2double prandtlTurb;
   const su2double cp;
   const bool correct;
-  const bool useSA_QCR;
   const bool wallFun;
   const bool uq;
   const bool uq_permute;
@@ -99,7 +98,6 @@ protected:
     prandtlTurb(config.GetPrandtl_Turb()),
     cp(gamma * gasConst / (gamma - 1)),
     correct(iMesh == MESH_0),
-    useSA_QCR(config.GetQCR()),
     wallFun(config.GetWall_Functions()),
     uq(config.GetUsing_UQ()),
     uq_permute(config.GetUQ_Permute()),
