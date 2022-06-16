@@ -43,8 +43,7 @@ su2_cfd_src += files(['numerics/CNumerics.cpp',
 su2_cfd_src += files(['../include/numerics_simd/CNumericsSIMD.cpp'])
 
 su2_cfd_src += files(['drivers/CDriver.cpp',
-                      'drivers/CSinglezoneDriver.cpp',
-                      'drivers/CDummyDriver.cpp'])
+                      'drivers/CSinglezoneDriver.cpp'])
 
 su2_cfd_src += files(['integration/CIntegration.cpp',
                       'integration/CIntegrationFactory.cpp',

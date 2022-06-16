@@ -94,12 +94,6 @@ public:
   bool Monitor(unsigned long TimeIter) override;
 
   /*!
-     * \brief  Returns whether all specified windowed-time-averaged ouputs have been converged
-     * \return Boolean indicating whether the problem is converged.
-     */
-  virtual bool GetTimeConvergence() const;
-
-  /*!
    * \brief Runtime_Parsing
    */
   virtual void Runtime_Options();
