@@ -173,15 +173,11 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
   UsedTimeOutput     = 0.0;
   IterCount          = 0;
   OutputCount        = 0;
-  MDOFs              = 0.0;
-  MDOFsDomain        = 0.0;
   Mpoints            = 0.0;
   MpointsDomain      = 0.0;
   for (iZone = 0; iZone < nZone; iZone++) {
     Mpoints       += geometry_container[iZone][INST_0][MESH_0]->GetGlobal_nPoint()/(1.0e6);
     MpointsDomain += geometry_container[iZone][INST_0][MESH_0]->GetGlobal_nPointDomain()/(1.0e6);
-    MDOFs         += DOFsPerPoint*geometry_container[iZone][INST_0][MESH_0]->GetGlobal_nPoint()/(1.0e6);
-    MDOFsDomain   += DOFsPerPoint*geometry_container[iZone][INST_0][MESH_0]->GetGlobal_nPointDomain()/(1.0e6);
   }
 
   /*--- Reset timer for compute/output performance benchmarking. ---*/
@@ -214,7 +210,6 @@ void CDriver::SetContainers_Null(){
   solver_container               = nullptr;
   numerics_container             = nullptr;
   config_container               = nullptr;
-  interface_types                = nullptr;
   nInst                          = nullptr;
 
   /*--- Definition and of the containers for all possible zones. ---*/
@@ -225,16 +220,10 @@ void CDriver::SetContainers_Null(){
   numerics_container             = new CNumerics*****[nZone] ();
   config_container               = new CConfig*[nZone] ();
   geometry_container             = new CGeometry***[nZone] ();
-  interface_types                = new unsigned short*[nZone] ();
   output_container               = new COutput*[nZone] ();
   nInst                          = new unsigned short[nZone] ();
   driver_config                  = nullptr;
   driver_output                  = nullptr;
-
-  for (iZone = 0; iZone < nZone; iZone++) {
-    interface_types[iZone] = new unsigned short[nZone];
-    nInst[iZone] = 1;
-  }
 
   strcpy(runtime_file_name, "runtime.dat");
 
@@ -301,12 +290,6 @@ void CDriver::Postprocessing() {
   }
   delete [] iteration_container;
   if (rank == MASTER_NODE) cout << "Deleted CIteration container." << endl;
-
-  if (interface_types != nullptr) {
-    for (iZone = 0; iZone < nZone; iZone++)
-      delete [] interface_types[iZone];
-    delete [] interface_types;
-  }
 
   for (iZone = 0; iZone < nZone; iZone++) {
     if (geometry_container[iZone] != nullptr) {
@@ -723,50 +706,7 @@ void CDriver::Solver_Preprocessing(CConfig* config, CGeometry** geometry, CSolve
   /*--- Restart solvers, for FSI the geometry cannot be updated because the interpolation classes
    * should always use the undeformed mesh (otherwise the results would not be repeatable). ---*/
 
-  if (!fsi) Solver_Restart(solver, geometry, config, true);
-
-  /*--- Set up any necessary inlet profiles ---*/
-
-  Inlet_Preprocessing(solver, geometry, config);
-
-}
-
-void CDriver::Inlet_Preprocessing(CSolver ***solver, CGeometry **geometry,
-                                  CConfig *config) const {
-
-  /*--- Adjust iteration number for unsteady restarts. ---*/
-
-  const bool adjoint = config->GetDiscrete_Adjoint() || config->GetContinuous_Adjoint();
-
-  int val_iter = 0;
-
-  if (config->GetTime_Domain()) {
-    val_iter = adjoint? config->GetUnst_AdjointIter() : config->GetRestart_Iter();
-    val_iter -= 1;
-    if (!adjoint && config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND)
-      val_iter -= 1;
-    if (!adjoint && !config->GetRestart()) val_iter = 0;
-  }
-
-  /*--- Load inlet profile files for any of the active solver containers.
-   Note that these routines fill the fine grid data structures for the markers
-   and restrict values down to all coarser MG levels. ---*/
-
-
-    /*--- Uniform inlets or python-customized inlets ---*/
-
-    /* --- Initialize quantities for inlet boundary
-     * This routine does not check if the python wrapper is being used to
-     * set custom boundary conditions.  This is intentional; the
-     * default values for python custom BCs are initialized with the default
-     * values specified in the config (avoiding non physical values) --- */
-
-    for (unsigned short iMesh = 0; iMesh <= config->GetnMGLevels(); iMesh++) {
-      for(unsigned short iMarker=0; iMarker < config->GetnMarker_All(); iMarker++) {
-        if (solver[iMesh][FLOW_SOL]) solver[iMesh][FLOW_SOL]->SetUniformInlet(config, iMarker);
-      }
-    }
-
+  Solver_Restart(solver, geometry, config, true);
 
 }
 
@@ -1284,7 +1224,6 @@ void CFluidDriver::Preprocess(unsigned long Iter) {
 
   /*--- Set the initial condition for EULER/N-S/RANS and for a non FSI simulation ---*/
 
-  if(!fsi) {
     for (iZone = 0; iZone < nZone; iZone++) {
       if (config_container[iZone]->GetFluidProblem()) {
         for (iInst = 0; iInst < nInst[iZone]; iInst++) {
@@ -1292,7 +1231,6 @@ void CFluidDriver::Preprocess(unsigned long Iter) {
         }
       }
     }
-  }
 }
 
 void CFluidDriver::Run() {
