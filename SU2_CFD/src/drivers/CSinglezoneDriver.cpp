@@ -202,15 +202,11 @@ void CSinglezoneDriver::Output(unsigned long TimeIter) {
 
 bool CSinglezoneDriver::Monitor(unsigned long TimeIter){
 
-  unsigned long nInnerIter, InnerIter, nTimeIter;
-  su2double MaxTime, CurTime;
-  bool TimeDomain, InnerConvergence, TimeConvergence, FinalTimeReached, MaxIterationsReached;
+  unsigned long nInnerIter, InnerIter;
+  bool TimeDomain, InnerConvergence, MaxIterationsReached;
 
   nInnerIter = config_container[ZONE_0]->GetnInner_Iter();
   InnerIter  = config_container[ZONE_0]->GetInnerIter();
-  nTimeIter  = config_container[ZONE_0]->GetnTime_Iter();
-  MaxTime    = config_container[ZONE_0]->GetMax_Time();
-  CurTime    = output_container[ZONE_0]->GetHistoryFieldValue("CUR_TIME");
 
   TimeDomain = config_container[ZONE_0]->GetTime_Domain();
 
@@ -231,27 +227,6 @@ bool CSinglezoneDriver::Monitor(unsigned long TimeIter){
     }
 
     StopCalc = MaxIterationsReached || InnerConvergence;
-  }
-
-
-
-  if (TimeDomain == YES) {
-
-    /*--- Check whether the outer time integration has reached the final time ---*/
-
-    TimeConvergence = GetTimeConvergence();
-
-    FinalTimeReached     = CurTime >= MaxTime;
-    MaxIterationsReached = TimeIter+1 >= nTimeIter;
-
-    if ((FinalTimeReached || MaxIterationsReached || TimeConvergence) && (rank == MASTER_NODE)){
-      cout << endl << "----------------------------- Solver Exit -------------------------------";
-      if (TimeConvergence)     cout << endl << "All windowed time-averaged convergence criteria are fullfilled." << endl;
-      if (FinalTimeReached)     cout << endl << "Maximum time reached (MAX_TIME = " << MaxTime << "s)." << endl;
-      if (MaxIterationsReached) cout << endl << "Maximum number of time iterations reached (TIME_ITER = " << nTimeIter << ")." << endl;
-      cout << "-------------------------------------------------------------------------" << endl;
-    }
-    StopCalc = FinalTimeReached || MaxIterationsReached|| TimeConvergence;
   }
 
   /*--- Reset the inner convergence --- */
@@ -280,8 +255,4 @@ void CSinglezoneDriver::Runtime_Options(){
     delete runtime;
   }
 
-}
-
-bool CSinglezoneDriver::GetTimeConvergence() const{
-  return output_container[ZONE_0]->GetCauchyCorrectedTimeConvergence(config_container[ZONE_0]);
 }
