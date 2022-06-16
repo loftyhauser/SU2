@@ -53,15 +53,12 @@ void CSinglezoneDriver::StartSolver() {
 
   /*--- Main external loop of the solver. Runs for the number of time steps required. ---*/
 
-  if (rank == MASTER_NODE)
     cout << endl <<"------------------------------ Begin Solver -----------------------------" << endl;
 
-  if (rank == MASTER_NODE){
     cout << endl <<"Simulation Run using the Single-zone Driver" << endl;
     if (driver_config->GetTime_Domain())
       cout << "The simulation will run for "
            << driver_config->GetnTime_Iter() - config_container[ZONE_0]->GetRestart_Iter() << " time steps." << endl;
-  }
 
   /*--- Set the initial time iteration to the restart iteration. ---*/
   if (config_container[ZONE_0]->GetRestart() && driver_config->GetTime_Domain())
@@ -218,7 +215,7 @@ bool CSinglezoneDriver::Monitor(unsigned long TimeIter){
     InnerConvergence     = output_container[ZONE_0]->GetConvergence();
     MaxIterationsReached = InnerIter+1 >= nInnerIter;
 
-    if ((MaxIterationsReached || InnerConvergence) && (rank == MASTER_NODE)) {
+    if ((MaxIterationsReached || InnerConvergence) ) {
       cout << endl << "----------------------------- Solver Exit -------------------------------" << endl;
       if (InnerConvergence) cout << "All convergence criteria satisfied." << endl;
       else cout << endl << "Maximum number of iterations reached (ITER = " << nInnerIter << ") before convergence." << endl;

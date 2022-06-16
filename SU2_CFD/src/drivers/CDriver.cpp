@@ -60,11 +60,6 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
   config_file_name(confFile), StartTime(0.0), StopTime(0.0), UsedTime(0.0),
   TimeIter(0), nZone(val_nZone), StopCalc(false), dry_run(dummy_geo) {
 
-  SU2_MPI::SetComm(MPICommunicator);
-
-  rank = SU2_MPI::GetRank();
-  size = SU2_MPI::GetSize();
-
   /*--- Start timer to track preprocessing for benchmarking. ---*/
 
   StartTime = SU2_MPI::Wtime();
@@ -236,7 +231,6 @@ void CDriver::Postprocessing() {
 
     /*--- Output some information to the console. ---*/
 
-  if (rank == MASTER_NODE) {
 
     /*--- Print out the number of non-physical points and reconstructions ---*/
 
@@ -244,9 +238,7 @@ void CDriver::Postprocessing() {
       cout << "Warning: there are " << config_container[ZONE_0]->GetNonphysical_Points() << " non-physical points in the solution." << endl;
     if (config_container[ZONE_0]->GetNonphysical_Reconstr() > 0)
       cout << "Warning: " << config_container[ZONE_0]->GetNonphysical_Reconstr() << " reconstructed states for upwinding are non-physical." << endl;
-  }
 
-  if (rank == MASTER_NODE)
     cout << endl <<"------------------------- Solver Postprocessing -------------------------" << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
@@ -257,7 +249,7 @@ void CDriver::Postprocessing() {
     delete [] numerics_container[iZone];
   }
   delete [] numerics_container;
-  if (rank == MASTER_NODE) cout << "Deleted CNumerics container." << endl;
+  cout << "Deleted CNumerics container." << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
     for (iInst = 0; iInst < nInst[iZone]; iInst++){
@@ -269,7 +261,7 @@ void CDriver::Postprocessing() {
     delete [] integration_container[iZone];
   }
   delete [] integration_container;
-  if (rank == MASTER_NODE) cout << "Deleted CIntegration container." << endl;
+  cout << "Deleted CIntegration container." << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
     for (iInst = 0; iInst < nInst[iZone]; iInst++){
@@ -281,7 +273,7 @@ void CDriver::Postprocessing() {
     delete [] solver_container[iZone];
   }
   delete [] solver_container;
-  if (rank == MASTER_NODE) cout << "Deleted CSolver container." << endl;
+  cout << "Deleted CSolver container." << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
     for (iInst = 0; iInst < nInst[iZone]; iInst++)
@@ -289,7 +281,7 @@ void CDriver::Postprocessing() {
     delete [] iteration_container[iZone];
   }
   delete [] iteration_container;
-  if (rank == MASTER_NODE) cout << "Deleted CIteration container." << endl;
+  cout << "Deleted CIteration container." << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
     if (geometry_container[iZone] != nullptr) {
@@ -302,7 +294,7 @@ void CDriver::Postprocessing() {
     }
   }
   delete [] geometry_container;
-  if (rank == MASTER_NODE) cout << "Deleted CGeometry container." << endl;
+  cout << "Deleted CGeometry container." << endl;
 
   /*--- Deallocate config container ---*/
   if (config_container!= nullptr) {
@@ -311,10 +303,10 @@ void CDriver::Postprocessing() {
     delete [] config_container;
   }
   delete driver_config;
-  if (rank == MASTER_NODE) cout << "Deleted CConfig container." << endl;
+  cout << "Deleted CConfig container." << endl;
 
   delete [] nInst;
-  if (rank == MASTER_NODE) cout << "Deleted nInst container." << endl;
+  cout << "Deleted nInst container." << endl;
 
   /*--- Deallocate output container ---*/
 
@@ -326,9 +318,9 @@ void CDriver::Postprocessing() {
 
   delete driver_output;
 
-  if (rank == MASTER_NODE) cout << "Deleted COutput class." << endl;
+  cout << "Deleted COutput class." << endl;
 
-  if (rank == MASTER_NODE) cout << "-------------------------------------------------------------------------" << endl;
+  cout << "-------------------------------------------------------------------------" << endl;
 
 
   /*--- Stop the timer and output the final performance summary. ---*/
@@ -338,17 +330,16 @@ void CDriver::Postprocessing() {
   UsedTime = StopTime-StartTime;
   UsedTimeCompute += UsedTime;
 
-  if ((rank == MASTER_NODE) && (wrt_perf)) {
+  if (wrt_perf) {
     su2double TotalTime = UsedTimePreproc + UsedTimeCompute + UsedTimeOutput;
     cout.precision(6);
     cout << endl << endl <<"-------------------------- Performance Summary --------------------------" << endl;
     cout << "Simulation totals:" << endl;
     cout << setw(25) << "Wall-clock time (hrs):" << setw(12) << (TotalTime)/(60.0*60.0) << " | ";
-    cout << setw(20) << "Core-hrs:" << setw(12) << size*TotalTime/(60.0*60.0) << endl;
-    cout << setw(25) << "Cores:" << setw(12) << size << " | ";
+    cout << setw(20) << "Core-hrs:" << setw(12) << TotalTime/(60.0*60.0) << endl;
     cout << setw(20) << "DOFs/point:" << setw(12) << DOFsPerPoint << endl;
-    cout << setw(25) << "Points/core:" << setw(12) << 1.0e6*MpointsDomain/size << " | ";
-    cout << setw(20) << "Ghost points/core:" << setw(12) << 1.0e6*(Mpoints-MpointsDomain)/size << endl;
+    cout << setw(25) << "Points:" << setw(12) << 1.0e6*MpointsDomain << " | ";
+    cout << setw(20) << "Ghost points:" << setw(12) << 1.0e6*(Mpoints-MpointsDomain) << endl;
     cout << setw(25) << "Ghost/Owned Point Ratio:" << setw(12) << (Mpoints-MpointsDomain)/MpointsDomain << " | " << endl;
     cout << endl;
     cout << "Preprocessing phase:" << endl;
@@ -361,7 +352,7 @@ void CDriver::Postprocessing() {
     cout << setw(25) << "Iteration count:"  << setw(12)<< IterCount << " | ";
     if (IterCount != 0) {
       cout << setw(20) << "Avg. s/iter:" << setw(12)<< UsedTimeCompute/IterCount << endl;
-      cout << setw(25) << "Core-s/iter/Mpoints:" << setw(12)<< size*UsedTimeCompute/IterCount/Mpoints << " | ";
+      cout << setw(25) << "s/iter/Mpoints:" << setw(12)<< UsedTimeCompute/IterCount/Mpoints << " | ";
       cout << setw(20) << "Mpoints/s:" << setw(12)<< Mpoints*IterCount/UsedTimeCompute << endl;
     } else cout << endl;
     cout << endl;
@@ -373,7 +364,7 @@ void CDriver::Postprocessing() {
       cout << setw(20)<< "Avg. s/output:" << setw(12)<< UsedTimeOutput/OutputCount << endl;
       if (BandwidthSum > 0) {
         cout << setw(25)<< "Restart Aggr. BW (MB/s):" << setw(12)<< BandwidthSum/OutputCount << " | ";
-        cout << setw(20)<< "MB/s/core:" << setw(12)<< BandwidthSum/OutputCount/size << endl;
+        cout << setw(20)<< "MB/s:" << setw(12)<< BandwidthSum/OutputCount << endl;
       }
     } else cout << endl;
     cout << "-------------------------------------------------------------------------" << endl;
@@ -382,7 +373,6 @@ void CDriver::Postprocessing() {
 
   /*--- Exit the solver cleanly ---*/
 
-  if (rank == MASTER_NODE)
     cout << endl <<"------------------------- Exit Success (SU2_CFD) ------------------------" << endl << endl;
 
 }
@@ -396,9 +386,7 @@ void CDriver::Input_Preprocessing(CConfig **&config, CConfig *&driver_config) {
 
   for (iZone = 0; iZone < nZone; iZone++) {
 
-    if (rank == MASTER_NODE){
       cout  << endl << "Parsing config file for zone " << iZone << endl;
-    }
     /*--- Definition of the configuration option class for all zones. In this
      constructor, the input configuration file is parsed and all options are
      read and stored. ---*/
@@ -416,12 +404,10 @@ void CDriver::Input_Preprocessing(CConfig **&config, CConfig *&driver_config) {
 void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, bool dummy){
 
   if (!dummy){
-    if (rank == MASTER_NODE)
       cout << endl <<"------------------- Geometry Preprocessing ( Zone " << config->GetiZone() <<" ) -------------------" << endl;
 
     Geometrical_Preprocessing_FVM(config, geometry);
   } else {
-    if (rank == MASTER_NODE)
       cout << endl <<"-------------------------- Using Dummy Geometry -------------------------" << endl;
 
     unsigned short iMGlevel;
@@ -479,7 +465,6 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, 
   if((config_container[iZone]->GetnMarker_Euler() != 0 ||
      config_container[iZone]->GetnMarker_SymWall() != 0)) {
 
-    if (rank == MASTER_NODE)
       cout << "Checking if Euler & Symmetry markers are straight/plane:" << endl;
 
     for (iMesh = 0; iMesh <= config_container[iZone]->GetnMGLevels(); iMesh++)
@@ -524,42 +509,42 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
 
   /*--- Compute elements surrounding points, points surrounding points ---*/
 
-  if (rank == MASTER_NODE) cout << "Setting point connectivity." << endl;
+  cout << "Setting point connectivity." << endl;
   geometry[MESH_0]->SetPoint_Connectivity();
 
   /*--- Renumbering points using Reverse Cuthill McKee ordering ---*/
 
-  if (rank == MASTER_NODE) cout << "Renumbering points (Reverse Cuthill McKee Ordering)." << endl;
+  cout << "Renumbering points (Reverse Cuthill McKee Ordering)." << endl;
   geometry[MESH_0]->SetRCM_Ordering(config);
 
   /*--- recompute elements surrounding points, points surrounding points ---*/
 
-  if (rank == MASTER_NODE) cout << "Recomputing point connectivity." << endl;
+  cout << "Recomputing point connectivity." << endl;
   geometry[MESH_0]->SetPoint_Connectivity();
 
   /*--- Compute elements surrounding elements ---*/
 
-  if (rank == MASTER_NODE) cout << "Setting element connectivity." << endl;
+  cout << "Setting element connectivity." << endl;
   geometry[MESH_0]->SetElement_Connectivity();
 
   /*--- Check the orientation before computing geometrical quantities ---*/
 
   geometry[MESH_0]->SetBoundVolume();
   if (config->GetReorientElements()) {
-    if (rank == MASTER_NODE) cout << "Checking the numerical grid orientation." << endl;
+    cout << "Checking the numerical grid orientation." << endl;
     geometry[MESH_0]->Check_IntElem_Orientation(config);
     geometry[MESH_0]->Check_BoundElem_Orientation(config);
   }
 
   /*--- Create the edge structure ---*/
 
-  if (rank == MASTER_NODE) cout << "Identifying edges and vertices." << endl;
+  cout << "Identifying edges and vertices." << endl;
   geometry[MESH_0]->SetEdges();
   geometry[MESH_0]->SetVertex(config);
 
   /*--- Create the control volume structures ---*/
 
-  if (rank == MASTER_NODE) cout << "Setting the control volume structure." << endl;
+  cout << "Setting the control volume structure." << endl;
   SU2_OMP_PARALLEL {
     geometry[MESH_0]->SetControlVolume(config, ALLOCATE);
     geometry[MESH_0]->SetBoundControlVolume(config, ALLOCATE);
@@ -574,17 +559,17 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
 
   /*--- Identify closest normal neighbor ---*/
 
-  if (rank == MASTER_NODE) cout << "Searching for the closest normal neighbors to the surfaces." << endl;
+  cout << "Searching for the closest normal neighbors to the surfaces." << endl;
   geometry[MESH_0]->FindNormal_Neighbor(config);
 
   /*--- Store the global to local mapping. ---*/
 
-  if (rank == MASTER_NODE) cout << "Storing a mapping from global to local point index." << endl;
+  cout << "Storing a mapping from global to local point index." << endl;
   geometry[MESH_0]->SetGlobal_to_Local_Point();
 
   /*--- Compute the surface curvature ---*/
 
-    if (rank == MASTER_NODE) cout << "Compute the surface curvature." << endl;
+    cout << "Compute the surface curvature." << endl;
     geometry[MESH_0]->ComputeSurf_Curvature(config);
 
   /*--- Compute the global surface areas for all markers. ---*/
@@ -593,17 +578,17 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
 
   /*--- Check for periodicity and disable MG if necessary. ---*/
 
-  if (rank == MASTER_NODE) cout << "Checking for periodicity." << endl;
+  cout << "Checking for periodicity." << endl;
   geometry[MESH_0]->Check_Periodicity(config);
 
   /*--- Compute mesh quality statistics on the fine grid. ---*/
 
-    if (rank == MASTER_NODE)
+    
       cout << "Computing mesh quality statistics for the dual control volumes." << endl;
     geometry[MESH_0]->ComputeMeshQualityStatistics(config);
 
   geometry[MESH_0]->SetMGLevel(MESH_0);
-  if ((config->GetnMGLevels() != 0) && (rank == MASTER_NODE))
+  if (config->GetnMGLevels() != 0)
     cout << "Setting the multigrid structure." << endl;
 
   /*--- Loop over all the new grid ---*/
@@ -668,17 +653,13 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
 
     /*--- Compute the max length. ---*/
 
-      if ((rank == MASTER_NODE) && (iMGlevel == MESH_0))
+      if (iMGlevel == MESH_0)
         cout << "Finding max control volume width." << endl;
       geometry[iMGlevel]->SetMaxLength(config);
 
     /*--- Communicate the number of neighbors. This is needed for
          some centered schemes and for multigrid in parallel. ---*/
 
-    if ((rank == MASTER_NODE) && (size > SINGLE_NODE) && (iMGlevel == MESH_0))
-      cout << "Communicating number of neighbors." << endl;
-    geometry[iMGlevel]->InitiateComms(geometry[iMGlevel], config, NEIGHBORS);
-    geometry[iMGlevel]->CompleteComms(geometry[iMGlevel], config, NEIGHBORS);
   }
 
 }
@@ -687,7 +668,6 @@ void CDriver::Solver_Preprocessing(CConfig* config, CGeometry** geometry, CSolve
 
   MAIN_SOLVER kindSolver = config->GetKind_Solver();
 
-  if (rank == MASTER_NODE)
     cout << endl <<"-------------------- Solver Preprocessing ( Zone " << config->GetiZone() <<" ) --------------------" << endl;
 
   solver = new CSolver**[config->GetnMGLevels()+1] ();
@@ -780,7 +760,6 @@ void CDriver::Solver_Postprocessing(CSolver ****solver, CGeometry **geometry,
 
 void CDriver::Integration_Preprocessing(CConfig *config, CSolver **solver, CIntegration **&integration) const {
 
-  if (rank == MASTER_NODE)
     cout << endl <<"----------------- Integration Preprocessing ( Zone " << config->GetiZone() <<" ) ------------------" << endl;
 
   MAIN_SOLVER kindMainSolver = config->GetKind_Solver();
@@ -801,7 +780,6 @@ void CDriver::Integration_Postprocessing(CIntegration ***integration, CGeometry 
 
 void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSolver ***solver, CNumerics ****&numerics) const {
 
-  if (rank == MASTER_NODE)
     cout << endl <<"------------------- Numerics Preprocessing ( Zone " << config->GetiZone() <<" ) -------------------" << endl;
 
   unsigned short iMGlevel, iSol,
@@ -1068,7 +1046,6 @@ void CDriver::Numerics_Postprocessing(CNumerics *****numerics, CSolver***, CGeom
 
 void CDriver::Iteration_Preprocessing(CConfig* config, CIteration *&iteration) const {
 
-  if (rank == MASTER_NODE)
     cout << endl <<"------------------- Iteration Preprocessing ( Zone " << config->GetiZone() <<" ) ------------------" << endl;
 
   iteration = CIterationFactory::CreateIteration(config->GetKind_Solver(), config);
@@ -1084,7 +1061,6 @@ void CDriver::Output_Preprocessing(CConfig **config, CConfig *driver_config, COu
 
   for (iZone = 0; iZone < nZone; iZone++){
 
-    if (rank == MASTER_NODE)
       cout << endl <<"-------------------- Output Preprocessing ( Zone " << iZone <<" ) --------------------" << endl;
 
     MAIN_SOLVER kindSolver = config[iZone]->GetKind_Solver();
@@ -1108,8 +1084,6 @@ void CDriver::Output_Preprocessing(CConfig **config, CConfig *driver_config, COu
 CDriver::~CDriver(void) {}
 
 void CDriver::Print_DirectResidual(RECORDING kind_recording) {
-
-  if (!(rank == MASTER_NODE && kind_recording == RECORDING::SOLUTION_VARIABLES)) return;
 
   const bool multizone = config_container[ZONE_0]->GetMultizone_Problem();
 
@@ -1170,9 +1144,7 @@ void CFluidDriver::StartSolver(){
 
   /*--- Main external loop of the solver. Within this loop, each iteration ---*/
 
-  if (rank == MASTER_NODE){
     cout << endl <<"------------------------------ Begin Solver -----------------------------" << endl;
-  }
 
   unsigned long Iter = 0;
   while ( Iter < Max_Iter ) {
