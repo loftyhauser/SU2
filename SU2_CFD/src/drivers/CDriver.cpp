@@ -1017,55 +1017,6 @@ void CDriver::Output_Preprocessing(CConfig **config, CConfig *driver_config, COu
 
 CDriver::~CDriver(void) {}
 
-void CDriver::Print_DirectResidual(RECORDING kind_recording) {
-
-  const bool multizone = config_container[ZONE_0]->GetMultizone_Problem();
-
-  /*--- Helper lambda func to return lengthy [iVar][iZone] string.  ---*/
-  auto iVar_iZone2string = [&](unsigned short ivar, unsigned short izone) {
-    if (multizone)
-      return "[" + std::to_string(ivar) + "][" + std::to_string(izone) + "]";
-    else
-      return "[" + std::to_string(ivar) + "]";
-  };
-
-  /*--- Print residuals in the first iteration ---*/
-
-  const unsigned short fieldWidth = 15;
-  PrintingToolbox::CTablePrinter RMSTable(&std::cout);
-  RMSTable.SetPrecision(config_container[ZONE_0]->GetOutput_Precision());
-
-  /*--- The CTablePrinter requires two sweeps:
-    *--- 0. Add the colum names (addVals=0=false) plus CTablePrinter.PrintHeader()
-    *--- 1. Add the RMS-residual values (addVals=1=true) plus CTablePrinter.PrintFooter() ---*/
-  for (int addVals = 0; addVals < 2; addVals++) {
-
-
-      auto solvers = solver_container[0][INST_0][MESH_0];
-      auto configs = config_container[0];
-
-      /*--- Note: the FEM-Flow solvers are availalbe for disc. adjoint runs only for SingleZone. ---*/
-      if (configs->GetFluidProblem()) {
-
-        for (unsigned short iVar = 0; iVar < solvers[FLOW_SOL]->GetnVar(); iVar++) {
-          if (!addVals)
-            RMSTable.AddColumn("rms_Flow" + iVar_iZone2string(iVar, 0), fieldWidth);
-          else
-            RMSTable << log10(solvers[FLOW_SOL]->GetRes_RMS(iVar));
-        }
-
-      }
-        SU2_MPI::Error("Invalid KindSolver for SingleZone-Driver.", CURRENT_FUNCTION);
-
-    if (!addVals) RMSTable.PrintHeader();
-    else RMSTable.PrintFooter();
-
-  } // for addVals
-
-  cout << "\n-------------------------------------------------------------------------\n" << endl;
-
-}
-
 CFluidDriver::CFluidDriver(char* confFile) : CDriver(confFile) {
   Max_Iter = config_container[ZONE_0]->GetnInner_Iter();
 }

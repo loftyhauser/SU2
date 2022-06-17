@@ -186,40 +186,14 @@ protected:
   void Numerics_Postprocessing(CNumerics *****numerics, CSolver ***solver, CGeometry **geometry, CConfig *config);
 
   /*!
-   * \brief Initialize Python interface functionalities
-   */
-  void PythonInterface_Preprocessing(CConfig** config, CGeometry**** geometry, CSolver***** solver);
-
-  /*!
    * \brief Preprocess the output container.
    */
   void Output_Preprocessing(CConfig **config, CConfig *driver_config, COutput **&output_container, COutput *&driver_output);
 
   /*!
-   * \brief Initiate value for static mesh movement such as the gridVel for the ROTATING frame.
-   */
-  void StaticMesh_Preprocessing(const CConfig *config, CGeometry **geometry);
-
-  /*!
-   * \brief A virtual member to run a Block Gauss-Seidel iteration in multizone problems.
-   */
-  virtual void Run_GaussSeidel(){}
-
-  /*!
-   * \brief A virtual member to run a Block-Jacobi iteration in multizone problems.
-   */
-  virtual void Run_Jacobi(){}
-
-  /*!
    * \brief A virtual member.
    */
   virtual void Update() {}
-
-  /*!
-   * \brief Print out the direct residuals.
-   * \param[in] kind_recording - Type of recording (full list in ENUM_RECORDING, option_structure.hpp)
-   */
-  void Print_DirectResidual(RECORDING kind_recording);
 
 public:
 
@@ -249,111 +223,6 @@ public:
   virtual void Output(unsigned long TimeIter){ }
 
   /*!
-   * \brief Process the boundary conditions and update the multigrid structure.
-   */
-  void BoundaryConditionsUpdate();
-
-  /*!
-   * \brief Get the total drag.
-   * \return Total drag.
-   */
-  passivedouble Get_Drag() const;
-
-  /*!
-   * \brief Get the total lift.
-   * \return Total lift.
-   */
-  passivedouble Get_Lift() const;
-
-  /*!
-   * \brief Get the total x moment.
-   * \return Total x moment.
-   */
-  passivedouble Get_Mx() const;
-
-  /*!
-   * \brief Get the total y moment.
-   * \return Total y moment.
-   */
-  passivedouble Get_My() const;
-
-  /*!
-   * \brief Get the total z moment.
-   * \return Total z moment.
-   */
-  passivedouble Get_Mz() const;
-
-  /*!
-   * \brief Get the total drag coefficient.
-   * \return Total drag coefficient.
-   */
-  passivedouble Get_DragCoeff() const;
-
-  /*!
-   * \brief Get the total lift coefficient.
-   * \return Total lift coefficient.
-   */
-  passivedouble Get_LiftCoeff() const;
-
-  /*!
-   * \brief Get the number of vertices (halo nodes included) from a specified marker.
-   * \param[in] iMarker -  Marker identifier.
-   * \return Number of vertices.
-   */
-  unsigned long GetNumberVertices(unsigned short iMarker) const;
-
-  /*!
-   * \brief Get the name of the output file for the surface.
-   * \return File name for the surface output.
-   */
-  string GetSurfaceFileName() const;
-
-  /*!
-   * \brief Get the global index of a vertex on a specified marker.
-   * \param[in] iMarker - Marker identifier.
-   * \param[in] iVertex - Vertex identifier.
-   * \return Vertex global index.
-   */
-  unsigned long GetVertexGlobalIndex(unsigned short iMarker, unsigned long iVertex) const;
-
-  /*!
-   * \brief Get the normal (vector) at a vertex on a specified marker.
-   * \param[in] iMarker - Marker identifier.
-   * \param[in] iVertex - Vertex identifier.
-   * \param[in] unitNormal - Bool to normalise the vector.
-   * \return Normal (vector) at the vertex.
-   */
-  vector<passivedouble> GetVertexNormal(unsigned short iMarker, unsigned long iVertex, bool unitNormal = false) const;
-
-  /*!
-   * \brief Get the unit normal (vector) at a vertex on a specified marker.
-   * \param[in] iMarker - Marker identifier.
-   * \param[in] iVertex - Vertex identifier.
-   * \return Unit normal (vector) at the vertex.
-   */
-  inline vector<passivedouble> GetVertexUnitNormal(unsigned short iMarker, unsigned long iVertex) const {
-    return GetVertexNormal(iMarker, iVertex, true);
-  }
-
-  /*!
-   * \brief Get all the boundary markers tags.
-   * \return List of boundary markers tags.
-   */
-  vector<string> GetAllBoundaryMarkersTag() const;
-
-  /*!
-   * \brief Get all the boundary markers tags with their associated indices.
-   * \return List of boundary markers tags with their indices.
-   */
-  map<string, int> GetAllBoundaryMarkers() const;
-
-  /*!
-   * \brief Get all the boundary markers tags with their associated types.
-   * \return List of boundary markers tags with their types.
-   */
-  map<string, string> GetAllBoundaryMarkersType() const;
-
-  /*!
    * \brief Get the flow load (from the extra step - the repeated methods should be unified once the postprocessing
    * strategy is in place).
    * \param[in] iMarker - Marker identifier.
@@ -374,55 +243,6 @@ public:
       if (solver && (solver->GetAdjoint() == adjoint)) nVar += solver->GetnVar();
     }
     return nVar;
-  }
-
-  /*!
-   * \brief Set the solution of all solvers (adjoint or primal) in a zone.
-   * \param[in] iZone - Index of the zone.
-   * \param[in] adjoint - True to consider adjoint solvers instead of primal.
-   * \param[in] solution - Solution object with interface (iPoint,iVar).
-   * \tparam Old - If true set "old solutions" instead.
-   */
-  template<class Container, bool Old = false>
-  void SetAllSolutions(unsigned short iZone, bool adjoint, const Container& solution) {
-    const auto nPoint = geometry_container[iZone][INST_0][MESH_0]->GetnPoint();
-    for (auto iSol = 0u, offset = 0u; iSol < MAX_SOLS; ++iSol) {
-      auto solver = solver_container[iZone][INST_0][MESH_0][iSol];
-      if (!(solver && (solver->GetAdjoint() == adjoint))) continue;
-      for (auto iPoint = 0ul; iPoint < nPoint; ++iPoint)
-        for (auto iVar = 0ul; iVar < solver->GetnVar(); ++iVar)
-          if (!Old) solver->GetNodes()->SetSolution(iPoint, iVar, solution(iPoint,offset+iVar));
-          else solver->GetNodes()->SetSolution_Old(iPoint, iVar, solution(iPoint,offset+iVar));
-      offset += solver->GetnVar();
-    }
-  }
-
-  /*!
-   * \brief Set the "old solution" of all solvers (adjoint or primal) in a zone.
-   */
-  template<class Container>
-  void SetAllSolutionsOld(unsigned short iZone, bool adjoint, const Container& solution) {
-    SetAllSolutions<Container,true>(iZone, adjoint, solution);
-  }
-
-  /*!
-   * \brief Get the solution of all solvers (adjoint or primal) in a zone.
-   * \param[in] iZone - Index of the zone.
-   * \param[in] adjoint - True to consider adjoint solvers instead of primal.
-   * \param[out] solution - Solution object with interface (iPoint,iVar).
-   */
-  template<class Container>
-  void GetAllSolutions(unsigned short iZone, bool adjoint, Container& solution) const {
-    const auto nPoint = geometry_container[iZone][INST_0][MESH_0]->GetnPoint();
-    for (auto iSol = 0u, offset = 0u; iSol < MAX_SOLS; ++iSol) {
-      auto solver = solver_container[iZone][INST_0][MESH_0][iSol];
-      if (!(solver && (solver->GetAdjoint() == adjoint))) continue;
-      const auto& sol = solver->GetNodes()->GetSolution();
-      for (auto iPoint = 0ul; iPoint < nPoint; ++iPoint)
-        for (auto iVar = 0ul; iVar < solver->GetnVar(); ++iVar)
-          solution(iPoint,offset+iVar) = SU2_TYPE::GetValue(sol(iPoint,iVar));
-      offset += solver->GetnVar();
-    }
   }
 
 };
