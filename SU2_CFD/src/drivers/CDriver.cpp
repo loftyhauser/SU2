@@ -56,9 +56,9 @@
 
 #include <fenv.h>
 
-CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunicator, bool dummy_geo) :
+CDriver::CDriver(char* confFile, unsigned short val_nZone) :
   config_file_name(confFile), StartTime(0.0), StopTime(0.0), UsedTime(0.0),
-  TimeIter(0), nZone(val_nZone), StopCalc(false), dry_run(dummy_geo) {
+  TimeIter(0), nZone(val_nZone), StopCalc(false) {
 
   /*--- Start timer to track preprocessing for benchmarking. ---*/
 
@@ -103,7 +103,7 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
        identified and linked, face areas and volumes of the dual mesh cells are
        computed, and the multigrid levels are created using an agglomeration procedure. ---*/
 
-      Geometrical_Preprocessing(config_container[iZone], geometry_container[iZone][iInst], dry_run);
+      Geometrical_Preprocessing(config_container[iZone], geometry_container[iZone][iInst], false);
 
     }
   }
@@ -1068,7 +1068,7 @@ void CDriver::Output_Preprocessing(CConfig **config, CConfig *driver_config, COu
     output[iZone] = COutputFactory::CreateOutput(kindSolver, config[iZone], nDim);
 
     /*--- If dry-run is used, do not open/overwrite history file. ---*/
-    output[iZone]->PreprocessHistoryOutput(config[iZone], !dry_run);
+    output[iZone]->PreprocessHistoryOutput(config[iZone], true);
 
     output[iZone]->PreprocessVolumeOutput(config[iZone]);
 
@@ -1134,7 +1134,7 @@ void CDriver::Print_DirectResidual(RECORDING kind_recording) {
 
 }
 
-CFluidDriver::CFluidDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunicator) : CDriver(confFile, val_nZone, MPICommunicator, false) {
+CFluidDriver::CFluidDriver(char* confFile, unsigned short val_nZone) : CDriver(confFile, val_nZone) {
   Max_Iter = config_container[ZONE_0]->GetnInner_Iter();
 }
 

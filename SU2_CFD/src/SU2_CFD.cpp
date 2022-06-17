@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
   /*--- Generic single zone problem: instantiate the single zone driver class. ---*/
 
-  driver = new CSinglezoneDriver(config_file_name, 1, 0);
+  driver = new CSinglezoneDriver(config_file_name, 1);
 
   /*--- Launch the main external loop of the solver. ---*/
 

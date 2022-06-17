@@ -91,8 +91,7 @@ public:
    * \param[in] MPICommunicator - MPI communicator for SU2.
    */
   CDriver(char* confFile,
-          unsigned short val_nZone,
-          SU2_Comm MPICommunicator, bool dummy_geo);
+          unsigned short val_nZone);
 
   /*!
    * \brief Destructor of the class.
@@ -518,8 +517,7 @@ protected:
    * \param[in] MPICommunicator - MPI communicator for SU2.
    */
   CFluidDriver(char* confFile,
-               unsigned short val_nZone,
-               SU2_Comm MPICommunicator);
+               unsigned short val_nZone);
 
 public:
   /*!

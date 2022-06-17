@@ -31,11 +31,8 @@
 #include "../../include/iteration/CIteration.hpp"
 
 CSinglezoneDriver::CSinglezoneDriver(char* confFile,
-                       unsigned short val_nZone,
-                       SU2_Comm MPICommunicator) : CDriver(confFile,
-                                                          val_nZone,
-                                                          MPICommunicator,
-                                                          false) {
+                       unsigned short val_nZone) : CDriver(confFile,
+                                                          val_nZone) {
 
   /*--- Initialize the counter for TimeIter ---*/
   TimeIter = 0;
