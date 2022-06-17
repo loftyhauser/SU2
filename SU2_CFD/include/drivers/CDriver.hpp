@@ -64,8 +64,6 @@ protected:
   unsigned long TimeIter;                       /*!< \brief External iteration.*/
   ofstream **ConvHist_file;                     /*!< \brief Convergence history file.*/
   unsigned short iMesh,                         /*!< \brief Iterator on mesh levels.*/
-                iZone,                          /*!< \brief Iterator on zones.*/
-                nZone,                          /*!< \brief Total number of zones in the problem. */
                 nDim;                           /*!< \brief Number of dimensions.*/
   bool StopCalc;                                /*!< \brief Stop computation flag.*/
   CIteration ***iteration_container;            /*!< \brief Container vector with all the iteration methods. */
@@ -87,8 +85,7 @@ public:
    * \param[in] val_nDim - Number of dimensions.
    * \param[in] MPICommunicator - MPI communicator for SU2.
    */
-  CDriver(char* confFile,
-          unsigned short val_nZone);
+  CDriver(char* confFile);
 
   /*!
    * \brief Destructor of the class.
@@ -115,7 +112,7 @@ protected:
   /*!
    * \brief Construction of the edge-based data structure and the multigrid structure.
    */
-  void Geometrical_Preprocessing(CConfig *config, CGeometry **&geometry, bool dummy);
+  void Geometrical_Preprocessing(CConfig *config, CGeometry **&geometry);
 
   /*!
    * \brief Geometrical_Preprocessing_FVM
@@ -152,7 +149,7 @@ protected:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Solver_Postprocessing(CSolver ****solver, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
+  void Solver_Postprocessing(CSolver ****solver, CGeometry **geometry, CConfig *config);
 
   /*!
    * \brief Definition and allocation of all integration classes.
@@ -168,7 +165,7 @@ protected:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Integration_Postprocessing(CIntegration ***integration, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
+  void Integration_Postprocessing(CIntegration ***integration, CGeometry **geometry, CConfig *config);
 
   /*!
    * \brief Definition and allocation of all solver classes.
@@ -186,7 +183,7 @@ protected:
    * \param[in] geometry - Geometrical definition of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  void Numerics_Postprocessing(CNumerics *****numerics, CSolver ***solver, CGeometry **geometry, CConfig *config, unsigned short val_iInst);
+  void Numerics_Postprocessing(CNumerics *****numerics, CSolver ***solver, CGeometry **geometry, CConfig *config);
 
   /*!
    * \brief Initialize Python interface functionalities
@@ -235,11 +232,6 @@ public:
    * \brief Deallocation routine
    */
   void Postprocessing();
-
-  /*!
-   * \brief A virtual member.
-   */
-  virtual void ResetConvergence();
 
   /*!
    * \brief Perform some pre-processing before an iteration of the physics.
@@ -454,8 +446,7 @@ protected:
    * \param[in] val_nDim - Number of dimensions.
    * \param[in] MPICommunicator - MPI communicator for SU2.
    */
-  CFluidDriver(char* confFile,
-               unsigned short val_nZone);
+  CFluidDriver(char* confFile);
 
 public:
   /*!

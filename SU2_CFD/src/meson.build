@@ -1,6 +1,5 @@
 su2_cfd_include = include_directories('./')
-su2_cfd_src = files(['python_wrapper_structure.cpp',
-                     'CMarkerProfileReaderFVM.cpp'])
+su2_cfd_src = files(['CMarkerProfileReaderFVM.cpp'])
 
 su2_cfd_src += files(['fluid/CIdealGas.cpp'])
 

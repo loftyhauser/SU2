@@ -31,8 +31,7 @@
 #include "../../include/iteration/CIteration.hpp"
 
 CSinglezoneDriver::CSinglezoneDriver(char* confFile,
-                       unsigned short val_nZone) : CDriver(confFile,
-                                                          val_nZone) {
+                       unsigned short val_nZone) : CDriver(confFile) {
 
   /*--- Initialize the counter for TimeIter ---*/
   TimeIter = 0;
