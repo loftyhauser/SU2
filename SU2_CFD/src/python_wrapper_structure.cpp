@@ -174,20 +174,6 @@ unsigned long CDriver::GetNumberVertices(unsigned short iMarker) const {
 
 }
 
-unsigned long CDriver::GetNumberHaloVertices(unsigned short iMarker) const {
-
-  unsigned long nHaloVertices, iVertex, iPoint;
-
-  nHaloVertices = 0;
-  for(iVertex = 0; iVertex < geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[iMarker]; iVertex++){
-    iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNode();
-    if(!(geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetDomain(iPoint))) nHaloVertices += 1;
-  }
-
-  return nHaloVertices;
-
-}
-
 unsigned long CDriver::GetVertexGlobalIndex(unsigned short iMarker, unsigned long iVertex) const {
 
   unsigned long iPoint, GlobalIndex;
@@ -196,16 +182,6 @@ unsigned long CDriver::GetVertexGlobalIndex(unsigned short iMarker, unsigned lon
   GlobalIndex = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGlobalIndex(iPoint);
 
   return GlobalIndex;
-
-}
-
-bool CDriver::IsAHaloNode(unsigned short iMarker, unsigned long iVertex) const {
-
-  unsigned long iPoint;
-
-  iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNode();
-  if(geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetDomain(iPoint)) return false;
-  else return true;
 
 }
 
@@ -243,21 +219,6 @@ vector<passivedouble> CDriver::GetVertexNormal(unsigned short iMarker, unsigned 
 //////////////////////////////////////////////////////////////////////////////////
 /* Functions to obtain global parameters from SU2 (time steps, delta t, ecc...) */
 //////////////////////////////////////////////////////////////////////////////////
-
-unsigned long CDriver::GetnTimeIter() const {
-
-  return config_container[ZONE_0]->GetnTime_Iter();
-}
-
-unsigned long CDriver::GetTime_Iter() const{
-
-  return TimeIter;
-}
-
-passivedouble CDriver::GetUnsteady_TimeStep() const {
-
-  return SU2_TYPE::GetValue(config_container[ZONE_0]->GetTime_Step());
-}
 
 string CDriver::GetSurfaceFileName() const {
 

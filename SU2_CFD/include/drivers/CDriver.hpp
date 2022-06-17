@@ -77,7 +77,6 @@ protected:
   CConfig **config_container;                   /*!< \brief Definition of the particular problem. */
   CConfig *driver_config;                       /*!< \brief Definition of the driver configuration. */
   COutput *driver_output;                       /*!< \brief Definition of the driver output. */
-  bool dry_run;                                 /*!< \brief Flag if SU2_CFD was started as dry-run via "SU2_CFD -d <config>.cfg" */
 
 public:
 
@@ -312,39 +311,6 @@ public:
   unsigned long GetNumberVertices(unsigned short iMarker) const;
 
   /*!
-   * \brief Get the number of halo vertices from a specified marker.
-   * \param[in] iMarker - Marker identifier.
-   * \return Number of vertices.
-   */
-  unsigned long GetNumberHaloVertices(unsigned short iMarker) const;
-
-  /*!
-   * \brief Check if a vertex is physical or not (halo node) on a specified marker.
-   * \param[in] iMarker - Marker identifier.
-   * \param[in] iVertex - Vertex identifier.
-   * \return True if the specified vertex is a halo node.
-   */
-  bool IsAHaloNode(unsigned short iMarker, unsigned long iVertex) const;
-
-  /*!
-   * \brief Get the number of external iterations.
-   * \return Number of external iterations.
-   */
-  unsigned long GetnTimeIter() const;
-
-  /*!
-   * \brief Get the current external iteration.
-   * \return Current external iteration.
-   */
-  unsigned long GetTime_Iter() const;
-
-  /*!
-   * \brief Get the unsteady time step.
-   * \return Unsteady time step.
-   */
-  passivedouble GetUnsteady_TimeStep() const;
-
-  /*!
    * \brief Get the name of the output file for the surface.
    * \return File name for the surface output.
    */
@@ -357,22 +323,6 @@ public:
    * \return Vertex global index.
    */
   unsigned long GetVertexGlobalIndex(unsigned short iMarker, unsigned long iVertex) const;
-
-  /*!
-   * \brief Get the temperature at a vertex on a specified marker.
-   * \param[in] iMarker - Marker identifier.
-   * \param[in] iVertex - Vertex identifier.
-   * \return Temperature of the vertex.
-   */
-  passivedouble GetVertexTemperature(unsigned short iMarker, unsigned long iVertex) const;
-
-  /*!
-   * \brief Set the temperature of a vertex on a specified marker.
-   * \param[in] iMarker - Marker identifier.
-   * \param[in] iVertex - Vertex identifier.
-   * \param[in] val_WallTemp - Value of the temperature.
-   */
-  void SetVertexTemperature(unsigned short iMarker, unsigned long iVertex, passivedouble val_WallTemp);
 
   /*!
    * \brief Get the normal (vector) at a vertex on a specified marker.
@@ -410,16 +360,6 @@ public:
    * \return List of boundary markers tags with their types.
    */
   map<string, string> GetAllBoundaryMarkersType() const;
-
-  /*!
-   * \brief Get the sensitivity of the flow loads for the structural solver.
-   * \param[in] iMarker - Marker identifier.
-   * \param[in] iVertex - Vertex identifier.
-   * \param[in] LoadX - Value of the load in the direction X.
-   * \param[in] LoadX - Value of the load in the direction Y.
-   * \param[in] LoadX - Value of the load in the direction Z.
-   */
-  vector<passivedouble> GetFlowLoad_Sensitivity(unsigned short iMarker, unsigned long iVertex) const;
 
   /*!
    * \brief Get the flow load (from the extra step - the repeated methods should be unified once the postprocessing
@@ -552,11 +492,6 @@ public:
    * \brief Perform some pre-processing before an iteration of the physics.
    */
   void Preprocess(unsigned long Iter) override;
-
-  /*!
-   * \brief Transfer data among different zones (multiple zone).
-   */
-  void Transfer_Data(unsigned short donorZone, unsigned short targetZone);
 
 };
 
