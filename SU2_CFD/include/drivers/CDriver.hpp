@@ -66,9 +66,7 @@ protected:
   unsigned short iMesh,                         /*!< \brief Iterator on mesh levels.*/
                 iZone,                          /*!< \brief Iterator on zones.*/
                 nZone,                          /*!< \brief Total number of zones in the problem. */
-                nDim,                           /*!< \brief Number of dimensions.*/
-                iInst,                          /*!< \brief Iterator on instance levels.*/
-                *nInst;                         /*!< \brief Total number of instances in the problem (per zone). */
+                nDim;                           /*!< \brief Number of dimensions.*/
   bool StopCalc;                                /*!< \brief Stop computation flag.*/
   CIteration ***iteration_container;            /*!< \brief Container vector with all the iteration methods. */
   COutput **output_container;                   /*!< \brief Pointer to the COutput class. */

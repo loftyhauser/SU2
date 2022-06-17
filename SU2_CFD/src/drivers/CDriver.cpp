@@ -86,33 +86,28 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone) :
 
     /*--- Read the number of instances for each zone ---*/
 
-    nInst[iZone] = 1;
+    geometry_container[iZone]    = new CGeometry**    [1] ();
+    iteration_container[iZone]   = new CIteration*    [1] ();
+    solver_container[iZone]      = new CSolver***     [1] ();
+    integration_container[iZone] = new CIntegration** [1] ();
+    numerics_container[iZone]    = new CNumerics****  [1] ();
 
-    geometry_container[iZone]    = new CGeometry**    [nInst[iZone]] ();
-    iteration_container[iZone]   = new CIteration*    [nInst[iZone]] ();
-    solver_container[iZone]      = new CSolver***     [nInst[iZone]] ();
-    integration_container[iZone] = new CIntegration** [nInst[iZone]] ();
-    numerics_container[iZone]    = new CNumerics****  [nInst[iZone]] ();
 
-    for (iInst = 0; iInst < nInst[iZone]; iInst++) {
-
-      config_container[iZone]->SetiInst(iInst);
+      config_container[iZone]->SetiInst(0);
 
       /*--- Preprocessing of the geometry for all zones. In this routine, the edge-
        based data structure is constructed, i.e. node and cell neighbors are
        identified and linked, face areas and volumes of the dual mesh cells are
        computed, and the multigrid levels are created using an agglomeration procedure. ---*/
 
-      Geometrical_Preprocessing(config_container[iZone], geometry_container[iZone][iInst], false);
+      Geometrical_Preprocessing(config_container[iZone], geometry_container[iZone][0], false);
 
-    }
   }
 
   /*--- Before we proceed with the zone loop we have to compute the wall distances.
      * This computation depends on all zones at once. ---*/
   for (iZone = 0; iZone < nZone; iZone++) {
 
-    for (iInst = 0; iInst < nInst[iZone]; iInst++){
 
       /*--- Definition of the solver class: solver_container[#ZONES][#INSTANCES][#MG_GRIDS][#EQ_SYSTEMS].
        The solver classes are specific to a particular set of governing equations,
@@ -121,7 +116,7 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone) :
        fluxes, loops over the nodes to compute source terms, and routines for
        imposing various boundary condition type for the PDE. ---*/
 
-      Solver_Preprocessing(config_container[iZone], geometry_container[iZone][iInst], solver_container[iZone][iInst]);
+      Solver_Preprocessing(config_container[iZone], geometry_container[iZone][0], solver_container[iZone][0]);
 
       /*--- Definition of the numerical method class:
        numerics_container[#ZONES][#INSTANCES][#MG_GRIDS][#EQ_SYSTEMS][#EQ_TERMS].
@@ -130,8 +125,8 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone) :
        data structure (centered, upwind, galerkin), as well as any source terms
        (piecewise constant reconstruction) evaluated in each dual mesh volume. ---*/
 
-      Numerics_Preprocessing(config_container[iZone], geometry_container[iZone][iInst],
-                             solver_container[iZone][iInst], numerics_container[iZone][iInst]);
+      Numerics_Preprocessing(config_container[iZone], geometry_container[iZone][0],
+                             solver_container[iZone][0], numerics_container[iZone][0]);
 
       /*--- Definition of the integration class: integration_container[#ZONES][#INSTANCES][#EQ_SYSTEMS].
        The integration class orchestrates the execution of the spatial integration
@@ -139,17 +134,16 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone) :
        the residual at each node, R(U) and then integrates the equations to a
        steady state or time-accurately. ---*/
 
-      Integration_Preprocessing(config_container[iZone], solver_container[iZone][iInst][MESH_0],
-                                integration_container[iZone][iInst]);
+      Integration_Preprocessing(config_container[iZone], solver_container[iZone][0][MESH_0],
+                                integration_container[iZone][0]);
 
       /*--- Instantiate the type of physics iteration to be executed within each zone. For
        example, one can execute the same physics across multiple zones (mixing plane),
        different physics in different zones (fluid-structure interaction), or couple multiple
        systems tightly within a single zone by creating a new iteration class (e.g., RANS). ---*/
 
-      Iteration_Preprocessing(config_container[iZone], iteration_container[iZone][iInst]);
+      Iteration_Preprocessing(config_container[iZone], iteration_container[iZone][0]);
 
-    }
 
   }
 
@@ -205,7 +199,6 @@ void CDriver::SetContainers_Null(){
   solver_container               = nullptr;
   numerics_container             = nullptr;
   config_container               = nullptr;
-  nInst                          = nullptr;
 
   /*--- Definition and of the containers for all possible zones. ---*/
 
@@ -216,7 +209,6 @@ void CDriver::SetContainers_Null(){
   config_container               = new CConfig*[nZone] ();
   geometry_container             = new CGeometry***[nZone] ();
   output_container               = new COutput*[nZone] ();
-  nInst                          = new unsigned short[nZone] ();
   driver_config                  = nullptr;
   driver_output                  = nullptr;
 
@@ -242,42 +234,35 @@ void CDriver::Postprocessing() {
     cout << endl <<"------------------------- Solver Postprocessing -------------------------" << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
-    for (iInst = 0; iInst < nInst[iZone]; iInst++){
-      Numerics_Postprocessing(numerics_container[iZone], solver_container[iZone][iInst],
-          geometry_container[iZone][iInst], config_container[iZone], iInst);
-    }
+      Numerics_Postprocessing(numerics_container[iZone], solver_container[iZone][0],
+          geometry_container[iZone][0], config_container[iZone], 0);
     delete [] numerics_container[iZone];
   }
   delete [] numerics_container;
   cout << "Deleted CNumerics container." << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
-    for (iInst = 0; iInst < nInst[iZone]; iInst++){
       Integration_Postprocessing(integration_container[iZone],
-          geometry_container[iZone][iInst],
+          geometry_container[iZone][0],
           config_container[iZone],
-          iInst);
-    }
+          0);
     delete [] integration_container[iZone];
   }
   delete [] integration_container;
   cout << "Deleted CIntegration container." << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
-    for (iInst = 0; iInst < nInst[iZone]; iInst++){
       Solver_Postprocessing(solver_container[iZone],
-          geometry_container[iZone][iInst],
+          geometry_container[iZone][0],
           config_container[iZone],
-          iInst);
-    }
+          0);
     delete [] solver_container[iZone];
   }
   delete [] solver_container;
   cout << "Deleted CSolver container." << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
-    for (iInst = 0; iInst < nInst[iZone]; iInst++)
-      delete iteration_container[iZone][iInst];
+      delete iteration_container[iZone][0];
     delete [] iteration_container[iZone];
   }
   delete [] iteration_container;
@@ -285,11 +270,9 @@ void CDriver::Postprocessing() {
 
   for (iZone = 0; iZone < nZone; iZone++) {
     if (geometry_container[iZone] != nullptr) {
-      for (iInst = 0; iInst < nInst[iZone]; iInst++){
         for (unsigned short iMGlevel = 0; iMGlevel < config_container[iZone]->GetnMGLevels()+1; iMGlevel++)
-          delete geometry_container[iZone][iInst][iMGlevel];
-        delete [] geometry_container[iZone][iInst];
-      }
+          delete geometry_container[iZone][0][iMGlevel];
+        delete [] geometry_container[iZone][0];
       delete [] geometry_container[iZone];
     }
   }
@@ -304,9 +287,6 @@ void CDriver::Postprocessing() {
   }
   delete driver_config;
   cout << "Deleted CConfig container." << endl;
-
-  delete [] nInst;
-  cout << "Deleted nInst container." << endl;
 
   /*--- Deallocate output container ---*/
 
@@ -468,7 +448,7 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, 
       cout << "Checking if Euler & Symmetry markers are straight/plane:" << endl;
 
     for (iMesh = 0; iMesh <= config_container[iZone]->GetnMGLevels(); iMesh++)
-      geometry_container[iZone][iInst][iMesh]->ComputeSurf_Straightness(config_container[iZone], (iMesh==MESH_0) );
+      geometry_container[iZone][0][iMesh]->ComputeSurf_Straightness(config_container[iZone], (iMesh==MESH_0) );
 
   }
 
@@ -1198,9 +1178,7 @@ void CFluidDriver::Preprocess(unsigned long Iter) {
 
     for (iZone = 0; iZone < nZone; iZone++) {
       if (config_container[iZone]->GetFluidProblem()) {
-        for (iInst = 0; iInst < nInst[iZone]; iInst++) {
-          solver_container[iZone][iInst][MESH_0][FLOW_SOL]->SetInitialCondition(geometry_container[iZone][INST_0], solver_container[iZone][iInst], config_container[iZone], Iter);
-        }
+          solver_container[iZone][0][MESH_0][FLOW_SOL]->SetInitialCondition(geometry_container[iZone][INST_0], solver_container[iZone][0], config_container[iZone], Iter);
       }
     }
 }
@@ -1303,13 +1281,11 @@ void CFluidDriver::Output(unsigned long InnerIter) {
   for (iZone = 0; iZone < nZone; iZone++) {
     const auto inst = config_container[iZone]->GetiInst();
 
-    for (iInst = 0; iInst < nInst[iZone]; ++iInst) {
-      config_container[iZone]->SetiInst(iInst);
-      output_container[iZone]->SetResult_Files(geometry_container[iZone][iInst][MESH_0],
+      config_container[iZone]->SetiInst(1);
+      output_container[iZone]->SetResult_Files(geometry_container[iZone][0][MESH_0],
                                                config_container[iZone],
-                                               solver_container[iZone][iInst][MESH_0],
+                                               solver_container[iZone][0][MESH_0],
                                                InnerIter, StopCalc);
-    }
     config_container[iZone]->SetiInst(inst);
   }
 
