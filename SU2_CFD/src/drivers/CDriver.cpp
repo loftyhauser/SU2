@@ -101,11 +101,6 @@ CDriver::CDriver(char* confFile) :
 
       Geometrical_Preprocessing(config_container[0], geometry_container[0][0]);
 
-
-  /*--- Before we proceed with the zone loop we have to compute the wall distances.
-     * This computation depends on all zones at once. ---*/
-
-
       /*--- Definition of the solver class: solver_container[#ZONES][#INSTANCES][#MG_GRIDS][#EQ_SYSTEMS].
        The solver classes are specific to a particular set of governing equations,
        and they contain the subroutines with instructions for computing each spatial
@@ -365,33 +360,6 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry){
 
   geometry[MESH_0]->SetPositive_ZArea(config);
 
-  /*--- If we have any periodic markers in this calculation, we must
-       match the periodic points found on both sides of the periodic BC.
-       Note that the current implementation requires a 1-to-1 matching of
-       periodic points on the pair of periodic faces after the translation
-       or rotation is taken into account. ---*/
-
-  if ((config->GetnMarker_Periodic() != 0)) {
-    for (iMesh = 0; iMesh <= config->GetnMGLevels(); iMesh++) {
-
-      /*--- Note that we loop over pairs of periodic markers individually
-           so that repeated nodes on adjacent periodic faces are properly
-           accounted for in multiple places. ---*/
-
-      for (unsigned short iPeriodic = 1; iPeriodic <= config->GetnMarker_Periodic()/2; iPeriodic++) {
-        geometry[iMesh]->MatchPeriodic(config, iPeriodic);
-      }
-
-      /*--- For Streamwise Periodic flow, find a unique reference node on the dedicated inlet marker. ---*/
-      if (config->GetKind_Streamwise_Periodic() != ENUM_STREAMWISE_PERIODIC::NONE)
-        geometry[iMesh]->FindUniqueNode_PeriodicBound(config);
-
-      /*--- Initialize the communication framework for the periodic BCs. ---*/
-      geometry[iMesh]->PreprocessPeriodicComms(geometry[iMesh], config);
-
-    }
-  }
-
   /*--- If activated by the compile directive, perform a partition analysis. ---*/
 #if PARTITION
     else Partition_Analysis(geometry[MESH_0], config);
@@ -438,12 +406,6 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
 
   delete geometry_aux;
 
-  /*--- Add the Send/Receive boundaries ---*/
-  geometry[MESH_0]->SetSendReceive(config);
-
-  /*--- Add the Send/Receive boundaries ---*/
-  geometry[MESH_0]->SetBoundaries(config);
-
   /*--- Compute elements surrounding points, points surrounding points ---*/
 
   cout << "Setting point connectivity." << endl;
@@ -482,11 +444,8 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
   /*--- Create the control volume structures ---*/
 
   cout << "Setting the control volume structure." << endl;
-  SU2_OMP_PARALLEL {
     geometry[MESH_0]->SetControlVolume(config, ALLOCATE);
     geometry[MESH_0]->SetBoundControlVolume(config, ALLOCATE);
-  }
-  END_SU2_OMP_PARALLEL
 
   /*--- Visualize a dual control volume if requested ---*/
 
@@ -513,13 +472,7 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
 
   geometry[MESH_0]->ComputeSurfaceAreaCfgFile(config);
 
-  /*--- Check for periodicity and disable MG if necessary. ---*/
-
-  cout << "Checking for periodicity." << endl;
-  geometry[MESH_0]->Check_Periodicity(config);
-
   /*--- Compute mesh quality statistics on the fine grid. ---*/
-
     
       cout << "Computing mesh quality statistics for the dual control volumes." << endl;
     geometry[MESH_0]->ComputeMeshQualityStatistics(config);
@@ -577,7 +530,6 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
   /*--- For unsteady simulations, initialize the grid volumes
    and coordinates for previous solutions. Loop over all zones/grids ---*/
 
-
   /*--- Create the data structure for MPI point-to-point communications. ---*/
 
   for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++)
@@ -593,9 +545,6 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
       if (iMGlevel == MESH_0)
         cout << "Finding max control volume width." << endl;
       geometry[iMGlevel]->SetMaxLength(config);
-
-    /*--- Communicate the number of neighbors. This is needed for
-         some centered schemes and for multigrid in parallel. ---*/
 
   }
 
@@ -635,35 +584,17 @@ void CDriver::Solver_Restart(CSolver ***solver, CGeometry **geometry,
   const bool restart = config->GetRestart();
   const bool restart_flow = config->GetRestart_Flow();
 
-  /*--- Adjust iteration number for unsteady restarts. ---*/
-
-  int val_iter = 0;
-
-  const bool adjoint = (config->GetDiscrete_Adjoint() || config->GetContinuous_Adjoint());
-  const bool time_domain = config->GetTime_Domain();
-  const bool dt_step_2nd = (config->GetTime_Marching() == TIME_MARCHING::DT_STEPPING_2ND) &&
-                           !adjoint && time_domain;
-
-  if (time_domain) {
-    if (adjoint) val_iter = config->GetUnst_AdjointIter() - 1;
-    else val_iter = config->GetRestart_Iter() - 1 - dt_step_2nd;
-  }
-
   /*--- Restart direct solvers. ---*/
 
   if (restart || restart_flow) {
     for (auto iSol = 0u; iSol < MAX_SOLS; ++iSol) {
       auto sol = solver[MESH_0][iSol];
-      if (sol && !sol->GetAdjoint()) {
+      if (sol) {
         /*--- Note that the mesh solver always loads the most recent file (and not -2). ---*/
-        SU2_OMP_PARALLEL_(if(sol->GetHasHybridParallel()))
-        sol->LoadRestart(geometry, solver, config, val_iter, update_geo);
-        END_SU2_OMP_PARALLEL
+        sol->LoadRestart(geometry, solver, config, 0, update_geo);
       }
     }
   }
-
-  /*--- Restart adjoint solvers. ---*/
 
   if (restart) {
     if ((config->GetKind_Solver() == MAIN_SOLVER::TEMPLATE_SOLVER) && !config->GetFrozen_Visc_Cont()) {
@@ -674,7 +605,7 @@ void CDriver::Solver_Restart(CSolver ***solver, CGeometry **geometry,
     for (auto iSol = 0u; iSol < MAX_SOLS; ++iSol) {
       auto sol = solver[MESH_0][iSol];
       if (sol && sol->GetAdjoint())
-        sol->LoadRestart(geometry, solver, config, val_iter, update_geo);
+        sol->LoadRestart(geometry, solver, config, 0, update_geo);
     }
   }
 
@@ -715,6 +646,7 @@ void CDriver::Integration_Postprocessing(CIntegration ***integration, CGeometry 
 
 }
 
+// TODO: Check threads and template solver
 void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSolver ***solver, CNumerics ****&numerics) const {
 
     cout << endl <<"------------------- Numerics Preprocessing -------------------" << endl;
@@ -731,10 +663,10 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   bool roe_low_dissipation = (config->GetKind_RoeLowDiss() != NO_ROELOWDISS);
 
   /*--- Initialize some useful booleans ---*/
-  bool euler, ns, turbulent, adj_euler, adj_ns, adj_turb;
+  bool euler;
   bool template_solver;
 
-  euler = ns = turbulent = adj_euler = adj_ns = adj_turb = false;
+  euler = false;
   template_solver = false;
 
   /*--- Assign booleans ---*/
@@ -757,7 +689,6 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   /*--- Number of variables for direct problem ---*/
 
   if (euler)        nVar_Flow = solver[MESH_0][FLOW_SOL]->GetnVar();
-  if (ns)           nVar_Flow = solver[MESH_0][FLOW_SOL]->GetnVar();
 
   /*--- Definition of the Class for the numerical method:
     numerics_container[INSTANCE_LEVEL][MESH_LEVEL][EQUATION][EQ_TERM] ---*/
@@ -812,7 +743,7 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
   }
 
   /*--- Solver definition for the Potential, Euler, Navier-Stokes problems ---*/
-  if ((euler) || (ns)) {
+  if (euler) {
 
     /*--- Definition of the convective scheme for each equation and mesh level ---*/
     switch (config->GetKind_ConvNumScheme_Flow()) {
