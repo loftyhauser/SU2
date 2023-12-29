@@ -95,12 +95,6 @@ unsigned short GetnZone(string val_mesh_filename, unsigned short val_format, CCo
             }
             break;
             
-        case CGNS:
-            
-            nZone = 1;
-            //		if (rank == MASTER_NODE) cout << "CGNS mesh file format with a single zone." << endl;
-            break;
-            
         case NETCDF_ASCII:
             
             nZone = 1;
@@ -149,10 +143,6 @@ unsigned short GetnDim(string val_mesh_filename, unsigned short val_format) {
                     text_line.erase (0,6); nDim = atoi(text_line.c_str()); isFound = true;
                 }
             }
-            break;
-            
-        case CGNS:
-            nDim = 3;
             break;
             
         case NETCDF_ASCII:

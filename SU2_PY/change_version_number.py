@@ -33,8 +33,8 @@ os.system('rm -rf version.txt')
 # -F : Match exact pattern (instead of regular expressions)
 # -w : Match whole word
 # -r : search directory recursively
-# -v : Omit search string (.svn omitted, line containing ISC is CGNS related)
-os.system("grep -IFwr '%s' *|grep -vF '.svn' |grep -v ISC > version.txt"%oldvers)
+# -v : Omit search string (.svn omitted)
+os.system("grep -IFwr '%s' *|grep -vF '.svn' > version.txt"%oldvers)
 
 # Create a list of files to adjust
 filelist = []

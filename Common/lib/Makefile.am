@@ -46,11 +46,6 @@ libSU2_a_SOURCES = ../src/config_structure.hpp \
 libSU2_a_CXXFLAGS = 
 libSU2_a_LIBADD =
 
-# if BUILD_CGNS
-libSU2_a_CXXFLAGS += @CGNS_CXX@ 
-libSU2_a_LIBADD += @CGNS_LD@ 
-# endif
-
 # if BUILD_METIS
 libSU2_a_CXXFLAGS += @METIS_CXX@
 libSU2_a_LIBADD += @METIS_LD@

@@ -140,7 +140,7 @@ const int MASTER_NODE = 0;			/*!< \brief Master node for MPI parallelization. */
 const int SINGLE_NODE = 1;			/*!< \brief There is only a node in the MPI parallelization. */
 const int AUX_NODE = 1;			/*!< \brief Computational node that is used for IO stuff. */
 
-/** General output & CGNS defines **/
+/** General output defines **/
 const unsigned int N_ELEM_TYPES = 7;
 const unsigned int N_POINTS_LINE = 2;
 const unsigned int N_POINTS_TRIANGLE = 3;
@@ -807,15 +807,11 @@ static const map<string, ENUM_ADAPT> Adapt_Map = CCreateMap<string, ENUM_ADAPT>
  */
 enum ENUM_INPUT {
 	SU2 = 1,                       /*!< \brief SU2 input format. */
-	CGNS = 2,                     /*!< \brief CGNS input format for the computational grid. */
 	NETCDF_ASCII = 3      	/*!< \brief ASCII NETCDF input format for the computational grid. */
 };
 static const map<string, ENUM_INPUT> Input_Map = CCreateMap<string, ENUM_INPUT>
 ("SU2", SU2)
-("CGNS", CGNS)
 ("NETCDF_ASCII", NETCDF_ASCII);
-
-const int CGNS_STRING_SIZE = 33;/*!< \brief Length of strings used in the CGNS format. */
 
 /*!
  * \brief type of solution output file formats
@@ -826,7 +822,6 @@ enum ENUM_OUTPUT {
 	CSV = 3,			/*!< \brief Comma-separated values format for the solution output. */
 	STL = 4,				/*!< \brief STL CAD format for the solution output. */
   TECPLOT_BINARY = 5,  		/*!< \brief Tecplot binary format for the solution output. */
-	CGNS_SOL = 6,  		/*!< \brief CGNS format for the solution output. */
   PARAVIEW = 7  		/*!< \brief Paraview format for the solution output. */
 };
 static const map<string, ENUM_OUTPUT> Output_Map = CCreateMap<string, ENUM_OUTPUT>
@@ -835,7 +830,6 @@ static const map<string, ENUM_OUTPUT> Output_Map = CCreateMap<string, ENUM_OUTPU
 ("CSV", CSV)
 ("STL", STL)
 ("TECPLOT_BINARY", TECPLOT_BINARY)
-("CGNS", CGNS_SOL)
 ("PARAVIEW", PARAVIEW);
 
 /*!

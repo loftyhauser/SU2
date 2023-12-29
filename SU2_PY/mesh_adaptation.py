@@ -104,11 +104,7 @@ def mesh_adaptation( filename             ,
 
     # Get mesh filenames and filetypes
     mesh_filetype     = params_get['MESH_FORMAT']
-    if mesh_filetype == "CGNS":
-        error_str = "Currently cannot support mesh adaptation with CGNS grid files.  Please convert your CGNS mesh to SU2 format using the CGNS_TO_SU2 flag in the configuration file, re-specify the mesh file to the native .su2 file and set the MESH_FORMAT flag to SU2."
-        print "\n*****\n" + error_str + "\n*****\n"
-        return 1
-    elif mesh_filetype == "NETCDF_ASCII":
+    if mesh_filetype == "NETCDF_ASCII":
         error_str ="Currently cannot support mesh adaptation with NETCDF_ASCII grid files.  Please convert your mesh to SU2 format, re-specify the mesh file to the native .su2 file and set the MESH_FORMAT flag to SU2."
         print "\n*****\n" + error_str + "\n*****\n"
         return 1

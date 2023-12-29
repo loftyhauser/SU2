@@ -629,8 +629,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddEnumOption("OUTPUT_FORMAT", Output_FileFormat, Output_Map, "TECPLOT");
 	/* DESCRIPTION: Mesh input file format */
 	AddEnumOption("MESH_FORMAT", Mesh_FileFormat, Input_Map, "SU2");
-	/* DESCRIPTION: Convert a CGNS mesh to SU2 format */
-	AddSpecialOption("CGNS_TO_SU2", CGNS_To_SU2, SetBoolOption, false);
 	/* DESCRIPTION:  Mesh input file */
 	AddScalarOption("MESH_FILENAME", Mesh_FileName, string("mesh.su2"));
 	/* DESCRIPTION: Mesh output file */
@@ -996,16 +994,6 @@ void CConfig::SetPostprocessing(unsigned short val_software, unsigned short val_
 
   /*--- Store the SU2 module that we are executing. ---*/
 	Kind_SU2 = val_software;
-  
-  /*--- Only SU2_DDC, and SU2_CFD work with CGNS ---*/
-  if ((Kind_SU2 != SU2_DDC) && (Kind_SU2 != SU2_CFD) && (Kind_SU2 != SU2_SOL)) {
-    if (Mesh_FileFormat == CGNS) {
-    cout << "This software is not prepared for CGNS, please switch to SU2" << endl;
-    cout << "Press any key to exit..." << endl;
-    cin.get();
-    exit(1);
-    }
-  }
   
   /*--- If multiple processors the grid should be always in native .su2 format ---*/
   if ((size > SINGLE_NODE) && ((Kind_SU2 == SU2_CFD) || (Kind_SU2 == SU2_SOL))) Mesh_FileFormat = SU2;
@@ -3737,7 +3725,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
       case PARAVIEW: cout << "The output file format is Paraview ASCII (.vtk)." << endl; break;
       case TECPLOT: cout << "The output file format is Tecplot ASCII (.dat)." << endl; break;
       case TECPLOT_BINARY: cout << "The output file format is Tecplot binary (.plt)." << endl; break;
-      case CGNS_SOL: cout << "The output file format is CGNS (.cgns)." << endl; break;
 		}
 
 		cout << "Convergence history file name: " << Conv_FileName << "." << endl;
@@ -3768,7 +3755,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
       case PARAVIEW: cout << "The output file format is Paraview ASCII (.dat)." << endl; break;
       case TECPLOT: cout << "The output file format is Tecplot ASCII (.dat)." << endl; break;
       case TECPLOT_BINARY: cout << "The output file format is Tecplot binary (.plt)." << endl; break;
-      case CGNS_SOL: cout << "The output file format is CGNS (.cgns)." << endl; break;
 		}
 		cout << "Flow variables file name: " << Flow_FileName << "." << endl;
 	}

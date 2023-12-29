@@ -51,7 +51,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/numerics_linearized_turbulent.cpp \
 		../src/numerics_structure.cpp \
 		../src/numerics_template.cpp \
-		../src/output_cgns.cpp \
 		../src/output_structure.cpp \
 		../src/output_tecplot.cpp \
 		../src/output_paraview.cpp \
@@ -98,11 +97,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 
 ___bin_SU2_CFD_CXXFLAGS =
 ___bin_SU2_CFD_LDADD = ../../Common/lib/libSU2.a
-
-# if BUILD_CGNS
-___bin_SU2_CFD_CXXFLAGS += @CGNS_CXX@
-___bin_SU2_CFD_LDADD += @CGNS_LD@
-# endif
 
 # if BUILD_METIS
 ___bin_SU2_CFD_CXXFLAGS += @METIS_CXX@

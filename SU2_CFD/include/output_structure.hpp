@@ -34,10 +34,6 @@
 #include "../../Common/include/geometry_structure.hpp"
 #include "../../Common/include/config_structure.hpp"
 
-#ifndef NO_CGNS
-#include "cgnslib.h"
-#endif
-
 #ifndef NO_TECIO
 #include "TECIO.h"
 #endif
@@ -82,7 +78,7 @@ class COutput {
 	double **residuals, **consv_vars;					// placeholders
 	double *p, *rho, *M, *Cp, *Cf, *Ch, *h, *yplus;		// placeholders 
 	unsigned short nVar_Consv, nVar_Total, nVar_Extra, nZones;
-	bool wrote_base_file, wrote_surf_file, wrote_CGNS_base, wrote_Tecplot_base, wrote_Paraview_base;
+	bool wrote_base_file, wrote_surf_file, wrote_Tecplot_base, wrote_Paraview_base;
 
   int cgns_base, cgns_zone, cgns_base_results, cgns_zone_results;
   
@@ -225,30 +221,6 @@ public:
 	 */
 	void SetRestart(CConfig *config, CGeometry *geometry, unsigned short val_iZone);
 
-  /*!
-	 * \brief Write the x, y, & z coordinates to a CGNS output file.
-	 * \param[in] config - Definition of the particular problem.
-	 * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] val_iZone - iZone index.
-	 */
-	void SetCGNS_Coordinates(CConfig *config, CGeometry *geometry, unsigned short val_iZone);
-  
-  /*!
-	 * \brief Write the element connectivity to a CGNS output file.
-	 * \param[in] config - Definition of the particular problem.
-	 * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] val_iZone - iZone index.
-	 */
-	void SetCGNS_Connectivity(CConfig *config, CGeometry *geometry, unsigned short val_iZone);
-  
-  /*!
-	 * \brief Write solution data to a CGNS output file.
-	 * \param[in] config - Definition of the particular problem.
-	 * \param[in] geometry - Geometrical definition of the problem.
-   * \param[in] val_iZone - iZone index.
-	 */
-	void SetCGNS_Solution(CConfig *config, CGeometry *geometry, unsigned short val_iZone);
-  
   /*!
 	 * \brief Write a Paraview ASCII solution file.
 	 * \param[in] config - Definition of the particular problem.

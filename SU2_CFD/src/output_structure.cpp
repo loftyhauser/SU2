@@ -41,12 +41,6 @@ COutput::COutput(void) {
 	nGlobal_BoundTria = 0;
 	nGlobal_BoundQuad = 0;
 
-	/*--- Initialize CGNS write flag ---*/
-	wrote_base_file = false;
-
-	/*--- Initialize CGNS write flag ---*/
-	wrote_CGNS_base = false;
-
 	/*--- Initialize Tecplot write flag ---*/
 	wrote_Tecplot_base = false;
   
@@ -693,10 +687,6 @@ void COutput::MergeConnectivity(CConfig *config, CGeometry *geometry, unsigned s
          clear the memory immediately for the rest of the computation. ---*/
     
     unsigned short FileFormat = config->GetOutput_FileFormat();
-		if (rank == MASTER_NODE && FileFormat == CGNS_SOL) {
-			SetCGNS_Connectivity(config, geometry, val_iZone);
-			DeallocateConnectivity(config, geometry, false);
-		}
 
 	}
 }
@@ -984,7 +974,7 @@ void COutput::MergeVolumetricConnectivity(CConfig *config, CGeometry *geometry, 
 			/*--- Loop over all nodes in this element and load the
        connectivity into the temporary array. Do not merge any
        halo cells (periodic BC). Note that we are adding one to
-       the index value because CGNS/Tecplot use 1-based indexing. ---*/
+       the index value because Tecplot use 1-based indexing. ---*/
       
 			if (!isHalo) {
 				nElem_Total++;
@@ -1162,7 +1152,7 @@ void COutput::MergeVolumetricConnectivity(CConfig *config, CGeometry *geometry, 
 					nElem_Total++;
 
 					/*--- Get global index, then loop over each variable and store.
-           Note that we are adding one to the index value because CGNS/Tecplot
+           Note that we are adding one to the index value because Tecplot
            use 1-based indexing.---*/
           
 					for (iNode = 0; iNode < NODES_PER_ELEMENT; iNode++) {
@@ -1307,7 +1297,7 @@ void COutput::MergeSurfaceConnectivity(CConfig *config, CGeometry *geometry, uns
           /*--- Loop over all nodes in this element and load the
            connectivity into the temporary array. Do not merge any
            halo cells (periodic BC). Note that we are adding one to
-           the index value because CGNS/Tecplot use 1-based indexing. ---*/
+           the index value because Tecplot use 1-based indexing. ---*/
           if (!isHalo) {
             nElem_Total++;
             for (iNode = 0; iNode < NODES_PER_ELEMENT; iNode++) {
@@ -1486,7 +1476,7 @@ void COutput::MergeSurfaceConnectivity(CConfig *config, CGeometry *geometry, uns
 					nElem_Total++;
           
 					/*--- Get global index, then loop over each variable and store.
-           Note that we are adding one to the index value because CGNS/Tecplot
+           Note that we are adding one to the index value because Tecplot
            use 1-based indexing.---*/
           
 					for (iNode = 0; iNode < NODES_PER_ELEMENT; iNode++) {
@@ -3340,8 +3330,7 @@ void COutput::SetHistory_Header(ofstream *ConvHist_file, CConfig *config) {
   
 	if ((config->GetOutput_FileFormat() == TECPLOT) ||
       (config->GetOutput_FileFormat() == TECPLOT_BINARY))  sprintf (buffer, ".plt");
-	if ((config->GetOutput_FileFormat() == CGNS_SOL) ||
-      (config->GetOutput_FileFormat() == PARAVIEW))  sprintf (buffer, ".csv");
+	if ((config->GetOutput_FileFormat() == PARAVIEW))  sprintf (buffer, ".csv");
 	strcat(cstr,buffer);
   
 	ConvHist_file->open(cstr, ios::out);
@@ -4469,11 +4458,7 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
     
     if (rank == MASTER_NODE) {
       
-      if (FileFormat == CGNS_SOL) {
-        SetCGNS_Coordinates(config[iZone], geometry[iZone][MESH_0], iZone);
-        if (!wrote_base_file || dynamic_mesh)
-          DeallocateCoordinates(config[iZone], geometry[iZone][MESH_0]);
-      } else if (FileFormat == TECPLOT_BINARY) {
+      if (FileFormat == TECPLOT_BINARY) {
         SetTecplot_Mesh(config[iZone], geometry[iZone][MESH_0], iZone);
         SetTecplot_SurfaceMesh(config[iZone], geometry[iZone][MESH_0], iZone);
         if (!wrote_base_file) 
@@ -4489,7 +4474,7 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
 			MergeSolution(config[iZone], geometry[iZone][MESH_0],
 					solver_container[iZone][MESH_0], iZone);
   
-		/*--- Write restart, CGNS, or Tecplot files using the merged data.
+		/*--- Write restart, or Tecplot files using the merged data.
          This data lives only on the master, and these routines are currently
          executed by the master proc alone (as if in serial). ---*/
 
@@ -4514,12 +4499,6 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             
             /*--- Write a Tecplot binary solution file ---*/
             SetTecplot_Solution(config[iZone], geometry[iZone][MESH_0], iZone);
-            break;
-            
-          case CGNS_SOL:
-            
-            /*--- Write a CGNS solution file ---*/
-            SetCGNS_Solution(config[iZone], geometry[iZone][MESH_0], iZone);
             break;
             
           case PARAVIEW:
@@ -4626,7 +4605,7 @@ void COutput::SetBaselineResult_Files(CSolver **solver, CGeometry **geometry, CC
       MergeBaselineSolution(config[iZone], geometry[iZone], solver[iZone], iZone);
     }
     
-    /*--- Write restart, CGNS, Tecplot or Paraview files using the merged data.
+    /*--- Write restart, Tecplot or Paraview files using the merged data.
      This data lives only on the master, and these routines are currently
      executed by the master proc alone (as if in serial). ---*/
     
@@ -4651,12 +4630,6 @@ void COutput::SetBaselineResult_Files(CSolver **solver, CGeometry **geometry, CC
             /*--- Write a Tecplot binary solution file ---*/
             SetTecplot_Mesh(config[iZone], geometry[iZone], iZone);
             SetTecplot_Solution(config[iZone], geometry[iZone], iZone);
-            break;
-            
-          case CGNS_SOL:
-            
-            /*--- Write a CGNS solution file ---*/
-            SetCGNS_Solution(config[iZone], geometry[iZone], iZone);
             break;
             
           case PARAVIEW:

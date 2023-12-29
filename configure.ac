@@ -19,12 +19,6 @@ AM_INIT_AUTOMAKE([subdir-objects])  # [SU^2], [2.0]
 AC_ARG_WITH(MPI,
     	AS_HELP_STRING([--with-MPI[=ARG]], [Build parallel version with MPI tools, ARG = MPI C++ compiler]), 
 	[with_MPI=$withval], [with_MPI="no"])
-AC_ARG_WITH(CGNS-lib,
-    	AS_HELP_STRING([--with-CGNS-lib[=ARG]], [CGNS library directory, ARG = path to libcgns.a]), 
-	[with_CGNS_lib=$withval], [with_CGNS_lib="no"])
-AC_ARG_WITH(CGNS-include,
-    	AS_HELP_STRING([--with-CGNS-include[=ARG]], [CGNS include directory, ARG = path to cgnslib.h]), 
-	[with_CGNS_include=$withval], [with_CGNS_include="no"])
 AC_ARG_WITH(Tecio-lib,
     	AS_HELP_STRING([--with-Tecio-lib[=ARG]], [Tecio library directory, ARG = path to libtecio.a]), 
 	[with_Tecio_lib=$withval], [with_Tecio_lib="no"])
@@ -51,50 +45,6 @@ AC_ARG_ENABLE(CFD,
 	[build_CFD=$enableval], [build_CFD="yes"])
 
 ##########################
-
-# check for lib
-CGNSlib=libcgns.a
-CGNSheader=cgnslib.h
-have_CGNS="no"
-
-if test "$with_CGNS_lib" != "no" 
-then
-  	AC_CHECK_FILE([$with_CGNS_lib/$CGNSlib],[have_CGNS="yes"],[have_CGNS="no"])   
-	if test "$have_CGNS" == "no"
-	then
-		AC_MSG_ERROR([CGNS requested but library file not found.])
-	fi
-fi
-
-# check for header
-if test "$have_CGNS" != "no"
-then
-	if test "$with_CGNS_include" != "no"
-	then
-		AC_CHECK_FILE([$with_CGNS_include/$CGNSheader],[have_CGNS='yes'],[have_CGNS='no']) 
-		if test "$have_CGNS" == "no"
-		then
-			AC_MSG_ERROR([CGNS requested but header file not found.])
-		fi
-	else
-		have_CGNS="no"
-	fi  
-fi
-
-if test "$have_CGNS" != "no"
-then
-  	AM_CONDITIONAL(BUILD_CGNS,true)
-	CGNS_CXX=-I"$with_CGNS_include"
-	CGNS_LD="$with_CGNS_lib"/$CGNSlib
-else
-	AM_CONDITIONAL(BUILD_CGNS,false)
-	CGNS_CXX=-DNO_CGNS
-	CGNS_LD=
-fi
-AC_SUBST([CGNS_CXX])
-AC_SUBST([CGNS_LD])
-
-###########################
 
 # check for lib
 METISlib=libmetis.a
@@ -283,7 +233,6 @@ Build Configuration Summary:
     Preprocessor flags:   ${CPPFLAGS}
     Compiler flags:       ${CXXFLAGS}
     Linker flags:         ${LDFLAGS}
-    CGNS support:         $have_CGNS
     MPI support:          $have_MPI
     Metis support:        $have_METIS
     TecIO support:        $have_Tecio

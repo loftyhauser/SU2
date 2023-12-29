@@ -451,9 +451,7 @@ private:
 	ObjFunc_Value_FileName,			/*!< \brief Objective function. */
 	SurfFlowCoeff_FileName,			/*!< \brief Output file with the flow variables on the surface. */
 	SurfAdjCoeff_FileName,			/*!< \brief Output file with the adjoint variables on the surface. */
-	SurfLinCoeff_FileName,			/*!< \brief Output file with the linearized variables on the surface. */
-	New_SU2_FileName;        		/*!< \brief Output SU2 mesh file converted from CGNS format. */
-	bool CGNS_To_SU2;      		 	/*!< \brief Flag to specify whether a CGNS mesh is converted to SU2 format. */
+	SurfLinCoeff_FileName;			/*!< \brief Output file with the linearized variables on the surface. */
 	unsigned short nSpecies, 		/*!< \brief No of species present in plasma */
 	nReactions;									/*!< \brief Number of reactions in chemical model. */
 	bool Wrt_Vol_Sol,                /*!< \brief Write a volume solution file */
@@ -3976,12 +3974,6 @@ public:
 	 * \return <code>TRUE</code> if there is relative motion (need to search & interpolate); otherwise <code>FALSE</code>.
 	 */
 	bool GetRelative_Motion(void);
-
-	/*!
-	 * \brief Get information about converting a mesh from CGNS to SU2 format.
-	 * \return <code>TRUE</code> if a conversion is requested; otherwise <code>FALSE</code>.
-	 */
-	bool GetCGNS_To_SU2(void);
 
 	/*! 
 	 * \brief Get information about whether a converted mesh should be written.
