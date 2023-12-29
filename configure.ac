@@ -49,30 +49,6 @@ AC_ARG_WITH(Mutationpp-include,
 AC_ARG_ENABLE(CFD,
    	AS_HELP_STRING([--disable-CFD], [build the SU2_CFD executable (default = yes)]), 
 	[build_CFD=$enableval], [build_CFD="yes"])
-AC_ARG_ENABLE(DDC,
-   	AS_HELP_STRING([--disable-DDC], [build the SU2_DDC executable (default = yes)]), 
-	[build_DDC=$enableval], [build_DDC="yes"])
-AC_ARG_ENABLE(GPC,
-   	AS_HELP_STRING([--disable-GPC], [build the SU2_GPC executable (default = yes)]), 
-	[build_GPC=$enableval], [build_GPC="yes"])
-AC_ARG_ENABLE(MAC,
-   	AS_HELP_STRING([--disable-MAC], [build the SU2_MAC executable (default = yes)]), 
-	[build_MAC=$enableval], [build_MAC="yes"])
-AC_ARG_ENABLE(MDC,
-   	AS_HELP_STRING([--disable-MDC], [build the SU2_MDC executable (default = yes)]), 
-	[build_MDC=$enableval], [build_MDC="yes"])
-AC_ARG_ENABLE(PBC,
-   	AS_HELP_STRING([--disable-PBC], [build the SU2_PBC executable (default = yes)]), 
-	[build_PBC=$enableval], [build_PBC="yes"])
-AC_ARG_ENABLE(SMC,
-   	AS_HELP_STRING([--disable-SMC], [build the SU2_SMC executable (default = yes)]), 
-	[build_SMC=$enableval], [build_SMC="yes"])
-AC_ARG_ENABLE(SOL,
-   	AS_HELP_STRING([--disable-SOL], [build the SU2_SOL executable (default = yes)]), 
-	[build_SOL=$enableval], [build_SOL="yes"])
-AC_ARG_ENABLE(GDC,
-   	AS_HELP_STRING([--disable-GDC], [build the SU2_GDC executable (default = yes)]), 
-	[build_GDC=$enableval], [build_GDC="yes"])
 
 ##########################
 
@@ -279,14 +255,6 @@ fi
 ###########################
 
 AM_CONDITIONAL([BUILD_CFD],[test $build_CFD != "no"])
-AM_CONDITIONAL([BUILD_DDC],[test $build_DDC != "no"])
-AM_CONDITIONAL([BUILD_GPC],[test $build_GPC != "no"])
-AM_CONDITIONAL([BUILD_MAC],[test $build_MAC != "no"])
-AM_CONDITIONAL([BUILD_MDC],[test $build_MDC != "no"])
-AM_CONDITIONAL([BUILD_PBC],[test $build_PBC != "no"])
-AM_CONDITIONAL([BUILD_SMC],[test $build_SMC != "no"])
-AM_CONDITIONAL([BUILD_SOL],[test $build_SOL != "no"])
-AM_CONDITIONAL([BUILD_GDC],[test $build_GDC != "no"])
 
 ###########################
 
@@ -298,14 +266,6 @@ AC_PROG_RANLIB
 AC_OUTPUT(Makefile \
 	Common/lib/Makefile \
 	SU2_CFD/obj/Makefile \
-	SU2_DDC/obj/Makefile \
-	SU2_GPC/obj/Makefile \
-	SU2_MAC/obj/Makefile \
-	SU2_MDC/obj/Makefile \
-	SU2_PBC/obj/Makefile \
-	SU2_SMC/obj/Makefile \
-	SU2_SOL/obj/Makefile \
-	SU2_GDC/obj/Makefile \
 	SU2_PY/Makefile)
 
 abs_srcdir=`(cd $srcdir && pwd)`
@@ -330,14 +290,6 @@ Build Configuration Summary:
     Mutation++ support:   $have_Mutationpp
 
     Build SU2_CFD:        $build_CFD
-    Build SU2_DDC:        $build_DDC
-    Build SU2_GPC:        $build_GPC
-    Build SU2_MAC:        $build_MAC
-    Build SU2_MDC:        $build_MDC
-    Build SU2_PBC:        $build_PBC
-    Build SU2_SMC:        $build_SMC
-    Build SU2_SOL:        $build_SOL
-    Build SU2_GDC:        $build_GDC
 
 Please be sure to add the [\$]SU2_HOME and [\$]SU2_RUN environment variables, and update your [\$]PATH with [\$]SU2_RUN
 
