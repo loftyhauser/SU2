@@ -51,9 +51,4 @@ libSU2_a_CXXFLAGS += @METIS_CXX@
 libSU2_a_LIBADD += @METIS_LD@
 # endif
 
-# if BUILD_TECIO
-libSU2_a_CXXFLAGS += @TECIO_CXX@
-libSU2_a_LIBADD += @TECIO_LD@
-# endif
-
 

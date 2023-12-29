@@ -19,12 +19,6 @@ AM_INIT_AUTOMAKE([subdir-objects])  # [SU^2], [2.0]
 AC_ARG_WITH(MPI,
     	AS_HELP_STRING([--with-MPI[=ARG]], [Build parallel version with MPI tools, ARG = MPI C++ compiler]), 
 	[with_MPI=$withval], [with_MPI="no"])
-AC_ARG_WITH(Tecio-lib,
-    	AS_HELP_STRING([--with-Tecio-lib[=ARG]], [Tecio library directory, ARG = path to libtecio.a]), 
-	[with_Tecio_lib=$withval], [with_Tecio_lib="no"])
-AC_ARG_WITH(Tecio-include,
-    	AS_HELP_STRING([--with-Tecio-include[=ARG]], [Tecio include directory, ARG = path to TECIO.h]), 
-	[with_Tecio_include=$withval], [with_Tecio_include="no"])
 AC_ARG_WITH(Metis-lib,
    	AS_HELP_STRING([--with-Metis-lib[=ARG]], [Metis library directory, ARG = path to libmetis.a]), 
 	[with_Metis_lib=$withval], [with_Metis_lib="no"])
@@ -90,56 +84,6 @@ fi
 AC_SUBST([METIS_CXX])
 AC_SUBST([METIS_LD])
 
-########################### Tecplot
-
-Teciolib=libtecio.a
-Tecioheader=TECIO.h
-have_Tecio="no"
-
-# check for lib
-if test "$with_Tecio_lib" != "no" 
-then
-  	AC_CHECK_FILE([$with_Tecio_lib/$Teciolib],[have_Tecio="yes"],[have_Tecio="no"]) 
-	if test "$have_Tecio" == "no"
-	then
-		Teciolib=libtecio.a
-		AC_CHECK_FILE([$with_Tecio_lib/$Teciolib],[have_Tecio="yes"],[have_Tecio="no"])
-	fi
-	if test "$have_Tecio" == "no"
-	then
-		AC_MSG_ERROR([Tecplot linking requested but library file not found.])
-	fi
-fi
-
-# check for header
-if test "$have_Tecio" != "no"
-then
-	if test "$with_Tecio_include" != "no"
-	then
-		AC_CHECK_FILE([$with_Tecio_include/$Tecioheader],[have_Tecio='yes'],[have_Tecio='no']) 
-		if test "$have_Tecio" == "no"
-		then
-			AC_MSG_ERROR([Tecplot linking requested but header file not found.])
-		fi
-	else
-		have_Tecio="no"
-	fi  
-fi
-
-if test "$have_Tecio" != "no"
-then
-  	AM_CONDITIONAL(BUILD_TECIO,true)
-	TECIO_CXX=-I"$with_Tecio_include"
-	TECIO_LD="$with_Tecio_lib"/$Teciolib
-else
-	AM_CONDITIONAL(BUILD_TECIO,false)
-	TECIO_CXX=-DNO_TECIO
-	TECIO_LD=
-fi
-AC_SUBST([TECIO_CXX])
-AC_SUBST([TECIO_LD])
-
-
 ########################### MPI
 
 have_MPI="no"
@@ -184,7 +128,6 @@ Build Configuration Summary:
     Linker flags:         ${LDFLAGS}
     MPI support:          $have_MPI
     Metis support:        $have_METIS
-    TecIO support:        $have_Tecio
 
     Build SU2_CFD:        $build_CFD
 

@@ -985,13 +985,6 @@ void CConfig::SetPostprocessing(unsigned short val_software, unsigned short val_
   int size = MPI::COMM_WORLD.Get_size();
 #endif
   
-#ifdef NO_TECIO
-  if (Output_FileFormat == TECPLOT_BINARY) {
-    cout << "Tecplot binary file requested but SU^2 was built without TecIO support." << "\n";
-    Output_FileFormat = TECPLOT;
-  }
-#endif
-
   /*--- Store the SU2 module that we are executing. ---*/
 	Kind_SU2 = val_software;
   
@@ -3724,7 +3717,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 		switch (Output_FileFormat) {
       case PARAVIEW: cout << "The output file format is Paraview ASCII (.vtk)." << endl; break;
       case TECPLOT: cout << "The output file format is Tecplot ASCII (.dat)." << endl; break;
-      case TECPLOT_BINARY: cout << "The output file format is Tecplot binary (.plt)." << endl; break;
 		}
 
 		cout << "Convergence history file name: " << Conv_FileName << "." << endl;
@@ -3754,7 +3746,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 		switch (Output_FileFormat) {
       case PARAVIEW: cout << "The output file format is Paraview ASCII (.dat)." << endl; break;
       case TECPLOT: cout << "The output file format is Tecplot ASCII (.dat)." << endl; break;
-      case TECPLOT_BINARY: cout << "The output file format is Tecplot binary (.plt)." << endl; break;
 		}
 		cout << "Flow variables file name: " << Flow_FileName << "." << endl;
 	}

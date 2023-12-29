@@ -3328,8 +3328,7 @@ void COutput::SetHistory_Header(ofstream *ConvHist_file, CConfig *config) {
     strcat(cstr,buffer);
 	}
   
-	if ((config->GetOutput_FileFormat() == TECPLOT) ||
-      (config->GetOutput_FileFormat() == TECPLOT_BINARY))  sprintf (buffer, ".plt");
+	if ((config->GetOutput_FileFormat() == TECPLOT))  sprintf (buffer, ".plt");
 	if ((config->GetOutput_FileFormat() == PARAVIEW))  sprintf (buffer, ".csv");
 	strcat(cstr,buffer);
   
@@ -3371,8 +3370,7 @@ void COutput::SetHistory_Header(ofstream *ConvHist_file, CConfig *config) {
   
 	char end[]= ",\"Linear_Solver_Iterations\",\"Time(min)\"\n";
   
-	if ((config->GetOutput_FileFormat() == TECPLOT) ||
-      (config->GetOutput_FileFormat() == TECPLOT_BINARY)) {
+	if ((config->GetOutput_FileFormat() == TECPLOT))  {
     ConvHist_file[0] << "TITLE = \"SU2 Simulation\"" << endl;
         ConvHist_file[0] << "VARIABLES = ";
 	}
@@ -3443,7 +3441,7 @@ void COutput::SetHistory_Header(ofstream *ConvHist_file, CConfig *config) {
       break;
 	}
   
-	if (config->GetOutput_FileFormat() == TECPLOT || config->GetOutput_FileFormat() == TECPLOT_BINARY) {
+	if (config->GetOutput_FileFormat() == TECPLOT) {
 		ConvHist_file[0] << "ZONE T= \"Convergence history\"" << endl;
 	}
   
@@ -4456,18 +4454,6 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
 
     MergeCoordinates(config[iZone], geometry[iZone][MESH_0]);
     
-    if (rank == MASTER_NODE) {
-      
-      if (FileFormat == TECPLOT_BINARY) {
-        SetTecplot_Mesh(config[iZone], geometry[iZone][MESH_0], iZone);
-        SetTecplot_SurfaceMesh(config[iZone], geometry[iZone][MESH_0], iZone);
-        if (!wrote_base_file) 
-          DeallocateConnectivity(config[iZone], geometry[iZone][MESH_0], false);
-        if (!wrote_surf_file)
-          DeallocateConnectivity(config[iZone], geometry[iZone][MESH_0], wrote_surf_file);
-      }
-    }
-    
 		/*--- Merge the solution data needed for volume solutions and restarts ---*/
 
 		if (Wrt_Vol || Wrt_Rst)
@@ -4495,12 +4481,6 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             DeallocateConnectivity(config[iZone], geometry[iZone][MESH_0], false);
             break;
             
-          case TECPLOT_BINARY:
-            
-            /*--- Write a Tecplot binary solution file ---*/
-            SetTecplot_Solution(config[iZone], geometry[iZone][MESH_0], iZone);
-            break;
-            
           case PARAVIEW:
             
             /*--- Write a Paraview ASCII file ---*/
@@ -4525,12 +4505,6 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             DeallocateConnectivity(config[iZone], geometry[iZone][MESH_0], true);
             break;
             
-          case TECPLOT_BINARY:
-            
-            /*--- Write a Tecplot binary solution file ---*/
-            SetTecplot_SurfaceSolution(config[iZone], geometry[iZone][MESH_0], iZone);
-            break;
-            
           case PARAVIEW:
             
             /*--- Write a Paraview ASCII file ---*/
@@ -4546,7 +4520,6 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
 
 			/*--- Release memory needed for merging the solution data. ---*/
       if (((Wrt_Vol) || (Wrt_Srf)) && (FileFormat == TECPLOT ||
-                                       FileFormat == TECPLOT_BINARY ||
                                        FileFormat == PARAVIEW))
         DeallocateCoordinates(config[iZone], geometry[iZone][MESH_0]);
       
@@ -4625,13 +4598,6 @@ void COutput::SetBaselineResult_Files(CSolver **solver, CGeometry **geometry, CC
             DeallocateConnectivity(config[iZone], geometry[iZone], false);
             break;
             
-          case TECPLOT_BINARY:
-            
-            /*--- Write a Tecplot binary solution file ---*/
-            SetTecplot_Mesh(config[iZone], geometry[iZone], iZone);
-            SetTecplot_Solution(config[iZone], geometry[iZone], iZone);
-            break;
-            
           case PARAVIEW:
             
             /*--- Write a Paraview ASCII file ---*/
@@ -4658,13 +4624,6 @@ void COutput::SetBaselineResult_Files(CSolver **solver, CGeometry **geometry, CC
             DeallocateConnectivity(config[iZone], geometry[iZone], true);
             break;
             
-          case TECPLOT_BINARY:
-            
-            /*--- Write a Tecplot binary solution file ---*/
-            SetTecplot_SurfaceMesh(config[iZone], geometry[iZone], iZone);
-            SetTecplot_SurfaceSolution(config[iZone], geometry[iZone], iZone);
-            break;
-            
           case PARAVIEW:
             
             /*--- Write a Paraview ASCII file ---*/
@@ -4675,13 +4634,6 @@ void COutput::SetBaselineResult_Files(CSolver **solver, CGeometry **geometry, CC
           default:
             break;
         }
-      }
-      
-      if (FileFormat == TECPLOT_BINARY) {
-        if (!wrote_base_file)
-          DeallocateConnectivity(config[iZone], geometry[iZone], false);
-        if (!wrote_surf_file)
-          DeallocateConnectivity(config[iZone], geometry[iZone], wrote_surf_file);
       }
       
       if (Wrt_Vol || Wrt_Srf)

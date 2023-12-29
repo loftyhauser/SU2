@@ -102,8 +102,3 @@ ___bin_SU2_CFD_LDADD = ../../Common/lib/libSU2.a
 ___bin_SU2_CFD_CXXFLAGS += @METIS_CXX@
 ___bin_SU2_CFD_LDADD += @METIS_LD@
 # endif
-
-# if BUILD_TECIO
-___bin_SU2_CFD_CXXFLAGS += @TECIO_CXX@
-___bin_SU2_CFD_LDADD += @TECIO_LD@
-# endif

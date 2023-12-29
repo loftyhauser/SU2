@@ -821,7 +821,6 @@ enum ENUM_OUTPUT {
 	EXCEL = 2,			/*!< \brief Excel format for the solution output. */
 	CSV = 3,			/*!< \brief Comma-separated values format for the solution output. */
 	STL = 4,				/*!< \brief STL CAD format for the solution output. */
-  TECPLOT_BINARY = 5,  		/*!< \brief Tecplot binary format for the solution output. */
   PARAVIEW = 7  		/*!< \brief Paraview format for the solution output. */
 };
 static const map<string, ENUM_OUTPUT> Output_Map = CCreateMap<string, ENUM_OUTPUT>
@@ -829,7 +828,6 @@ static const map<string, ENUM_OUTPUT> Output_Map = CCreateMap<string, ENUM_OUTPU
 ("EXCEL", EXCEL)
 ("CSV", CSV)
 ("STL", STL)
-("TECPLOT_BINARY", TECPLOT_BINARY)
 ("PARAVIEW", PARAVIEW);
 
 /*!
