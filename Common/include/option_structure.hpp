@@ -188,7 +188,6 @@ enum ENUM_SOLVER {
 	PLASMA_EULER = 8,	/*!< \brief Definition of the plasma solver. */
 	PLASMA_NAVIER_STOKES = 9,	/*!< \brief Definition of the plasma solver. */
 	WAVE_EQUATION = 10,	/*!< \brief Definition of the wave solver. */
-	HEAT_EQUATION = 29,								/*!< \brief Definition of the heat solver. */
 	LINEAR_ELASTICITY = 11,	/*!< \brief Definition of the FEA solver. */
 	FLUID_STRUCTURE_EULER = 12,	/*!< \brief Definition of the FEA solver. */
 	FLUID_STRUCTURE_NAVIER_STOKES = 13,	/*!< \brief Definition of the FEA solver. */
@@ -223,7 +222,6 @@ static const map<string, ENUM_SOLVER> Solver_Map = CCreateMap<string, ENUM_SOLVE
 ("PLASMA_NAVIER_STOKES", PLASMA_NAVIER_STOKES)
 ("PLASMA_EULER", PLASMA_EULER)
 ("WAVE_EQUATION", WAVE_EQUATION)
-("HEAT_EQUATION", HEAT_EQUATION)
 ("LINEAR_ELASTICITY", LINEAR_ELASTICITY)
 ("FLUID_STRUCTURE_EULER", FLUID_STRUCTURE_EULER)
 ("FLUID_STRUCTURE_NAVIER_STOKES", FLUID_STRUCTURE_NAVIER_STOKES)
@@ -257,7 +255,6 @@ enum RUNTIME_TYPE {
 	RUNTIME_ELEC_SYS = 4,			/*!< \brief One-physics case, the code is solving the electrical potential equation. */
 	RUNTIME_PLASMA_SYS = 15,		/*!< \brief One-physics case, the code is solving the plasma equations. */
 	RUNTIME_WAVE_SYS = 8,		/*!< \brief One-physics case, the code is solving the wave equation. */
-	RUNTIME_HEAT_SYS = 21,		/*!< \brief One-physics case, the code is solving the heat equation. */
 	RUNTIME_FEA_SYS = 20,		/*!< \brief One-physics case, the code is solving the FEA equation. */
 	RUNTIME_ADJPOT_SYS = 5,		/*!< \brief One-physics case, the code is solving the adjoint potential flow equation. */
 	RUNTIME_ADJFLOW_SYS = 6,		/*!< \brief One-physics case, the code is solving the adjoint equations is being solved (Euler and Navier-Stokes). */
@@ -284,7 +281,6 @@ const int LINPLASMA_SOL = 1;	/*!< \brief Position of the linearized plasma solut
 const int TRANS_SOL = 4;	/*!< \brief Position of the transition model solution in the solver container array. */
 const int ELEC_SOL = 2;		/*!< \brief Position of the electronic potential solution in the solver container array. */
 const int WAVE_SOL = 1;		/*!< \brief Position of the wave equation in the solution solver array. */
-const int HEAT_SOL = 2;		/*!< \brief Position of the heat equation in the solution solver array. */
 const int FEA_SOL = 1;		/*!< \brief Position of the FEA equation in the solution solver array. */
 
 const int TEMPLATE_SOL = 0;     /*!< \brief Position of the template solution. */
