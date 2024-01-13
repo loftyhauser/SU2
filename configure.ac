@@ -19,72 +19,11 @@ AM_INIT_AUTOMAKE([subdir-objects])  # [SU^2], [2.0]
 AC_ARG_WITH(MPI,
     	AS_HELP_STRING([--with-MPI[=ARG]], [Build parallel version with MPI tools, ARG = MPI C++ compiler]), 
 	[with_MPI=$withval], [with_MPI="no"])
-AC_ARG_WITH(Metis-lib,
-   	AS_HELP_STRING([--with-Metis-lib[=ARG]], [Metis library directory, ARG = path to libmetis.a]), 
-	[with_Metis_lib=$withval], [with_Metis_lib="no"])
-AC_ARG_WITH(Metis-include,
-   	AS_HELP_STRING([--with-Metis-include[=ARG]], [Metis include directory, ARG = path to metis.h]), 
-	[with_Metis_include=$withval], [with_Metis_include="no"])
-AC_ARG_WITH(Metis-version,
-   	AS_HELP_STRING([--with-Metis-version[=ARG]], [Metis major version, ARG = 4 (default) or 5]), 
-	[with_Metis_version=$withval], [with_Metis_version="4"])
 AC_ARG_ENABLE(CFD,
    	AS_HELP_STRING([--disable-CFD], [build the SU2_CFD executable (default = yes)]), 
 	[build_CFD=$enableval], [build_CFD="yes"])
 
 ##########################
-
-# check for lib
-METISlib=libmetis.a
-METISheader=metis.h
-METISversion=
-have_METIS="no"
-
-if test "$with_Metis_lib" != "no" 
-then
-  	AC_CHECK_FILE([$with_Metis_lib/$METISlib],[have_METIS="yes"],[have_METIS="no"])   
-	if test "$have_METIS" == "no"
-	then
-		AC_MSG_ERROR([METIS requested but library file not found.])
-	fi
-fi
-
-# check for header
-if test "$have_METIS" != "no"
-then
-	if test "$with_Metis_include" != "no"
-	then
-		AC_CHECK_FILE([$with_Metis_include/$METISheader],[have_METIS="yes"],[have_METIS="no"]) 
-		if test "$have_METIS" == "no"
-		then
-			AC_MSG_ERROR([METIS requested but header file not found.])
-		fi
-	else
-		have_METIS="no"
-	fi  
-fi
-
-# METIS version check
-if test "$with_Metis_version" == "5"
-then
-	METISversion=-DMETIS_5
-fi
-
-if test "$have_METIS" != "no"
-then
-  	AM_CONDITIONAL(BUILD_METIS,true)
-	METIS_CXX="-I"$with_Metis_include" "$METISversion""
-	METIS_LD="$with_Metis_lib"/$METISlib
-else
-	AM_CONDITIONAL(BUILD_METIS,false)
-	METIS_CXX=-DNO_METIS
-	METIS_LD=
-	
-fi
-AC_SUBST([METIS_CXX])
-AC_SUBST([METIS_LD])
-
-########################### MPI
 
 have_MPI="no"
 if test "$with_MPI" != "no"
@@ -127,7 +66,6 @@ Build Configuration Summary:
     Compiler flags:       ${CXXFLAGS}
     Linker flags:         ${LDFLAGS}
     MPI support:          $have_MPI
-    Metis support:        $have_METIS
 
     Build SU2_CFD:        $build_CFD
 

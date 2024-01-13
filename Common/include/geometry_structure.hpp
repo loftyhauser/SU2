@@ -36,12 +36,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef NO_METIS
-extern "C" {
-#include "metis.h"
-}
-#endif
-
 #include "primal_grid_structure.hpp"
 #include "dual_grid_structure.hpp"
 #include "config_structure.hpp"

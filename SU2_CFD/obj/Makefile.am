@@ -97,8 +97,3 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 
 ___bin_SU2_CFD_CXXFLAGS =
 ___bin_SU2_CFD_LDADD = ../../Common/lib/libSU2.a
-
-# if BUILD_METIS
-___bin_SU2_CFD_CXXFLAGS += @METIS_CXX@
-___bin_SU2_CFD_LDADD += @METIS_LD@
-# endif
