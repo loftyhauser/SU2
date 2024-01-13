@@ -61,24 +61,6 @@ int main(int argc, char *argv[]) {
 	ofstream ConvHist_file;
 	int rank = MASTER_NODE;
 	
-#ifndef NO_MPI
-	/*--- MPI initialization, and buffer setting ---*/
-	void *buffer, *old_buffer;
-	int size, bufsize;
-	bufsize = MAX_MPI_BUFFER;
-	buffer = new char[bufsize];
-	MPI::Init(argc, argv);
-	MPI::Attach_buffer(buffer, bufsize);
-	rank = MPI::COMM_WORLD.Get_rank();
-	size = MPI::COMM_WORLD.Get_size();
-#ifdef TIME
-    /*--- Set up a timer for parallel performance benchmarking ---*/
-    double start, finish, time;
-    MPI::COMM_WORLD.Barrier();
-    start = MPI::Wtime();
-#endif
-#endif
-    
 	/*--- Create pointers to all of the classes that may be used throughout
      the SU2_CFD code. In general, the pointers are instantiated down a
      heirarchy over all zones, multigrid levels, equation sets, and equation
@@ -141,11 +123,6 @@ int main(int argc, char *argv[]) {
         
 		config_container[iZone] = new CConfig(config_file_name, SU2_CFD, iZone, nZone, VERB_HIGH);
 		
-#ifndef NO_MPI
-		/*--- Change the name of the input-output files for a parallel computation ---*/
-		config_container[iZone]->SetFileNameDomain(rank+1);
-#endif
-		
 		/*--- Perform the non-dimensionalization for the flow equations using the
          specified reference values. ---*/
         
@@ -171,11 +148,6 @@ int main(int argc, char *argv[]) {
     
     Geometrical_Preprocessing(geometry_container, config_container, nZone);
     
-#ifndef NO_MPI
-    /*--- Synchronization point after the geometrical definition subroutine ---*/
-    MPI::COMM_WORLD.Barrier();
-#endif
-    
     if (rank == MASTER_NODE)
         cout << endl <<"------------------------- Solver Preprocessing --------------------------" << endl;
     
@@ -200,11 +172,6 @@ int main(int argc, char *argv[]) {
         Solver_Preprocessing(solver_container[iZone], geometry_container[iZone],
                              config_container[iZone], iZone);
 		
-#ifndef NO_MPI
-		/*--- Synchronization point after the solution preprocessing subroutine ---*/
-		MPI::COMM_WORLD.Barrier();
-#endif
-		
 		if (rank == MASTER_NODE)
 			cout << endl <<"----------------- Integration and Numerics Preprocessing ----------------" << endl;
         
@@ -218,11 +185,6 @@ int main(int argc, char *argv[]) {
 		Integration_Preprocessing(integration_container[iZone], geometry_container[iZone],
                                   config_container[iZone], iZone);
         
-#ifndef NO_MPI
-		/*--- Synchronization point after the integration definition subroutine ---*/
-		MPI::COMM_WORLD.Barrier();
-#endif
-        
 		/*--- Definition of the numerical method class:
          numerics_container[#ZONES][#MG_GRIDS][#EQ_SYSTEMS][#EQ_TERMS].
          The numerics class contains the implementation of the numerical methods for
@@ -233,11 +195,6 @@ int main(int argc, char *argv[]) {
 		numerics_container[iZone] = new CNumerics***[config_container[iZone]->GetMGLevels()+1];
 		Numerics_Preprocessing(numerics_container[iZone], solver_container[iZone],
                                geometry_container[iZone], config_container[iZone], iZone);
-        
-#ifndef NO_MPI
-		/*--- Synchronization point after the solver definition subroutine ---*/
-		MPI::COMM_WORLD.Barrier();
-#endif
         
 		/*--- Computation of wall distances for turbulence modeling ---*/
         
@@ -388,9 +345,6 @@ int main(int argc, char *argv[]) {
         /*--- Synchronization point after a single solver iteration. Compute the
          wall clock time required. ---*/
         
-#ifndef NO_MPI
-		MPI::COMM_WORLD.Barrier();
-#endif
 		StopTime = clock(); TimeUsed += (StopTime - StartTime);
         
         /*--- For specific applications, evaluate and plot the equivalent area or flow rate. ---*/
@@ -496,25 +450,6 @@ int main(int argc, char *argv[]) {
     
     /*--- Integration class deallocation ---*/
     //  cout <<"Integration container, deallocated." << endl;
-    
-#ifndef NO_MPI
-    /*--- Compute/print the total time for parallel performance benchmarking. ---*/
-#ifdef TIME
-    MPI::COMM_WORLD.Barrier();
-    finish = MPI::Wtime();
-    time = finish-start;
-    if (rank == MASTER_NODE) {
-        cout << "\nCompleted in " << fixed << time << " seconds on "<< size;
-        if (size == 1) cout << " core.\n" << endl;
-        else cout << " cores.\n" << endl;
-    }
-#endif
-    /*--- Finalize MPI parallelization ---*/
-    old_buffer = buffer;
-    MPI::Detach_buffer(old_buffer);
-    //	delete [] buffer;
-    MPI::Finalize();
-#endif
     
     /*--- Exit the solver cleanly ---*/
     

@@ -1153,11 +1153,7 @@ void CWaveSolver::SetTime_Matrix(CGeometry *geometry,
 
 void CWaveSolver::GetRestart(CGeometry *geometry, CConfig *config) {
   
-#ifndef NO_MPI
-	int rank = MPI::COMM_WORLD.Get_rank();
-#else
 	int rank = MASTER_NODE;
-#endif
   
   /*--- Restart the solution from file information ---*/
   string restart_filename = config->GetRestart_WaveFileName();

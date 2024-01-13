@@ -221,11 +221,6 @@ void CIntegration::Convergence_Monitoring(CGeometry *geometry, CConfig *config, 
 
   unsigned short iCounter;
 
-#ifndef NO_MPI
-  int size = MPI::COMM_WORLD.Get_size();
-  int rank = MPI::COMM_WORLD.Get_rank();
-#endif
-
 	bool Already_Converged = Convergence;
 	
   /*--- Cauchi based convergence criteria ---*/
@@ -290,55 +285,12 @@ void CIntegration::Convergence_Monitoring(CGeometry *geometry, CConfig *config, 
 	if (Already_Converged) Convergence = true;
 
   
-  /*--- Apply the same convergence criteria to all the processors ---*/
-#ifndef NO_MPI
-
-  unsigned short *sbuf_conv = NULL, *rbuf_conv = NULL;
-  sbuf_conv = new unsigned short[1]; sbuf_conv[0] = 0;
-  rbuf_conv = new unsigned short[1]; rbuf_conv[0] = 0;
-
-  /*--- Convergence criteria ---*/
-  sbuf_conv[0] = Convergence;
-  MPI::COMM_WORLD.Reduce(sbuf_conv, rbuf_conv, 1, MPI::UNSIGNED_SHORT, MPI::SUM, MASTER_NODE);
-  MPI::COMM_WORLD.Barrier();
-
-  /*-- Compute global convergence criteria in the master node --*/
-  sbuf_conv[0] = 0;
-  if (rank == MASTER_NODE) {
-    if (rbuf_conv[0] == size) sbuf_conv[0] = 1;
-    else sbuf_conv[0] = 0;
-  }
-  
-  MPI::COMM_WORLD.Bcast(sbuf_conv, 1, MPI::UNSIGNED_SHORT, MASTER_NODE);
-
-  if (sbuf_conv[0] == 1) Convergence = true;
-  else Convergence = false;
-  
-  delete [] sbuf_conv;
-  delete [] rbuf_conv;
-
-#endif
-  
 	/*--- Stop the simulation in case a nan appears, do not save the solution ---*/
 	if (monitor != monitor) {
 
-#ifdef NO_MPI
     cout << "\n !!! Error: NaNs detected in solution. Now exiting... !!!" << endl;
 		exit(1);
-#else
-    if (rank == MASTER_NODE)
-      cout << "\n !!! Error: NaNs detected in solution. Now exiting... !!!" << endl;
-    MPI::COMM_WORLD.Barrier();
-    MPI::COMM_WORLD.Abort(1);
-#endif
-        
 	}
-  
-#ifndef NO_MPI
-
-  MPI::COMM_WORLD.Barrier();
-
-#endif
   
 }
 

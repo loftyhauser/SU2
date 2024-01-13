@@ -1266,9 +1266,6 @@ public:
 	void SetValue(const vector<string> & value) {
     
     int rank = MASTER_NODE;
-#ifndef NO_MPI
-    rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
 		typename map<string,Tenum>::const_iterator it;
 		if (ref_dim_ == NULL) {
@@ -1279,12 +1276,7 @@ public:
           cerr << "ERROR: Cannot find value " << value[0] << " in given map." << endl;
           cerr << "Please check the name of the variable in the config file." << endl;
         }
-#ifdef NO_MPI
         exit(1);
-#else
-        MPI::COMM_WORLD.Abort(1);
-        MPI::Finalize();
-#endif
 			}
 			*(*ref_) = it->second;
 		} else {
@@ -1298,12 +1290,7 @@ public:
             cerr << "ERROR: Cannot find value " << value[i] << " in given map." << endl;
             cerr << "Please check the name of the variable in the config file." << endl;
           }
-#ifdef NO_MPI
           exit(1);
-#else
-          MPI::COMM_WORLD.Abort(1);
-          MPI::Finalize();
-#endif
 				}
 				(*ref_)[i] = it->second;
 			}

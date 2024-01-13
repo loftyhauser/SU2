@@ -1143,8 +1143,6 @@ void CFEASolver::SetFEA_Load(CSolver ***flow_solution, CGeometry **fea_geometry,
 	unsigned long iVertex, iPoint;
 	double Pressure;	
 
-#ifdef NO_MPI
-	
 	unsigned long iPoint_Donor;
 
 	for (iMarker = 0; iMarker < fea_config->GetnMarker_All(); iMarker++) {
@@ -1158,68 +1156,5 @@ void CFEASolver::SetFEA_Load(CSolver ***flow_solution, CGeometry **fea_geometry,
 		}
 	}
 	
-#else
-	
-	int rank = MPI::COMM_WORLD.Get_rank(), jProcessor;
-	double *Buffer_Send_U = new double [1];
-	double *Buffer_Receive_U = new double [1];
-	unsigned long jPoint;
-	
-	/*--- Do the send process, by the moment we are sending each 
-	 node individually, this must be changed ---*/
-	for (iMarker = 0; iMarker < flow_config->GetnMarker_All(); iMarker++) {
-		/*--- There must be a better way to identify the marker that correspond with a fluid structure interation!!! ---*/
-		if ((flow_config->GetMarker_All_Boundary(iMarker) == EULER_WALL) && 
-			(flow_config->GetMarker_All_Moving(iMarker) == YES)) {
-			for(iVertex = 0; iVertex < flow_geometry[MESH_0]->nVertex[iMarker]; iVertex++) {
-				iPoint = flow_geometry[MESH_0]->vertex[iMarker][iVertex]->GetNode();
-				
-				if (flow_geometry[MESH_0]->node[iPoint]->GetDomain()) {
-					
-					/*--- Find the associate pair to the original node (index and processor) ---*/
-					jPoint = flow_geometry[MESH_0]->vertex[iMarker][iVertex]->GetPeriodicPointDomain()[0];
-					jProcessor = flow_geometry[MESH_0]->vertex[iMarker][iVertex]->GetPeriodicPointDomain()[1];
-					
-					/*--- We only send the pressure that belong to other boundary ---*/
-					if (jProcessor != rank) {
-						Buffer_Send_U[0] = 1.0; //(flow_solution[MESH_0][FLOW_SOL]->node[iPoint]->GetPressure()-101325.0);;
-						MPI::COMM_WORLD.Bsend(Buffer_Send_U, 1, MPI::DOUBLE, jProcessor, iPoint);
-					}
-					
-				}		
-			}
-		}
-	}
-	
-	/*--- Now the loop is over the fea points ---*/
-	for (iMarker = 0; iMarker < fea_config->GetnMarker_All(); iMarker++) {
-		if (fea_config->GetMarker_All_Boundary(iMarker) == LOAD_BOUNDARY) {
-			for(iVertex = 0; iVertex < fea_geometry[MESH_0]->nVertex[iMarker]; iVertex++) {
-				iPoint = fea_geometry[MESH_0]->vertex[iMarker][iVertex]->GetNode();
-				if (fea_geometry[MESH_0]->node[iPoint]->GetDomain()) {
-					
-					/*--- Find the associate pair to the original node ---*/
-					jPoint = fea_geometry[MESH_0]->vertex[iMarker][iVertex]->GetPeriodicPointDomain()[0];
-					jProcessor = fea_geometry[MESH_0]->vertex[iMarker][iVertex]->GetPeriodicPointDomain()[1];
-					
-					/*--- We only receive the information that belong to other boundary ---*/
-					if (jProcessor != rank)
-						MPI::COMM_WORLD.Recv(Buffer_Receive_U, 1, MPI::DOUBLE, jProcessor, jPoint);
-					else
-						Buffer_Receive_U[0] = 1.0; //(flow_solution[MESH_0][FLOW_SOL]->node[jPoint]->GetPressure()-101325.0);
-					
-					/*--- Store the solution for both points ---*/
-					Pressure = Buffer_Receive_U[1];
-					node[iPoint]->SetPressureValue(Pressure);
-					
-				}
-			}
-		}
-	}
-		
-	delete[] Buffer_Send_U;
-	delete[] Buffer_Receive_U;
-		
-#endif
 }
 

@@ -44,10 +44,6 @@ CPlasmaSolver::CPlasmaSolver(CGeometry *geometry, CConfig *config) : CSolver() {
 	roe_turkel = ((config->GetKind_Upwind_Plasma() == ROE_TURKEL_1ST) || (config->GetKind_Upwind_Plasma() == ROE_TURKEL_2ND) );
 	magnet = (config->GetMagnetic_Force() == YES);
 
-#ifndef NO_MPI
-	int rank = MPI::COMM_WORLD.Get_rank();
-#endif
-
 	double Density_Inf_mean, NumDensity_Inf_mean, Pressure_Inf_mean, Temperature_Inf_mean, Mach_Inf_mean;
 	double Gas_Constant_mean, SoundSpeed_mean, Gamma, Molar_Mass_mean, CharVibTemp;
 	double Gas_Constant;
@@ -362,7 +358,6 @@ CPlasmaSolver::CPlasmaSolver(CGeometry *geometry, CConfig *config) : CSolver() {
 		Energy_Inf[iSpecies] = Pressure_Inf[iSpecies]/(Density_Inf[iSpecies]*(Gamma-1.0)) + 1.0/2.0*Vel2 + Enthalpy_formation + Energy_vib_Inf[iSpecies] + Energy_el_Inf;
 	}
 
-#ifdef NO_MPI
 	for (iSpecies = 0; iSpecies < nSpecies; iSpecies ++) {
 		cout << " iSpecies = " << iSpecies << endl;
 		cout << " Temperature_inf = " << Temperature_Inf[iSpecies] << endl;
@@ -372,29 +367,11 @@ CPlasmaSolver::CPlasmaSolver(CGeometry *geometry, CConfig *config) : CSolver() {
 		cout << " Velocity_Inf = " << Velocity_Inf[iSpecies][0] << endl;
 		cout << " *********" << endl;
 	}
-#else
-	if (rank == MASTER_NODE) {
-		for (iSpecies = 0; iSpecies < nSpecies; iSpecies ++) {
-			cout << " iSpecies = " << iSpecies << endl;
-			cout << " Temperature_inf = " << Temperature_Inf[iSpecies] << endl;
-			cout << " Pressure_Inf = " << Pressure_Inf[iSpecies] << endl;
-			cout << " Density_Inf = " << Density_Inf[iSpecies] << endl;
-			cout << " Mach_Inf = " << Mach_Inf[iSpecies] << endl;
-			cout << " Velocity_Inf = " << Velocity_Inf[iSpecies][0] << endl;
-			cout << " *********" << endl;
-		}
-	}
-#endif
 
 	bool Inlet_Outlet_Defined = config->GetInletConditionsDefined();
 
 	if(!Inlet_Outlet_Defined) {
-#ifdef NO_MPI
 		cout << " Now defining the inlet and outlet conditions " << endl;
-#else
-		if (rank == MASTER_NODE)
-			cout << " Now defining the inlet and outlet conditions " << endl;
-#endif
 
 		for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
 
@@ -741,13 +718,6 @@ void CPlasmaSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 	short SendRecv;
 	int send_to, receive_from;
 
-#ifndef NO_MPI
-	double *Buffer_Send_U = NULL, *Buffer_Send_LaminarViscosity = NULL,
-			*Buffer_Send_EddyViscosity = NULL, *Buffer_Send_VGrad = NULL, *Buffer_Send_UGrad = NULL, *Buffer_Send_Limit = NULL, *Buffer_Send_Undivided_Laplacian = NULL,
-			*Buffer_Send_Sensor = NULL, *Buffer_Send_Lambda = NULL;
-	unsigned short *Buffer_Send_Neighbor = NULL;
-#endif
-
 	newSolution = new double[nVar];
 
 	/*--- Send-Receive boundary conditions ---*/
@@ -763,37 +733,12 @@ void CPlasmaSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 			send_to = SendRecv-1;
 			receive_from = abs(SendRecv)-1;
 
-#ifndef NO_MPI
-
-			/*--- Send information using MPI  ---*/
-			if (SendRecv > 0) {
-				/*--- Allocate upwind variables ---*/
-				Buffer_Send_U = new double[nBuffer_Vector];
-
-				for (iVertex = 0; iVertex < nVertex; iVertex++) {
-
-					iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-
-					/*--- Copy data ---*/
-					for (iVar = 0; iVar < nVar; iVar++) {
-						Buffer_Send_U[iVar*nVertex+iVertex] = node[iPoint]->GetSolution(iVar);
-					}
-				}
-
-				/*--- Send the buffer, and deallocate information using MPI ---*/
-				MPI::COMM_WORLD.Bsend(Buffer_Send_U, nBuffer_Vector, MPI::DOUBLE, send_to, 0); delete [] Buffer_Send_U;
-			}
-
-#endif
-
 			/*--- Receive information  ---*/
 			if (SendRecv < 0) {
 
 				/*--- Allocate upwind variables ---*/
 				Buffer_Receive_U = new double [nBuffer_Vector];
 
-
-#ifdef NO_MPI
 
 				/*--- Get the information from the donor point directly. This is a
 				 serial computation with access to all nodes. Note that there is an
@@ -808,11 +753,6 @@ void CPlasmaSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 					}
 				}
 
-#else
-				/*--- Receive the information using MPI---*/
-				MPI::COMM_WORLD.Recv(Buffer_Receive_U, nBuffer_Vector, MPI::DOUBLE, receive_from, 0);
-
-#endif
 
 				/*--- Do the coordinate transformation ---*/
 				for (iVertex = 0; iVertex < nVertex; iVertex++) {
@@ -885,13 +825,6 @@ void CPlasmaSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *conf
 	short SendRecv;
 	int send_to, receive_from;
     
-#ifndef NO_MPI
-    
-    MPI::COMM_WORLD.Barrier();
-	double *Buffer_Send_UGrad = NULL;
-    
-#endif
-    
 	newGradient = new double* [nVar];
 	for (iVar = 0; iVar < nVar; iVar++)
 		newGradient[iVar] = new double[3];
@@ -905,27 +838,9 @@ void CPlasmaSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *conf
 			send_to = SendRecv-1;
 			receive_from = abs(SendRecv)-1;
             
-#ifndef NO_MPI
-            
-			/*--- Send information using MPI  ---*/
-			if (SendRecv > 0) {
-                Buffer_Send_UGrad = new double[nBuffer_VectorGrad];
-				for (iVertex = 0; iVertex < nVertex; iVertex++) {
-					iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-                    for (iVar = 0; iVar < nVar; iVar++)
-                        for (iDim = 0; iDim < nDim; iDim++)
-                            Buffer_Send_UGrad[iDim*nVar*nVertex+iVar*nVertex+iVertex] = node[iPoint]->GetGradient(iVar,iDim);
-				}
-                MPI::COMM_WORLD.Bsend(Buffer_Send_UGrad, nBuffer_VectorGrad, MPI::DOUBLE, send_to, 0); delete [] Buffer_Send_UGrad;
-			}
-            
-#endif
-            
 			/*--- Receive information  ---*/
 			if (SendRecv < 0) {
                 Buffer_Receive_UGrad = new double [nBuffer_VectorGrad];
-                
-#ifdef NO_MPI
                 
 				/*--- Receive information without MPI ---*/
 				for (iVertex = 0; iVertex < nVertex; iVertex++) {
@@ -934,12 +849,6 @@ void CPlasmaSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *conf
                         for (iDim = 0; iDim < nDim; iDim++)
                             Buffer_Receive_UGrad[iDim*nVar*nVertex+iVar*nVertex+iVertex] = node[iPoint]->GetGradient(iVar,iDim);
 				}
-                
-#else
-                
-                MPI::COMM_WORLD.Recv(Buffer_Receive_UGrad, nBuffer_VectorGrad, MPI::DOUBLE, receive_from, 0);
-                
-#endif
                 
 				/*--- Do the coordinate transformation ---*/
 				for (iVertex = 0; iVertex < nVertex; iVertex++) {
@@ -1000,12 +909,6 @@ void CPlasmaSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *conf
 	for (iVar = 0; iVar < nVar; iVar++)
 		delete [] newGradient[iVar];
 	delete [] newGradient;
-    
-#ifndef NO_MPI
-    
-    MPI::COMM_WORLD.Barrier();
-    
-#endif
     
 }
 
@@ -2727,10 +2630,6 @@ void CPlasmaSolver::Set_MPI_PrimVar_Gradient(CGeometry *geometry, CConfig *confi
 	short SendRecv;
 	int send_to, receive_from;
 
-#ifndef NO_MPI
-	double *Buffer_Send_VGrad = NULL;
-#endif
-
 	nSpeciesPrimVar = nDim+3;
 	nPrimVar = nSpecies*nSpeciesPrimVar;
 
@@ -2751,44 +2650,12 @@ void CPlasmaSolver::Set_MPI_PrimVar_Gradient(CGeometry *geometry, CConfig *confi
 			send_to = SendRecv-1;
 			receive_from = abs(SendRecv)-1;
 
-#ifndef NO_MPI
-
-			/*--- Send information using MPI  ---*/
-			if (SendRecv > 0) {
-
-				/*--- Allocate viscous variables ---*/
-				Buffer_Send_VGrad = new double[nBuffer_VectorGrad];
-
-				for (iVertex = 0; iVertex < nVertex; iVertex++) {
-
-					iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-
-					/*--- Copy viscous data ---*/
-					iVar = 0;
-					for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-						for (iVar_Species = 0; iVar_Species < nSpeciesPrimVar; iVar_Species++) {
-							for (iDim = 0; iDim < nDim; iDim++) {
-								Buffer_Send_VGrad[iDim*nPrimVar*nVertex+iVar*nVertex+iVertex] = node[iPoint]->GetGradient_Primitive(iSpecies,iVar_Species,iDim);
-							}
-							iVar++;
-						}
-					}
-				}
-
-				/*--- Send the buffer and deallocate information using MPI ---*/
-				MPI::COMM_WORLD.Bsend(Buffer_Send_VGrad, nBuffer_VectorGrad, MPI::DOUBLE, send_to, 9); delete []  Buffer_Send_VGrad;
-
-			}
-
-#endif
 
 			/*--- Receive information  ---*/
 			if (SendRecv < 0) {
 
 				/*--- Allocate viscous variables ---*/
 				Buffer_Receive_VGrad = new double [nBuffer_VectorGrad];
-
-#ifdef NO_MPI
 
 				/*--- Get the information from the donor point directly. This is a
 				 serial computation with access to all nodes. Note that there is an
@@ -2808,10 +2675,6 @@ void CPlasmaSolver::Set_MPI_PrimVar_Gradient(CGeometry *geometry, CConfig *confi
 						}
 					}
 				}
-
-#else
-				MPI::COMM_WORLD.Recv(Buffer_Receive_VGrad, nBuffer_VectorGrad, MPI::DOUBLE, receive_from, 9);
-#endif
 
 				/*--- Do the coordinate transformation ---*/
 				for (iVertex = 0; iVertex < nVertex; iVertex++) {
@@ -3045,10 +2908,6 @@ void CPlasmaSolver::SetPrimVar_Limiter_MPI(CGeometry *geometry, CConfig *config)
 	short SendRecv;
 	int send_to, receive_from;
 
-#ifndef NO_MPI
-	double *Buffer_Send_VGrad = NULL;
-#endif
-
 	nSpeciesPrimVar = nDim+3;
 	nPrimVar = nSpecies*nSpeciesPrimVar;
 
@@ -3066,44 +2925,11 @@ void CPlasmaSolver::SetPrimVar_Limiter_MPI(CGeometry *geometry, CConfig *config)
 			send_to = SendRecv-1;
 			receive_from = abs(SendRecv)-1;
 
-#ifndef NO_MPI
-
-			/*--- Send information using MPI  ---*/
-			if (SendRecv > 0) {
-
-				/*--- Allocate viscous variables ---*/
-				Buffer_Send_VGrad = new double[nBuffer_VectorGrad];
-
-				for (iVertex = 0; iVertex < nVertex; iVertex++) {
-
-					iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-
-					/*--- Copy viscous data ---*/
-					iVar = 0;
-					for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-						for (iVar_Species = 0; iVar_Species < nSpeciesPrimVar; iVar_Species++) {
-
-							Buffer_Send_VGrad[iVar*nVertex+iVertex] = node[iPoint]->GetLimiterPrimitive(iSpecies, iVar_Species);
-							iVar++;
-						}
-					}
-				}
-
-				/*--- Send the buffer and deallocate information using MPI ---*/
-				MPI::COMM_WORLD.Bsend(Buffer_Send_VGrad, nBuffer_VectorGrad, MPI::DOUBLE, send_to, 9);
-				delete []  Buffer_Send_VGrad;
-
-			}
-
-#endif
-
 			/*--- Receive information  ---*/
 			if (SendRecv < 0) {
 
 				/*--- Allocate viscous variables ---*/
 				Buffer_Receive_VGrad = new double [nBuffer_VectorGrad];
-
-#ifdef NO_MPI
 
 				/*--- Get the information from the donor point directly. This is a
 				 serial computation with access to all nodes. Note that there is an
@@ -3123,10 +2949,6 @@ void CPlasmaSolver::SetPrimVar_Limiter_MPI(CGeometry *geometry, CConfig *config)
 						}
 					}
 				}
-
-#else
-				MPI::COMM_WORLD.Recv(Buffer_Receive_VGrad, nBuffer_VectorGrad, MPI::DOUBLE, receive_from, 9);
-#endif
 
 				/*--- Do the coordinate transformation ---*/
 				for (iVertex = 0; iVertex < nVertex; iVertex++) {

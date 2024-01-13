@@ -152,63 +152,8 @@ CSolver::~CSolver(void) {
 void CSolver::SetResidual_RMS(CGeometry *geometry, CConfig *config) {
   unsigned short iVar;
 
-#ifdef NO_MPI
-
 	for (iVar = 0; iVar < nVar; iVar++)
     SetRes_RMS(iVar, max(EPS, sqrt(GetRes_RMS(iVar)/geometry->GetnPoint())));
-  
-#else
-  
-  int iProcessor;
-  
-	int nProcessor = MPI::COMM_WORLD.Get_size();
-  double *sbuf_residual, *rbuf_residual;
-  unsigned long *sbuf_point, *rbuf_point, Local_nPointDomain, Global_nPointDomain;
-  
-  /*--- Set the L2 Norm residual in all the processors ---*/
-  sbuf_residual  = new double[nVar]; for (iVar = 0; iVar < nVar; iVar++) sbuf_residual[iVar] = 0.0;
-  rbuf_residual  = new double[nVar]; for (iVar = 0; iVar < nVar; iVar++) rbuf_residual[iVar] = 0.0;
-  
-  for (iVar = 0; iVar < nVar; iVar++) sbuf_residual[iVar] = GetRes_RMS(iVar);
-  Local_nPointDomain = geometry->GetnPointDomain();
-  
-  MPI::COMM_WORLD.Allreduce(sbuf_residual, rbuf_residual, nVar, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&Local_nPointDomain, &Global_nPointDomain, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-  
-  for (iVar = 0; iVar < nVar; iVar++)
-    SetRes_RMS(iVar, max(EPS, sqrt(rbuf_residual[iVar]/Global_nPointDomain)));
-  
-  delete [] sbuf_residual;
-  delete [] rbuf_residual;
-  
-  /*--- Set the Maximum residual in all the processors ---*/
-  sbuf_residual = new double [nVar]; for (iVar = 0; iVar < nVar; iVar++) sbuf_residual[iVar] = 0.0;
-  sbuf_point = new unsigned long [nVar]; for (iVar = 0; iVar < nVar; iVar++) sbuf_point[iVar] = 0;
-  
-	rbuf_residual = new double [nProcessor*nVar]; for (iVar = 0; iVar < nProcessor*nVar; iVar++) rbuf_residual[iVar] = 0.0;
-	rbuf_point = new unsigned long [nProcessor*nVar]; for (iVar = 0; iVar < nProcessor*nVar; iVar++) rbuf_point[iVar] = 0;
-  
-  for (iVar = 0; iVar < nVar; iVar++) {
-    sbuf_residual[iVar] = GetRes_Max(iVar);
-    sbuf_point[iVar] = GetPoint_Max(iVar);
-  }
-  
-	MPI::COMM_WORLD.Allgather(sbuf_residual, nVar, MPI::DOUBLE, rbuf_residual, nVar, MPI::DOUBLE);
-  MPI::COMM_WORLD.Allgather(sbuf_point, nVar, MPI::UNSIGNED_LONG, rbuf_point, nVar, MPI::UNSIGNED_LONG);
-  
-  for (iVar = 0; iVar < nVar; iVar++) {
-    for (iProcessor = 0; iProcessor < nProcessor; iProcessor++) {
-      AddRes_Max(iVar, rbuf_residual[iProcessor*nVar+iVar], rbuf_point[iProcessor*nVar+iVar]);
-    }
-  }
-  
-  delete [] sbuf_residual;
-  delete [] rbuf_residual;
-  
-  delete [] sbuf_point;
-  delete [] rbuf_point;
-  
-#endif
   
 }
 
@@ -1280,9 +1225,6 @@ CBaselineSolver::CBaselineSolver(void) : CSolver() { }
 CBaselineSolver::CBaselineSolver(CGeometry *geometry, CConfig *config, unsigned short iMesh) : CSolver() {
   
   int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
 	unsigned long iPoint, index, iPoint_Global;
   long iPoint_Local;
@@ -1405,13 +1347,6 @@ void CBaselineSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 	short SendRecv;
 	int send_to, receive_from;
   
-#ifndef NO_MPI
-  
-  MPI::COMM_WORLD.Barrier();
-	double *Buffer_Send_U = NULL;
-  
-#endif
-  
 	newSolution = new double[nVar];
 
 	/*--- Send-Receive boundary conditions ---*/
@@ -1423,26 +1358,9 @@ void CBaselineSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 			send_to = SendRecv-1;
 			receive_from = abs(SendRecv)-1;
       
-#ifndef NO_MPI
-      
-			/*--- Send information using MPI  ---*/
-			if (SendRecv > 0) {
-        Buffer_Send_U = new double[nBuffer_Vector];
-				for (iVertex = 0; iVertex < nVertex; iVertex++) {
-					iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-          for (iVar = 0; iVar < nVar; iVar++)
-            Buffer_Send_U[iVar*nVertex+iVertex] = node[iPoint]->GetSolution(iVar);
-				}
-        MPI::COMM_WORLD.Bsend(Buffer_Send_U, nBuffer_Vector, MPI::DOUBLE, send_to, 0); delete [] Buffer_Send_U;
-			}
-      
-#endif
-
 			/*--- Receive information  ---*/
 			if (SendRecv < 0) {
         Buffer_Receive_U = new double [nBuffer_Vector];
-        
-#ifdef NO_MPI
         
 				/*--- Receive information without MPI ---*/
 				for (iVertex = 0; iVertex < nVertex; iVertex++) {
@@ -1450,12 +1368,6 @@ void CBaselineSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
           for (iVar = 0; iVar < nVar; iVar++)
             Buffer_Receive_U[iVar*nVertex+iVertex] = node[iPoint]->GetSolution(iVar);
         }
-        
-#else
-        
-        MPI::COMM_WORLD.Recv(Buffer_Receive_U, nBuffer_Vector, MPI::DOUBLE, receive_from, 0);
-        
-#endif
         
 				/*--- Do the coordinate transformation ---*/
 				for (iVertex = 0; iVertex < nVertex; iVertex++) {
@@ -1509,20 +1421,11 @@ void CBaselineSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 	}
 	delete [] newSolution;
   
-#ifndef NO_MPI
-  
-  MPI::COMM_WORLD.Barrier();
-  
-#endif
-  
 }
 
 void CBaselineSolver::GetRestart(CGeometry *geometry, CConfig *config, int val_iter) {
   
 	int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
 	/*--- Restart the solution from file information ---*/
 	string filename;

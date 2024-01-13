@@ -37,10 +37,6 @@ void MeanFlowIteration(COutput *output, CIntegration ***integration_container, C
   unsigned long IntIter = 0; config_container[ZONE_0]->SetIntIter(IntIter);
   unsigned long ExtIter = config_container[ZONE_0]->GetExtIter();
   
-#ifndef NO_MPI
-	int rank = MPI::COMM_WORLD.Get_rank();
-#endif
-  
   /*--- Initial set up for unsteady problems with dynamic meshes. ---*/
 	for (iZone = 0; iZone < nZone; iZone++) {
         
@@ -144,9 +140,6 @@ void MeanFlowIteration(COutput *output, CIntegration ***integration_container, C
                            grid_movement[iZone], FFDBox[iZone], solver_container[iZone], config_container[iZone], iZone, IntIter);
           /* If unsteady step converged, write out the plunge and pitch for that step */
           int rank = MASTER_NODE;
-#ifndef NO_MPI
-          rank = MPI::COMM_WORLD.Get_rank();
-#endif
           if (rank == MASTER_NODE && integration_container[ZONE_0][FLOW_SOL]->GetConvergence()) {
             std::fstream output_file;
             output_file.open("plunging_pitching2.txt", std::fstream::in | std::fstream::out | std::fstream::app);
@@ -203,10 +196,6 @@ void AdjMeanFlowIteration(COutput *output, CIntegration ***integration_container
   unsigned long IntIter = 0; config_container[ZONE_0]->SetIntIter(IntIter);
   unsigned long ExtIter = config_container[ZONE_0]->GetExtIter();
   
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
-
 	/*--- Initial set up for unsteady problems with dynamic meshes. ---*/
 	for (iZone = 0; iZone < nZone; iZone++) {
 		/*--- Dynamic mesh update ---*/
@@ -420,10 +409,6 @@ void AdjPlasmaIteration(COutput *output, CIntegration ***integration_container, 
   unsigned long IntIter = 0; config_container[ZONE_0]->SetIntIter(IntIter);
   unsigned long ExtIter = config_container[ZONE_0]->GetExtIter();
 
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
-
 	/*--- Continuous adjoint Euler equations ---*/
 	if (ExtIter == 0 || config_container[ZONE_0]->GetUnsteady_Simulation()) {
 
@@ -455,10 +440,6 @@ void WaveIteration(COutput *output, CIntegration ***integration_container, CGeom
 	unsigned short nZone = geometry_container[ZONE_0][MESH_0]->GetnZone();
   unsigned long IntIter = 0; config_container[ZONE_0]->SetIntIter(IntIter);
   unsigned long ExtIter = config_container[ZONE_0]->GetExtIter();
-
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
 
 	for (iZone = 0; iZone < nZone; iZone++) {
 
@@ -506,10 +487,6 @@ void FEAIteration(COutput *output, CIntegration ***integration_container, CGeome
 	unsigned short nZone = geometry_container[ZONE_0][MESH_0]->GetnZone();
   unsigned long IntIter = 0; config_container[ZONE_0]->SetIntIter(IntIter);
   unsigned long ExtIter = config_container[ZONE_0]->GetExtIter();
-
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
 
 	for (iZone = 0; iZone < nZone; iZone++) {
 
@@ -718,10 +695,6 @@ void AdjAeroacousticIteration(COutput *output, CIntegration ***integration_conta
   unsigned long IntIter = 0; config_container[ZONE_0]->SetIntIter(IntIter);
   unsigned long ExtIter = config_container[ZONE_0]->GetExtIter();
 
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
-
 	/*--- Continuous adjoint Euler equations + continuous adjoint wave equation ---*/
 
 	if (rank == MASTER_NODE) cout << "Iteration over the direct problem to store all flow information." << endl;
@@ -834,9 +807,6 @@ void SetWind_GustField(CConfig *config_container, CGeometry **geometry_container
     // In this routine the gust derivatives needed for the source term are calculated. The source term itself is implemented in the class CSourceWindGust
     
     int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
     /*--- Gust Parameters from config ---*/
     unsigned short Gust_Type = config_container->GetGust_Type();
@@ -852,12 +822,7 @@ void SetWind_GustField(CConfig *config_container, CGeometry **geometry_container
         cout << "ERROR: The gust length needs to be positive" << endl;
         cout << "Press any key to exit..." << endl;
         cin.get();
-#ifdef NO_MPI
         exit(1);
-#else
-        MPI::COMM_WORLD.Abort(1);
-        MPI::Finalize();
-#endif
     }
 
     /*--- Variables needed to compute the gust ---*/
@@ -980,9 +945,6 @@ void SetGrid_Movement(CGeometry **geometry_container, CSurfaceMovement *surface_
 	}
   
 	int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
 	/*--- Perform mesh movement depending on specified type ---*/
 	switch (Kind_Grid_Movement) {
@@ -1151,16 +1113,9 @@ void SetGrid_Movement(CGeometry **geometry_container, CSurfaceMovement *surface_
       Cl_proc = solver_container[MESH_0][FLOW_SOL]->GetTotal_CLift();
       Cm_proc = -1.0*solver_container[MESH_0][FLOW_SOL]->GetTotal_CMz();
       
-#ifndef NO_MPI
-      /*--- Add the forces over all the processors ---*/
-      MPI::COMM_WORLD.Allreduce(&Cl_proc, &Cl, 1, MPI::DOUBLE, MPI::SUM);
-      MPI::COMM_WORLD.Allreduce(&Cm_proc, &Cm, 1, MPI::DOUBLE, MPI::SUM);
-      MPI::COMM_WORLD.Barrier();
-#else
       /*--- Set the forces to the forces on the sole processor ---*/
       Cl = Cl_proc;
       Cm = Cm_proc;
-#endif
       
       /*--- Use the if statement to move the grid only at selected dual time step iterations. ---*/
       if (ExtIter % 3 ==0) {
@@ -1214,9 +1169,6 @@ void SetTimeSpectral(CGeometry ***geometry_container, CSolver ****solver_contain
 		CConfig **config_container, unsigned short nZone, unsigned short iZone) {
 
 	int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
 
 	/*--- Local variables and initialization ---*/
 	unsigned short iVar, kZone, jZone, iMGlevel;
@@ -1520,16 +1472,9 @@ void SetTimeSpectral(CGeometry ***geometry_container, CSolver ****solver_contain
 	  sbuf_force[6] = solver_container[kZone][MESH_0][FLOW_SOL]->GetTotal_CQ();
 	  sbuf_force[7] = solver_container[kZone][MESH_0][FLOW_SOL]->GetTotal_CMerit();
 
-#ifndef NO_MPI
-
-	  /*--- for a given zone, sum the coefficients across the processors ---*/
-	  MPI::COMM_WORLD.Reduce(sbuf_force, rbuf_force, nVar_Force, MPI::DOUBLE, MPI::SUM, MASTER_NODE);
-	  MPI::COMM_WORLD.Barrier();
-#else
 	  for (iVar = 0; iVar < nVar_Force; iVar++) {
 		  rbuf_force[iVar] = sbuf_force[iVar];
 	  }
-#endif
 
 	  if (rank == MASTER_NODE) {
 		  TS_Flow_file << kZone << ", ";
@@ -1569,14 +1514,6 @@ void SetTimeSpectral(CGeometry ***geometry_container, CSolver ****solver_contain
 
 void SetSliding_Interfaces(CGeometry ***geometry_container, CSolver ****solver_container,
 		CConfig **config_container, unsigned short nZone) {
-
-#ifndef NO_MPI
-	cout << "!!! Error: Sliding mesh interfaces not yet supported in parallel. !!!" << endl;
-	cout << "Press any key to exit..." << endl;
-	cin.get();
-	MPI::COMM_WORLD.Abort(1);
-	MPI::Finalize();
-#endif
 
 	unsigned short nDim = geometry_container[ZONE_0][MESH_0]->GetnDim();
 	unsigned short iMarker, iZone, donorZone;

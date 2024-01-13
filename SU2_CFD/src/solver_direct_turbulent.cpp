@@ -61,11 +61,6 @@ void CTurbSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 	double *Buffer_Receive_U = NULL, *Buffer_Send_U = NULL, *Buffer_Receive_muT = NULL, *Buffer_Send_muT = NULL;
 	int send_to, receive_from;
     
-#ifndef NO_MPI
-    MPI::Status status;
-    MPI::Request send_request, recv_request;
-#endif
-    
 	for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
         
 		if ((config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) &&
@@ -95,26 +90,6 @@ void CTurbSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
                     Buffer_Send_U[iVar*nVertexS+iVertex] = node[iPoint]->GetSolution(iVar);
             }
             
-#ifndef NO_MPI
-            
-            //      /*--- Send/Receive using non-blocking communications ---*/
-            //      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_U, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-            //      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_U, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-            //      send_request.Wait(status);
-            //      recv_request.Wait(status);
-            //      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_muT, nBufferS_Scalar, MPI::DOUBLE, 1, send_to);
-            //      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_muT, nBufferR_Scalar, MPI::DOUBLE, 1, receive_from);
-            //      send_request.Wait(status);
-            //      recv_request.Wait(status);
-            
-            /*--- Send/Receive information using Sendrecv ---*/
-            MPI::COMM_WORLD.Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                                     Buffer_Receive_U, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-            MPI::COMM_WORLD.Sendrecv(Buffer_Send_muT, nBufferS_Scalar, MPI::DOUBLE, send_to, 1,
-                                     Buffer_Receive_muT, nBufferR_Scalar, MPI::DOUBLE, receive_from, 1);
-            
-#else
-            
             /*--- Receive information without MPI ---*/
             for (iVertex = 0; iVertex < nVertexR; iVertex++) {
                 iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
@@ -122,8 +97,6 @@ void CTurbSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
                 for (iVar = 0; iVar < nVar; iVar++)
                     Buffer_Receive_U[iVar*nVertexR+iVertex] = Buffer_Send_U[iVar*nVertexR+iVertex];
             }
-            
-#endif
             
             /*--- Deallocate send buffer ---*/
             delete [] Buffer_Send_U;
@@ -158,11 +131,6 @@ void CTurbSolver::Set_MPI_Solution_Old(CGeometry *geometry, CConfig *config) {
 	double *Buffer_Receive_U = NULL, *Buffer_Send_U = NULL;
 	int send_to, receive_from;
     
-#ifndef NO_MPI
-    MPI::Status status;
-    MPI::Request send_request, recv_request;
-#endif
-    
 	for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
         
 		if ((config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) &&
@@ -187,28 +155,12 @@ void CTurbSolver::Set_MPI_Solution_Old(CGeometry *geometry, CConfig *config) {
                     Buffer_Send_U[iVar*nVertexS+iVertex] = node[iPoint]->GetSolution_Old(iVar);
             }
             
-#ifndef NO_MPI
-            
-            //      /*--- Send/Receive using non-blocking communications ---*/
-            //      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_U, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-            //      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_U, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-            //      send_request.Wait(status);
-            //      recv_request.Wait(status);
-            
-            /*--- Send/Receive information using Sendrecv ---*/
-            MPI::COMM_WORLD.Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                                     Buffer_Receive_U, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-            
-#else
-            
             /*--- Receive information without MPI ---*/
             for (iVertex = 0; iVertex < nVertexR; iVertex++) {
                 iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
                 for (iVar = 0; iVar < nVar; iVar++)
                     Buffer_Receive_U[iVar*nVertexR+iVertex] = Buffer_Send_U[iVar*nVertexR+iVertex];
             }
-            
-#endif
             
             /*--- Deallocate send buffer ---*/
             delete [] Buffer_Send_U;
@@ -240,11 +192,6 @@ void CTurbSolver::Set_MPI_Solution_Limiter(CGeometry *geometry, CConfig *config)
     *Buffer_Receive_Limit = NULL, *Buffer_Send_Limit = NULL;
 	int send_to, receive_from;
     
-#ifndef NO_MPI
-    MPI::Status status;
-    MPI::Request send_request, recv_request;
-#endif
-    
 	for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
         
 		if ((config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) &&
@@ -269,28 +216,12 @@ void CTurbSolver::Set_MPI_Solution_Limiter(CGeometry *geometry, CConfig *config)
                     Buffer_Send_Limit[iVar*nVertexS+iVertex] = node[iPoint]->GetLimiter(iVar);
             }
             
-#ifndef NO_MPI
-            
-            //      /*--- Send/Receive using non-blocking communications ---*/
-            //      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_Limit, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-            //      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_Limit, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-            //      send_request.Wait(status);
-            //      recv_request.Wait(status);
-            
-            /*--- Send/Receive information using Sendrecv ---*/
-            MPI::COMM_WORLD.Sendrecv(Buffer_Send_Limit, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                                     Buffer_Receive_Limit, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-            
-#else
-            
             /*--- Receive information without MPI ---*/
             for (iVertex = 0; iVertex < nVertexR; iVertex++) {
                 iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
                 for (iVar = 0; iVar < nVar; iVar++)
                     Buffer_Receive_Limit[iVar*nVertexR+iVertex] = Buffer_Send_Limit[iVar*nVertexR+iVertex];
             }
-            
-#endif
             
             /*--- Deallocate send buffer ---*/
             delete [] Buffer_Send_Limit;
@@ -362,11 +293,6 @@ void CTurbSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *config
     *Buffer_Receive_Gradient = NULL, *Buffer_Send_Gradient = NULL;
 	int send_to, receive_from;
     
-#ifndef NO_MPI
-    MPI::Status status;
-    MPI::Request send_request, recv_request;
-#endif
-    
     double **Gradient = new double* [nVar];
     for (iVar = 0; iVar < nVar; iVar++)
         Gradient[iVar] = new double[nDim];
@@ -396,20 +322,6 @@ void CTurbSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *config
                         Buffer_Send_Gradient[iDim*nVar*nVertexS+iVar*nVertexS+iVertex] = node[iPoint]->GetGradient(iVar, iDim);
             }
             
-#ifndef NO_MPI
-            
-            //      /*--- Send/Receive using non-blocking communications ---*/
-            //      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_Gradient, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-            //      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_Gradient, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-            //      send_request.Wait(status);
-            //      recv_request.Wait(status);
-            
-            /*--- Send/Receive information using Sendrecv ---*/
-            MPI::COMM_WORLD.Sendrecv(Buffer_Send_Gradient, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                                     Buffer_Receive_Gradient, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-            
-#else
-            
             /*--- Receive information without MPI ---*/
             for (iVertex = 0; iVertex < nVertexR; iVertex++) {
                 iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
@@ -417,8 +329,6 @@ void CTurbSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *config
                     for (iDim = 0; iDim < nDim; iDim++)
                         Buffer_Receive_Gradient[iDim*nVar*nVertexR+iVar*nVertexR+iVertex] = Buffer_Send_Gradient[iDim*nVar*nVertexR+iVar*nVertexR+iVertex];
             }
-            
-#endif
             
             /*--- Deallocate send buffer ---*/
             delete [] Buffer_Send_Gradient;
@@ -774,9 +684,6 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
                       (config->GetUnsteady_Simulation() == DT_STEPPING_2ND));
     
 	int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
 	Gamma = config->GetGamma();
 	Gamma_Minus_One = Gamma - 1.0;
@@ -2142,8 +2049,6 @@ void CTurbSASolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_
     
     double *Vector = new double[nDim];
     
-#ifdef NO_MPI
-    
 	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
 		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
         
@@ -2186,112 +2091,6 @@ void CTurbSASolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_
 			}
 		}
 	}
-    
-#else
-    
-	int rank = MPI::COMM_WORLD.Get_rank(), jProcessor;
-	double *Conserv_Var, *Flow_Var;
-	bool compute;
-    
-    unsigned short Buffer_Size = nVar+solver_container[FLOW_SOL]->GetnVar();
-	double *Buffer_Send_U = new double [Buffer_Size];
-	double *Buffer_Receive_U = new double [Buffer_Size];
-    
-	/*--- Do the send process, by the moment we are sending each
-	 node individually, this must be changed ---*/
-	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-		if (geometry->node[iPoint]->GetDomain()) {
-            
-			/*--- Find the associate pair to the original node ---*/
-			jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
-			jProcessor = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[1];
-            
-			if ((iPoint == jPoint) && (jProcessor == rank)) compute = false;
-			else compute = true;
-            
-			/*--- We only send the information that belong to other boundary ---*/
-			if ((jProcessor != rank) && compute) {
-                
-				Conserv_Var = node[iPoint]->GetSolution();
-                Flow_Var = solver_container[FLOW_SOL]->node[iPoint]->GetSolution();
-                
-				for (iVar = 0; iVar < nVar; iVar++)
-					Buffer_Send_U[iVar] = Conserv_Var[iVar];
-                
-                for (iVar = 0; iVar < solver_container[FLOW_SOL]->GetnVar(); iVar++)
-					Buffer_Send_U[nVar+iVar] = Flow_Var[iVar];
-                
-				MPI::COMM_WORLD.Bsend(Buffer_Send_U, Buffer_Size, MPI::DOUBLE, jProcessor, iPoint);
-                
-			}
-		}
-	}
-    
-	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-        
-		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-        
-		if (geometry->node[iPoint]->GetDomain()) {
-            
-			/*--- Find the associate pair to the original node ---*/
-			jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
-			jProcessor = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[1];
-            
-			if ((iPoint == jPoint) && (jProcessor == rank)) compute = false;
-			else compute = true;
-            
-			if (compute) {
-                
-				/*--- We only receive the information that belong to other boundary ---*/
-				if (jProcessor != rank) {
-					MPI::COMM_WORLD.Recv(Buffer_Receive_U, Buffer_Size, MPI::DOUBLE, jProcessor, jPoint);
-                }
-				else {
-                    
-					for (iVar = 0; iVar < nVar; iVar++)
-						Buffer_Receive_U[iVar] = node[jPoint]->GetSolution(iVar);
-                    
-                    for (iVar = 0; iVar < solver_container[FLOW_SOL]->GetnVar(); iVar++)
-                        Buffer_Send_U[nVar+iVar] = solver_container[FLOW_SOL]->node[jPoint]->GetSolution(iVar);
-                    
-				}
-                
-				/*--- Store the solution for both points ---*/
-				for (iVar = 0; iVar < nVar; iVar++) {
-					Solution_i[iVar] = node[iPoint]->GetSolution(iVar);
-					Solution_j[iVar] = Buffer_Receive_U[iVar];
-				}
-                
-                /*--- Set Turbulent Variables ---*/
-                numerics->SetTurbVar(Solution_i, Solution_j);
-                
-                /*--- Retrieve flow solution for both points ---*/
-                for (iVar = 0; iVar < solver_container[FLOW_SOL]->GetnVar(); iVar++) {
-                    FlowSolution_i[iVar] = solver_container[FLOW_SOL]->node[iPoint]->GetSolution(iVar);
-                    FlowSolution_j[iVar] = Buffer_Receive_U[nVar + iVar];
-                }
-                
-				/*--- Set Flow Variables ---*/
-                numerics->SetConservative(FlowSolution_i, FlowSolution_j);
-                
-				geometry->vertex[val_marker][iVertex]->GetNormal(Vector);
-				for (iDim = 0; iDim < nDim; iDim++)
-					Vector[iDim] = -Vector[iDim];
-				numerics->SetNormal(Vector);
-                
-				numerics->ComputeResidual(Residual, Jacobian_i, Jacobian_j, config);
-				LinSysRes.AddBlock(iPoint, Residual);
-				Jacobian.AddBlock(iPoint, iPoint, Jacobian_i);
-                
-			}
-		}
-	}
-    
-	delete[] Buffer_Send_U;
-	delete[] Buffer_Receive_U;
-    
-#endif
     
     delete[] Vector;
     
@@ -2304,8 +2103,6 @@ void CTurbSASolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_
     
     double *Vector = new double[nDim];
     
-#ifdef NO_MPI
-    
 	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
 		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
         
@@ -2348,112 +2145,6 @@ void CTurbSASolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_
 			}
 		}
 	}
-    
-#else
-    
-	int rank = MPI::COMM_WORLD.Get_rank(), jProcessor;
-	double *Conserv_Var, *Flow_Var;
-	bool compute;
-    
-    unsigned short Buffer_Size = nVar+solver_container[FLOW_SOL]->GetnVar();
-	double *Buffer_Send_U = new double [Buffer_Size];
-	double *Buffer_Receive_U = new double [Buffer_Size];
-    
-	/*--- Do the send process, by the moment we are sending each
-	 node individually, this must be changed ---*/
-	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-		if (geometry->node[iPoint]->GetDomain()) {
-            
-			/*--- Find the associate pair to the original node ---*/
-			jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
-			jProcessor = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[1];
-            
-			if ((iPoint == jPoint) && (jProcessor == rank)) compute = false;
-			else compute = true;
-            
-			/*--- We only send the information that belong to other boundary ---*/
-			if ((jProcessor != rank) && compute) {
-                
-				Conserv_Var = node[iPoint]->GetSolution();
-                Flow_Var = solver_container[FLOW_SOL]->node[iPoint]->GetSolution();
-                
-				for (iVar = 0; iVar < nVar; iVar++)
-					Buffer_Send_U[iVar] = Conserv_Var[iVar];
-                
-                for (iVar = 0; iVar < solver_container[FLOW_SOL]->GetnVar(); iVar++)
-					Buffer_Send_U[nVar+iVar] = Flow_Var[iVar];
-                
-				MPI::COMM_WORLD.Bsend(Buffer_Send_U, Buffer_Size, MPI::DOUBLE, jProcessor, iPoint);
-                
-			}
-		}
-	}
-    
-	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-        
-		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-        
-		if (geometry->node[iPoint]->GetDomain()) {
-            
-			/*--- Find the associate pair to the original node ---*/
-			jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
-			jProcessor = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[1];
-            
-			if ((iPoint == jPoint) && (jProcessor == rank)) compute = false;
-			else compute = true;
-            
-			if (compute) {
-                
-				/*--- We only receive the information that belong to other boundary ---*/
-				if (jProcessor != rank) {
-					MPI::COMM_WORLD.Recv(Buffer_Receive_U, Buffer_Size, MPI::DOUBLE, jProcessor, jPoint);
-                }
-				else {
-                    
-					for (iVar = 0; iVar < nVar; iVar++)
-						Buffer_Receive_U[iVar] = node[jPoint]->GetSolution(iVar);
-                    
-                    for (iVar = 0; iVar < solver_container[FLOW_SOL]->GetnVar(); iVar++)
-                        Buffer_Send_U[nVar+iVar] = solver_container[FLOW_SOL]->node[jPoint]->GetSolution(iVar);
-                    
-				}
-                
-				/*--- Store the solution for both points ---*/
-				for (iVar = 0; iVar < nVar; iVar++) {
-					Solution_i[iVar] = node[iPoint]->GetSolution(iVar);
-					Solution_j[iVar] = Buffer_Receive_U[iVar];
-				}
-                
-                /*--- Set Turbulent Variables ---*/
-                numerics->SetTurbVar(Solution_i, Solution_j);
-                
-                /*--- Retrieve flow solution for both points ---*/
-                for (iVar = 0; iVar < solver_container[FLOW_SOL]->GetnVar(); iVar++) {
-                    FlowSolution_i[iVar] = solver_container[FLOW_SOL]->node[iPoint]->GetSolution(iVar);
-                    FlowSolution_j[iVar] = Buffer_Receive_U[nVar + iVar];
-                }
-                
-				/*--- Set Flow Variables ---*/
-                numerics->SetConservative(FlowSolution_i, FlowSolution_j);
-                
-				geometry->vertex[val_marker][iVertex]->GetNormal(Vector);
-				for (iDim = 0; iDim < nDim; iDim++)
-					Vector[iDim] = -Vector[iDim];
-				numerics->SetNormal(Vector);
-                
-				numerics->ComputeResidual(Residual, Jacobian_i, Jacobian_j, config);
-				LinSysRes.AddBlock(iPoint, Residual);
-				Jacobian.AddBlock(iPoint, iPoint, Jacobian_i);
-                
-			}
-		}
-	}
-    
-	delete[] Buffer_Send_U;
-	delete[] Buffer_Receive_U;
-    
-#endif
     
     delete[] Vector;
     
@@ -2628,9 +2319,6 @@ CTurbSSTSolver::CTurbSSTSolver(CGeometry *geometry, CConfig *config, unsigned sh
     bool freesurface = (config->GetKind_Regime() == FREESURFACE);
     
 	int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
     /*--- Array initialization ---*/
     constants = NULL;

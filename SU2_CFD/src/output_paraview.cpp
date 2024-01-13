@@ -77,12 +77,6 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
 		if (val_iZone == 1) Kind_Solver = ELECTRIC_POTENTIAL;
 	}
     
-#ifndef NO_MPI
-	/*--- Remove the domain number from the surface csv filename ---*/
-	int nProcessor = MPI::COMM_WORLD.Get_size();
-	if (nProcessor > 1) filename.erase (filename.end()-2, filename.end());
-#endif
-    
 	strcpy (cstr, filename.c_str());
 	if (Kind_Solver == ELECTRIC_POTENTIAL) strcpy (cstr, config->GetStructure_FileName().c_str());
     

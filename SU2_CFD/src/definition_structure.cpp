@@ -33,15 +33,6 @@ unsigned short GetnZone(string val_mesh_filename, unsigned short val_format, CCo
 	string::size_type position;
 	int rank = MASTER_NODE;
     
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-	if (MPI::COMM_WORLD.Get_size() != 1) {
-        unsigned short lastindex = val_mesh_filename.find_last_of(".");
-        val_mesh_filename = val_mesh_filename.substr(0, lastindex);
-		val_mesh_filename = val_mesh_filename + "_1.su2";
-	}
-#endif
-    
 	/*--- Search the mesh file for the 'NZONE' keyword. ---*/
 	switch (val_format) {
         case SU2:
@@ -54,12 +45,7 @@ unsigned short GetnZone(string val_mesh_filename, unsigned short val_format, CCo
                 cout << "There is no geometry file (GetnZone))!" << endl;
                 cout << "Press any key to exit..." << endl;
                 cin.get();
-#ifdef NO_MPI
                 exit(1);
-#else
-                MPI::COMM_WORLD.Abort(1);
-                MPI::Finalize();
-#endif
             }
             
             /*--- Open the SU2 mesh file ---*/
@@ -77,12 +63,7 @@ unsigned short GetnZone(string val_mesh_filename, unsigned short val_format, CCo
                             cout << "Error: Number of mesh zones is less than 1 !!!" << endl;
                             cout << "Press any key to exit..." << endl;
                             cin.get();
-#ifdef NO_MPI
                             exit(1);
-#else
-                            MPI::COMM_WORLD.Abort(1);
-                            MPI::Finalize();
-#endif
                         }
                     }
                 }
@@ -120,14 +101,6 @@ unsigned short GetnDim(string val_mesh_filename, unsigned short val_format) {
 	char cstr[200];
 	string::size_type position;
     
-#ifndef NO_MPI
-	if (MPI::COMM_WORLD.Get_size() != 1) {
-        unsigned short lastindex = val_mesh_filename.find_last_of(".");
-        val_mesh_filename = val_mesh_filename.substr(0, lastindex);
-		val_mesh_filename = val_mesh_filename + "_1.su2";
-	}
-#endif
-    
 	switch (val_format) {
         case SU2:
             
@@ -160,9 +133,6 @@ void Geometrical_Preprocessing(CGeometry ***geometry, CConfig **config, unsigned
 	unsigned short iMGlevel, iZone;
 	unsigned long iPoint;
 	int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
 	for (iZone = 0; iZone < val_nZone; iZone++) {
         
@@ -204,11 +174,6 @@ void Geometrical_Preprocessing(CGeometry ***geometry, CConfig **config, unsigned
 			cout << "Setting the multigrid structure." <<endl;
         
 	}
-    
-#ifndef NO_MPI
-	/*--- Synchronization point after the multigrid stuff ---*/
-	MPI::COMM_WORLD.Barrier();
-#endif
     
 	/*--- Loop over all the new grid ---*/
 	for (iMGlevel = 1; iMGlevel <= config[ZONE_0]->GetMGLevels(); iMGlevel++) {

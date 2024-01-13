@@ -278,13 +278,6 @@ void CAdjPlasmaSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 	short SendRecv;
 	int send_to, receive_from;
   
-#ifndef NO_MPI
-	double *Buffer_Send_U = NULL, *Buffer_Send_LaminarViscosity = NULL,
-  *Buffer_Send_EddyViscosity = NULL, *Buffer_Send_VGrad = NULL, *Buffer_Send_UGrad = NULL, *Buffer_Send_Limit = NULL, *Buffer_Send_Undivided_Laplacian = NULL,
-  *Buffer_Send_Sensor = NULL, *Buffer_Send_Lambda = NULL;
-	unsigned short *Buffer_Send_Neighbor = NULL;
-#endif
-  
 	newSolution = new double[nVar];
   
 	/*--- Send-Receive boundary conditions ---*/
@@ -300,37 +293,12 @@ void CAdjPlasmaSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 			send_to = SendRecv-1;
 			receive_from = abs(SendRecv)-1;
       
-#ifndef NO_MPI
-      
-			/*--- Send information using MPI  ---*/
-			if (SendRecv > 0) {
-				/*--- Allocate upwind variables ---*/
-				Buffer_Send_U = new double[nBuffer_Vector];
-        
-				for (iVertex = 0; iVertex < nVertex; iVertex++) {
-          
-					iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-          
-					/*--- Copy data ---*/
-					for (iVar = 0; iVar < nVar; iVar++) {
-						Buffer_Send_U[iVar*nVertex+iVertex] = node[iPoint]->GetSolution(iVar);
-					}
-				}
-        
-				/*--- Send the buffer, and deallocate information using MPI ---*/
-				MPI::COMM_WORLD.Bsend(Buffer_Send_U, nBuffer_Vector, MPI::DOUBLE, send_to, 0); delete [] Buffer_Send_U;
-			}
-      
-#endif
-      
 			/*--- Receive information  ---*/
 			if (SendRecv < 0) {
         
 				/*--- Allocate upwind variables ---*/
 				Buffer_Receive_U = new double [nBuffer_Vector];
         
-        
-#ifdef NO_MPI
         
 				/*--- Get the information from the donor point directly. This is a
 				 serial computation with access to all nodes. Note that there is an
@@ -344,12 +312,6 @@ void CAdjPlasmaSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 						Buffer_Receive_U[iVar*nVertex+iVertex] = node[iPoint]->GetSolution(iVar);
 					}
 				}
-        
-#else
-				/*--- Receive the information using MPI---*/
-				MPI::COMM_WORLD.Recv(Buffer_Receive_U, nBuffer_Vector, MPI::DOUBLE, receive_from, 0);
-        
-#endif
         
 				/*--- Do the coordinate transformation ---*/
 				for (iVertex = 0; iVertex < nVertex; iVertex++) {
@@ -422,13 +384,6 @@ void CAdjPlasmaSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *c
 	short SendRecv;
 	int send_to, receive_from;
     
-#ifndef NO_MPI
-    
-    MPI::COMM_WORLD.Barrier();
-	double *Buffer_Send_UGrad = NULL;
-    
-#endif
-    
 	newGradient = new double* [nVar];
 	for (iVar = 0; iVar < nVar; iVar++)
 		newGradient[iVar] = new double[3];
@@ -442,27 +397,9 @@ void CAdjPlasmaSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *c
 			send_to = SendRecv-1;
 			receive_from = abs(SendRecv)-1;
             
-#ifndef NO_MPI
-            
-			/*--- Send information using MPI  ---*/
-			if (SendRecv > 0) {
-                Buffer_Send_UGrad = new double[nBuffer_VectorGrad];
-				for (iVertex = 0; iVertex < nVertex; iVertex++) {
-					iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-                    for (iVar = 0; iVar < nVar; iVar++)
-                        for (iDim = 0; iDim < nDim; iDim++)
-                            Buffer_Send_UGrad[iDim*nVar*nVertex+iVar*nVertex+iVertex] = node[iPoint]->GetGradient(iVar,iDim);
-				}
-                MPI::COMM_WORLD.Bsend(Buffer_Send_UGrad, nBuffer_VectorGrad, MPI::DOUBLE, send_to, 0); delete [] Buffer_Send_UGrad;
-			}
-            
-#endif
-            
 			/*--- Receive information  ---*/
 			if (SendRecv < 0) {
                 Buffer_Receive_UGrad = new double [nBuffer_VectorGrad];
-                
-#ifdef NO_MPI
                 
 				/*--- Receive information without MPI ---*/
 				for (iVertex = 0; iVertex < nVertex; iVertex++) {
@@ -471,12 +408,6 @@ void CAdjPlasmaSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *c
                         for (iDim = 0; iDim < nDim; iDim++)
                             Buffer_Receive_UGrad[iDim*nVar*nVertex+iVar*nVertex+iVertex] = node[iPoint]->GetGradient(iVar,iDim);
 				}
-                
-#else
-                
-                MPI::COMM_WORLD.Recv(Buffer_Receive_UGrad, nBuffer_VectorGrad, MPI::DOUBLE, receive_from, 0);
-                
-#endif
                 
 				/*--- Do the coordinate transformation ---*/
 				for (iVertex = 0; iVertex < nVertex; iVertex++) {
@@ -537,12 +468,6 @@ void CAdjPlasmaSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *c
 	for (iVar = 0; iVar < nVar; iVar++)
 		delete [] newGradient[iVar];
 	delete [] newGradient;
-    
-#ifndef NO_MPI
-    
-    MPI::COMM_WORLD.Barrier();
-    
-#endif
     
 }
 

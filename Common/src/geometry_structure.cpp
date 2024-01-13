@@ -409,9 +409,6 @@ CPhysicalGeometry::CPhysicalGeometry(CConfig *config, unsigned short val_iZone, 
     unsigned short val_format = config->GetMesh_FileFormat();
     
     /*--- Initialize counters for local/global points & elements ---*/
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
 	if (rank == MASTER_NODE)
 		cout << endl <<"---------------------- Read grid file information -----------------------" << endl;
@@ -427,12 +424,7 @@ CPhysicalGeometry::CPhysicalGeometry(CConfig *config, unsigned short val_iZone, 
             cout << "Unrecognized mesh format specified!!" << endl;
             cout << "Press any key to exit..." << endl;
             cin.get();
-#ifdef NO_MPI
             exit(1);
-#else
-            MPI::COMM_WORLD.Abort(1);
-            MPI::Finalize();
-#endif
             break;
 	}
     
@@ -461,13 +453,6 @@ CPhysicalGeometry::CPhysicalGeometry(CConfig *config, unsigned short val_iZone, 
 			cout << "  and wrote to the output file: " << config->GetMesh_Out_FileName() << endl;
 		}
     
-#ifndef NO_MPI
-    /*--- Synchronization point after reading the grid ---*/
-    if (config->GetKind_SU2() != SU2_DDC) {
-        MPI::COMM_WORLD.Barrier();
-    }
-#endif
-    
 }
 
 CPhysicalGeometry::~CPhysicalGeometry(void) {
@@ -491,15 +476,6 @@ void CPhysicalGeometry::Read_SU2_Format(CConfig *config, string val_mesh_filenam
 	nZone = val_nZone;
     
     /*--- Initialize counters for local/global points & elements ---*/
-#ifndef NO_MPI
-	unsigned long LocalIndex;
-	unsigned long Local_nPoint, Local_nPointDomain;
-	unsigned long Local_nElem;
-    unsigned long Local_nElemTri, Local_nElemQuad, Local_nElemTet;
-    unsigned long Local_nElemHex, Local_nElemWedge, Local_nElemPyramid;
-	rank = MPI::COMM_WORLD.Get_rank();
-	size = MPI::COMM_WORLD.Get_size();
-#endif
     FinestMGLevel = true;
 	Global_nPoint = 0; Global_nPointDomain = 0; Global_nElem = 0;
     nelem_edge     = 0; Global_nelem_edge     = 0;
@@ -519,12 +495,7 @@ void CPhysicalGeometry::Read_SU2_Format(CConfig *config, string val_mesh_filenam
         cout << "There is no geometry file (CPhysicalGeometry)!! " << cstr << endl;
         cout << "Press any key to exit..." << endl;
         cin.get();
-#ifdef NO_MPI
         exit(1);
-#else
-        MPI::COMM_WORLD.Abort(1);
-        MPI::Finalize();
-#endif
     }
     
     /*--- If divided grid, we need the global index to
@@ -621,18 +592,7 @@ void CPhysicalGeometry::Read_SU2_Format(CConfig *config, string val_mesh_filenam
         if (position != string::npos) {
             text_line.erase (0,6); nElem = atoi(text_line.c_str());
             
-#ifndef NO_MPI
-            if (config->GetKind_SU2() != SU2_DDC) {
-                Local_nElem = nElem;
-                MPI::COMM_WORLD.Allreduce(&Local_nElem, &Global_nElem, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-            }
-            else {
-                Local_nElem = nElem;
-                Global_nElem = Local_nElem;
-            }
-#else
             Global_nElem = nElem;
-#endif
             if (rank == MASTER_NODE)
                 cout << Global_nElem << " interior elements. " << endl;
             
@@ -988,49 +948,12 @@ void CPhysicalGeometry::Read_SU2_Format(CConfig *config, string val_mesh_filenam
             if (config->GetDivide_Element()) nElem = nelem_triangle + nelem_quad + nelem_tetra + nelem_hexa + nelem_wedge + nelem_pyramid;
             
             /*--- Communicate the number of each element type to all processors. ---*/
-#ifndef NO_MPI
-            if (config->GetKind_SU2() != SU2_DDC) {
-                Local_nElemTri = nelem_triangle;
-                MPI::COMM_WORLD.Allreduce(&Local_nElemTri, &Global_nelem_triangle,
-                                          1, MPI::UNSIGNED_LONG, MPI::SUM);
-                Local_nElemQuad = nelem_quad;
-                MPI::COMM_WORLD.Allreduce(&Local_nElemQuad,     &Global_nelem_quad,
-                                          1, MPI::UNSIGNED_LONG, MPI::SUM);
-                Local_nElemTet = nelem_tetra;
-                MPI::COMM_WORLD.Allreduce(&Local_nElemTet,    &Global_nelem_tetra,
-                                          1, MPI::UNSIGNED_LONG, MPI::SUM);
-                Local_nElemHex = nelem_hexa;
-                MPI::COMM_WORLD.Allreduce(&Local_nElemHex,     &Global_nelem_hexa,
-                                          1, MPI::UNSIGNED_LONG, MPI::SUM);
-                Local_nElemWedge = nelem_wedge;
-                MPI::COMM_WORLD.Allreduce(&Local_nElemWedge,    &Global_nelem_wedge,
-                                          1, MPI::UNSIGNED_LONG, MPI::SUM);
-                Local_nElemPyramid = nelem_pyramid;
-                MPI::COMM_WORLD.Allreduce(&Local_nElemPyramid,  &Global_nelem_pyramid,
-                                          1, MPI::UNSIGNED_LONG, MPI::SUM);
-            }
-            else {
-                Local_nElemTri = nelem_triangle;
-                Global_nelem_triangle = Local_nElemTri;
-                Local_nElemQuad = nelem_quad;
-                Global_nelem_quad = Local_nElemQuad;
-                Local_nElemTet = nelem_tetra;
-                Global_nelem_tetra = Local_nElemTet;
-                Local_nElemHex = nelem_hexa;
-                Global_nelem_hexa = Local_nElemHex;
-                Local_nElemWedge = nelem_wedge;
-                Global_nelem_wedge = Local_nElemWedge;
-                Local_nElemPyramid = nelem_pyramid;
-                Global_nelem_pyramid = Local_nElemPyramid;
-            }
-#else
             Global_nelem_triangle = nelem_triangle;
             Global_nelem_quad     = nelem_quad;
             Global_nelem_tetra    = nelem_tetra;
             Global_nelem_hexa     = nelem_hexa;
             Global_nelem_wedge    = nelem_wedge;
             Global_nelem_pyramid  = nelem_pyramid;
-#endif
             
             /*--- Print information about the elements to the console ---*/
             if (rank == MASTER_NODE) {
@@ -1068,21 +991,8 @@ void CPhysicalGeometry::Read_SU2_Format(CConfig *config, string val_mesh_filenam
                 stream_line >> nPointDomain;
                 
                 /*--- Set some important point information for parallel simulations. ---*/
-#ifndef NO_MPI
-                if (config->GetKind_SU2() != SU2_DDC) {
-                    Local_nPoint = nPoint; Local_nPointDomain = nPointDomain;
-                    MPI::COMM_WORLD.Allreduce(&Local_nPoint, &Global_nPoint, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-                    MPI::COMM_WORLD.Allreduce(&Local_nPointDomain, &Global_nPointDomain, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-                }
-                else {
-                    Local_nPoint = nPoint; Local_nPointDomain = nPointDomain;
-                    Global_nPoint = Local_nPoint;
-                    Global_nPointDomain = Local_nPointDomain;
-                }
-#else
                 Global_nPoint = nPoint;
                 Global_nPointDomain = nPointDomain;
-#endif
                 if (rank == MASTER_NODE)
                     cout << Global_nPointDomain << " points, and " << Global_nPoint-Global_nPointDomain << " ghost points." << endl;
             }
@@ -1097,12 +1007,7 @@ void CPhysicalGeometry::Read_SU2_Format(CConfig *config, string val_mesh_filenam
                 cout << "NPOIN improperly specified!!" << endl;
                 cout << "Press any key to exit..." << endl;
                 cin.get();
-#ifdef NO_MPI
                 exit(1);
-#else
-                MPI::COMM_WORLD.Abort(1);
-                MPI::Finalize();
-#endif
             }
             
             /*--- Retrieve grid conversion factor. The conversion is only
@@ -1121,22 +1026,12 @@ void CPhysicalGeometry::Read_SU2_Format(CConfig *config, string val_mesh_filenam
                 switch(nDim) {
                     case 2:
                         GlobalIndex = iPoint;
-#ifdef NO_MPI
                         point_line >> Coord_2D[0]; point_line >> Coord_2D[1];
-#else
-                        if (size > SINGLE_NODE) { point_line >> Coord_2D[0]; point_line >> Coord_2D[1]; point_line >> LocalIndex; point_line >> GlobalIndex; }
-                        else { point_line >> Coord_2D[0]; point_line >> Coord_2D[1]; LocalIndex = iPoint; GlobalIndex = iPoint; }
-#endif
                         node[iPoint] = new CPoint(Conversion_Factor*Coord_2D[0], Conversion_Factor*Coord_2D[1], GlobalIndex, config);
                         iPoint++; break;
                     case 3:
                         GlobalIndex = iPoint;
-#ifdef NO_MPI
                         point_line >> Coord_3D[0]; point_line >> Coord_3D[1]; point_line >> Coord_3D[2];
-#else
-                        if (size > SINGLE_NODE) { point_line >> Coord_3D[0]; point_line >> Coord_3D[1]; point_line >> Coord_3D[2]; point_line >> LocalIndex; point_line >> GlobalIndex; }
-                        else { point_line >> Coord_3D[0]; point_line >> Coord_3D[1]; point_line >> Coord_3D[2]; LocalIndex = iPoint; GlobalIndex = iPoint; }
-#endif
                         node[iPoint] = new CPoint(Conversion_Factor*Coord_3D[0], Conversion_Factor*Coord_3D[1], Conversion_Factor*Coord_3D[2], GlobalIndex, config);
                         iPoint++; break;
                 }
@@ -1195,12 +1090,7 @@ void CPhysicalGeometry::Read_SU2_Format(CConfig *config, string val_mesh_filenam
                                     cout << "Please remove line boundary conditions from the mesh file!" << endl;
                                     cout << "Press any key to exit..." << endl;
                                     cin.get();
-#ifdef NO_MPI
                                     exit(1);
-#else
-                                    MPI::COMM_WORLD.Abort(1);
-                                    MPI::Finalize();
-#endif
                                 }
                                 
                                 bound_line >> vnodes_edge[0]; bound_line >> vnodes_edge[1];
@@ -1324,12 +1214,7 @@ void CPhysicalGeometry::Read_SU2_Format(CConfig *config, string val_mesh_filenam
                         cout << "PERIODIC_INDEX out of order in SU2 file!!" << endl;
                         cout << "Press any key to exit..." << endl;
                         cin.get();
-#ifdef NO_MPI
                         exit(1);
-#else
-                        MPI::COMM_WORLD.Abort(1);
-                        MPI::Finalize();
-#endif
                     }
                 }
                 double* center    = new double[3];
@@ -1402,13 +1287,6 @@ void CPhysicalGeometry::Read_NETCDF_Format(CConfig *config, string val_mesh_file
     nelem_pyramid  = 0; Global_nelem_pyramid  = 0;
     
     /*--- Throw error if not in serial mode. ---*/
-#ifndef NO_MPI
-    cout << "Parallel support with NETCDF format not yet implemented!!" << endl;
-    cout << "Press any key to exit..." << endl;
-    cin.get();
-    MPI::COMM_WORLD.Abort(1);
-    MPI::Finalize();
-#endif
     
     unsigned short Marker_Index, marker, icommas, iDim;
     unsigned long nmarker, ielem_triangle, ielem_hexa, ncoord, iSurfElem, ielem_wedge,
@@ -2079,13 +1957,8 @@ void CPhysicalGeometry::ComputeWall_Distance(CConfig *config) {
 	unsigned long iPoint, iVertex, nVertex_SolidWall;
     
     int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
 	if (rank == MASTER_NODE)
 		cout << "Computing wall distances." << endl;
-    
-#ifdef NO_MPI
     
 	/*--- Compute the total number of nodes on no-slip boundaries ---*/
     
@@ -2139,92 +2012,6 @@ void CPhysicalGeometry::ComputeWall_Distance(CConfig *config) {
 		delete[] Coord_bound[iVertex];
 	delete[] Coord_bound;
     
-    
-#else
-    
-    /*--- Variables and buffers needed for MPI ---*/
-    
-	int iProcessor;
-	int nProcessor = MPI::COMM_WORLD.Get_size();
-    
-	unsigned long nLocalVertex_NS = 0, nGlobalVertex_NS = 0, MaxLocalVertex_NS = 0;
-	unsigned long *Buffer_Send_nVertex    = new unsigned long [1];
-	unsigned long *Buffer_Receive_nVertex = new unsigned long [nProcessor];
-    
-    /*--- Count the total number of nodes on no-slip boundaries within the
-     local partition. ---*/
-    
-	for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++)
-		if ((config->GetMarker_All_Boundary(iMarker) == HEAT_FLUX) ||
-            (config->GetMarker_All_Boundary(iMarker) == ISOTHERMAL))
-			nLocalVertex_NS += GetnVertex(iMarker);
-    
-    /*--- Communicate to all processors the total number of no-slip boundary
-     nodes, the maximum number of no-slip boundary nodes on any single single
-     partition, and the number of no-slip nodes on each partition. ---*/
-    
-	Buffer_Send_nVertex[0] = nLocalVertex_NS;
-	MPI::COMM_WORLD.Allreduce(&nLocalVertex_NS, &nGlobalVertex_NS,  1,
-                              MPI::UNSIGNED_LONG, MPI::SUM);
-	MPI::COMM_WORLD.Allreduce(&nLocalVertex_NS, &MaxLocalVertex_NS, 1,
-                              MPI::UNSIGNED_LONG, MPI::MAX);
-	MPI::COMM_WORLD.Allgather(Buffer_Send_nVertex, 1, MPI::UNSIGNED_LONG,
-                              Buffer_Receive_nVertex, 1, MPI::UNSIGNED_LONG);
-    
-    /*--- Create and initialize to zero some buffers to hold the coordinates
-     of the boundary nodes that are communicated from each partition (all-to-all). ---*/
-    
-	double *Buffer_Send_Coord    = new double [MaxLocalVertex_NS*nDim];
-	double *Buffer_Receive_Coord = new double [nProcessor*MaxLocalVertex_NS*nDim];
-	unsigned long nBuffer = MaxLocalVertex_NS*nDim;
-    
-	for (iVertex = 0; iVertex < MaxLocalVertex_NS; iVertex++)
-		for (iDim = 0; iDim < nDim; iDim++)
-			Buffer_Send_Coord[iVertex*nDim+iDim] = 0.0;
-    
-    /*--- Retrieve and store the coordinates of the no-slip boundary nodes on
-     the local partition and broadcast them to all partitions. ---*/
-    
-	nVertex_SolidWall = 0;
-	for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++)
-		if ((config->GetMarker_All_Boundary(iMarker) == HEAT_FLUX) ||
-            (config->GetMarker_All_Boundary(iMarker) == ISOTHERMAL))
-			for (iVertex = 0; iVertex < GetnVertex(iMarker); iVertex++) {
-				iPoint = vertex[iMarker][iVertex]->GetNode();
-				for (iDim = 0; iDim < nDim; iDim++)
-					Buffer_Send_Coord[nVertex_SolidWall*nDim+iDim] = node[iPoint]->GetCoord(iDim);
-				nVertex_SolidWall++;
-			}
-	MPI::COMM_WORLD.Allgather(Buffer_Send_Coord, nBuffer, MPI::DOUBLE,
-                              Buffer_Receive_Coord, nBuffer, MPI::DOUBLE);
-    
-    /*--- Loop over all interior mesh nodes on the local partition and compute
-     the distances to each of the no-slip boundary nodes in the entire mesh.
-     Store the minimum distance to the wall for each interior mesh node. ---*/
-    
-	for (iPoint = 0; iPoint < GetnPoint(); iPoint++) {
-		coord = node[iPoint]->GetCoord();
-		dist = 1E20;
-		for (iProcessor = 0; iProcessor < nProcessor; iProcessor++)
-			for (iVertex = 0; iVertex < Buffer_Receive_nVertex[iProcessor]; iVertex++) {
-				dist2 = 0.0;
-				for (iDim = 0; iDim < nDim; iDim++)
-					dist2 += (coord[iDim]-Buffer_Receive_Coord[(iProcessor*MaxLocalVertex_NS+iVertex)*nDim+iDim])*
-					(coord[iDim]-Buffer_Receive_Coord[(iProcessor*MaxLocalVertex_NS+iVertex)*nDim+iDim]);
-				if (dist2 < dist) dist = dist2;
-			}
-		node[iPoint]->SetWall_Distance(sqrt(dist));
-	}
-    
-    /*--- Deallocate the buffers needed for the MPI communication. ---*/
-    
-	delete[] Buffer_Send_Coord;
-	delete[] Buffer_Receive_Coord;
-	delete[] Buffer_Send_nVertex;
-	delete[] Buffer_Receive_nVertex;
-    
-#endif
-    
 }
 
 void CPhysicalGeometry::SetPositive_ZArea(CConfig *config) {
@@ -2233,8 +2020,6 @@ void CPhysicalGeometry::SetPositive_ZArea(CConfig *config) {
 	double *Normal, PositiveZArea;
 	int rank = MASTER_NODE;
     
-#ifdef NO_MPI
-    
 	PositiveZArea = 0.0;
 	for (iMarker = 0; iMarker < nMarker; iMarker++) {
 		Boundary = config->GetMarker_All_Boundary(iMarker);
@@ -2250,34 +2035,6 @@ void CPhysicalGeometry::SetPositive_ZArea(CConfig *config) {
 				}
 			}
 	}
-    
-#else
-    
-	double TotalPositiveZArea;
-    
-	rank = MPI::COMM_WORLD.Get_rank();
-    
-	PositiveZArea = 0.0;
-	for (iMarker = 0; iMarker < nMarker; iMarker++) {
-		Boundary = config->GetMarker_All_Boundary(iMarker);
-		Monitoring = config->GetMarker_All_Monitoring(iMarker);
-        
-		if (((Boundary == EULER_WALL) || (Boundary == HEAT_FLUX) ||
-             (Boundary == ISOTHERMAL)) && (Monitoring == YES))
-			for(iVertex = 0; iVertex < nVertex[iMarker]; iVertex++) {
-				iPoint = vertex[iMarker][iVertex]->GetNode();
-				if (node[iPoint]->GetDomain()) {
-					Normal = vertex[iMarker][iVertex]->GetNormal();
-					if (Normal[nDim-1] < 0) PositiveZArea -= Normal[nDim-1];
-				}
-			}
-	}
-    
-	MPI::COMM_WORLD.Reduce(&PositiveZArea, &TotalPositiveZArea, 1, MPI::DOUBLE, MPI::SUM, MASTER_NODE);
-	if (MPI::COMM_WORLD.Get_rank() == MASTER_NODE) PositiveZArea = TotalPositiveZArea;
-	MPI::COMM_WORLD.Bcast (&PositiveZArea, 1, MPI::DOUBLE, MASTER_NODE);
-    
-#endif
     
 	if (config->GetRefAreaCoeff() == 0.0)
 		config->SetRefAreaCoeff(PositiveZArea);
@@ -2705,7 +2462,6 @@ void CPhysicalGeometry::MatchNearField(CConfig *config) {
     unsigned short nMarker_NearfieldBound = config->GetnMarker_NearFieldBound();
     
     if (nMarker_NearfieldBound != 0) {
-#ifdef NO_MPI
         
         unsigned short iMarker, jMarker;
         unsigned long iVertex, iPoint, jVertex, jPoint = 0, pPoint = 0;
@@ -2745,140 +2501,6 @@ void CPhysicalGeometry::MatchNearField(CConfig *config) {
                 cout <<"The max distance between points is: " << maxdist <<"."<< endl;
             }
         
-#else
-        
-        MPI::COMM_WORLD.Barrier();
-        
-        unsigned short iMarker, iDim;
-        unsigned long iVertex, iPoint, pPoint = 0, jVertex, jPoint;
-        double *Coord_i, Coord_j[3], dist = 0.0, mindist, maxdist_local, maxdist_global;
-        int iProcessor, pProcessor = 0;
-        unsigned long nLocalVertex_NearField = 0, nGlobalVertex_NearField = 0, MaxLocalVertex_NearField = 0;
-        
-        int rank = MPI::COMM_WORLD.Get_rank();
-        int nProcessor = MPI::COMM_WORLD.Get_size();
-        
-        unsigned long *Buffer_Send_nVertex = new unsigned long [1];
-        unsigned long *Buffer_Receive_nVertex = new unsigned long [nProcessor];
-        
-        if (rank == MASTER_NODE) cout << "Set Near-Field boundary conditions." <<endl;
-        
-        /*--- Compute the number of vertex that have nearfield boundary condition
-         without including the ghost nodes ---*/
-        nLocalVertex_NearField = 0;
-        for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++)
-            if (config->GetMarker_All_Boundary(iMarker) == NEARFIELD_BOUNDARY)
-                for (iVertex = 0; iVertex < GetnVertex(iMarker); iVertex++) {
-                    iPoint = vertex[iMarker][iVertex]->GetNode();
-                    if (node[iPoint]->GetDomain()) nLocalVertex_NearField ++;
-                }
-        
-        Buffer_Send_nVertex[0] = nLocalVertex_NearField;
-        
-        /*--- Send Near-Field vertex information --*/
-        MPI::COMM_WORLD.Allreduce(&nLocalVertex_NearField, &nGlobalVertex_NearField, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-        MPI::COMM_WORLD.Allreduce(&nLocalVertex_NearField, &MaxLocalVertex_NearField, 1, MPI::UNSIGNED_LONG, MPI::MAX);
-        MPI::COMM_WORLD.Allgather(Buffer_Send_nVertex, 1, MPI::UNSIGNED_LONG, Buffer_Receive_nVertex, 1, MPI::UNSIGNED_LONG);
-        
-        double *Buffer_Send_Coord = new double [MaxLocalVertex_NearField*nDim];
-        unsigned long *Buffer_Send_Point = new unsigned long [MaxLocalVertex_NearField];
-        
-        double *Buffer_Receive_Coord = new double [nProcessor*MaxLocalVertex_NearField*nDim];
-        unsigned long *Buffer_Receive_Point = new unsigned long [nProcessor*MaxLocalVertex_NearField];
-        
-        unsigned long nBuffer_Coord = MaxLocalVertex_NearField*nDim;
-        unsigned long nBuffer_Point = MaxLocalVertex_NearField;
-        
-        for (iVertex = 0; iVertex < MaxLocalVertex_NearField; iVertex++) {
-            Buffer_Send_Point[iVertex] = 0;
-            for (iDim = 0; iDim < nDim; iDim++)
-                Buffer_Send_Coord[iVertex*nDim+iDim] = 0.0;
-        }
-        
-        /*--- Copy coordinates and point to the auxiliar vector --*/
-        nLocalVertex_NearField = 0;
-        for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++)
-            if (config->GetMarker_All_Boundary(iMarker) == NEARFIELD_BOUNDARY)
-                for (iVertex = 0; iVertex < GetnVertex(iMarker); iVertex++) {
-                    iPoint = vertex[iMarker][iVertex]->GetNode();
-                    if (node[iPoint]->GetDomain()) {
-                        Buffer_Send_Point[nLocalVertex_NearField] = iPoint;
-                        for (iDim = 0; iDim < nDim; iDim++)
-                            Buffer_Send_Coord[nLocalVertex_NearField*nDim+iDim] = node[iPoint]->GetCoord(iDim);
-                        nLocalVertex_NearField++;
-                    }
-                }
-        
-        MPI::COMM_WORLD.Allgather(Buffer_Send_Coord, nBuffer_Coord, MPI::DOUBLE, Buffer_Receive_Coord, nBuffer_Coord, MPI::DOUBLE);
-        MPI::COMM_WORLD.Allgather(Buffer_Send_Point, nBuffer_Point, MPI::UNSIGNED_LONG, Buffer_Receive_Point, nBuffer_Point, MPI::UNSIGNED_LONG);
-        
-        /*--- Compute the closest point to a Near-Field boundary point ---*/
-        maxdist_local = 0.0;
-        maxdist_global = 0.0;
-        for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-            if (config->GetMarker_All_Boundary(iMarker) == NEARFIELD_BOUNDARY) {
-                
-                for (iVertex = 0; iVertex < nVertex[iMarker]; iVertex++) {
-                    iPoint = vertex[iMarker][iVertex]->GetNode();
-                    if (node[iPoint]->GetDomain()) {
-                        
-                        /*--- Coordinates of the boundary point ---*/
-                        Coord_i = node[iPoint]->GetCoord(); mindist = 1E6; pProcessor = 0; pPoint = 0;
-                        
-                        /*--- Loop over all the boundaries to find the pair ---*/
-                        for (iProcessor = 0; iProcessor < nProcessor; iProcessor++)
-                            for (jVertex = 0; jVertex < Buffer_Receive_nVertex[iProcessor]; jVertex++) {
-                                jPoint = Buffer_Receive_Point[iProcessor*MaxLocalVertex_NearField+jVertex];
-                                
-                                /*--- Compute the distance ---*/
-                                dist = 0.0; for (iDim = 0; iDim < nDim; iDim++) {
-                                    Coord_j[iDim] = Buffer_Receive_Coord[(iProcessor*MaxLocalVertex_NearField+jVertex)*nDim+iDim];
-                                    dist += pow(Coord_j[iDim]-Coord_i[iDim],2.0);
-                                } dist = sqrt(dist);
-                                
-                                if (((dist < mindist) && (iProcessor != rank)) ||
-									((dist < mindist) && (iProcessor == rank) && (jPoint != iPoint))) {
-                                    mindist = dist; pProcessor = iProcessor; pPoint = jPoint;
-                                }
-                            }
-                        
-                        /*--- Store the value of the pair ---*/
-                        maxdist_local = max(maxdist_local, mindist);
-                        vertex[iMarker][iVertex]->SetDonorPoint(pPoint, pProcessor);
-                        
-                        if (mindist > epsilon) {
-                            cout.precision(10);
-                            cout << endl;
-                            cout << "   Bad match for point " << iPoint << ".\tNearest";
-                            cout << " donor distance: " << scientific << mindist << ".";
-                            vertex[iMarker][iVertex]->SetDonorPoint(iPoint);
-                            maxdist_local = min(maxdist_local, 0.0);
-                        }
-                        
-                    }
-                }
-                
-            }
-        }
-        
-        MPI::COMM_WORLD.Reduce(&maxdist_local, &maxdist_global, 1, MPI::DOUBLE, MPI::MAX, MASTER_NODE);
-        if (rank == MASTER_NODE) cout <<"The max distance between points is: " << maxdist_global <<"."<< endl;
-        
-        
-        delete[] Buffer_Send_Coord;
-        delete[] Buffer_Send_Point;
-        
-        delete[] Buffer_Receive_Coord;
-        delete[] Buffer_Receive_Point;
-        
-        delete[] Buffer_Send_nVertex;
-        delete[] Buffer_Receive_nVertex;
-        
-        
-        MPI::COMM_WORLD.Barrier();
-        
-#endif
-        
     }
     
 }
@@ -2889,7 +2511,6 @@ void CPhysicalGeometry::MatchInterface(CConfig *config) {
     unsigned short nMarker_InterfaceBound = config->GetnMarker_InterfaceBound();
     
     if (nMarker_InterfaceBound != 0) {
-#ifdef NO_MPI
         
         unsigned short iMarker, jMarker;
         unsigned long iVertex, iPoint, jVertex, jPoint = 0, pPoint = 0;
@@ -2930,143 +2551,11 @@ void CPhysicalGeometry::MatchInterface(CConfig *config) {
                 cout <<"The max distance between points is: " << maxdist <<"."<< endl;
             }
         
-#else
-        
-        MPI::COMM_WORLD.Barrier();
-        
-        unsigned short iMarker, iDim;
-        unsigned long iVertex, iPoint, pPoint = 0, jVertex, jPoint;
-        double *Coord_i, Coord_j[3], dist = 0.0, mindist, maxdist_local, maxdist_global;
-        int iProcessor, pProcessor = 0;
-        unsigned long nLocalVertex_Interface = 0, nGlobalVertex_Interface = 0, MaxLocalVertex_Interface = 0;
-        
-        int rank = MPI::COMM_WORLD.Get_rank();
-        int nProcessor = MPI::COMM_WORLD.Get_size();
-        
-        unsigned long *Buffer_Send_nVertex = new unsigned long [1];
-        unsigned long *Buffer_Receive_nVertex = new unsigned long [nProcessor];
-        
-        if (rank == MASTER_NODE) cout << "Set Interface boundary conditions (if any)." <<endl;
-        
-        /*--- Compute the number of vertex that have nearfield boundary condition
-         without including the ghost nodes ---*/
-        nLocalVertex_Interface = 0;
-        for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++)
-            if (config->GetMarker_All_Boundary(iMarker) == INTERFACE_BOUNDARY)
-                for (iVertex = 0; iVertex < GetnVertex(iMarker); iVertex++) {
-                    iPoint = vertex[iMarker][iVertex]->GetNode();
-                    if (node[iPoint]->GetDomain()) nLocalVertex_Interface ++;
-                }
-        
-        Buffer_Send_nVertex[0] = nLocalVertex_Interface;
-        
-        /*--- Send Interface vertex information --*/
-        MPI::COMM_WORLD.Allreduce(&nLocalVertex_Interface, &nGlobalVertex_Interface, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-        MPI::COMM_WORLD.Allreduce(&nLocalVertex_Interface, &MaxLocalVertex_Interface, 1, MPI::UNSIGNED_LONG, MPI::MAX);
-        MPI::COMM_WORLD.Allgather(Buffer_Send_nVertex, 1, MPI::UNSIGNED_LONG, Buffer_Receive_nVertex, 1, MPI::UNSIGNED_LONG);
-        
-        double *Buffer_Send_Coord = new double [MaxLocalVertex_Interface*nDim];
-        unsigned long *Buffer_Send_Point = new unsigned long [MaxLocalVertex_Interface];
-        
-        double *Buffer_Receive_Coord = new double [nProcessor*MaxLocalVertex_Interface*nDim];
-        unsigned long *Buffer_Receive_Point = new unsigned long [nProcessor*MaxLocalVertex_Interface];
-        
-        unsigned long nBuffer_Coord = MaxLocalVertex_Interface*nDim;
-        unsigned long nBuffer_Point = MaxLocalVertex_Interface;
-        
-        for (iVertex = 0; iVertex < MaxLocalVertex_Interface; iVertex++) {
-            Buffer_Send_Point[iVertex] = 0;
-            for (iDim = 0; iDim < nDim; iDim++)
-                Buffer_Send_Coord[iVertex*nDim+iDim] = 0.0;
-        }
-        
-        /*--- Copy coordinates and point to the auxiliar vector --*/
-        nLocalVertex_Interface = 0;
-        for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++)
-            if (config->GetMarker_All_Boundary(iMarker) == INTERFACE_BOUNDARY)
-                for (iVertex = 0; iVertex < GetnVertex(iMarker); iVertex++) {
-                    iPoint = vertex[iMarker][iVertex]->GetNode();
-                    if (node[iPoint]->GetDomain()) {
-                        Buffer_Send_Point[nLocalVertex_Interface] = iPoint;
-                        for (iDim = 0; iDim < nDim; iDim++)
-                            Buffer_Send_Coord[nLocalVertex_Interface*nDim+iDim] = node[iPoint]->GetCoord(iDim);
-                        nLocalVertex_Interface++;
-                    }
-                }
-        
-        MPI::COMM_WORLD.Allgather(Buffer_Send_Coord, nBuffer_Coord, MPI::DOUBLE, Buffer_Receive_Coord, nBuffer_Coord, MPI::DOUBLE);
-        MPI::COMM_WORLD.Allgather(Buffer_Send_Point, nBuffer_Point, MPI::UNSIGNED_LONG, Buffer_Receive_Point, nBuffer_Point, MPI::UNSIGNED_LONG);
-        
-        /*--- Compute the closest point to a Near-Field boundary point ---*/
-        maxdist_local = 0.0;
-        for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-            if (config->GetMarker_All_Boundary(iMarker) == INTERFACE_BOUNDARY) {
-                for (iVertex = 0; iVertex < nVertex[iMarker]; iVertex++) {
-                    iPoint = vertex[iMarker][iVertex]->GetNode();
-                    if (node[iPoint]->GetDomain()) {
-                        
-                        /*--- Coordinates of the boundary point ---*/
-                        Coord_i = node[iPoint]->GetCoord(); mindist = 1E6; pProcessor = 0; pPoint = 0;
-                        
-                        /*--- Loop over all the boundaries to find the pair ---*/
-                        for (iProcessor = 0; iProcessor < nProcessor; iProcessor++)
-                            for (jVertex = 0; jVertex < Buffer_Receive_nVertex[iProcessor]; jVertex++) {
-                                jPoint = Buffer_Receive_Point[iProcessor*MaxLocalVertex_Interface+jVertex];
-                                
-                                /*--- Compute the distance ---*/
-                                dist = 0.0; for (iDim = 0; iDim < nDim; iDim++) {
-                                    Coord_j[iDim] = Buffer_Receive_Coord[(iProcessor*MaxLocalVertex_Interface+jVertex)*nDim+iDim];
-                                    dist += pow(Coord_j[iDim]-Coord_i[iDim],2.0);
-                                } dist = sqrt(dist);
-                                
-                                if (((dist < mindist) && (iProcessor != rank)) ||
-									((dist < mindist) && (iProcessor == rank) && (jPoint != iPoint))) {
-                                    mindist = dist; pProcessor = iProcessor; pPoint = jPoint;
-                                }
-                            }
-                        
-                        /*--- Store the value of the pair ---*/
-                        maxdist_local = max(maxdist_local, mindist);
-                        vertex[iMarker][iVertex]->SetDonorPoint(pPoint, pProcessor);
-                        
-                        if (mindist > epsilon) {
-                            cout.precision(10);
-                            cout << endl;
-                            cout << "   Bad match for point " << iPoint << ".\tNearest";
-                            cout << " donor distance: " << scientific << mindist << ".";
-                            vertex[iMarker][iVertex]->SetDonorPoint(iPoint);
-                            maxdist_local = min(maxdist_local, 0.0);
-                        }
-                        
-                    }
-                }
-            }
-        }
-        
-        MPI::COMM_WORLD.Reduce(&maxdist_local, &maxdist_global, 1, MPI::DOUBLE, MPI::MAX, MASTER_NODE);
-        if (rank == MASTER_NODE) cout <<"The max distance between points is: " << maxdist_global <<"."<< endl;
-        
-        delete[] Buffer_Send_Coord;
-        delete[] Buffer_Send_Point;
-        
-        delete[] Buffer_Receive_Coord;
-        delete[] Buffer_Receive_Point;
-        
-        delete[] Buffer_Send_nVertex;
-        delete[] Buffer_Receive_nVertex;
-        
-        
-        MPI::COMM_WORLD.Barrier();
-        
-#endif
-        
     }
 }
 
 void CPhysicalGeometry::MatchZone(CConfig *config, CGeometry *geometry_donor, CConfig *config_donor,
                                   unsigned short val_iZone, unsigned short val_nZone) {
-    
-#ifdef NO_MPI
     
 	unsigned short iMarker, jMarker;
 	unsigned long iVertex, iPoint, jVertex, jPoint = 0, pPoint = 0;
@@ -3098,124 +2587,6 @@ void CPhysicalGeometry::MatchZone(CConfig *config, CGeometry *geometry_donor, CC
 		}
 	}
     
-#else
-    
-	MPI::COMM_WORLD.Barrier();
-    
-	unsigned short iMarker, iDim;
-	unsigned long iVertex, iPoint, pPoint = 0, jVertex, jPoint;
-	double *Coord_i, Coord_j[3], dist = 0.0, mindist, maxdist;
-	int iProcessor, pProcessor = 0;
-	unsigned long nLocalVertex_Zone = 0, nGlobalVertex_Zone = 0, MaxLocalVertex_Zone = 0;
-    
-	int rank = MPI::COMM_WORLD.Get_rank();
-	int nProcessor = MPI::COMM_WORLD.Get_size();
-    
-	unsigned long *Buffer_Send_nVertex = new unsigned long [1];
-	unsigned long *Buffer_Receive_nVertex = new unsigned long [nProcessor];
-    
-	if (val_iZone == ZONE_0) cout << "Set zone boundary conditions (if any)." <<endl;
-    
-	nLocalVertex_Zone = 0;
-	for (iMarker = 0; iMarker < config_donor->GetnMarker_All(); iMarker++)
-		if (config->GetMarker_All_Boundary(iMarker) != SLIDING_INTERFACE)
-			for (iVertex = 0; iVertex < geometry_donor->GetnVertex(iMarker); iVertex++) {
-				iPoint = geometry_donor->vertex[iMarker][iVertex]->GetNode();
-				if (geometry_donor->node[iPoint]->GetDomain()) nLocalVertex_Zone ++;
-			}
-    
-	Buffer_Send_nVertex[0] = nLocalVertex_Zone;
-    
-	/*--- Send Interface vertex information --*/
-	MPI::COMM_WORLD.Allreduce(&nLocalVertex_Zone, &nGlobalVertex_Zone, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-	MPI::COMM_WORLD.Allreduce(&nLocalVertex_Zone, &MaxLocalVertex_Zone, 1, MPI::UNSIGNED_LONG, MPI::MAX);
-	MPI::COMM_WORLD.Allgather(Buffer_Send_nVertex, 1, MPI::UNSIGNED_LONG, Buffer_Receive_nVertex, 1, MPI::UNSIGNED_LONG);
-    
-	double *Buffer_Send_Coord = new double [MaxLocalVertex_Zone*nDim];
-	unsigned long *Buffer_Send_Point = new unsigned long [MaxLocalVertex_Zone];
-    
-	double *Buffer_Receive_Coord = new double [nProcessor*MaxLocalVertex_Zone*nDim];
-	unsigned long *Buffer_Receive_Point = new unsigned long [nProcessor*MaxLocalVertex_Zone];
-    
-	unsigned long nBuffer_Coord = MaxLocalVertex_Zone*nDim;
-	unsigned long nBuffer_Point = MaxLocalVertex_Zone;
-    
-	for (iVertex = 0; iVertex < MaxLocalVertex_Zone; iVertex++) {
-		Buffer_Send_Point[iVertex] = 0;
-		for (iDim = 0; iDim < nDim; iDim++)
-			Buffer_Send_Coord[iVertex*nDim+iDim] = 0.0;
-	}
-    
-	/*--- Copy coordinates and point to the auxiliar vector --*/
-	nLocalVertex_Zone = 0;
-	for (iMarker = 0; iMarker < config_donor->GetnMarker_All(); iMarker++)
-		if (config->GetMarker_All_Boundary(iMarker) != SLIDING_INTERFACE)
-			for (iVertex = 0; iVertex < geometry_donor->GetnVertex(iMarker); iVertex++) {
-				iPoint = geometry_donor->vertex[iMarker][iVertex]->GetNode();
-				if (geometry_donor->node[iPoint]->GetDomain()) {
-					Buffer_Send_Point[nLocalVertex_Zone] = iPoint;
-					for (iDim = 0; iDim < nDim; iDim++)
-						Buffer_Send_Coord[nLocalVertex_Zone*nDim+iDim] = geometry_donor->node[iPoint]->GetCoord(iDim);
-					nLocalVertex_Zone++;
-				}
-			}
-    
-	MPI::COMM_WORLD.Allgather(Buffer_Send_Coord, nBuffer_Coord, MPI::DOUBLE, Buffer_Receive_Coord, nBuffer_Coord, MPI::DOUBLE);
-	MPI::COMM_WORLD.Allgather(Buffer_Send_Point, nBuffer_Point, MPI::UNSIGNED_LONG, Buffer_Receive_Point, nBuffer_Point, MPI::UNSIGNED_LONG);
-    
-	/*--- Compute the closest point to a Near-Field boundary point ---*/
-	maxdist = 0.0;
-	for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-		if (config->GetMarker_All_Boundary(iMarker) != SLIDING_INTERFACE) {
-			for (iVertex = 0; iVertex < nVertex[iMarker]; iVertex++) {
-				iPoint = vertex[iMarker][iVertex]->GetNode();
-                
-				if (node[iPoint]->GetDomain()) {
-                    
-					/*--- Coordinates of the boundary point ---*/
-					Coord_i = node[iPoint]->GetCoord(); mindist = 1E6; pProcessor = 0; pPoint = 0;
-                    
-					/*--- Loop over all the boundaries to find the pair ---*/
-					for (iProcessor = 0; iProcessor < nProcessor; iProcessor++)
-						for (jVertex = 0; jVertex < Buffer_Receive_nVertex[iProcessor]; jVertex++) {
-							jPoint = Buffer_Receive_Point[iProcessor*MaxLocalVertex_Zone+jVertex];
-                            
-							/*--- Compute the distance ---*/
-							dist = 0.0; for (iDim = 0; iDim < nDim; iDim++) {
-								Coord_j[iDim] = Buffer_Receive_Coord[(iProcessor*MaxLocalVertex_Zone+jVertex)*nDim+iDim];
-								dist += pow(Coord_j[iDim]-Coord_i[iDim],2.0);
-							} dist = sqrt(dist);
-                            
-							if (((dist < mindist) && (iProcessor != rank)) ||
-                                ((dist < mindist) && (iProcessor == rank) && (jPoint != iPoint))) {
-								mindist = dist; pProcessor = iProcessor; pPoint = jPoint;
-							}
-						}
-                    
-					/*--- Store the value of the pair ---*/
-					maxdist = max(maxdist, mindist);
-					vertex[iMarker][iVertex]->SetDonorPoint(pPoint, pProcessor);
-                    
-                    
-				}
-			}
-		}
-	}
-    
-	delete[] Buffer_Send_Coord;
-	delete[] Buffer_Send_Point;
-    
-	delete[] Buffer_Receive_Coord;
-	delete[] Buffer_Receive_Point;
-    
-	delete[] Buffer_Send_nVertex;
-	delete[] Buffer_Receive_nVertex;
-    
-    
-	MPI::COMM_WORLD.Barrier();
-    
-#endif
-    
 }
 
 
@@ -3227,11 +2598,7 @@ void CPhysicalGeometry::SetControlVolume(CConfig *config, unsigned short action)
 	Volume, DomainVolume, my_DomainVolume, *NormalFace = NULL;
 	bool change_face_orientation;
     
-#ifdef NO_MPI
 	int rank = MASTER_NODE;
-#else
-	int rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
 	/*--- Update values of faces of the edge ---*/
 	if (action != ALLOCATE) {
@@ -3326,11 +2693,7 @@ void CPhysicalGeometry::SetControlVolume(CConfig *config, unsigned short action)
 	//		}
 	//	}
     
-#ifndef NO_MPI
-	MPI::COMM_WORLD.Allreduce(&my_DomainVolume, &DomainVolume, 1, MPI::DOUBLE, MPI::SUM);
-#else
 	DomainVolume = my_DomainVolume;
-#endif
     
 	if ((rank == MASTER_NODE) && (action == ALLOCATE)) {
 		if (nDim == 2) cout <<"Area of the computational grid: "<< DomainVolume <<"."<<endl;
@@ -3378,11 +2741,7 @@ void CPhysicalGeometry::SetMeshFile (CConfig *config, string val_mesh_out_filena
 	for (iPoint = 0; iPoint < nPoint; iPoint++) {
 		for (iDim = 0; iDim < nDim; iDim++)
 			output_file << scientific << "\t" << node[iPoint]->GetCoord(iDim) ;
-#ifdef NO_MPI
 		output_file << "\t" << iPoint << endl;
-#else
-		output_file << "\t" << iPoint << "\t" << node[iPoint]->GetGlobalIndex() << endl;
-#endif
         
 	}
     
@@ -3548,11 +2907,7 @@ void CPhysicalGeometry::SetMeshFile(CConfig *config, string val_mesh_out_filenam
             for (iPoint = 0; iPoint < nPoint; iPoint++) {
                 for (iDim = 0; iDim < nDim; iDim++)
                     output_file << scientific << node[iPoint]->GetCoord(iDim) << "\t";
-#ifdef NO_MPI
                 output_file << iPoint << endl;
-#else
-                output_file << iPoint << "\t" << node[iPoint]->GetGlobalIndex() << endl;
-#endif
             }
             
         }
@@ -4068,10 +3423,6 @@ void CPhysicalGeometry::SetBoundSTL (CConfig *config, char mesh_filename[200]) {
 
 void CPhysicalGeometry::SetColorGrid(CConfig *config) {
     
-#ifndef NO_MPI
-    
-#endif
-    
 }
 
 void CPhysicalGeometry::GetQualityStatistics(double *statistics) {
@@ -4126,9 +3477,6 @@ void CPhysicalGeometry::SetRotationalVelocity(CConfig *config) {
 	double RotVel[3], Distance[3], *Coord, Center[3], Omega[3], L_Ref;
     
     int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
     /*--- Center of rotation & angular velocity vector from config ---*/
     
@@ -4225,13 +3573,6 @@ void CPhysicalGeometry::Set_MPI_GridVel(CConfig *config) {
 	short SendRecv;
 	int send_to, receive_from;
     
-#ifndef NO_MPI
-    
-    MPI::COMM_WORLD.Barrier();
-	double *Buffer_Send_GridVel = NULL;
-    
-#endif
-    
 	newGridVel = new double[nDim];
     
 	/*--- Send-Receive boundary conditions ---*/
@@ -4243,27 +3584,9 @@ void CPhysicalGeometry::Set_MPI_GridVel(CConfig *config) {
 			send_to = SendRecv-1;
 			receive_from = abs(SendRecv)-1;
             
-#ifndef NO_MPI
-            
-			/*--- Send information using MPI  ---*/
-			if (SendRecv > 0) {
-                Buffer_Send_GridVel = new double[nBuffer_Vector];
-				for (iVertex = 0; iVertex < nVert; iVertex++) {
-					iPoint = vertex[iMarker][iVertex]->GetNode();
-                    GridVel = node[iPoint]->GetGridVel();
-                    for (iVar = 0; iVar < nDim; iVar++)
-                        Buffer_Send_GridVel[iVar*nVert+iVertex] = GridVel[iVar];
-				}
-                MPI::COMM_WORLD.Bsend(Buffer_Send_GridVel, nBuffer_Vector, MPI::DOUBLE, send_to, 0); delete [] Buffer_Send_GridVel;
-			}
-            
-#endif
-            
 			/*--- Receive information  ---*/
 			if (SendRecv < 0) {
                 Buffer_Receive_GridVel = new double [nBuffer_Vector];
-                
-#ifdef NO_MPI
                 
 				/*--- Receive information without MPI ---*/
 				for (iVertex = 0; iVertex < nVert; iVertex++) {
@@ -4272,12 +3595,6 @@ void CPhysicalGeometry::Set_MPI_GridVel(CConfig *config) {
                     for (iVar = 0; iVar < nDim; iVar++)
                         Buffer_Receive_GridVel[iVar*nVert+iVertex] = GridVel[iVar];
                 }
-                
-#else
-                
-                MPI::COMM_WORLD.Recv(Buffer_Receive_GridVel, nBuffer_Vector, MPI::DOUBLE, receive_from, 0);
-                
-#endif
                 
 				/*--- Do the coordinate transformation ---*/
 				for (iVertex = 0; iVertex < nVert; iVertex++) {
@@ -4330,12 +3647,6 @@ void CPhysicalGeometry::Set_MPI_GridVel(CConfig *config) {
 		}
 	}
 	delete [] newGridVel;
-    
-#ifndef NO_MPI
-    
-    MPI::COMM_WORLD.Barrier();
-    
-#endif
     
 }
 
@@ -4682,11 +3993,7 @@ void CPhysicalGeometry::ComputeSurf_Curvature(CConfig *config) {
     double U[3], V[3], W[3], Length_U, Length_V, Length_W, CosValue, Angle_Value, *K, *Angle_Defect, *Area_Vertex, *Angle_Alpha, *Angle_Beta, **NormalMeanK, MeanK, GaussK, MaxPrinK, MinPrinK, cot_alpha, cot_beta, delta, X1, X2, X3, Y1, Y2, Y3, radius, *Buffer_Send_Coord, *Buffer_Receive_Coord, *Coord, Dist, MinDist, MaxK, MinK, SigmaK;
     bool *Check_Edge;
     
-#ifdef NO_MPI
 	int rank = MASTER_NODE;
-#else
-	int rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
     /*--- Allocate surface curvature ---*/
     K = new double [nPoint];
@@ -4924,15 +4231,6 @@ void CPhysicalGeometry::ComputeSurf_Curvature(CConfig *config) {
         }
     }
     
-#ifndef NO_MPI
-    double MyMeanK = MeanK; MeanK = 0.0;
-    double MyMaxK = MaxK; MaxK = 0.0;
-    unsigned long MynPointDomain = TotalnPointDomain; TotalnPointDomain = 0;
-    MPI::COMM_WORLD.Allreduce(&MyMeanK, &MeanK, 1, MPI::DOUBLE, MPI::SUM);
-    MPI::COMM_WORLD.Allreduce(&MyMaxK, &MaxK, 1, MPI::DOUBLE, MPI::MAX);
-    MPI::COMM_WORLD.Allreduce(&MynPointDomain, &TotalnPointDomain, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-#endif
-    
     /*--- Compute the mean ---*/
     MeanK /= double(TotalnPointDomain);
     
@@ -4948,11 +4246,6 @@ void CPhysicalGeometry::ComputeSurf_Curvature(CConfig *config) {
             }
         }
     }
-    
-#ifndef NO_MPI
-    double MySigmaK = SigmaK; SigmaK = 0.0;
-    MPI::COMM_WORLD.Allreduce(&MySigmaK, &SigmaK, 1, MPI::DOUBLE, MPI::SUM);
-#endif
     
     SigmaK = sqrt(SigmaK/double(TotalnPointDomain));
     
@@ -4976,11 +4269,7 @@ void CPhysicalGeometry::ComputeSurf_Curvature(CConfig *config) {
     
     /*--- Variables and buffers needed for MPI ---*/
     
-#ifndef NO_MPI
-    nProcessor = MPI::COMM_WORLD.Get_size();
-#else
 	nProcessor = 1;
-#endif
     
 	nLocalVertex = 0, nGlobalVertex = 0, MaxLocalVertex = 0;
 	Buffer_Send_nVertex    = new unsigned long [1];
@@ -4991,18 +4280,9 @@ void CPhysicalGeometry::ComputeSurf_Curvature(CConfig *config) {
     Buffer_Send_nVertex[0] = nLocalVertex;
     
     /*--- Communicate to all processors the total number of critical edge nodes. ---*/
-#ifndef NO_MPI
-	MPI::COMM_WORLD.Allreduce(&nLocalVertex, &nGlobalVertex,  1,
-                              MPI::UNSIGNED_LONG, MPI::SUM);
-	MPI::COMM_WORLD.Allreduce(&nLocalVertex, &MaxLocalVertex, 1,
-                              MPI::UNSIGNED_LONG, MPI::MAX);
-	MPI::COMM_WORLD.Allgather(Buffer_Send_nVertex, 1, MPI::UNSIGNED_LONG,
-                              Buffer_Receive_nVertex, 1, MPI::UNSIGNED_LONG);
-#else
     MaxLocalVertex = nLocalVertex;
     nGlobalVertex = nLocalVertex;
     Buffer_Receive_nVertex[0] = nLocalVertex;
-#endif
     
     
     /*--- Create and initialize to zero some buffers to hold the coordinates
@@ -5027,16 +4307,11 @@ void CPhysicalGeometry::ComputeSurf_Curvature(CConfig *config) {
             Buffer_Send_Coord[iVertex*nDim+iDim] = node[iPoint]->GetCoord(iDim);
     }
     
-#ifndef NO_MPI
-	MPI::COMM_WORLD.Allgather(Buffer_Send_Coord, nBuffer, MPI::DOUBLE,
-                              Buffer_Receive_Coord, nBuffer, MPI::DOUBLE);
-#else
     for (iVertex = 0; iVertex < Point_Critical.size(); iVertex++) {
         for (iDim = 0; iDim < nDim; iDim++) {
             Buffer_Receive_Coord[iVertex*nDim+iDim] = Buffer_Send_Coord[iVertex*nDim+iDim];
         }
     }
-#endif
     
     /*--- Loop over all interior mesh nodes on the local partition and compute
      the distances to each of the no-slip boundary nodes in the entire mesh.
@@ -5234,14 +4509,6 @@ void CPhysicalGeometry::ComputeAirfoil_Section(double *Plane_P0, double *Plane_N
     double **Coord_Variation;
     bool Boundary, Monitoring;
     
-#ifndef NO_MPI
-	unsigned long nLocalVertex, nGlobalVertex, MaxLocalVertex, *Buffer_Send_nVertex, *Buffer_Receive_nVertex, nBuffer;
-	int nProcessor, iProcessor;
- 	double *Buffer_Send_Coord, *Buffer_Receive_Coord;
-    
-    rank = MPI::COMM_WORLD.Get_rank();
-#endif
-    
   	// clean the vector, just to be safe
   	Xcoord_Airfoil.clear();
 	Ycoord_Airfoil.clear();
@@ -5316,58 +4583,6 @@ void CPhysicalGeometry::ComputeAirfoil_Section(double *Plane_P0, double *Plane_N
             }
         }
     }
-    
-    
-    
-#ifndef NO_MPI
-    
-    /*--- Copy the coordinates of all the points in the plane to the master node ---*/
-    nLocalVertex = 0, nGlobalVertex = 0, MaxLocalVertex = 0;
-    nProcessor = MPI::COMM_WORLD.Get_size();
-    
-    Buffer_Send_nVertex = new unsigned long [1];
-    Buffer_Receive_nVertex = new unsigned long [nProcessor];
-    
-    nLocalVertex = Xcoord.size();
-    
-    Buffer_Send_nVertex[0] = nLocalVertex;
-    
-    MPI::COMM_WORLD.Allreduce(&nLocalVertex, &nGlobalVertex, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-    MPI::COMM_WORLD.Allreduce(&nLocalVertex, &MaxLocalVertex, 1, MPI::UNSIGNED_LONG, MPI::MAX);
-    MPI::COMM_WORLD.Allgather(Buffer_Send_nVertex, 1, MPI::UNSIGNED_LONG, Buffer_Receive_nVertex, 1, MPI::UNSIGNED_LONG);
-    
-    Buffer_Send_Coord = new double [MaxLocalVertex*3];
-    Buffer_Receive_Coord = new double [nProcessor*MaxLocalVertex*3];
-    nBuffer = MaxLocalVertex*3;
-    
-    for (iVertex = 0; iVertex < nLocalVertex; iVertex++) {
-        Buffer_Send_Coord[iVertex*3 + 0] = Xcoord[iVertex];
-        Buffer_Send_Coord[iVertex*3 + 1] = Ycoord[iVertex];
-        Buffer_Send_Coord[iVertex*3 + 2] = Zcoord[iVertex];
-    }
-    
-    MPI::COMM_WORLD.Allgather(Buffer_Send_Coord, nBuffer, MPI::DOUBLE, Buffer_Receive_Coord, nBuffer, MPI::DOUBLE);
-    
-    /*--- Clean the vectors before adding the new vertices only to the master node ---*/
-    Xcoord.clear();
-    Ycoord.clear();
-    Zcoord.clear();
-    
-    /*--- Copy the boundary to the master node vectors ---*/
-    if (rank == MASTER_NODE) {
-        for (iProcessor = 0; iProcessor < nProcessor; iProcessor++) {
-            for (iVertex = 0; iVertex < Buffer_Receive_nVertex[iProcessor]; iVertex++) {
-                Xcoord.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalVertex*3 + iVertex*3 + 0] );
-                Ycoord.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalVertex*3 + iVertex*3 + 1] );
-                Zcoord.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalVertex*3 + iVertex*3 + 2] );
-            }
-        }
-    }
-    
-    delete[] Buffer_Send_Coord;   delete[] Buffer_Receive_Coord;
-    delete[] Buffer_Send_nVertex; delete[] Buffer_Receive_nVertex;
-    
-#endif
     
     if (rank == MASTER_NODE) {
         
@@ -5977,10 +5192,6 @@ void CPhysicalGeometry::ComputeAirfoil_Section(double *Plane_P0, double *Plane_N
         
     }
     
-#ifndef NO_MPI
-    MPI::COMM_WORLD.Barrier();
-#endif
-    
 }
 
 CMultiGridGeometry::CMultiGridGeometry(CGeometry ***geometry, CConfig **config_container, unsigned short iMesh, unsigned short iZone) : CGeometry() {
@@ -6304,39 +5515,6 @@ CMultiGridGeometry::CMultiGridGeometry(CGeometry ***geometry, CConfig **config_c
 	/*--- Send the node agglomeration information of the donor
 	 (parent and children), Sending only occurs with MPI ---*/
     
-#ifndef NO_MPI
-    
-	for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-        
-		Marker_Boundary = config->GetMarker_All_Boundary(iMarker);
-		Send_Recv = config->GetMarker_All_SendRecv(iMarker);
-        
-		if ((Marker_Boundary == SEND_RECEIVE) && (Send_Recv > 0)) {
-            
-			unsigned long nBuffer = fine_grid->nVertex[iMarker];
-            
-			unsigned long *Buffer_Send_Parent = new unsigned long[nBuffer];
-			unsigned long *Buffer_Send_Children = new unsigned long[nBuffer];
-            
-			for (iVertex = 0; iVertex < fine_grid->nVertex[iMarker]; iVertex++) {
-				iPoint = fine_grid->vertex[iMarker][iVertex]->GetNode();
-				Buffer_Send_Children[iVertex] = iPoint;
-				Buffer_Send_Parent[iVertex] = fine_grid->node[iPoint]->GetParent_CV();
-			}
-            
-			int send_to = Send_Recv - 1;
-            
-			MPI::COMM_WORLD.Bsend(Buffer_Send_Children, nBuffer, MPI::UNSIGNED_LONG, send_to, 1);
-			MPI::COMM_WORLD.Bsend(Buffer_Send_Parent, nBuffer, MPI::UNSIGNED_LONG, send_to, 0);
-            
-			delete[] Buffer_Send_Parent;
-			delete[] Buffer_Send_Children;
-            
-		}
-	}
-    
-#endif
-    
 	/*--- Receive the donor agglomeration (parent and children) ---*/
 	for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
 		Marker_Boundary = config->GetMarker_All_Boundary(iMarker);
@@ -6350,10 +5528,6 @@ CMultiGridGeometry::CMultiGridGeometry(CGeometry ***geometry, CConfig **config_c
 			unsigned long *Buffer_Receive_Parent = new unsigned long [nBuffer];
 			unsigned long *Buffer_Receive_Children = new unsigned long [nBuffer];
             
-#ifndef NO_MPI
-			MPI::COMM_WORLD.Recv(Buffer_Receive_Children, nBuffer, MPI::UNSIGNED_LONG, receive_from, 1);
-			MPI::COMM_WORLD.Recv(Buffer_Receive_Parent, nBuffer, MPI::UNSIGNED_LONG, receive_from, 0);
-#else
 			/*--- Retrieve the donor information from the matching marker ---*/
 			unsigned short donorZone   = 0;
 			unsigned short donorMarker = 1;
@@ -6377,8 +5551,6 @@ CMultiGridGeometry::CMultiGridGeometry(CGeometry ***geometry, CConfig **config_c
 				Buffer_Receive_Children[iVertex] = donorPoint;
 				Buffer_Receive_Parent[iVertex] = geometry[donorZone][iMesh-1]->node[donorPoint]->GetParent_CV();
 			}
-            
-#endif
             
 			/*--- Create a list of the parent nodes without repeated parents ---*/
 			vector<unsigned long>::iterator it;
@@ -6442,20 +5614,7 @@ CMultiGridGeometry::CMultiGridGeometry(CGeometry ***geometry, CConfig **config_c
     
 	nPoint = Index_CoarseCV;
     
-#ifdef NO_MPI
 	cout << "CVs of the MG level: " << nPoint << ". Agglom. rate 1/" << double(fine_grid->GetnPoint())/double(nPoint) <<". MG level: "<< iMesh <<"."<< endl;
-#else
-	unsigned long Local_nPointCoarse, Local_nPointFine, Global_nPointCoarse, Global_nPointFine;
-	int rank = MPI::COMM_WORLD.Get_rank();
-    
-	Local_nPointCoarse = nPoint;
-	Local_nPointFine = fine_grid->GetnPoint();
-	MPI::COMM_WORLD.Allreduce(&Local_nPointCoarse, &Global_nPointCoarse, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-	MPI::COMM_WORLD.Allreduce(&Local_nPointFine, &Global_nPointFine, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-    
-	if (rank == MASTER_NODE) cout << "CVs of the MG level: " << Global_nPointCoarse << ". Agglom. rate 1/" << double(Global_nPointFine)/double(Global_nPointCoarse) <<". MG level: "<< iMesh <<"."<< endl;
-#endif
-    
 }
 
 CMultiGridGeometry::~CMultiGridGeometry(void) {
@@ -6802,8 +5961,6 @@ void CMultiGridGeometry::SetVertex(CGeometry *fine_grid, CConfig *config) {
 
 void CMultiGridGeometry::MatchNearField(CConfig *config) {
     
-#ifdef NO_MPI
-    
 	unsigned short iMarker;
 	unsigned long iVertex, iPoint;
     
@@ -6813,30 +5970,11 @@ void CMultiGridGeometry::MatchNearField(CConfig *config) {
 				iPoint = vertex[iMarker][iVertex]->GetNode();
 				vertex[iMarker][iVertex]->SetDonorPoint(iPoint);
 			}
-    
-#else
-    
-	unsigned short iMarker;
-	unsigned long iVertex, iPoint;
-	int rank = MPI::COMM_WORLD.Get_rank();
-    
-	for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++)
-		if (config->GetMarker_All_Boundary(iMarker) == NEARFIELD_BOUNDARY)
-			for (iVertex = 0; iVertex < nVertex[iMarker]; iVertex++) {
-				iPoint = vertex[iMarker][iVertex]->GetNode();
-				if (node[iPoint]->GetDomain()) {
-					vertex[iMarker][iVertex]->SetDonorPoint(iPoint, rank);
-				}
-			}
-    
-#endif
     
 }
 
 void CMultiGridGeometry::MatchInterface(CConfig *config) {
     
-#ifdef NO_MPI
-    
 	unsigned short iMarker;
 	unsigned long iVertex, iPoint;
     
@@ -6846,23 +5984,6 @@ void CMultiGridGeometry::MatchInterface(CConfig *config) {
 				iPoint = vertex[iMarker][iVertex]->GetNode();
 				vertex[iMarker][iVertex]->SetDonorPoint(iPoint);
 			}
-    
-#else
-    
-	unsigned short iMarker;
-	unsigned long iVertex, iPoint;
-	int rank = MPI::COMM_WORLD.Get_rank();
-    
-	for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++)
-		if (config->GetMarker_All_Boundary(iMarker) == INTERFACE_BOUNDARY)
-			for (iVertex = 0; iVertex < nVertex[iMarker]; iVertex++) {
-				iPoint = vertex[iMarker][iVertex]->GetNode();
-				if (node[iPoint]->GetDomain()) {
-					vertex[iMarker][iVertex]->SetDonorPoint(iPoint, rank);
-				}
-			}
-    
-#endif
     
 }
 
@@ -7290,13 +6411,6 @@ CBoundaryGeometry::CBoundaryGeometry(CConfig *config, string val_mesh_filename, 
 	double Coord_2D[2], Coord_3D[3];
 	string::size_type position;
     
-#ifndef NO_MPI
-	unsigned long LocalIndex;
-	unsigned long Local_nPoint, Local_nPointDomain, Global_nPoint = 0;
-	unsigned long Local_nElem, Global_nElem = 0;
-	rank = MPI::COMM_WORLD.Get_rank();
-	size = MPI::COMM_WORLD.Get_size();
-#endif
 	Global_nPointDomain = 0;
 	FinestMGLevel = true;
     
@@ -7311,12 +6425,7 @@ CBoundaryGeometry::CBoundaryGeometry(CConfig *config, string val_mesh_filename, 
 		cout << "There is no geometry file (CBoundaryGeometry)!" << endl;
 		cout << "Press any key to exit..." << endl;
 		cin.get();
-#ifdef NO_MPI
 		exit(1);
-#else
-		MPI::COMM_WORLD.Abort(1);
-		MPI::Finalize();
-#endif
 	}
     
 	/*--- If more than one, find the domain in the mesh file ---*/
@@ -7360,10 +6469,6 @@ CBoundaryGeometry::CBoundaryGeometry(CConfig *config, string val_mesh_filename, 
 			if (size == 1)
 				cout << nElem << " interior elements. ";
             
-#ifndef NO_MPI
-			Local_nElem = nElem;
-			MPI::COMM_WORLD.Allreduce(&Local_nElem, &Global_nElem, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-#endif
 			while (iElem < nElem) {
 				getline(mesh_file,text_line);
 				iElem++;
@@ -7389,13 +6494,7 @@ CBoundaryGeometry::CBoundaryGeometry(CConfig *config, string val_mesh_filename, 
 					cout << nPoint << " points, and " << nPoint-nPointDomain << " ghost points." << endl;
                 
 				/*--- Set some important point information for parallel simulations. ---*/
-#ifndef NO_MPI
-				Local_nPoint = nPoint; Local_nPointDomain = nPointDomain;
-				MPI::COMM_WORLD.Allreduce(&Local_nPoint, &Global_nPoint, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-				MPI::COMM_WORLD.Allreduce(&Local_nPointDomain, &Global_nPointDomain, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-#else
 				Global_nPointDomain = nPointDomain;
-#endif
 			}
 			else if (iCount == 1) {
 				stream_line >> nPoint;
@@ -7407,12 +6506,7 @@ CBoundaryGeometry::CBoundaryGeometry(CConfig *config, string val_mesh_filename, 
 				cout << "NPOIN improperly specified!!" << endl;
 				cout << "Press any key to exit..." << endl;
 				cin.get();
-#ifdef NO_MPI
 				exit(1);
-#else
-				MPI::COMM_WORLD.Abort(1);
-				MPI::Finalize();
-#endif
 			}
             
 			node = new CPoint*[nPoint];
@@ -7422,20 +6516,12 @@ CBoundaryGeometry::CBoundaryGeometry(CConfig *config, string val_mesh_filename, 
 				switch(nDim) {
                     case 2:
                         GlobalIndex = iPoint;
-#ifdef NO_MPI
                         point_line >> Coord_2D[0]; point_line >> Coord_2D[1];
-#else
-                        point_line >> Coord_2D[0]; point_line >> Coord_2D[1]; point_line >> LocalIndex; point_line >> GlobalIndex;
-#endif
                         node[iPoint] = new CPoint(Coord_2D[0], Coord_2D[1], GlobalIndex, config);
                         iPoint++; break;
                     case 3:
                         GlobalIndex = iPoint;
-#ifdef NO_MPI
                         point_line >> Coord_3D[0]; point_line >> Coord_3D[1]; point_line >> Coord_3D[2];
-#else
-                        point_line >> Coord_3D[0]; point_line >> Coord_3D[1]; point_line >> Coord_3D[2]; point_line >> LocalIndex; point_line >> GlobalIndex;
-#endif
                         node[iPoint] = new CPoint(Coord_3D[0], Coord_3D[1], Coord_3D[2], GlobalIndex, config);
                         iPoint++; break;
 				}
@@ -7566,12 +6652,7 @@ CBoundaryGeometry::CBoundaryGeometry(CConfig *config, string val_mesh_filename, 
 						cout << "PERIODIC_INDEX out of order in SU2 file!!" << endl;
 						cout << "Press any key to exit..." << endl;
 						cin.get();
-#ifdef NO_MPI
 						exit(1);
-#else
-						MPI::COMM_WORLD.Abort(1);
-						MPI::Finalize();
-#endif
 					}
 				}
 				double* center    = new double[3];
@@ -7612,11 +6693,6 @@ CBoundaryGeometry::CBoundaryGeometry(CConfig *config, string val_mesh_filename, 
     
 	/*--- Close the input file ---*/
 	mesh_file.close();
-    
-#ifndef NO_MPI
-	if ((size > SINGLE_NODE) && (rank == MASTER_NODE))
-		cout << Global_nElem << " interior elements (incl. halo cells). " << Global_nPoint << " points (incl. ghost points) " << endl;
-#endif
     
 	/*--- Loop over the surface element to set the boundaries ---*/
 	for (iMarker = 0; iMarker < nMarker; iMarker++)
@@ -7768,17 +6844,8 @@ void CBoundaryGeometry::SetBoundSensitivity(CConfig *config) {
 	int rank = MASTER_NODE;
 	int size = SINGLE_NODE;
     
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-	size = MPI::COMM_WORLD.Get_size();
-#endif
-    
 	nPointLocal = nPoint;
-#ifndef NO_MPI
-	MPI::COMM_WORLD.Allreduce(&nPointLocal, &nPointGlobal, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-#else
 	nPointGlobal = nPointLocal;
-#endif
     
 	Point2Vertex = new unsigned long[nPointGlobal][2];
 	PointInDomain = new bool[nPointGlobal];
@@ -7791,11 +6858,7 @@ void CBoundaryGeometry::SetBoundSensitivity(CConfig *config) {
 			for (iVertex = 0; iVertex < nVertex[iMarker]; iVertex++) {
                 
 				/*--- The sensitivity file uses the global numbering ---*/
-#ifdef NO_MPI
 				iPoint = vertex[iMarker][iVertex]->GetNode();
-#else
-				iPoint = node[vertex[iMarker][iVertex]->GetNode()]->GetGlobalIndex();
-#endif
 				if (vertex[iMarker][iVertex]->GetNode() < GetnPointDomain()) {
 					Point2Vertex[iPoint][0] = iMarker;
 					Point2Vertex[iPoint][1] = iVertex;
@@ -7906,14 +6969,6 @@ void CBoundaryGeometry::ComputeAirfoil_Section(double *Plane_P0, double *Plane_N
 	int rank = MASTER_NODE;
 	double **Coord_Variation;
   
-#ifndef NO_MPI
-	unsigned long nLocalVertex, nGlobalVertex, MaxLocalVertex, *Buffer_Send_nVertex, *Buffer_Receive_nVertex, nBuffer;
-	int nProcessor, iProcessor;
-	double *Buffer_Send_Coord, *Buffer_Receive_Coord;
-  
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
-  
 	Xcoord_Airfoil.clear();
 	Ycoord_Airfoil.clear();
 	Zcoord_Airfoil.clear();
@@ -8003,56 +7058,6 @@ void CBoundaryGeometry::ComputeAirfoil_Section(double *Plane_P0, double *Plane_N
 	}
   
   
-#ifndef NO_MPI
-  
-	/*--- Copy the coordinates of all the points in the plane to the master node ---*/
-	nLocalVertex = 0, nGlobalVertex = 0, MaxLocalVertex = 0;
-	nProcessor = MPI::COMM_WORLD.Get_size();
-  
-	Buffer_Send_nVertex = new unsigned long [1];
-	Buffer_Receive_nVertex = new unsigned long [nProcessor];
-  
-	nLocalVertex = Xcoord.size();
-  
-	Buffer_Send_nVertex[0] = nLocalVertex;
-  
-	MPI::COMM_WORLD.Allreduce(&nLocalVertex, &nGlobalVertex, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-	MPI::COMM_WORLD.Allreduce(&nLocalVertex, &MaxLocalVertex, 1, MPI::UNSIGNED_LONG, MPI::MAX);
-	MPI::COMM_WORLD.Allgather(Buffer_Send_nVertex, 1, MPI::UNSIGNED_LONG, Buffer_Receive_nVertex, 1, MPI::UNSIGNED_LONG);
-  
-	Buffer_Send_Coord = new double [MaxLocalVertex*3];
-	Buffer_Receive_Coord = new double [nProcessor*MaxLocalVertex*3];
-	nBuffer = MaxLocalVertex*3;
-  
-	for (iVertex = 0; iVertex < nLocalVertex; iVertex++) {
-		Buffer_Send_Coord[iVertex*3 + 0] = Xcoord[iVertex];
-		Buffer_Send_Coord[iVertex*3 + 1] = Ycoord[iVertex];
-		Buffer_Send_Coord[iVertex*3 + 2] = Zcoord[iVertex];
-	}
-  
-	MPI::COMM_WORLD.Allgather(Buffer_Send_Coord, nBuffer, MPI::DOUBLE, Buffer_Receive_Coord, nBuffer, MPI::DOUBLE);
-  
-	/*--- Clean the vectors before adding the new vertices only to the master node ---*/
-	Xcoord.clear();
-	Ycoord.clear();
-	Zcoord.clear();
-  
-	/*--- Copy the boundary to the master node vectors ---*/
-	if (rank == MASTER_NODE) {
-		for (iProcessor = 0; iProcessor < nProcessor; iProcessor++) {
-			for (iVertex = 0; iVertex < Buffer_Receive_nVertex[iProcessor]; iVertex++) {
-				Xcoord.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalVertex*3 + iVertex*3 + 0] );
-				Ycoord.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalVertex*3 + iVertex*3 + 1] );
-				Zcoord.push_back( Buffer_Receive_Coord[ iProcessor*MaxLocalVertex*3 + iVertex*3 + 2] );
-			}
-		}
-	}
-  
-	delete[] Buffer_Send_Coord;   delete[] Buffer_Receive_Coord;
-	delete[] Buffer_Send_nVertex; delete[] Buffer_Receive_nVertex;
-  
-#endif
-    
   if ((rank == MASTER_NODE) && (Xcoord.size() != 0)) {
     
     /*--- Create a list with the duplicated points ---*/
@@ -8239,10 +7244,6 @@ void CBoundaryGeometry::ComputeAirfoil_Section(double *Plane_P0, double *Plane_N
 		}
     
 	}
-  
-#ifndef NO_MPI
-	MPI::COMM_WORLD.Barrier();
-#endif
   
 }
 
@@ -8618,842 +7619,6 @@ double CBoundaryGeometry::Compute_Area(double *Plane_P0, double *Plane_Normal, u
 
 CDomainGeometry::CDomainGeometry(CGeometry *geometry, CConfig *config) {
     
-#ifndef NO_MPI
-    
-	unsigned long nElemTotal, nPointTotal, nPointDomainTotal, nPointGhost, nPointPeriodic, nElemTriangle, nElemRectangle, nElemTetrahedron, nElemHexahedron, nElemWedge, nElemPyramid, iElemTotal, iPointTotal, iPointGhost, iPointDomain, iPointPeriodic, iElemTriangle, iElemRectangle, iElemTetrahedron, iElemHexahedron, iElemWedge, iElemPyramid, nVertexDomain[MAX_NUMBER_MARKER], iPoint, jPoint, iElem, iVertex, nBoundLine[MAX_NUMBER_MARKER], nBoundLineTotal, iBoundLineTotal, nBoundTriangle[MAX_NUMBER_MARKER], nBoundTriangleTotal, iBoundTriangleTotal, nBoundRectangle[MAX_NUMBER_MARKER], nBoundRectangleTotal, iBoundRectangleTotal;
-    unsigned short iVertexDomain, iBoundLine, iBoundTriangle, iBoundRectangle, iNode, iDim, iMarker, nMarkerDomain, iMarkerDomain, nDomain, iDomain, jDomain, jNode, nPeriodic, iPeriodic;
-    
-    long vnodes_local[8];
-	double coord[3];
-    char Marker_All_Tag[MAX_NUMBER_MARKER][200];
-    
-    /*--- Define buffer vector interior domain ---*/
-    double        *Buffer_Send_Coord,             *Buffer_Receive_Coord;
-    unsigned long *Buffer_Send_Color,             *Buffer_Receive_Color;
-    unsigned long *Buffer_Send_GlobalPointIndex,  *Buffer_Receive_GlobalPointIndex;
-    unsigned long *Buffer_Send_Triangle,          *Buffer_Receive_Triangle;
-    unsigned long *Buffer_Send_Rectangle,         *Buffer_Receive_Rectangle;
-    unsigned long *Buffer_Send_Tetrahedron,       *Buffer_Receive_Tetrahedron;
-    unsigned long *Buffer_Send_Hexahedron,        *Buffer_Receive_Hexahedron;
-    unsigned long *Buffer_Send_Wedge,             *Buffer_Receive_Wedge;
-    unsigned long *Buffer_Send_Pyramid,           *Buffer_Receive_Pyramid;
-    
-    /*--- Define buffer vector boundary ---*/
-    unsigned long *Buffer_Send_BoundLine,           *Buffer_Receive_BoundLine;
-    unsigned long *Buffer_Send_BoundTriangle,       *Buffer_Receive_BoundTriangle;
-    unsigned long *Buffer_Send_BoundRectangle,      *Buffer_Receive_BoundRectangle;
-    unsigned long *Buffer_Send_Local2Global_Marker, *Buffer_Receive_Local2Global_Marker;
-    
-    int rank = MPI::COMM_WORLD.Get_rank();
-	int size = MPI::COMM_WORLD.Get_size();
-    
-    /*--- Basic dimensionalization ---*/
-	nDomain = size;
-    
-    bool *ElemIn, *MarkerIn, **VertexIn;
-    Marker_All_SendRecv = new short[MAX_NUMBER_MARKER];
-    
-    /*--- Auxiliar vector defined in the master node (based on the original geometry) ---*/
-    if (rank == MASTER_NODE) {
-        ElemIn = new bool [geometry->GetnElem()];
-        MarkerIn = new bool [geometry->GetnMarker()];
-        VertexIn = new bool* [geometry->GetnMarker()];
-        for (iMarker = 0; iMarker < geometry->GetnMarker(); iMarker++)
-            VertexIn[iMarker] = new bool [geometry->GetnElem_Bound(iMarker)];
-        
-        nDim = geometry->GetnDim();
-        nPeriodic = config->GetnPeriodicIndex();
-        
-        Global_to_Local_Point =  new long[geometry->GetnPoint()];
-        for (iPoint = 0; iPoint < geometry->GetnPoint(); iPoint++)
-            Global_to_Local_Point[iPoint] = -1;
-    }
-    
-    for (iDomain = 0; iDomain < size; iDomain++) {
-        
-        if (rank == MASTER_NODE) {
-            
-            /*--- Interior dimensionalization ---*/
-            /*--- Loop over the original grid to perform the dimensionalizaton of the domain variables ---*/
-            nElemTotal = 0; nPointTotal = 0; nPointGhost = 0; nPointDomainTotal = 0; nPointPeriodic = 0;
-            nElemTriangle = 0; nElemRectangle = 0; nElemTetrahedron = 0; nElemHexahedron = 0; nElemWedge = 0; nElemPyramid = 0;
-            for (iPoint = 0; iPoint < geometry->GetnPoint(); iPoint++) Global_to_Local_Point[iPoint] = -1;
-            
-            for (iElem = 0; iElem < geometry->GetnElem(); iElem++) {
-                
-                /*--- Check if the element belong to the domain ---*/
-                ElemIn[iElem] = false;
-                for (iNode = 0; iNode < geometry->elem[iElem]->GetnNodes(); iNode++) {
-                    iPoint = geometry->elem[iElem]->GetNode(iNode);
-                    if ( geometry->node[iPoint]->GetColor() == iDomain ) {
-                        ElemIn[iElem] = true; break;
-                    }
-                }
-                
-                /*--- If an element belong to the domain (at least one point belong has the
-                 same color as the domain)---*/
-                if (ElemIn[iElem]) {
-                    for (iNode = 0; iNode < geometry->elem[iElem]->GetnNodes(); iNode++) {
-                        iPoint = geometry->elem[iElem]->GetNode(iNode);
-                        if (Global_to_Local_Point[iPoint] == -1) {
-                            Global_to_Local_Point[iPoint] = 1;
-                            
-                            nPointTotal++;
-                            
-                            if ( geometry->node[iPoint]->GetColor() != iDomain ) nPointGhost++;
-                            else {
-                                if (iPoint > geometry->GetnPointDomain() - 1) {
-                                    nPointGhost++; // Note that the periodic BC (receive) are also ghost cell
-                                    nPointPeriodic++;
-                                }
-                                else nPointDomainTotal++;
-                            }
-                            
-                        }
-                    }
-                    
-                    switch(geometry->elem[iElem]->GetVTK_Type()) {
-                        case TRIANGLE: nElemTriangle++; break;
-                        case RECTANGLE: nElemRectangle++; break;
-                        case TETRAHEDRON: nElemTetrahedron++; break;
-                        case HEXAHEDRON: nElemHexahedron++; break;
-                        case WEDGE: nElemWedge++; break;
-                        case PYRAMID: nElemPyramid++; break;
-                    }
-                    
-                    nElemTotal++;
-                }
-            }
-            
-            /*--- Boundary dimensionalization ---*/
-            /*--- Dimensionalization with physical boundaries, compute nMarkerDomain, nVertexDomain[nMarkerDomain] ---*/
-            nMarkerDomain = 0;
-            for (iMarker = 0; iMarker < geometry->GetnMarker(); iMarker++) {
-                nVertexDomain[iMarker] = 0;
-                nBoundLine[iMarker] = 0; nBoundLineTotal = 0;
-                nBoundTriangle[iMarker] = 0; nBoundTriangleTotal = 0;
-                nBoundRectangle[iMarker] = 0; nBoundRectangleTotal = 0;
-                
-                /*--- Create a copy of the markers ---*/
-                Marker_All_SendRecv[iMarker] = config->GetMarker_All_SendRecv(iMarker);
-                sprintf(Marker_All_Tag[iMarker], "%s", config->GetMarker_All_Tag(iMarker).c_str());
-            }
-            
-            for (iMarker = 0; iMarker < geometry->GetnMarker(); iMarker++) {
-                if (config->GetMarker_All_Boundary(iMarker) != SEND_RECEIVE) {
-                    MarkerIn[iMarker] = false; nVertexDomain[nMarkerDomain] = 0;
-                    for (iVertex = 0; iVertex < geometry->GetnElem_Bound(iMarker); iVertex++) {
-                        VertexIn[iMarker][iVertex] = false;
-                        for (iNode = 0; iNode < geometry->bound[iMarker][iVertex]->GetnNodes(); iNode++) {
-                            if (geometry->node[geometry->bound[iMarker][iVertex]->GetNode(iNode)]->GetColor() == iDomain)
-                                VertexIn[iMarker][iVertex] = true;
-                        }
-                        if (VertexIn[iMarker][iVertex]) {
-                            
-                            switch(geometry->bound[iMarker][iVertex]->GetVTK_Type()) {
-                                case LINE: nBoundLine[nMarkerDomain]++; nBoundLineTotal++; break;
-                                case TRIANGLE: nBoundTriangle[nMarkerDomain]++; nBoundTriangleTotal++; break;
-                                case RECTANGLE: nBoundRectangle[nMarkerDomain]++; nBoundRectangleTotal++; break;
-                            }
-                            
-                            nVertexDomain[nMarkerDomain] ++;
-                            MarkerIn[iMarker] = true;
-                        }
-                    }
-                    if (MarkerIn[iMarker]) { nMarkerDomain++; }
-                }
-            }
-            
-        }
-        
-        /*--- Allocate the buffer vectors in the appropiate domain (master, iDomain) using the following information
-         nElemTotal, nPointTotal, nPointGhost, nPointDomainTotal, nPointPeriodic
-         nElemTriangle, nElemRectangle, nElemTetrahedron, nElemHexahedron, nElemWedge, nElemPyramid
-         ---*/
-        
-        if (rank == MASTER_NODE) {
-            
-            /*--- Allocate the send buffer vector ---*/
-            Buffer_Send_Coord =             new double [nPointTotal*nDim];
-            Buffer_Send_Color =             new unsigned long [nPointTotal];
-            Buffer_Send_GlobalPointIndex =  new unsigned long [nPointTotal];
-            Buffer_Send_Triangle =          new unsigned long [nElemTriangle*3];
-            Buffer_Send_Rectangle =         new unsigned long [nElemRectangle*4];
-            Buffer_Send_Tetrahedron =       new unsigned long [nElemTetrahedron*4];
-            Buffer_Send_Hexahedron =        new unsigned long [nElemHexahedron*8];
-            Buffer_Send_Wedge =             new unsigned long [nElemWedge*6];
-            Buffer_Send_Pyramid =           new unsigned long [nElemPyramid*5];
-            
-            /*--- Send the size of buffers ---*/
-            MPI::COMM_WORLD.Bsend(&nDim,               1,  MPI::UNSIGNED_SHORT,  iDomain, 0);
-            MPI::COMM_WORLD.Bsend(&nPointTotal,        1,  MPI::UNSIGNED_LONG,   iDomain, 1);
-            MPI::COMM_WORLD.Bsend(&nPointDomainTotal,  1,  MPI::UNSIGNED_LONG,   iDomain, 2);
-            MPI::COMM_WORLD.Bsend(&nPointGhost,        1,  MPI::UNSIGNED_LONG,   iDomain, 3);
-            MPI::COMM_WORLD.Bsend(&nPointPeriodic,     1,  MPI::UNSIGNED_LONG,   iDomain, 4);
-            MPI::COMM_WORLD.Bsend(&nElemTotal,         1,  MPI::UNSIGNED_LONG,   iDomain, 5);
-            MPI::COMM_WORLD.Bsend(&nElemTriangle,      1,  MPI::UNSIGNED_LONG,   iDomain, 6);
-            MPI::COMM_WORLD.Bsend(&nElemRectangle,     1,  MPI::UNSIGNED_LONG,   iDomain, 7);
-            MPI::COMM_WORLD.Bsend(&nElemTetrahedron,   1,  MPI::UNSIGNED_LONG,   iDomain, 8);
-            MPI::COMM_WORLD.Bsend(&nElemHexahedron,    1,  MPI::UNSIGNED_LONG,   iDomain, 9);
-            MPI::COMM_WORLD.Bsend(&nElemWedge,         1,  MPI::UNSIGNED_LONG,   iDomain, 10);
-            MPI::COMM_WORLD.Bsend(&nElemPyramid,       1,  MPI::UNSIGNED_LONG,   iDomain, 11);
-            
-            /*--- Allocate the send buffer vector ---*/
-            Buffer_Send_BoundLine =           new unsigned long [nBoundLineTotal*2];
-            Buffer_Send_BoundTriangle =       new unsigned long [nBoundTriangleTotal*3];
-            Buffer_Send_BoundRectangle =      new unsigned long [nBoundRectangleTotal*4];
-            Buffer_Send_Local2Global_Marker = new unsigned long [nMarkerDomain];
-            
-            /*--- Send the size of buffers ---*/
-            MPI::COMM_WORLD.Bsend(&nBoundLineTotal,      1, MPI::UNSIGNED_LONG, iDomain, 12);
-            MPI::COMM_WORLD.Bsend(&nBoundTriangleTotal,  1, MPI::UNSIGNED_LONG, iDomain, 13);
-            MPI::COMM_WORLD.Bsend(&nBoundRectangleTotal, 1, MPI::UNSIGNED_LONG, iDomain, 14);
-            MPI::COMM_WORLD.Bsend(&nMarkerDomain,        1, MPI::UNSIGNED_LONG, iDomain, 15);
-            MPI::COMM_WORLD.Bsend(nVertexDomain,         MAX_NUMBER_MARKER, MPI::UNSIGNED_LONG, iDomain, 16);
-            MPI::COMM_WORLD.Bsend(nBoundLine,            MAX_NUMBER_MARKER, MPI::UNSIGNED_LONG, iDomain, 17);
-            MPI::COMM_WORLD.Bsend(nBoundTriangle,        MAX_NUMBER_MARKER, MPI::UNSIGNED_LONG, iDomain, 18);
-            MPI::COMM_WORLD.Bsend(nBoundRectangle,       MAX_NUMBER_MARKER, MPI::UNSIGNED_LONG, iDomain, 19);
-            MPI::COMM_WORLD.Bsend(Marker_All_SendRecv,   MAX_NUMBER_MARKER, MPI::SHORT, iDomain, 20);
-            MPI::COMM_WORLD.Bsend(Marker_All_Tag,        MAX_NUMBER_MARKER*200, MPI::CHAR, iDomain, 21);
-            
-            /*--- Send the size of buffers ---*/
-            MPI::COMM_WORLD.Bsend(&nPeriodic, 1, MPI::UNSIGNED_SHORT, iDomain, 22);
-            
-        }
-        
-        if (rank == iDomain) {
-            
-            /*--- Receive the size of buffers---*/
-            MPI::COMM_WORLD.Recv(&nDim,               1, MPI::UNSIGNED_SHORT,   MASTER_NODE, 0);
-            MPI::COMM_WORLD.Recv(&nPointTotal,        1, MPI::UNSIGNED_LONG,    MASTER_NODE, 1);
-            MPI::COMM_WORLD.Recv(&nPointDomainTotal,  1, MPI::UNSIGNED_LONG,    MASTER_NODE, 2);
-            MPI::COMM_WORLD.Recv(&nPointGhost,        1, MPI::UNSIGNED_LONG,    MASTER_NODE, 3);
-            MPI::COMM_WORLD.Recv(&nPointPeriodic,     1, MPI::UNSIGNED_LONG,    MASTER_NODE, 4);
-            MPI::COMM_WORLD.Recv(&nElemTotal,         1, MPI::UNSIGNED_LONG,    MASTER_NODE, 5);
-            MPI::COMM_WORLD.Recv(&nElemTriangle,      1, MPI::UNSIGNED_LONG,    MASTER_NODE, 6);
-            MPI::COMM_WORLD.Recv(&nElemRectangle,     1, MPI::UNSIGNED_LONG,    MASTER_NODE, 7);
-            MPI::COMM_WORLD.Recv(&nElemTetrahedron,   1, MPI::UNSIGNED_LONG,    MASTER_NODE, 8);
-            MPI::COMM_WORLD.Recv(&nElemHexahedron,    1, MPI::UNSIGNED_LONG,    MASTER_NODE, 9);
-            MPI::COMM_WORLD.Recv(&nElemWedge,         1, MPI::UNSIGNED_LONG,    MASTER_NODE, 10);
-            MPI::COMM_WORLD.Recv(&nElemPyramid,       1, MPI::UNSIGNED_LONG,    MASTER_NODE, 11);
-            
-            /*--- Receive the size of buffers ---*/
-            MPI::COMM_WORLD.Recv(&nBoundLineTotal,      1, MPI::UNSIGNED_LONG, MASTER_NODE, 12);
-            MPI::COMM_WORLD.Recv(&nBoundTriangleTotal,  1, MPI::UNSIGNED_LONG, MASTER_NODE, 13);
-            MPI::COMM_WORLD.Recv(&nBoundRectangleTotal, 1, MPI::UNSIGNED_LONG, MASTER_NODE, 14);
-            MPI::COMM_WORLD.Recv(&nMarkerDomain,        1, MPI::UNSIGNED_LONG, MASTER_NODE, 15);
-            MPI::COMM_WORLD.Recv(nVertexDomain,         MAX_NUMBER_MARKER, MPI::UNSIGNED_LONG, MASTER_NODE, 16);
-            MPI::COMM_WORLD.Recv(nBoundLine,            MAX_NUMBER_MARKER, MPI::UNSIGNED_LONG, MASTER_NODE, 17);
-            MPI::COMM_WORLD.Recv(nBoundTriangle,        MAX_NUMBER_MARKER, MPI::UNSIGNED_LONG, MASTER_NODE, 18);
-            MPI::COMM_WORLD.Recv(nBoundRectangle,       MAX_NUMBER_MARKER, MPI::UNSIGNED_LONG, MASTER_NODE, 19);
-            MPI::COMM_WORLD.Recv(Marker_All_SendRecv,   MAX_NUMBER_MARKER, MPI::SHORT, MASTER_NODE, 20);
-            MPI::COMM_WORLD.Recv(Marker_All_Tag,        MAX_NUMBER_MARKER*200, MPI::CHAR, MASTER_NODE, 21);
-            for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-                config->SetMarker_All_Tag(iMarker, string(Marker_All_Tag[iMarker]));
-            }
-            
-            /*--- Receive the size of buffers ---*/
-            MPI::COMM_WORLD.Recv(&nPeriodic, 1, MPI::UNSIGNED_SHORT, MASTER_NODE, 22);
-			config->SetnPeriodicIndex(nPeriodic);
-			double* center = new double[3]; double* rotation  = new double[3]; double* translate = new double[3];
-            for (iPeriodic = 0; iPeriodic < nPeriodic; iPeriodic++) {
-                for (iDim = 0; iDim < 3; iDim++) { center[iDim] = 0.0; rotation[iDim] = 0.0; translate[iDim] = 0.0; }
-                config->SetPeriodicCenter(iPeriodic, center);
-                config->SetPeriodicRotation(iPeriodic, rotation);
-                config->SetPeriodicTranslate(iPeriodic, translate);
-            }
-            
-            /*--- Allocate the receive buffer vector ---*/
-            Buffer_Receive_Coord =              new double [nPointTotal*nDim];
-            Buffer_Receive_Color =              new unsigned long [nPointTotal];
-            Buffer_Receive_GlobalPointIndex =   new unsigned long [nPointTotal];
-            Buffer_Receive_Triangle =           new unsigned long [nElemTriangle*3];
-            Buffer_Receive_Rectangle =          new unsigned long [nElemRectangle*4];
-            Buffer_Receive_Tetrahedron =        new unsigned long [nElemTetrahedron*4];
-            Buffer_Receive_Hexahedron =         new unsigned long [nElemHexahedron*8];
-            Buffer_Receive_Wedge =              new unsigned long [nElemWedge*6];
-            Buffer_Receive_Pyramid =            new unsigned long [nElemPyramid*5];
-            
-            /*--- Allocate the receive buffer vector ---*/
-            Buffer_Receive_BoundLine =            new unsigned long [nBoundLineTotal*2];
-            Buffer_Receive_BoundTriangle =        new unsigned long [nBoundTriangleTotal*3];
-            Buffer_Receive_BoundRectangle =       new unsigned long [nBoundRectangleTotal*4];
-            Buffer_Receive_Local2Global_Marker =  new unsigned long [nMarkerDomain];
-            
-        }
-        
-        /*--- Set the value of the Send buffers ---*/
-        if (rank == MASTER_NODE) {
-            
-            /*--- Set the value of the interior geometry ---*/
-            iElemTotal = 0; iPointTotal = 0; iPointDomain = 0; iPointPeriodic = nPointDomainTotal; iPointGhost = nPointDomainTotal + nPointPeriodic;
-            iElemTriangle = 0; iElemRectangle = 0; iElemTetrahedron = 0; iElemHexahedron = 0; iElemWedge = 0; iElemPyramid = 0;
-            for (iPoint = 0; iPoint < geometry->GetnPoint(); iPoint++) Global_to_Local_Point[iPoint] = -1;
-            
-            for (iElem = 0; iElem < geometry->GetnElem(); iElem++) {
-                
-                if (ElemIn[iElem]) {
-                    
-                    for (iNode = 0; iNode < geometry->elem[iElem]->GetnNodes(); iNode++) {
-                        iPoint = geometry->elem[iElem]->GetNode(iNode);
-                        if (Global_to_Local_Point[iPoint] == -1) {
-                            
-                            if ( geometry->node[iPoint]->GetColor() == iDomain ) {
-                                if ( iPoint > geometry->GetnPointDomain() - 1) iPointTotal = iPointPeriodic;
-                                else iPointTotal = iPointDomain;
-                            }
-                            else iPointTotal = iPointGhost;
-                            
-                            Global_to_Local_Point[iPoint] = iPointTotal;
-                            
-                            /*--- Copy the information to be sended ---*/
-                            Buffer_Send_Color[iPointTotal] = geometry->node[iPoint]->GetColor();
-                            Buffer_Send_GlobalPointIndex[iPointTotal] = iPoint;
-                            for (iDim = 0; iDim < nDim; iDim++)
-                                Buffer_Send_Coord[nDim*iPointTotal+iDim] = geometry->node[iPoint]->GetCoord(iDim);
-                            
-                            /*--- Compute the index for the periodic and extra Ghost points. ---*/
-                            if ( geometry->node[iPoint]->GetColor() == iDomain ) {
-                                if ( iPoint > geometry->GetnPointDomain() - 1) iPointPeriodic++;
-                                else iPointDomain++;
-                            }
-                            else iPointGhost++;
-                        }
-                        vnodes_local[iNode] = Global_to_Local_Point[iPoint];
-                    }
-                    
-                    /*--- Create the elements ---*/
-                    switch(geometry->elem[iElem]->GetVTK_Type()) {
-                        case TRIANGLE:
-                            for (iNode = 0; iNode < geometry->elem[iElem]->GetnNodes(); iNode++) {
-                                Buffer_Send_Triangle[3*iElemTriangle+iNode] = vnodes_local[iNode];
-                            }
-                            iElemTriangle++;
-                            break;
-                        case RECTANGLE:
-                            for (iNode = 0; iNode < geometry->elem[iElem]->GetnNodes(); iNode++)
-                                Buffer_Send_Rectangle[4*iElemRectangle+iNode] = vnodes_local[iNode];
-                            iElemRectangle++;
-                            break;
-                        case TETRAHEDRON:
-                            for (iNode = 0; iNode < geometry->elem[iElem]->GetnNodes(); iNode++)
-                                Buffer_Send_Tetrahedron[4*iElemTetrahedron+iNode] = vnodes_local[iNode];
-                            iElemTetrahedron++;
-                            break;
-                        case HEXAHEDRON:
-                            for (iNode = 0; iNode < geometry->elem[iElem]->GetnNodes(); iNode++)
-                                Buffer_Send_Hexahedron[8*iElemHexahedron+iNode] = vnodes_local[iNode];
-                            iElemHexahedron++;
-                            break;
-                        case WEDGE:
-                            for (iNode = 0; iNode < geometry->elem[iElem]->GetnNodes(); iNode++)
-                                Buffer_Send_Wedge[6*iElemWedge+iNode] = vnodes_local[iNode];
-                            iElemWedge++;
-                            break;
-                        case PYRAMID:
-                            for (iNode = 0; iNode < geometry->elem[iElem]->GetnNodes(); iNode++)
-                                Buffer_Send_Pyramid[5*iElemPyramid+iNode] = vnodes_local[iNode];
-                            iElemPyramid++;
-                            break;
-                    }
-                    
-                    iElemTotal++;
-                }
-            }
-            
-            
-            /*--- Set the value of the boundary geometry ---*/
-            iMarkerDomain = 0;
-            iBoundLineTotal = 0; iBoundTriangleTotal = 0; iBoundRectangleTotal = 0;
-            
-            for (iMarker = 0; iMarker < geometry->GetnMarker(); iMarker++) {
-                
-                if (config->GetMarker_All_Boundary(iMarker) != SEND_RECEIVE) {
-                    
-                    /*--- If the marker is in the domain ---*/
-                    if (MarkerIn[iMarker]) {
-                        
-                        for (iVertex = 0; iVertex < geometry->GetnElem_Bound(iMarker); iVertex++) {
-                            
-                            /*--- If the vertex is in the domain ---*/
-                            if (VertexIn[iMarker][iVertex]) {
-                                
-                                /*--- Read the points in the local domain ---*/
-                                for (iNode = 0; iNode < geometry->bound[iMarker][iVertex]->GetnNodes(); iNode++) {
-                                    vnodes_local[iNode] = Global_to_Local_Point[geometry->bound[iMarker][iVertex]->GetNode(iNode)];
-                                }
-                                
-                                /*--- Create the data structure for the boundaries ---*/
-                                switch(geometry->bound[iMarker][iVertex]->GetVTK_Type()) {
-                                    case LINE:
-                                        Buffer_Send_BoundLine[2*iBoundLineTotal+0] = vnodes_local[0];
-                                        Buffer_Send_BoundLine[2*iBoundLineTotal+1] = vnodes_local[1];
-                                        iBoundLineTotal++;
-                                        break;
-                                    case TRIANGLE:
-                                        Buffer_Send_BoundTriangle[3*iBoundTriangleTotal+0] = vnodes_local[0];
-                                        Buffer_Send_BoundTriangle[3*iBoundTriangleTotal+1] = vnodes_local[1];
-                                        Buffer_Send_BoundTriangle[3*iBoundTriangleTotal+2] = vnodes_local[2];
-                                        iBoundTriangleTotal++;
-                                        break;
-                                    case RECTANGLE:
-                                        Buffer_Send_BoundRectangle[4*iBoundRectangleTotal+0] = vnodes_local[0];
-                                        Buffer_Send_BoundRectangle[4*iBoundRectangleTotal+1] = vnodes_local[1];
-                                        Buffer_Send_BoundRectangle[4*iBoundRectangleTotal+2] = vnodes_local[2];
-                                        Buffer_Send_BoundRectangle[4*iBoundRectangleTotal+3] = vnodes_local[3];
-                                        iBoundRectangleTotal++;
-                                        break;
-                                }
-                            }
-                        }
-                        
-                        Buffer_Send_Local2Global_Marker[iMarkerDomain] = iMarker;
-                        iMarkerDomain++;
-                        
-                    }
-                }
-            }
-            
-            /*--- Estimate the size of the buffer for each domain ---*/
-            int SizeBuffer[11];
-            SizeBuffer[0] = (nPointTotal*nDim)*sizeof(double) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[1] = (nPointTotal)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[2] = (nElemTriangle*3)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[3] = (nElemRectangle*4)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[4] = (nElemTetrahedron*4)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[5] = (nElemHexahedron*8)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[6] = (nElemWedge*6)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[7] = (nElemPyramid*5)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[8] = (nBoundLineTotal*2)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[9] = (nBoundTriangleTotal*3)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[10] = (nBoundRectangleTotal*4)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            SizeBuffer[11] = (nMarkerDomain)*sizeof(unsigned long) + MPI_BSEND_OVERHEAD;
-            
-            int MaxBuffer = max(SizeBuffer[0], max(SizeBuffer[1], max(SizeBuffer[2], max(SizeBuffer[3], max(SizeBuffer[4], max(SizeBuffer[5], max(SizeBuffer[6], max(SizeBuffer[7], max(SizeBuffer[8], max(SizeBuffer[9], max(SizeBuffer[10], SizeBuffer[11])))))))))));
-            int TotalBuffer = SizeBuffer[0]+SizeBuffer[1]+SizeBuffer[2]+SizeBuffer[3]+SizeBuffer[4]+SizeBuffer[5]+SizeBuffer[6]+SizeBuffer[7]+SizeBuffer[8]+SizeBuffer[9]+SizeBuffer[10]+SizeBuffer[11];
-            
-            cout.precision(2);
-            cout.setf(ios::fixed, ios::floatfield);
-            cout << "Domain "<< iDomain + 1 << ": " << nPointTotal << " points (" << nPointGhost << " ghost points";
-            if (nPointPeriodic == 0) cout <<"). ";
-            else cout <<" including " << nPointPeriodic << " periodic points). ";
-            cout << "Comm buff: "<< double(TotalBuffer)/1048576 <<"MB of "<< double(MAX_MPI_BUFFER)/1048576 <<"MB."<< endl;
-            
-            /*--- Send the buffers with the geometrical information ---*/
-            MPI::COMM_WORLD.Bsend(Buffer_Send_Coord,                 nPointTotal*nDim,   MPI::DOUBLE,        iDomain, 0);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_GlobalPointIndex,      nPointTotal,        MPI::UNSIGNED_LONG, iDomain, 1);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_Color,                 nPointTotal,        MPI::UNSIGNED_LONG, iDomain, 2);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_Triangle,              nElemTriangle*3,    MPI::UNSIGNED_LONG, iDomain, 3);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_Rectangle,             nElemRectangle*4,   MPI::UNSIGNED_LONG, iDomain, 5);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_Tetrahedron,           nElemTetrahedron*4, MPI::UNSIGNED_LONG, iDomain, 6);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_Hexahedron,            nElemHexahedron*8,  MPI::UNSIGNED_LONG, iDomain, 7);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_Wedge,                 nElemWedge*6,       MPI::UNSIGNED_LONG, iDomain, 8);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_Pyramid,               nElemPyramid*5,     MPI::UNSIGNED_LONG, iDomain, 9);
-            
-            delete[] Buffer_Send_Coord;
-            delete[] Buffer_Send_GlobalPointIndex;
-            delete[] Buffer_Send_Color;
-            delete[] Buffer_Send_Triangle;
-            delete[] Buffer_Send_Rectangle;
-            delete[] Buffer_Send_Tetrahedron;
-            delete[] Buffer_Send_Hexahedron;
-            delete[] Buffer_Send_Wedge;
-            delete[] Buffer_Send_Pyramid;
-            
-            MPI::COMM_WORLD.Bsend(Buffer_Send_BoundLine,             nBoundLineTotal*2,      MPI::UNSIGNED_LONG, iDomain, 10);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_BoundTriangle,         nBoundTriangleTotal*3,  MPI::UNSIGNED_LONG, iDomain, 11);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_BoundRectangle,        nBoundRectangleTotal*4, MPI::UNSIGNED_LONG, iDomain, 12);
-            MPI::COMM_WORLD.Bsend(Buffer_Send_Local2Global_Marker,   nMarkerDomain,          MPI::UNSIGNED_LONG, iDomain, 13);
-            
-            delete[] Buffer_Send_BoundLine;
-            delete[] Buffer_Send_BoundTriangle;
-            delete[] Buffer_Send_BoundRectangle;
-            delete[] Buffer_Send_Local2Global_Marker;
-            
-        }
-        
-        /*--- Set a communitation barrier before
-         receiving to reduce the buffering ---*/
-        MPI::COMM_WORLD.Barrier();
-        
-        if (rank == iDomain) {
-            
-            /*--- Receive the buffers with the geometrical information ---*/
-            MPI::COMM_WORLD.Recv(Buffer_Receive_Coord,                 nPointTotal*nDim,    MPI::DOUBLE,        MASTER_NODE, 0);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_GlobalPointIndex,      nPointTotal,         MPI::UNSIGNED_LONG, MASTER_NODE, 1);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_Color,                 nPointTotal,         MPI::UNSIGNED_LONG, MASTER_NODE, 2);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_Triangle,              nElemTriangle*3,     MPI::UNSIGNED_LONG, MASTER_NODE, 3);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_Rectangle,             nElemRectangle*4,    MPI::UNSIGNED_LONG, MASTER_NODE, 5);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_Tetrahedron,           nElemTetrahedron*4,  MPI::UNSIGNED_LONG, MASTER_NODE, 6);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_Hexahedron,            nElemHexahedron*8,   MPI::UNSIGNED_LONG, MASTER_NODE, 7);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_Wedge,                 nElemWedge*6,        MPI::UNSIGNED_LONG, MASTER_NODE, 8);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_Pyramid,               nElemPyramid*5,      MPI::UNSIGNED_LONG, MASTER_NODE, 9);
-            
-            MPI::COMM_WORLD.Recv(Buffer_Receive_BoundLine,             nBoundLineTotal*2,      MPI::UNSIGNED_LONG, MASTER_NODE, 10);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_BoundTriangle,         nBoundTriangleTotal*3,  MPI::UNSIGNED_LONG, MASTER_NODE, 11);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_BoundRectangle,        nBoundRectangleTotal*4, MPI::UNSIGNED_LONG, MASTER_NODE, 12);
-            MPI::COMM_WORLD.Recv(Buffer_Receive_Local2Global_Marker,   nMarkerDomain,          MPI::UNSIGNED_LONG, MASTER_NODE, 13);
-            
-            /*--- Create the domain structures for the points ---*/
-            nPoint = nPointTotal; iPoint = 0;
-            nPointDomain = nPointDomainTotal;
-            node = new CPoint*[nPoint];
-            Local_to_Global_Point =  new unsigned long[nPoint];
-            for (iPoint = 0; iPoint < nPoint; iPoint++) {
-                Local_to_Global_Point[iPoint] = Buffer_Receive_GlobalPointIndex[iPoint];
-                if ( nDim == 2 ) node[iPoint] = new CPoint(Buffer_Receive_Coord[iPoint*nDim+0], Buffer_Receive_Coord[iPoint*nDim+1], Local_to_Global_Point[iPoint], config);
-                if ( nDim == 3 ) node[iPoint] = new CPoint(Buffer_Receive_Coord[iPoint*nDim+0], Buffer_Receive_Coord[iPoint*nDim+1], Buffer_Receive_Coord[iPoint*nDim+2], Local_to_Global_Point[iPoint], config);
-                node[iPoint]->SetColor(Buffer_Receive_Color[iPoint]);
-            }
-            
-            delete[] Buffer_Receive_Coord;
-            delete[] Buffer_Receive_GlobalPointIndex;
-            delete[] Buffer_Receive_Color;
-            
-            /*--- Create the domain structures for the elements ---*/
-            nElem = nElemTotal; iElem = 0;
-            elem = new CPrimalGrid*[nElem];
-            
-            for (iElemTriangle = 0; iElemTriangle < nElemTriangle; iElemTriangle++) {
-                elem[iElem] = new CTriangle(Buffer_Receive_Triangle[iElemTriangle*3+0], Buffer_Receive_Triangle[iElemTriangle*3+1], Buffer_Receive_Triangle[iElemTriangle*3+2], 2);
-                iElem++;
-            }
-            for (iElemRectangle = 0; iElemRectangle < nElemRectangle; iElemRectangle++) {
-                elem[iElem] = new CRectangle(Buffer_Receive_Rectangle[iElemRectangle*4+0], Buffer_Receive_Rectangle[iElemRectangle*4+1], Buffer_Receive_Rectangle[iElemRectangle*4+2], Buffer_Receive_Rectangle[iElemRectangle*4+3], 2);
-                iElem++;
-            }
-            for (iElemTetrahedron = 0; iElemTetrahedron < nElemTetrahedron; iElemTetrahedron++) {
-                elem[iElem] = new CTetrahedron(Buffer_Receive_Tetrahedron[iElemTetrahedron*4+0], Buffer_Receive_Tetrahedron[iElemTetrahedron*4+1], Buffer_Receive_Tetrahedron[iElemTetrahedron*4+2], Buffer_Receive_Tetrahedron[iElemTetrahedron*4+3]);
-                iElem++;
-            }
-            for (iElemHexahedron = 0; iElemHexahedron < nElemHexahedron; iElemHexahedron++) {
-                elem[iElem] = new CHexahedron(Buffer_Receive_Hexahedron[iElemHexahedron*8+0], Buffer_Receive_Hexahedron[iElemHexahedron*8+1], Buffer_Receive_Hexahedron[iElemHexahedron*8+2], Buffer_Receive_Hexahedron[iElemHexahedron*8+3], Buffer_Receive_Hexahedron[iElemHexahedron*8+4], Buffer_Receive_Hexahedron[iElemHexahedron*8+5], Buffer_Receive_Hexahedron[iElemHexahedron*8+6], Buffer_Receive_Hexahedron[iElemHexahedron*8+7]);
-                iElem++;
-            }
-            for (iElemWedge = 0; iElemWedge < nElemWedge; iElemWedge++) {
-                elem[iElem] = new CWedge(Buffer_Receive_Wedge[iElemWedge*6+0], Buffer_Receive_Wedge[iElemWedge*6+1], Buffer_Receive_Wedge[iElemWedge*6+2], Buffer_Receive_Wedge[iElemWedge*6+3], Buffer_Receive_Wedge[iElemWedge*6+4], Buffer_Receive_Wedge[iElemWedge*6+5]);
-                iElem++;
-            }
-            for (iElemPyramid = 0; iElemPyramid < nElemPyramid; iElemPyramid++) {
-                elem[iElem] = new CPyramid(Buffer_Receive_Pyramid[iElemPyramid*5+0], Buffer_Receive_Pyramid[iElemPyramid*5+1], Buffer_Receive_Pyramid[iElemPyramid*5+2], Buffer_Receive_Pyramid[iElemPyramid*5+3], Buffer_Receive_Pyramid[iElemPyramid*5+4]);
-                iElem++;
-            }
-            
-            delete[] Buffer_Receive_Triangle;
-            delete[] Buffer_Receive_Rectangle;
-            delete[] Buffer_Receive_Tetrahedron;
-            delete[] Buffer_Receive_Hexahedron;
-            delete[] Buffer_Receive_Wedge;
-            delete[] Buffer_Receive_Pyramid;
-            
-            /*--- Create the domain structures for the boundaries ---*/
-            nMarker = nMarkerDomain;
-            unsigned short overhead = 4;
-            
-            nElem_Bound = new unsigned long [nMarker+(overhead*size)];
-            Local_to_Global_Marker = new unsigned short [nMarker+(overhead*size)];
-            
-            for (iMarker = 0; iMarker < nMarker; iMarker++) nElem_Bound[iMarker] = nVertexDomain[iMarker];
-            
-            bound = new CPrimalGrid**[nMarker+(overhead*size)];
-            for (iMarker = 0; iMarker < nMarker; iMarker++) bound[iMarker] = new CPrimalGrid* [nElem_Bound[iMarker]];
-            
-            iBoundLineTotal = 0; iBoundTriangleTotal = 0; iBoundRectangleTotal = 0;
-            for (iMarker = 0; iMarker < nMarker; iMarker++) {
-                
-                iVertexDomain = 0;
-                
-                for (iBoundLine = 0; iBoundLine < nBoundLine[iMarker]; iBoundLine++) {
-                    bound[iMarker][iVertexDomain] = new CLine(Buffer_Receive_BoundLine[iBoundLineTotal*2+0],
-                                                              Buffer_Receive_BoundLine[iBoundLineTotal*2+1], 2);
-                    iVertexDomain++;
-                    iBoundLineTotal++;
-                }
-                for (iBoundTriangle = 0; iBoundTriangle < nBoundTriangle[iMarker]; iBoundTriangle++) {
-                    bound[iMarker][iVertexDomain] = new CTriangle(Buffer_Receive_BoundTriangle[iBoundTriangleTotal*3+0],
-                                                                  Buffer_Receive_BoundTriangle[iBoundTriangleTotal*3+1],
-                                                                  Buffer_Receive_BoundTriangle[iBoundTriangleTotal*3+2], 3);
-                    iVertexDomain++;
-                    iBoundTriangleTotal++;
-                }
-                for (iBoundRectangle = 0; iBoundRectangle < nBoundRectangle[iMarker]; iBoundRectangle++) {
-                    bound[iMarker][iVertexDomain] = new CRectangle(Buffer_Receive_BoundRectangle[iBoundRectangleTotal*4+0],
-                                                                   Buffer_Receive_BoundRectangle[iBoundRectangleTotal*4+1],
-                                                                   Buffer_Receive_BoundRectangle[iBoundRectangleTotal*4+2],
-                                                                   Buffer_Receive_BoundRectangle[iBoundRectangleTotal*4+3], 3);
-                    iVertexDomain++;
-                    iBoundRectangleTotal++;
-                }
-                
-                Local_to_Global_Marker[iMarker] = Buffer_Receive_Local2Global_Marker[iMarker];
-                
-            }
-            
-            delete[] Buffer_Receive_BoundLine;
-            delete[] Buffer_Receive_BoundTriangle;
-            delete[] Buffer_Receive_BoundRectangle;
-            delete[] Buffer_Receive_Local2Global_Marker;
-            
-        }
-        
-    }
-    
-    /*--- End of the MPI stuff, each node has the right piece of the grid ---*/
-    MPI::COMM_WORLD.Barrier();
-    
-    //  /*--- Set the periodic boundary conditions ---*/
-    //  unsigned long ReceptorColor, DonorColor, Transformation;
-    //  unsigned short jMarker;
-    //
-    //  unsigned long *nSendDomain_Periodic = new unsigned long [nDomain];
-    //  unsigned long *iSendDomain_Periodic = new unsigned long [nDomain];
-    //  unsigned long *nReceivedDomain_Periodic = new unsigned long [nDomain];
-    //  unsigned long *iReceivedDomain_Periodic = new unsigned long [nDomain];
-    //  unsigned long nTotalSendDomain_Periodic, iTotalSendDomain_Periodic;
-    //  unsigned long nTotalReceivedDomain_Periodic, iTotalReceivedDomain_Periodic;
-    //
-    //  unsigned long *SendDomain_Periodic;
-    //  unsigned long *SendDomain_PeriodicTrans;
-    //  unsigned long *ReceivedDomain_Periodic;
-    //  unsigned long *ReceivedDomain_PeriodicTrans;
-    //
-    //  unsigned long *Buffer_Send_SendDomain_Periodic;
-    //  unsigned long *Buffer_Send_SendDomain_PeriodicTrans;
-    //  unsigned long *Buffer_Send_ReceivedDomain_Periodic;
-    //  unsigned long *Buffer_Send_ReceivedDomain_PeriodicTrans;
-    //
-    //  unsigned long *Buffer_Receive_SendDomain_Periodic;
-    //  unsigned long *Buffer_Receive_SendDomain_PeriodicTrans;
-    //  unsigned long *Buffer_Receive_ReceivedDomain_Periodic;
-    //  unsigned long *Buffer_Receive_ReceivedDomain_PeriodicTrans;
-    //
-    //  /*--- Periodic boundary conditions ---*/
-    //  for (iDomain = 0; iDomain < size; iDomain++) {
-    //
-    //    if (rank == MASTER_NODE) {
-    //
-    //      /*--- Inizialization ---*/
-    //      for (jDomain = 0; jDomain < size; jDomain++) {
-    //        nSendDomain_Periodic[jDomain] = 0;      iSendDomain_Periodic[jDomain] = 0;
-    //        nReceivedDomain_Periodic[jDomain] = 0;  iReceivedDomain_Periodic[jDomain] = 0;
-    //      }
-    //      nTotalSendDomain_Periodic = 0; iTotalSendDomain_Periodic = 0;
-    //      nTotalReceivedDomain_Periodic = 0; iTotalReceivedDomain_Periodic = 0;
-    //
-    //      /*--- Dimensionalization of the periodic auxiliar vectors ---*/
-    //      for (iMarker = 0; iMarker < geometry->GetnMarker(); iMarker++) {
-    //        if (config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) {
-    //          for (iVertex = 0; iVertex < geometry->GetnElem_Bound(iMarker); iVertex++) {
-    //            iPoint = geometry->bound[iMarker][iVertex]->GetNode(0);
-    //            if (iDomain == geometry->node[iPoint]->GetColor()) {
-    //
-    //              if (Marker_All_SendRecv[iMarker] > 0) {
-    //
-    //                /*--- Identify the color of the receptor ---*/
-    //                for (jMarker = 0; jMarker < geometry->GetnMarker(); jMarker++) {
-    //                  if ((config->GetMarker_All_Boundary(jMarker) == SEND_RECEIVE) &&
-    //                    (Marker_All_SendRecv[jMarker] == -Marker_All_SendRecv[iMarker])) {
-    //                      jPoint = geometry->bound[jMarker][iVertex]->GetNode(0);
-    //                      ReceptorColor = geometry->node[jPoint]->GetColor();
-    //                    }
-    //                }
-    //
-    //                nSendDomain_Periodic[ReceptorColor]++;
-    //                nTotalSendDomain_Periodic++;
-    //
-    //              }
-    //              if (Marker_All_SendRecv[iMarker] < 0) {
-    //
-    //                /*--- Identify the color of the donor ---*/
-    //                for (jMarker = 0; jMarker < geometry->GetnMarker(); jMarker++) {
-    //                  if ((config->GetMarker_All_Boundary(jMarker) == SEND_RECEIVE) &&
-    //                      (Marker_All_SendRecv[jMarker] == -Marker_All_SendRecv[iMarker])) {
-    //                    jPoint = geometry->bound[jMarker][iVertex]->GetNode(0);
-    //                    DonorColor = geometry->node[jPoint]->GetColor();
-    //                  }
-    //                }
-    //
-    //                nReceivedDomain_Periodic[DonorColor]++;
-    //                nTotalReceivedDomain_Periodic++;
-    //
-    //              }
-    //            }
-    //          }
-    //        }
-    //      }
-    //
-    //      /*--- Allocate the send buffer vector ---*/
-    //      Buffer_Send_SendDomain_Periodic           = new unsigned long [nTotalSendDomain_Periodic];
-    //      Buffer_Send_SendDomain_PeriodicTrans      = new unsigned long [nTotalSendDomain_Periodic];
-    //      Buffer_Send_ReceivedDomain_Periodic       = new unsigned long [nTotalReceivedDomain_Periodic];
-    //      Buffer_Send_ReceivedDomain_PeriodicTrans  = new unsigned long [nTotalReceivedDomain_Periodic];
-    //
-    //      /*--- Send the size of buffers ---*/
-    //      MPI::COMM_WORLD.Bsend(&nTotalSendDomain_Periodic,       1, MPI::UNSIGNED_LONG, iDomain, 0);
-    //      MPI::COMM_WORLD.Bsend(&nTotalReceivedDomain_Periodic,   1, MPI::UNSIGNED_LONG, iDomain, 1);
-    //      MPI::COMM_WORLD.Bsend(nSendDomain_Periodic,             size, MPI::UNSIGNED_LONG, iDomain, 2);
-    //      MPI::COMM_WORLD.Bsend(nReceivedDomain_Periodic,         size, MPI::UNSIGNED_LONG, iDomain, 3);
-    //
-    //    }
-    //
-    //    MPI::COMM_WORLD.Barrier();
-    //
-    //    if (rank == iDomain) {
-    //
-    //      /*--- Receive the size of buffers---*/
-    //      MPI::COMM_WORLD.Recv(&nTotalSendDomain_Periodic,       1, MPI::UNSIGNED_LONG, MASTER_NODE, 0);
-    //      MPI::COMM_WORLD.Recv(&nTotalReceivedDomain_Periodic,   1, MPI::UNSIGNED_LONG, MASTER_NODE, 1);
-    //      MPI::COMM_WORLD.Recv(nSendDomain_Periodic,             size, MPI::UNSIGNED_LONG, MASTER_NODE, 2);
-    //      MPI::COMM_WORLD.Recv(nReceivedDomain_Periodic,         size, MPI::UNSIGNED_LONG, MASTER_NODE, 3);
-    //
-    //      /*--- Allocate the send buffer vector ---*/
-    //      Buffer_Receive_SendDomain_Periodic           = new unsigned long [nTotalSendDomain_Periodic];
-    //      Buffer_Receive_SendDomain_PeriodicTrans      = new unsigned long [nTotalSendDomain_Periodic];
-    //      Buffer_Receive_ReceivedDomain_Periodic       = new unsigned long [nTotalReceivedDomain_Periodic];
-    //      Buffer_Receive_ReceivedDomain_PeriodicTrans  = new unsigned long [nTotalReceivedDomain_Periodic];
-    //
-    //    }
-    //
-    //    MPI::COMM_WORLD.Barrier();
-    //
-    //    /*--- Copy SendDomain_Periodic, SendDomain_PeriodicTrans, ReceivedDomain_Periodic,
-    //     and ReceivedDomain_PeriodicTrans ---*/
-    //    if (rank == MASTER_NODE) {
-    //
-    //      /*--- Evaluate the number of already existing periodic boundary conditions ---*/
-    //      for (iMarker = 0; iMarker < geometry->GetnMarker(); iMarker++) {
-    //
-    //        if (config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) {
-    //
-    //          for (iVertex = 0; iVertex < geometry->GetnElem_Bound(iMarker); iVertex++) {
-    //            iPoint = geometry->bound[iMarker][iVertex]->GetNode(0);
-    //            Transformation = geometry->bound[iMarker][iVertex]->GetRotation_Type();
-    //
-    //            if (iDomain == geometry->node[iPoint]->GetColor()) {
-    //
-    //              /*--- If the information is going to be sended, find the
-    //               domain of the receptor ---*/
-    //              if (Marker_All_SendRecv[iMarker] > 0) {
-    //
-    //                /*--- Identify the color of the receptor ---*/
-    //                for (jMarker = 0; jMarker < geometry->GetnMarker(); jMarker++) {
-    //                  if ((config->GetMarker_All_Boundary(jMarker) == SEND_RECEIVE) &&
-    //                      (Marker_All_SendRecv[jMarker] == -Marker_All_SendRecv[iMarker])) {
-    //                    jPoint = geometry->bound[jMarker][iVertex]->GetNode(0);
-    //                    ReceptorColor = geometry->node[jPoint]->GetColor();
-    //                  }
-    //                }
-    //
-    //                /*--- For each color of the receptor we will han an extra marker (+) ---*/
-    //                Buffer_Send_SendDomain_Periodic[iTotalSendDomain_Periodic] = 0;//Global_to_Local_Point[iPoint];
-    //                Buffer_Send_SendDomain_PeriodicTrans[iTotalSendDomain_Periodic] = Transformation;
-    //                iTotalSendDomain_Periodic++;
-    //
-    //              }
-    //
-    //
-    //              /*--- If the information is goint to be received,
-    //               find the domain if the donor ---*/
-    //              if (Marker_All_SendRecv[iMarker] < 0) {
-    //
-    //                /*--- Identify the color of the donor ---*/
-    //                for (jMarker = 0; jMarker < geometry->GetnMarker(); jMarker++) {
-    //                  if ((config->GetMarker_All_Boundary(jMarker) == SEND_RECEIVE) &&
-    //                      (Marker_All_SendRecv[jMarker] == -Marker_All_SendRecv[iMarker] )) {
-    //                    jPoint = geometry->bound[jMarker][iVertex]->GetNode(0);
-    //                    DonorColor = geometry->node[jPoint]->GetColor();
-    //                  }
-    //                }
-    //
-    //                /*--- For each color of the donor we will han an extra marker (-) ---*/
-    //                Buffer_Send_ReceivedDomain_Periodic[iTotalReceivedDomain_Periodic] = 0;//Global_to_Local_Point[iPoint];
-    //                Buffer_Send_ReceivedDomain_PeriodicTrans[iTotalReceivedDomain_Periodic] = Transformation;
-    //                iTotalReceivedDomain_Periodic++;
-    //
-    //              }
-    //            }
-    //          }
-    //        }
-    //      }
-    //
-    //
-    //      MPI::COMM_WORLD.Bsend(Buffer_Send_SendDomain_Periodic,           nTotalSendDomain_Periodic, MPI::UNSIGNED_LONG, iDomain, 0);
-    //      MPI::COMM_WORLD.Bsend(Buffer_Send_SendDomain_PeriodicTrans,      nTotalSendDomain_Periodic, MPI::UNSIGNED_LONG, iDomain, 1);
-    //      MPI::COMM_WORLD.Bsend(Buffer_Send_ReceivedDomain_Periodic,       nTotalReceivedDomain_Periodic, MPI::UNSIGNED_LONG, iDomain, 2);
-    //      MPI::COMM_WORLD.Bsend(Buffer_Send_ReceivedDomain_PeriodicTrans,  nTotalReceivedDomain_Periodic, MPI::UNSIGNED_LONG, iDomain, 3);
-    //
-    //      delete[] Buffer_Send_SendDomain_Periodic;
-    //      delete[] Buffer_Send_SendDomain_PeriodicTrans;
-    //      delete[] Buffer_Send_ReceivedDomain_Periodic;
-    //      delete[] Buffer_Send_ReceivedDomain_PeriodicTrans;
-    //
-    //    }
-    //
-    //    MPI::COMM_WORLD.Barrier();
-    //
-    //    if (rank == iDomain) {
-    //
-    //      /*--- Receive the size of buffers---*/
-    //      MPI::COMM_WORLD.Recv(Buffer_Receive_SendDomain_Periodic,          nTotalSendDomain_Periodic, MPI::UNSIGNED_LONG, MASTER_NODE, 0);
-    //      MPI::COMM_WORLD.Recv(Buffer_Receive_SendDomain_PeriodicTrans,     nTotalSendDomain_Periodic, MPI::UNSIGNED_LONG, MASTER_NODE, 1);
-    //      MPI::COMM_WORLD.Recv(Buffer_Receive_ReceivedDomain_Periodic,      nTotalReceivedDomain_Periodic, MPI::UNSIGNED_LONG, MASTER_NODE, 2);
-    //      MPI::COMM_WORLD.Recv(Buffer_Receive_ReceivedDomain_PeriodicTrans, nTotalReceivedDomain_Periodic, MPI::UNSIGNED_LONG, MASTER_NODE, 3);
-    //
-    //
-    //      /*--- Add the new periodic markers to the domain ---*/
-    //      for (jDomain = 0; jDomain < size; jDomain++) {
-    //
-    //        iTotalSendDomain_Periodic = 0;
-    //        if (nSendDomain_Periodic[jDomain] != 0) {
-    //          nVertexDomain[nMarker] = 0;
-    //          for (iVertex = 0; iVertex < nSendDomain_Periodic[jDomain]; iVertex++) {
-    //            bound[nMarker][iVertex] = new CVertexMPI(Buffer_Receive_SendDomain_Periodic[iTotalSendDomain_Periodic], nDim);
-    //            bound[nMarker][iVertex]->SetRotation_Type(Buffer_Receive_SendDomain_PeriodicTrans[iTotalSendDomain_Periodic]);
-    //            nVertexDomain[nMarker]++;
-    //            iTotalSendDomain_Periodic++;
-    //          }
-    //          Marker_All_SendRecv[nMarker] = jDomain+1;
-    //          nMarker++;
-    //        }
-    //
-    //        iTotalReceivedDomain_Periodic = 0;
-    //        if (nReceivedDomain_Periodic[jDomain] != 0) {
-    //          nVertexDomain[nMarker] = 0;
-    //          for (iVertex = 0; iVertex < nReceivedDomain_Periodic[jDomain]; iVertex++) {
-    //            bound[nMarker][iVertex] = new CVertexMPI(Buffer_Receive_ReceivedDomain_Periodic[iTotalReceivedDomain_Periodic], nDim);
-    //            bound[nMarker][iVertex]->SetRotation_Type(Buffer_Receive_ReceivedDomain_PeriodicTrans[iTotalReceivedDomain_Periodic]);
-    //            nVertexDomain[nMarker]++;
-    //            iTotalReceivedDomain_Periodic++;
-    //          }
-    //          Marker_All_SendRecv[nMarker] = -(jDomain+1);
-    //          nMarker++;
-    //        }
-    //
-    //      }
-    //
-    //      delete[] Buffer_Receive_SendDomain_Periodic;
-    //      delete[] Buffer_Receive_SendDomain_PeriodicTrans;
-    //      delete[] Buffer_Receive_ReceivedDomain_Periodic;
-    //      delete[] Buffer_Receive_ReceivedDomain_PeriodicTrans;
-    //
-    //    }
-    //
-    //  }
-    
-    
-    /*--- End of the MPI stuff, each node has the right piece of the grid ---*/
-    MPI::COMM_WORLD.Barrier();
-    
-    if (rank == MASTER_NODE) {
-        delete[] Global_to_Local_Point;
-        delete[] ElemIn;
-        delete[] MarkerIn;
-        for (iMarker = 0; iMarker < geometry->GetnMarker(); iMarker++)
-            delete VertexIn[iMarker];
-        delete[] VertexIn;
-    }
-    
-#endif
 }
 
 CDomainGeometry::~CDomainGeometry(void) {
@@ -9898,148 +8063,6 @@ void CDomainGeometry::SetDomainSerial(CGeometry *geometry, CConfig *config, unsi
 
 void CDomainGeometry::SetSendReceive(CConfig *config) {
     
-#ifndef NO_MPI
-    
-	unsigned short Counter_Send, Counter_Receive, iMarkerSend, iMarkerReceive;
-	unsigned long iVertex, LocalNode;
-    
-    unsigned long  nVertexDomain[MAX_NUMBER_MARKER], iPoint, jPoint, iElem;
-	unsigned short iNode, iDomain, jDomain, jNode;
-	vector<unsigned long>::iterator it;
-    
-    int rank = MPI::COMM_WORLD.Get_rank();
-	int size = MPI::COMM_WORLD.Get_size();
-    
-	int nDomain = size;
-    
-    /*--- Loop over the all the points of the element
-	 to find the points with different colours, and create the send/received list ---*/
-	for (iElem = 0; iElem < nElem; iElem++) {
-		for (iNode = 0; iNode < elem[iElem]->GetnNodes(); iNode++) {
-			iPoint = elem[iElem]->GetNode(iNode);
-            iDomain = node[iPoint]->GetColor();
-            
-            if (iDomain == rank) {
-                for(jNode = 0; jNode < elem[iElem]->GetnNodes(); jNode++) {
-                    jPoint = elem[iElem]->GetNode(jNode);
-                    jDomain = node[jPoint]->GetColor();
-                    
-                    /*--- If different color and connected by an edge, then we add them to the list ---*/
-                    if (iDomain != jDomain) {
-                        
-                        /*--- We send from iDomain to jDomain the value of iPoint, we save the
-                         global value becuase we need to sort the lists ---*/
-                        SendDomainLocal[jDomain].push_back(Local_to_Global_Point[iPoint]);
-                        /*--- We send from jDomain to iDomain the value of jPoint, we save the
-                         global value becuase we need to sort the lists ---*/
-                        ReceivedDomainLocal[jDomain].push_back(Local_to_Global_Point[jPoint]);
-                        
-                    }
-                }
-            }
-		}
-	}
-    
-    /*--- Sort the points that must be sended and delete repeated points, note
-     that the sortering should be done with the global point (not the local) ---*/
-	for (iDomain = 0; iDomain < nDomain; iDomain++) {
-		sort( SendDomainLocal[iDomain].begin(), SendDomainLocal[iDomain].end());
-		it = unique( SendDomainLocal[iDomain].begin(), SendDomainLocal[iDomain].end());
-		SendDomainLocal[iDomain].resize( it - SendDomainLocal[iDomain].begin() );
-	}
-	
-	/*--- Sort the points that must be received and delete repeated points, note
-     that the sortering should be done with the global point (not the local) ---*/
-	for (iDomain = 0; iDomain < nDomain; iDomain++) {
-		sort( ReceivedDomainLocal[iDomain].begin(), ReceivedDomainLocal[iDomain].end());
-		it = unique( ReceivedDomainLocal[iDomain].begin(), ReceivedDomainLocal[iDomain].end());
-		ReceivedDomainLocal[iDomain].resize( it - ReceivedDomainLocal[iDomain].begin() );
-	}
-    
-    /*--- Create Global to Local Point array, note that the array is smaller (Max_GlobalPoint) than the total
-     number of points in the simulation  ---*/
-    Max_GlobalPoint = 0;
-    for (iPoint = 0; iPoint < nPoint; iPoint++) {
-        if (Local_to_Global_Point[iPoint] > Max_GlobalPoint)
-            Max_GlobalPoint = Local_to_Global_Point[iPoint];
-    }
-    Global_to_Local_Point =  new long[Max_GlobalPoint+1]; // +1 to include the bigger point.
-    
-    /*--- Initialization of the array with -1 this is important for the FFD ---*/
-    for (iPoint = 0; iPoint < Max_GlobalPoint+1; iPoint++)
-        Global_to_Local_Point[iPoint] = -1;
-    
-    /*--- Set the value of some of the points ---*/
-    for (iPoint = 0; iPoint < nPoint; iPoint++)
-        Global_to_Local_Point[Local_to_Global_Point[iPoint]] = iPoint;
-    
-    /*--- Add the new MPI send receive boundaries, reset the transformation, and save the local value ---*/
-	for (iDomain = 0; iDomain < nDomain; iDomain++) {
-		if (SendDomainLocal[iDomain].size() != 0) {
-			nVertexDomain[nMarker] = SendDomainLocal[iDomain].size();
-            for (iVertex = 0; iVertex < nVertexDomain[nMarker]; iVertex++) {
-                SendDomainLocal[iDomain][iVertex] = Global_to_Local_Point[SendDomainLocal[iDomain][iVertex]];
-                SendTransfLocal[iDomain].push_back(0);
-            }
-            nElem_Bound[nMarker] = nVertexDomain[nMarker];
-            bound[nMarker] = new CPrimalGrid*[nElem_Bound[nMarker]];
-			nMarker++;
-		}
-    }
-    
-    /*--- Add the new MPI receive boundaries, reset the transformation, and save the local value ---*/
-    for (iDomain = 0; iDomain < nDomain; iDomain++) {
- 		if (ReceivedDomainLocal[iDomain].size() != 0) {
-			nVertexDomain[nMarker] = ReceivedDomainLocal[iDomain].size();
-            for (iVertex = 0; iVertex < nVertexDomain[nMarker]; iVertex++) {
-                ReceivedDomainLocal[iDomain][iVertex] = Global_to_Local_Point[ReceivedDomainLocal[iDomain][iVertex]];
-                ReceivedTransfLocal[iDomain].push_back(0);
-            }
-            nElem_Bound[nMarker] = nVertexDomain[nMarker];
-            bound[nMarker] = new CPrimalGrid*[nElem_Bound[nMarker]];
-			nMarker++;
-		}
-    }
-    
-	/*--- First compute the Send/Receive boundaries ---*/
-	Counter_Send = 0; 	Counter_Receive = 0;
-	for (iDomain = 0; iDomain < nDomain; iDomain++)
-		if (SendDomainLocal[iDomain].size() != 0) Counter_Send++;
-    
-	for (iDomain = 0; iDomain < nDomain; iDomain++)
-		if (ReceivedDomainLocal[iDomain].size() != 0) Counter_Receive++;
-    
-	iMarkerSend = nMarker - Counter_Send - Counter_Receive;
-	iMarkerReceive = nMarker - Counter_Receive;
-    
-	/*--- First we do the send ---*/
-	for (iDomain = 0; iDomain < nDomain; iDomain++) {
-		if (SendDomainLocal[iDomain].size() != 0) {
-			for (iVertex = 0; iVertex < GetnElem_Bound(iMarkerSend); iVertex++) {
-				LocalNode = SendDomainLocal[iDomain][iVertex];
-				bound[iMarkerSend][iVertex] = new CVertexMPI(LocalNode, 3);
-				bound[iMarkerSend][iVertex]->SetRotation_Type(SendTransfLocal[iDomain][iVertex]);
-			}
-			Marker_All_SendRecv[iMarkerSend] = iDomain+1;
-			iMarkerSend++;
-		}
-	}
-    
-	/*--- Second we do the receive ---*/
-	for (iDomain = 0; iDomain < nDomain; iDomain++) {
-		if (ReceivedDomainLocal[iDomain].size() != 0) {
-			for (iVertex = 0; iVertex < GetnElem_Bound(iMarkerReceive); iVertex++) {
-				LocalNode = ReceivedDomainLocal[iDomain][iVertex];
-				bound[iMarkerReceive][iVertex] = new CVertexMPI(LocalNode, 3);
-				bound[iMarkerReceive][iVertex]->SetRotation_Type(ReceivedTransfLocal[iDomain][iVertex]);
-			}
-			Marker_All_SendRecv[iMarkerReceive] = -(iDomain+1);
-			iMarkerReceive++;
-		}
-	}
-    
-#endif
-    
 }
 
 void CDomainGeometry::SetMeshFile(CConfig *config, string val_mesh_out_filename) {
@@ -10089,55 +8112,6 @@ void CDomainGeometry::SetMeshFile(CConfig *config, string val_mesh_out_filename)
         }
     }
     
-#ifndef NO_MPI
-    
-    /*--- Send after receive in the .su2 file ---*/
-    unsigned short iDomain, nDomain;
-    int size = MPI::COMM_WORLD.Get_size();
-    nDomain = size+1;
-    
-    for (iDomain = 0; iDomain < nDomain; iDomain++) {
-        
-        for (iMarker = 0; iMarker < nMarker; iMarker++) {
-            if (bound[iMarker][0]->GetVTK_Type() == VERTEX) {
-                
-                if (Marker_All_SendRecv[iMarker] == iDomain) {
-                    output_file << "MARKER_TAG= SEND_RECEIVE" << endl;
-                    output_file << "MARKER_ELEMS= " << nElem_Bound[iMarker]<< endl;
-                    output_file << "SEND_TO= " << Marker_All_SendRecv[iMarker] << endl;
-                    
-                    for (iElem_Bound = 0; iElem_Bound < nElem_Bound[iMarker]; iElem_Bound++) {
-                        output_file << bound[iMarker][iElem_Bound]->GetVTK_Type() << "\t" ;
-                        output_file << bound[iMarker][iElem_Bound]->GetNode(0) << "\t";
-                        output_file << bound[iMarker][iElem_Bound]->GetRotation_Type() << "\t";
-                        output_file << bound[iMarker][iElem_Bound]->GetMatching_Zone() << endl;
-                    }
-                }
-            }
-        }
-        
-        for (iMarker = 0; iMarker < nMarker; iMarker++) {
-            if (bound[iMarker][0]->GetVTK_Type() == VERTEX) {
-                
-                if (Marker_All_SendRecv[iMarker] == -iDomain) {
-                    output_file << "MARKER_TAG= SEND_RECEIVE" << endl;
-                    output_file << "MARKER_ELEMS= " << nElem_Bound[iMarker]<< endl;
-                    output_file << "SEND_TO= " << Marker_All_SendRecv[iMarker] << endl;
-                    
-                    for (iElem_Bound = 0; iElem_Bound < nElem_Bound[iMarker]; iElem_Bound++) {
-                        output_file << bound[iMarker][iElem_Bound]->GetVTK_Type() << "\t" ;
-                        output_file << bound[iMarker][iElem_Bound]->GetNode(0) << "\t";
-                        output_file << bound[iMarker][iElem_Bound]->GetRotation_Type() << "\t";
-                        output_file << bound[iMarker][iElem_Bound]->GetMatching_Zone() << endl;
-                    }
-                }
-            }
-        }
-        
-    }
-    
-#else
-    
     for (iMarker = 0; iMarker < nMarker; iMarker++) {
 		if (bound[iMarker][0]->GetVTK_Type() == VERTEX) {
             output_file << "MARKER_TAG= SEND_RECEIVE" << endl;
@@ -10153,8 +8127,6 @@ void CDomainGeometry::SetMeshFile(CConfig *config, string val_mesh_out_filename)
             }
         }
     }
-    
-#endif
     
 	/*--- Get the total number of periodic transformations ---*/
 	nPeriodic = config->GetnPeriodicIndex();

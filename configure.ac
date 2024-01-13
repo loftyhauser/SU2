@@ -16,25 +16,11 @@ AC_PREREQ([2.59])
 AM_INIT_AUTOMAKE([subdir-objects])  # [SU^2], [2.0]
 
 # optional bindings
-AC_ARG_WITH(MPI,
-    	AS_HELP_STRING([--with-MPI[=ARG]], [Build parallel version with MPI tools, ARG = MPI C++ compiler]), 
-	[with_MPI=$withval], [with_MPI="no"])
 AC_ARG_ENABLE(CFD,
    	AS_HELP_STRING([--disable-CFD], [build the SU2_CFD executable (default = yes)]), 
 	[build_CFD=$enableval], [build_CFD="yes"])
 
 ##########################
-
-have_MPI="no"
-if test "$with_MPI" != "no"
-then
-	CXX="$with_MPI"	
-	have_MPI="yes"
-else
-	CXXFLAGS=""$CXXFLAGS" -DNO_MPI"
-fi
-
-###########################
 
 AM_CONDITIONAL([BUILD_CFD],[test $build_CFD != "no"])
 
@@ -65,7 +51,6 @@ Build Configuration Summary:
     Preprocessor flags:   ${CPPFLAGS}
     Compiler flags:       ${CXXFLAGS}
     Linker flags:         ${LDFLAGS}
-    MPI support:          $have_MPI
 
     Build SU2_CFD:        $build_CFD
 

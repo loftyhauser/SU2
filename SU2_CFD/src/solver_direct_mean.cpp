@@ -80,9 +80,6 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config, unsigned short 
 	roe_turkel = false;
   
 	int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
 
 	/*--- Array initialization ---*/
 	Velocity_Inlet = NULL;
@@ -405,11 +402,7 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config, unsigned short 
         counter_local++;
       }
     }
-#ifndef NO_MPI
-    MPI::COMM_WORLD.Reduce(&counter_local, &counter_global, 1, MPI::UNSIGNED_LONG, MPI::SUM, MASTER_NODE);
-#else
     counter_global = counter_local;
-#endif
     if ((rank == MASTER_NODE) && (counter_global != 0))
       cout << "Warning. The original solution contains "<< counter_global << " points that are not physical." << endl;
   }
@@ -518,11 +511,6 @@ void CEulerSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 	double rotMatrix[3][3], *angles, theta, cosTheta, sinTheta, phi, cosPhi, sinPhi, psi, cosPsi, sinPsi, *Buffer_Receive_U = NULL, *Buffer_Send_U = NULL;
 	int send_to, receive_from;
   
-#ifndef NO_MPI
-  MPI::Status status;
-  MPI::Request send_request, recv_request;
-#endif
-  
 	for (iMarker = 0; iMarker < nMarker; iMarker++) {
     
 		if ((config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) &&
@@ -547,28 +535,12 @@ void CEulerSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
           Buffer_Send_U[iVar*nVertexS+iVertex] = node[iPoint]->GetSolution(iVar);
       }
       
-#ifndef NO_MPI
-      
-//      /*--- Send/Receive using non-blocking communications ---*/
-//      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_U, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-//      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_U, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-//      send_request.Wait(status);
-//      recv_request.Wait(status);
-      
-      /*--- Send/Receive information using Sendrecv ---*/
-      MPI::COMM_WORLD.Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                               Buffer_Receive_U, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-      
-#else
-      
       /*--- Receive information without MPI ---*/
       for (iVertex = 0; iVertex < nVertexR; iVertex++) {
         iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
         for (iVar = 0; iVar < nVar; iVar++)
           Buffer_Receive_U[iVar*nVertexR+iVertex] = Buffer_Send_U[iVar*nVertexR+iVertex];
       }
-      
-#endif
       
       /*--- Deallocate send buffer ---*/
       delete [] Buffer_Send_U;
@@ -641,11 +613,6 @@ void CEulerSolver::Set_MPI_Solution_Old(CGeometry *geometry, CConfig *config) {
   *Buffer_Receive_U = NULL, *Buffer_Send_U = NULL;
 	int send_to, receive_from;
   
-#ifndef NO_MPI
-  MPI::Status status;
-  MPI::Request send_request, recv_request;
-#endif
-  
 	for (iMarker = 0; iMarker < nMarker; iMarker++) {
     
 		if ((config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) &&
@@ -670,28 +637,12 @@ void CEulerSolver::Set_MPI_Solution_Old(CGeometry *geometry, CConfig *config) {
           Buffer_Send_U[iVar*nVertexS+iVertex] = node[iPoint]->GetSolution_Old(iVar);
       }
       
-#ifndef NO_MPI
-      
-//      /*--- Send/Receive using non-blocking communications ---*/
-//      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_U, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-//      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_U, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-//      send_request.Wait(status);
-//      recv_request.Wait(status);
-      
-      /*--- Send/Receive information using Sendrecv ---*/
-      MPI::COMM_WORLD.Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                               Buffer_Receive_U, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-      
-#else
-      
       /*--- Receive information without MPI ---*/
       for (iVertex = 0; iVertex < nVertexR; iVertex++) {
         iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
         for (iVar = 0; iVar < nVar; iVar++)
           Buffer_Receive_U[iVar*nVertexR+iVertex] = Buffer_Send_U[iVar*nVertexR+iVertex];
       }
-      
-#endif
       
       /*--- Deallocate send buffer ---*/
       delete [] Buffer_Send_U;
@@ -763,11 +714,6 @@ void CEulerSolver::Set_MPI_Solution_Limiter(CGeometry *geometry, CConfig *config
   *Buffer_Receive_Limit = NULL, *Buffer_Send_Limit = NULL;
 	int send_to, receive_from;
   
-#ifndef NO_MPI
-  MPI::Status status;
-  MPI::Request send_request, recv_request;
-#endif
-  
 	for (iMarker = 0; iMarker < nMarker; iMarker++) {
     
 		if ((config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) &&
@@ -792,28 +738,12 @@ void CEulerSolver::Set_MPI_Solution_Limiter(CGeometry *geometry, CConfig *config
           Buffer_Send_Limit[iVar*nVertexS+iVertex] = node[iPoint]->GetLimiter(iVar);
       }
       
-#ifndef NO_MPI
-      
-//      /*--- Send/Receive using non-blocking communications ---*/
-//      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_Limit, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-//      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_Limit, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-//      send_request.Wait(status);
-//      recv_request.Wait(status);
-      
-      /*--- Send/Receive information using Sendrecv ---*/
-      MPI::COMM_WORLD.Sendrecv(Buffer_Send_Limit, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                               Buffer_Receive_Limit, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-      
-#else
-      
       /*--- Receive information without MPI ---*/
       for (iVertex = 0; iVertex < nVertexR; iVertex++) {
         iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
         for (iVar = 0; iVar < nVar; iVar++)
           Buffer_Receive_Limit[iVar*nVertexR+iVertex] = Buffer_Send_Limit[iVar*nVertexR+iVertex];
       }
-      
-#endif
       
       /*--- Deallocate send buffer ---*/
       delete [] Buffer_Send_Limit;
@@ -885,11 +815,6 @@ void CEulerSolver::Set_MPI_Undivided_Laplacian(CGeometry *geometry, CConfig *con
   *Buffer_Receive_Undivided_Laplacian = NULL, *Buffer_Send_Undivided_Laplacian = NULL;
 	int send_to, receive_from;
   
-#ifndef NO_MPI
-  MPI::Status status;
-  MPI::Request send_request, recv_request;
-#endif
-  
 	for (iMarker = 0; iMarker < nMarker; iMarker++) {
     
 		if ((config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) &&
@@ -914,28 +839,12 @@ void CEulerSolver::Set_MPI_Undivided_Laplacian(CGeometry *geometry, CConfig *con
           Buffer_Send_Undivided_Laplacian[iVar*nVertexS+iVertex] = node[iPoint]->GetUndivided_Laplacian(iVar);
       }
       
-#ifndef NO_MPI
-      
-//      /*--- Send/Receive using non-blocking communications ---*/
-//      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_Undivided_Laplacian, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-//      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_Undivided_Laplacian, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-//      send_request.Wait(status);
-//      recv_request.Wait(status);
-      
-      /*--- Send/Receive information using Sendrecv ---*/
-      MPI::COMM_WORLD.Sendrecv(Buffer_Send_Undivided_Laplacian, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                               Buffer_Receive_Undivided_Laplacian, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-      
-#else
-      
       /*--- Receive information without MPI ---*/
       for (iVertex = 0; iVertex < nVertexR; iVertex++) {
         iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
         for (iVar = 0; iVar < nVar; iVar++)
           Buffer_Receive_Undivided_Laplacian[iVar*nVertexR+iVertex] = Buffer_Send_Undivided_Laplacian[iVar*nVertexR+iVertex];
       }
-      
-#endif
       
       /*--- Deallocate send buffer ---*/
       delete [] Buffer_Send_Undivided_Laplacian;
@@ -1007,11 +916,6 @@ void CEulerSolver::Set_MPI_MaxEigenvalue(CGeometry *geometry, CConfig *config) {
 	double *Buffer_Receive_Lambda = NULL, *Buffer_Send_Lambda = NULL;
 	int send_to, receive_from;
   
-#ifndef NO_MPI
-  MPI::Status status;
-  MPI::Request send_request, recv_request;
-#endif
-  
 	for (iMarker = 0; iMarker < nMarker; iMarker++) {
     
 		if ((config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) &&
@@ -1038,36 +942,12 @@ void CEulerSolver::Set_MPI_MaxEigenvalue(CGeometry *geometry, CConfig *config) {
         Buffer_Send_Neighbor[iVertex] = geometry->node[iPoint]->GetnPoint();
       }
       
-#ifndef NO_MPI
-      
-//      /*--- Send/Receive using non-blocking communications ---*/
-//      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_Lambda, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-//      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_Lambda, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-//      send_request.Wait(status);
-//      recv_request.Wait(status);
-//      
-//      /*--- Send/Receive using non-blocking communications ---*/
-//      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_Neighbor, nBufferS_Vector, MPI::UNSIGNED_SHORT, 1, send_to);
-//      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_Neighbor, nBufferR_Vector, MPI::UNSIGNED_SHORT, 1, receive_from);
-//      send_request.Wait(status);
-//      recv_request.Wait(status);
-      
-      /*--- Send/Receive information using Sendrecv ---*/
-      MPI::COMM_WORLD.Sendrecv(Buffer_Send_Lambda, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                               Buffer_Receive_Lambda, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-      MPI::COMM_WORLD.Sendrecv(Buffer_Send_Neighbor, nBufferS_Vector, MPI::UNSIGNED_SHORT, send_to, 1,
-                               Buffer_Receive_Neighbor, nBufferR_Vector, MPI::UNSIGNED_SHORT, receive_from, 1);
-      
-#else
-      
       /*--- Receive information without MPI ---*/
       for (iVertex = 0; iVertex < nVertexR; iVertex++) {
         iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
         Buffer_Receive_Lambda[iVertex] = Buffer_Send_Lambda[iVertex];
         Buffer_Receive_Neighbor[iVertex] = Buffer_Send_Neighbor[iVertex];
       }
-      
-#endif
       
       /*--- Deallocate send buffer ---*/
       delete [] Buffer_Send_Lambda;
@@ -1098,11 +978,6 @@ void CEulerSolver::Set_MPI_Dissipation_Switch(CGeometry *geometry, CConfig *conf
 	double *Buffer_Receive_Lambda = NULL, *Buffer_Send_Lambda = NULL;
 	int send_to, receive_from;
   
-#ifndef NO_MPI
-  MPI::Status status;
-  MPI::Request send_request, recv_request;
-#endif
-  
 	for (iMarker = 0; iMarker < nMarker; iMarker++) {
     
 		if ((config->GetMarker_All_Boundary(iMarker) == SEND_RECEIVE) &&
@@ -1126,27 +1001,11 @@ void CEulerSolver::Set_MPI_Dissipation_Switch(CGeometry *geometry, CConfig *conf
         Buffer_Send_Lambda[iVertex] = node[iPoint]->GetSensor();
       }
       
-#ifndef NO_MPI
-      
-//      /*--- Send/Receive using non-blocking communications ---*/
-//      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_Lambda, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-//      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_Lambda, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-//      send_request.Wait(status);
-//      recv_request.Wait(status);
-      
-      /*--- Send/Receive information using Sendrecv ---*/
-      MPI::COMM_WORLD.Sendrecv(Buffer_Send_Lambda, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                               Buffer_Receive_Lambda, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-      
-#else
-      
       /*--- Receive information without MPI ---*/
       for (iVertex = 0; iVertex < nVertexR; iVertex++) {
         iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
         Buffer_Receive_Lambda[iVertex] = Buffer_Send_Lambda[iVertex];
       }
-      
-#endif
       
       /*--- Deallocate send buffer ---*/
       delete [] Buffer_Send_Lambda;
@@ -1174,11 +1033,6 @@ void CEulerSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *confi
 	double rotMatrix[3][3], *angles, theta, cosTheta, sinTheta, phi, cosPhi, sinPhi, psi, cosPsi, sinPsi,
   *Buffer_Receive_Gradient = NULL, *Buffer_Send_Gradient = NULL;
 	int send_to, receive_from;
-  
-#ifndef NO_MPI
-  MPI::Status status;
-  MPI::Request send_request, recv_request;
-#endif
   
   double **Gradient = new double* [nVar];
   for (iVar = 0; iVar < nVar; iVar++)
@@ -1209,20 +1063,6 @@ void CEulerSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *confi
             Buffer_Send_Gradient[iDim*nVar*nVertexS+iVar*nVertexS+iVertex] = node[iPoint]->GetGradient(iVar, iDim);
       }
       
-#ifndef NO_MPI
-      
-//      /*--- Send/Receive using non-blocking communications ---*/
-//      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_Gradient, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-//      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_Gradient, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-//      send_request.Wait(status);
-//      recv_request.Wait(status);
-      
-      /*--- Send/Receive information using Sendrecv ---*/
-      MPI::COMM_WORLD.Sendrecv(Buffer_Send_Gradient, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                               Buffer_Receive_Gradient, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-      
-#else
-      
       /*--- Receive information without MPI ---*/
       for (iVertex = 0; iVertex < nVertexR; iVertex++) {
         iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
@@ -1230,8 +1070,6 @@ void CEulerSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *confi
           for (iDim = 0; iDim < nDim; iDim++)
             Buffer_Receive_Gradient[iDim*nVar*nVertexR+iVar*nVertexR+iVertex] = Buffer_Send_Gradient[iDim*nVar*nVertexR+iVar*nVertexR+iVertex];
       }
-      
-#endif
       
       /*--- Deallocate send buffer ---*/
       delete [] Buffer_Send_Gradient;
@@ -1304,11 +1142,6 @@ void CEulerSolver::Set_MPI_PrimVar_Gradient(CGeometry *geometry, CConfig *config
   *Buffer_Receive_Gradient = NULL, *Buffer_Send_Gradient = NULL;
 	int send_to, receive_from;
   
-#ifndef NO_MPI
-  MPI::Status status;
-  MPI::Request send_request, recv_request;
-#endif
-  
   double **Gradient = new double* [nPrimVarGrad];
   for (iVar = 0; iVar < nPrimVarGrad; iVar++)
     Gradient[iVar] = new double[nDim];
@@ -1338,20 +1171,6 @@ void CEulerSolver::Set_MPI_PrimVar_Gradient(CGeometry *geometry, CConfig *config
             Buffer_Send_Gradient[iDim*nPrimVarGrad*nVertexS+iVar*nVertexS+iVertex] = node[iPoint]->GetGradient_Primitive(iVar, iDim);
       }
       
-#ifndef NO_MPI
-      
-//      /*--- Send/Receive using non-blocking communications ---*/
-//      send_request = MPI::COMM_WORLD.Isend(Buffer_Send_Gradient, nBufferS_Vector, MPI::DOUBLE, 0, send_to);
-//      recv_request = MPI::COMM_WORLD.Irecv(Buffer_Receive_Gradient, nBufferR_Vector, MPI::DOUBLE, 0, receive_from);
-//      send_request.Wait(status);
-//      recv_request.Wait(status);
-      
-      /*--- Send/Receive information using Sendrecv ---*/
-      MPI::COMM_WORLD.Sendrecv(Buffer_Send_Gradient, nBufferS_Vector, MPI::DOUBLE, send_to, 0,
-                               Buffer_Receive_Gradient, nBufferR_Vector, MPI::DOUBLE, receive_from, 0);
-      
-#else
-      
       /*--- Receive information without MPI ---*/
       for (iVertex = 0; iVertex < nVertexR; iVertex++) {
         iPoint = geometry->vertex[MarkerR][iVertex]->GetNode();
@@ -1359,8 +1178,6 @@ void CEulerSolver::Set_MPI_PrimVar_Gradient(CGeometry *geometry, CConfig *config
           for (iDim = 0; iDim < nDim; iDim++)
             Buffer_Receive_Gradient[iDim*nPrimVarGrad*nVertexR+iVar*nVertexR+iVertex] = Buffer_Send_Gradient[iDim*nPrimVarGrad*nVertexR+iVar*nVertexR+iVertex];
       }
-      
-#endif
       
       /*--- Deallocate send buffer ---*/
       delete [] Buffer_Send_Gradient;
@@ -1784,11 +1601,7 @@ void CEulerSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container
 	unsigned long iPoint, ErrorCounter = 0;
   bool RightSol;
 
-#ifdef NO_MPI
 	int rank = MASTER_NODE;
-#else
-	int rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
 	bool adjoint = config->GetAdjoint();
 	bool implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
@@ -1847,10 +1660,6 @@ void CEulerSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container
 	if (implicit) Jacobian.SetValZero();
   
   /*--- Error message ---*/
-#ifndef NO_MPI
-  unsigned long MyErrorCounter = ErrorCounter; ErrorCounter = 0;
-  MPI::COMM_WORLD.Allreduce(&MyErrorCounter, &ErrorCounter, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-#endif
   if ((ErrorCounter != 0) && (rank == MASTER_NODE) && (iMesh == MESH_0))
     cout <<"The solution contains "<< ErrorCounter << " non-physical points." << endl;
   
@@ -1997,14 +1806,6 @@ void CEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
 
 	/*--- For exact time solution use the minimum delta time of the whole mesh ---*/
 	if (config->GetUnsteady_Simulation() == TIME_STEPPING) {
-#ifndef NO_MPI
-		double rbuf_time, sbuf_time;
-		sbuf_time = Global_Delta_Time;
-		MPI::COMM_WORLD.Reduce(&sbuf_time, &rbuf_time, 1, MPI::DOUBLE, MPI::MIN, MASTER_NODE);
-		MPI::COMM_WORLD.Bcast(&rbuf_time, 1, MPI::DOUBLE, MASTER_NODE);
-		MPI::COMM_WORLD.Barrier();
-		Global_Delta_Time = rbuf_time;
-#endif
 		for(iPoint = 0; iPoint < nPointDomain; iPoint++)
 			node[iPoint]->SetDelta_Time(Global_Delta_Time);
 	}
@@ -2014,14 +1815,6 @@ void CEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
 	if ((dual_time) && (Iteration == 0) && (config->GetUnst_CFL() != 0.0) && (iMesh == MESH_0)) {
 		Global_Delta_UnstTimeND = config->GetUnst_CFL()*Global_Delta_Time/config->GetCFL(iMesh);
 
-#ifndef NO_MPI
-		double rbuf_time, sbuf_time;
-		sbuf_time = Global_Delta_UnstTimeND;
-		MPI::COMM_WORLD.Reduce(&sbuf_time, &rbuf_time, 1, MPI::DOUBLE, MPI::MIN, MASTER_NODE);
-		MPI::COMM_WORLD.Bcast(&rbuf_time, 1, MPI::DOUBLE, MASTER_NODE);
-		MPI::COMM_WORLD.Barrier();
-		Global_Delta_UnstTimeND = rbuf_time;
-#endif
 		config->SetDelta_UnstTimeND(Global_Delta_UnstTimeND);
 	}
 
@@ -2893,10 +2686,6 @@ void CEulerSolver::Inviscid_Forces_Sections(CGeometry *geometry, CConfig *config
   char buffer[50];
   
 	int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
-
   
 	if (nDim == 3) {
     
@@ -3551,42 +3340,6 @@ void CEulerSolver::Inviscid_Forces(CGeometry *geometry, CConfig *config) {
 		}
 	}
 
-#ifndef NO_MPI
-  
-  /*--- Add AllBound information using all the nodes ---*/
-
-  double MyAllBound_CDrag_Inv        = AllBound_CDrag_Inv;        AllBound_CDrag_Inv = 0.0;
-	double MyAllBound_CLift_Inv       = AllBound_CLift_Inv;        AllBound_CLift_Inv = 0.0;
-	double MyAllBound_CSideForce_Inv   = AllBound_CSideForce_Inv;   AllBound_CSideForce_Inv = 0.0;
-	double MyAllBound_CEff_Inv         = AllBound_CEff_Inv;         AllBound_CEff_Inv = 0.0;
-	double MyAllBound_CMx_Inv          = AllBound_CMx_Inv;          AllBound_CMx_Inv = 0.0;
-	double MyAllBound_CMy_Inv          = AllBound_CMy_Inv;          AllBound_CMy_Inv = 0.0;
-	double MyAllBound_CMz_Inv          = AllBound_CMz_Inv;          AllBound_CMz_Inv = 0.0;
-	double MyAllBound_CFx_Inv          = AllBound_CFx_Inv;          AllBound_CFx_Inv = 0.0;
-	double MyAllBound_CFy_Inv         = AllBound_CFy_Inv;          AllBound_CFy_Inv = 0.0;
-	double MyAllBound_CFz_Inv          = AllBound_CFz_Inv;          AllBound_CFz_Inv = 0.0;
-	double MyAllBound_CT_Inv           = AllBound_CT_Inv;           AllBound_CT_Inv = 0.0;
-	double MyAllBound_CQ_Inv           = AllBound_CQ_Inv;           AllBound_CQ_Inv = 0.0;
-	double MyAllBound_CMerit_Inv       = AllBound_CMerit_Inv;       AllBound_CMerit_Inv = 0.0;
-  double MyAllBound_CNearFieldOF_Inv = AllBound_CNearFieldOF_Inv; AllBound_CNearFieldOF_Inv = 0.0;
-  
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CDrag_Inv, &AllBound_CDrag_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CLift_Inv, &AllBound_CLift_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CSideForce_Inv, &AllBound_CSideForce_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  AllBound_CEff_Inv = AllBound_CLift_Inv / (AllBound_CDrag_Inv + config->GetCteViscDrag() + EPS);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CMx_Inv, &AllBound_CMx_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CMy_Inv, &AllBound_CMy_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CMz_Inv, &AllBound_CMz_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CFx_Inv, &AllBound_CFx_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CFy_Inv, &AllBound_CFy_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CFz_Inv, &AllBound_CFz_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CT_Inv, &AllBound_CT_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CQ_Inv, &AllBound_CQ_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  AllBound_CMerit_Inv = AllBound_CT_Inv / (AllBound_CQ_Inv + EPS);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CNearFieldOF_Inv, &AllBound_CNearFieldOF_Inv, 1, MPI::DOUBLE, MPI::SUM);
-  
-#endif
-  
   /*--- Update the total coefficients (note that all the nodes have the same value)---*/
 
 	Total_CDrag         = AllBound_CDrag_Inv;
@@ -4037,9 +3790,6 @@ void CEulerSolver::GetNacelle_Properties(CGeometry *geometry, CConfig *config, u
   unsigned short nMarker_NacelleExhaust = config->GetnMarker_NacelleExhaust();
   
   int rank = MASTER_NODE;
-#ifndef NO_MPI
-  rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
   /*--- Compute the numerical fan face Mach number, and the total area of the inflow ---*/
   for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
@@ -4192,18 +3942,6 @@ void CEulerSolver::GetNacelle_Properties(CGeometry *geometry, CConfig *config, u
     
   }
   
-#ifndef NO_MPI
-  
-  MPI::COMM_WORLD.Allreduce(FanFace_MassFlow_Local, FanFace_MassFlow_Total, nMarker_NacelleInflow, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(FanFace_Mach_Local, FanFace_Mach_Total, nMarker_NacelleInflow, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(FanFace_Pressure_Local, FanFace_Pressure_Total, nMarker_NacelleInflow, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(FanFace_Area_Local, FanFace_Area_Total, nMarker_NacelleInflow, MPI::DOUBLE, MPI::SUM);
-  
-  MPI::COMM_WORLD.Allreduce(Exhaust_MassFlow_Local, Exhaust_MassFlow_Total, nMarker_NacelleExhaust, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(Exhaust_Area_Local, Exhaust_Area_Total, nMarker_NacelleExhaust, MPI::DOUBLE, MPI::SUM);
-  
-#else
-  
   for (iMarker_NacelleInflow = 0; iMarker_NacelleInflow < nMarker_NacelleInflow; iMarker_NacelleInflow++) {
     FanFace_MassFlow_Total[iMarker_NacelleInflow]   = FanFace_MassFlow_Local[iMarker_NacelleInflow];
     FanFace_Mach_Total[iMarker_NacelleInflow]       = FanFace_Mach_Local[iMarker_NacelleInflow];
@@ -4215,8 +3953,6 @@ void CEulerSolver::GetNacelle_Properties(CGeometry *geometry, CConfig *config, u
     Exhaust_MassFlow_Total[iMarker_NacelleExhaust]  = Exhaust_MassFlow_Local[iMarker_NacelleExhaust];
     Exhaust_Area_Total[iMarker_NacelleExhaust]      = Exhaust_Area_Local[iMarker_NacelleExhaust];
   }
-  
-#endif
   
   /*--- Compute the value of FanFace_Area_Total, and FanFace_Pressure_Total, and
    set the value in the config structure for future use ---*/
@@ -5776,8 +5512,6 @@ void CEulerSolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_c
 
 	bool implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
 
-#ifdef NO_MPI
-
 	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
 		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
 
@@ -5811,83 +5545,6 @@ void CEulerSolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_c
 			}
 		}
 	}
-
-#else
-
-	int rank = MPI::COMM_WORLD.Get_rank(), jProcessor;
-	double *Conserv_Var;
-	bool compute;
-
-	double *Buffer_Send_U = new double [nVar];
-	double *Buffer_Receive_U = new double [nVar];
-
-	/*--- Do the send process, by the moment we are sending each
-	 node individually, this must be changed ---*/
-	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-		if (geometry->node[iPoint]->GetDomain()) {
-
-			/*--- Find the associate pair to the original node ---*/
-			jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
-			jProcessor = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[1];
-
-			if ((iPoint == jPoint) && (jProcessor == rank)) compute = false;
-			else compute = true;
-
-			/*--- We only send the information that belong to other boundary ---*/
-			if ((jProcessor != rank) && compute) {
-				Conserv_Var = node[iPoint]->GetSolution();
-				for (iVar = 0; iVar < nVar; iVar++)
-					Buffer_Send_U[iVar] = Conserv_Var[iVar];
-				MPI::COMM_WORLD.Bsend(Buffer_Send_U, nVar, MPI::DOUBLE, jProcessor, iPoint);
-			}
-		}
-	}
-
-	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-		if (geometry->node[iPoint]->GetDomain()) {
-
-			/*--- Find the associate pair to the original node ---*/
-			jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
-			jProcessor = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[1];
-
-			if ((iPoint == jPoint) && (jProcessor == rank)) compute = false;
-			else compute = true;
-
-			if (compute) {
-				/*--- We only receive the information that belong to other boundary ---*/
-				if (jProcessor != rank)
-					MPI::COMM_WORLD.Recv(Buffer_Receive_U, nVar, MPI::DOUBLE, jProcessor, jPoint);
-				else {
-					for (iVar = 0; iVar < nVar; iVar++)
-						Buffer_Receive_U[iVar] = node[jPoint]->GetSolution(iVar);
-				}
-
-				/*--- Store the solution for both points ---*/
-				for (iVar = 0; iVar < nVar; iVar++) {
-					Solution_i[iVar] = node[iPoint]->GetSolution(iVar);
-					Solution_j[iVar] = Buffer_Receive_U[iVar];
-				}
-
-				numerics->SetConservative(Solution_i, Solution_j);
-
-				geometry->vertex[val_marker][iVertex]->GetNormal(Vector);
-				for (iDim = 0; iDim < nDim; iDim++)
-					Vector[iDim] = -Vector[iDim];
-				numerics->SetNormal(Vector);
-
-				numerics->ComputeResidual(Residual, Jacobian_i, Jacobian_j, config);
-				LinSysRes.AddBlock(iPoint, Residual);
-				if (implicit) Jacobian.AddBlock(iPoint, iPoint, Jacobian_i);
-			}
-		}
-	}
-
-	delete[] Buffer_Send_U;
-	delete[] Buffer_Receive_U;
-
-#endif
 
 }
 
@@ -5898,8 +5555,6 @@ void CEulerSolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_c
 
 	bool implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
 
-#ifdef NO_MPI
-
 	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
 		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
 
@@ -5933,87 +5588,6 @@ void CEulerSolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_c
 		}
 	}
 
-#else
-
-	int rank = MPI::COMM_WORLD.Get_rank(), jProcessor;
-	double *Conserv_Var;
-	bool compute;
-
-	double *Buffer_Send_U = new double [nVar];
-	double *Buffer_Receive_U = new double [nVar];
-
-	/*--- Do the send process, by the moment we are sending each
-	 node individually, this must be changed ---*/
-	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-		if (geometry->node[iPoint]->GetDomain()) {
-
-			/*--- Find the associate pair to the original node ---*/
-			jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
-			jProcessor = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[1];
-
-			if ((iPoint == jPoint) && (jProcessor == rank)) compute = false;
-			else compute = true;
-
-			/*--- We only send the information that belong to other boundary, -1 processor
-			 means that the boundary condition is not applied ---*/
-			if ((jProcessor != rank) && compute) {
-				Conserv_Var = node[iPoint]->GetSolution();
-				for (iVar = 0; iVar < nVar; iVar++)
-					Buffer_Send_U[iVar] = Conserv_Var[iVar];
-				MPI::COMM_WORLD.Bsend(Buffer_Send_U, nVar, MPI::DOUBLE, jProcessor, iPoint);
-			}
-		}
-	}
-
-	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-		if (geometry->node[iPoint]->GetDomain()) {
-
-			/*--- Find the associate pair to the original node ---*/
-			jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
-			jProcessor = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[1];
-
-			if ((iPoint == jPoint) && (jProcessor == rank)) compute = false;
-			else compute = true;
-
-			if (compute) {
-				/*--- We only receive the information that belong to other boundary ---*/
-				if (jProcessor != rank)
-					MPI::COMM_WORLD.Recv(Buffer_Receive_U, nVar, MPI::DOUBLE, jProcessor, jPoint);
-				else {
-					for (iVar = 0; iVar < nVar; iVar++)
-						Buffer_Receive_U[iVar] = node[jPoint]->GetSolution(iVar);
-				}
-
-				/*--- Store the solution for both points ---*/
-				for (iVar = 0; iVar < nVar; iVar++) {
-					Solution_i[iVar] = node[iPoint]->GetSolution(iVar);
-					Solution_j[iVar] = Buffer_Receive_U[iVar];
-				}
-
-				/*--- Set Conservative Variables ---*/
-				numerics->SetConservative(Solution_i, Solution_j);
-
-				/*--- Set Normal ---*/
-				geometry->vertex[val_marker][iVertex]->GetNormal(Vector);
-				for (iDim = 0; iDim < nDim; iDim++)
-					Vector[iDim] = -Vector[iDim];
-				numerics->SetNormal(Vector);
-
-				/*--- Add Residuals and Jacobians ---*/
-				numerics->ComputeResidual(Residual, Jacobian_i, Jacobian_j, config);
-				LinSysRes.AddBlock(iPoint, Residual);
-				if (implicit) Jacobian.AddBlock(iPoint, iPoint, Jacobian_i);
-			}
-		}
-	}
-
-	delete[] Buffer_Send_U;
-	delete[] Buffer_Receive_U;
-
-#endif
-
 }
 
 void CEulerSolver::BC_Dirichlet(CGeometry *geometry, CSolver **solver_container,
@@ -6022,8 +5596,6 @@ void CEulerSolver::BC_Dirichlet(CGeometry *geometry, CSolver **solver_container,
 	unsigned short iVar;
 
 	bool implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-
-#ifdef NO_MPI
 
 	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
 		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
@@ -6054,77 +5626,6 @@ void CEulerSolver::BC_Dirichlet(CGeometry *geometry, CSolver **solver_container,
 
 		}
 	}
-
-#else
-
-	int rank = MPI::COMM_WORLD.Get_rank(), jProcessor;
-	double *Conserv_Var;
-
-	double *Buffer_Send_U = new double [nVar];
-	double *Buffer_Receive_U = new double [nVar];
-
-	/*--- Do the send process, by the moment we are sending each
-	 node individually, this must be changed ---*/
-	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-		if (geometry->node[iPoint]->GetDomain()) {
-
-			/*--- Find the associate pair to the original node ---*/
-			jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
-			jProcessor = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[1];
-
-			/*--- We only send the information that belong to other boundary ---*/
-			if (jProcessor != rank) {
-				Conserv_Var = node[iPoint]->GetSolution();
-				for (iVar = 0; iVar < nVar; iVar++)
-					Buffer_Send_U[iVar] = Conserv_Var[iVar];
-				MPI::COMM_WORLD.Bsend(Buffer_Send_U, nVar, MPI::DOUBLE, jProcessor, iPoint);
-			}
-		}
-	}
-
-	for(iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
-		iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-		if (geometry->node[iPoint]->GetDomain()) {
-
-			/*--- Find the associate pair to the original node ---*/
-			jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
-			jProcessor = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[1];
-
-			/*--- We only receive the information that belong to other boundary ---*/
-			if (jProcessor != rank)
-				MPI::COMM_WORLD.Recv(Buffer_Receive_U, nVar, MPI::DOUBLE, jProcessor, jPoint);
-			else {
-				for (iVar = 0; iVar < nVar; iVar++)
-					Buffer_Receive_U[iVar] = node[jPoint]->GetSolution(iVar);
-			}
-
-			/*--- Store the solution for both points ---*/
-			for (iVar = 0; iVar < nVar; iVar++) {
-				Solution_i[iVar] = node[iPoint]->GetSolution(iVar);
-				Solution_j[iVar] = Buffer_Receive_U[iVar];
-			}
-
-			/*--- Set the residual, truncation error and solution value ---*/
-			node[iPoint]->SetSolution_Old(Solution_j);
-			node[iPoint]->SetSolution(Solution_j);
-			LinSysRes.SetBlock_Zero(iPoint);
-			node[iPoint]->SetRes_TruncErrorZero();
-
-			/*--- Change rows of the Jacobian (includes 1 in the diagonal) ---*/
-			if (implicit)
-				for (iVar = 0; iVar < nVar; iVar++) {
-					total_index = iPoint*nVar+iVar;
-					Jacobian.DeleteValsRowi(total_index);
-				}
-
-		}
-	}
-
-	delete[] Buffer_Send_U;
-	delete[] Buffer_Receive_U;
-
-#endif
 
 }
 
@@ -6280,7 +5781,6 @@ void CEulerSolver::SetFlow_Displacement(CGeometry **flow_geometry, CVolumetricMo
 	unsigned long iVertex, iPoint;
 	double *Coord, VarCoord[3];
 
-#ifdef NO_MPI
 	unsigned long iPoint_Donor;
 	double *CoordDonor, *DisplacementDonor;
 
@@ -6301,77 +5801,6 @@ void CEulerSolver::SetFlow_Displacement(CGeometry **flow_geometry, CVolumetricMo
 		}
 	}
 	flow_grid_movement->SetVolume_Deformation(flow_geometry[MESH_0], flow_config, true);
-
-#else
-
-	int rank = MPI::COMM_WORLD.Get_rank(), jProcessor;
-	double *Buffer_Send_Coord = new double [nDim];
-	double *Buffer_Receive_Coord = new double [nDim];
-	unsigned long jPoint;
-
-	/*--- Do the send process, by the moment we are sending each
-	 node individually, this must be changed ---*/
-	for (iMarker = 0; iMarker < fea_config->GetnMarker_All(); iMarker++) {
-		if (fea_config->GetMarker_All_Boundary(iMarker) == LOAD_BOUNDARY) {
-			for(iVertex = 0; iVertex < fea_geometry[MESH_0]->nVertex[iMarker]; iVertex++) {
-				iPoint = fea_geometry[MESH_0]->vertex[iMarker][iVertex]->GetNode();
-
-				if (fea_geometry[MESH_0]->node[iPoint]->GetDomain()) {
-
-					/*--- Find the associate pair to the original node (index and processor) ---*/
-					jPoint = fea_geometry[MESH_0]->vertex[iMarker][iVertex]->GetPeriodicPointDomain()[0];
-					jProcessor = fea_geometry[MESH_0]->vertex[iMarker][iVertex]->GetPeriodicPointDomain()[1];
-
-					/*--- We only send the pressure that belong to other boundary ---*/
-					if (jProcessor != rank) {
-						for (iDim = 0; iDim < nDim; iDim++)
-							Buffer_Send_Coord[iDim] = fea_geometry[MESH_0]->node[iPoint]->GetCoord(iDim);
-
-						MPI::COMM_WORLD.Bsend(Buffer_Send_Coord, nDim, MPI::DOUBLE, jProcessor, iPoint);
-					}
-
-				}
-			}
-		}
-	}
-
-	/*--- Now the loop is over the fea points ---*/
-	for (iMarker = 0; iMarker < flow_config->GetnMarker_All(); iMarker++) {
-		if ((flow_config->GetMarker_All_Boundary(iMarker) == EULER_WALL) &&
-				(flow_config->GetMarker_All_Moving(iMarker) == YES)) {
-			for(iVertex = 0; iVertex < flow_geometry[MESH_0]->nVertex[iMarker]; iVertex++) {
-				iPoint = flow_geometry[MESH_0]->vertex[iMarker][iVertex]->GetNode();
-				if (flow_geometry[MESH_0]->node[iPoint]->GetDomain()) {
-
-					/*--- Find the associate pair to the original node ---*/
-					jPoint = flow_geometry[MESH_0]->vertex[iMarker][iVertex]->GetPeriodicPointDomain()[0];
-					jProcessor = flow_geometry[MESH_0]->vertex[iMarker][iVertex]->GetPeriodicPointDomain()[1];
-
-					/*--- We only receive the information that belong to other boundary ---*/
-					if (jProcessor != rank)
-						MPI::COMM_WORLD.Recv(Buffer_Receive_Coord, nDim, MPI::DOUBLE, jProcessor, jPoint);
-					else {
-						for (iDim = 0; iDim < nDim; iDim++)
-							Buffer_Send_Coord[iDim] = fea_geometry[MESH_0]->node[jPoint]->GetCoord(iDim);
-					}
-
-					/*--- Store the solution for both points ---*/
-					Coord = flow_geometry[MESH_0]->node[iPoint]->GetCoord();
-
-					for (iDim = 0; iDim < nDim; iDim++)
-						VarCoord[iDim] = Buffer_Send_Coord[iDim]-Coord[iDim];
-
-					flow_geometry[MESH_0]->vertex[iMarker][iVertex]->SetVarCoord(VarCoord);
-
-
-				}
-			}
-		}
-	}
-	delete[] Buffer_Send_Coord;
-	delete[] Buffer_Receive_Coord;
-
-#endif
 
 }
 
@@ -6494,8 +5923,6 @@ void CEulerSolver::SetFreeSurface_Distance(CGeometry *geometry, CConfig *config,
 	unsigned short nDim = geometry->GetnDim();
   unsigned long iExtIter = config->GetExtIter();
   
-#ifdef NO_MPI
-  
   /*--- Identification of the 0 level set points and coordinates ---*/
   nVertex_LevelSet = 0;
   for (iEdge = 0; iEdge < geometry->GetnEdge(); iEdge++) {
@@ -6520,80 +5947,6 @@ void CEulerSolver::SetFreeSurface_Distance(CGeometry *geometry, CConfig *config,
       nVertex_LevelSet++;
     }
   }
-  
-#else
-  
-  int iProcessor;
-  unsigned long *Buffer_Send_nVertex = NULL, *Buffer_Receive_nVertex = NULL,
-  nLocalVertex_LevelSet = 0, nGlobalVertex_LevelSet = 0, MaxLocalVertex_LevelSet = 0, nBuffer;
-  double *Buffer_Send_Coord = NULL, *Buffer_Receive_Coord = NULL;
-  
-  int nProcessor = MPI::COMM_WORLD.Get_size();
-  rank = MPI::COMM_WORLD.Get_rank();
-  
-  Buffer_Send_nVertex = new unsigned long [1];
-  Buffer_Receive_nVertex = new unsigned long [nProcessor];
-  
-  nLocalVertex_LevelSet = 0;
-  for (iEdge = 0; iEdge < geometry->GetnEdge(); iEdge++) {
-    iPoint = geometry->edge[iEdge]->GetNode(0); LevelSet_i = node[iPoint]->GetSolution(nDim+1);
-    jPoint = geometry->edge[iEdge]->GetNode(1); LevelSet_j = node[jPoint]->GetSolution(nDim+1);
-    if (LevelSet_i*LevelSet_j < 0.0) nLocalVertex_LevelSet ++;
-  }
-  
-  Buffer_Send_nVertex[0] = nLocalVertex_LevelSet;
-  
-  MPI::COMM_WORLD.Allreduce(&nLocalVertex_LevelSet, &nGlobalVertex_LevelSet, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&nLocalVertex_LevelSet, &MaxLocalVertex_LevelSet, 1, MPI::UNSIGNED_LONG, MPI::MAX);
-  MPI::COMM_WORLD.Allgather(Buffer_Send_nVertex, 1, MPI::UNSIGNED_LONG, Buffer_Receive_nVertex, 1, MPI::UNSIGNED_LONG);
-  
-  nBuffer = MaxLocalVertex_LevelSet*nDim;
-  Buffer_Send_Coord = new double [nBuffer];
-  Buffer_Receive_Coord = new double [nProcessor*nBuffer];
-  
-  for (iVertex = 0; iVertex < MaxLocalVertex_LevelSet; iVertex++)
-    for (iDim = 0; iDim < nDim; iDim++)
-      Buffer_Send_Coord[iVertex*nDim+iDim] = 0.0;
-  
-  nLocalVertex_LevelSet = 0;
-  for (iEdge = 0; iEdge < geometry->GetnEdge(); iEdge++) {
-    iPoint = geometry->edge[iEdge]->GetNode(0); LevelSet_i = node[iPoint]->GetSolution(nDim+1); iCoord = geometry->node[iPoint]->GetCoord();
-    jPoint = geometry->edge[iEdge]->GetNode(1); LevelSet_j = node[jPoint]->GetSolution(nDim+1); jCoord = geometry->node[jPoint]->GetCoord();
-    
-    if (LevelSet_i*LevelSet_j < 0.0) {
-      for (iDim = 0; iDim < nDim; iDim++)
-        Buffer_Send_Coord[nLocalVertex_LevelSet*nDim+iDim] = iCoord[iDim]-LevelSet_i*(jCoord[iDim]-iCoord[iDim])/(LevelSet_j-LevelSet_i);
-      nLocalVertex_LevelSet++;
-    }
-  }
-  
-  MPI::COMM_WORLD.Allgather(Buffer_Send_Coord, nBuffer, MPI::DOUBLE, Buffer_Receive_Coord, nBuffer, MPI::DOUBLE);
-  
-  /*--- Identification of the 0 level set points and coordinates ---*/
-  nVertex_LevelSet = 0;
-  for (iProcessor = 0; iProcessor < nProcessor; iProcessor++)
-    nVertex_LevelSet += Buffer_Receive_nVertex[iProcessor];
-  
-  /*--- Allocate vector of boundary coordinates ---*/
-  Coord_LevelSet = new double* [nVertex_LevelSet];
-  for (iVertex = 0; iVertex < nVertex_LevelSet; iVertex++)
-    Coord_LevelSet[iVertex] = new double [nDim];
-  
-  /*--- Set the value of the coordinates at the level set zero ---*/
-  nVertex_LevelSet = 0;
-  for (iProcessor = 0; iProcessor < nProcessor; iProcessor++)
-    for (iVertex = 0; iVertex < Buffer_Receive_nVertex[iProcessor]; iVertex++) {
-      for (iDim = 0; iDim < nDim; iDim++)
-        Coord_LevelSet[nVertex_LevelSet][iDim] = Buffer_Receive_Coord[(iProcessor*MaxLocalVertex_LevelSet+iVertex)*nDim+iDim];
-      nVertex_LevelSet++;
-    }
-  
-  delete [] Buffer_Send_Coord;
-  delete [] Buffer_Receive_Coord;
-  delete [] Buffer_Send_nVertex;
-  delete [] Buffer_Receive_nVertex;
-  
-#endif
   
   if (Initialization) {
     
@@ -6759,9 +6112,6 @@ CNSSolver::CNSSolver(CGeometry *geometry, CConfig *config, unsigned short iMesh)
 	CSkinFriction = NULL;
     
 	int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
 	/*--- Set the gamma value ---*/
 	Gamma = config->GetGamma();
@@ -7064,11 +6414,7 @@ CNSSolver::CNSSolver(CGeometry *geometry, CConfig *config, unsigned short iMesh)
         counter_local++;
       }
     }
-#ifndef NO_MPI
-    MPI::COMM_WORLD.Reduce(&counter_local, &counter_global, 1, MPI::UNSIGNED_LONG, MPI::SUM, MASTER_NODE);
-#else
     counter_global = counter_local;
-#endif
     if ((rank == MASTER_NODE) && (counter_global != 0))
       cout << "Warning. The original solution contains "<< counter_global << " points that are not physical." << endl;
   }
@@ -7137,11 +6483,7 @@ void CNSSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, C
 	unsigned long iPoint, ErrorCounter = 0;
   bool RightSol;
 
-#ifdef NO_MPI
 	int rank = MASTER_NODE;
-#else
-	int rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
 	bool adjoint = config->GetAdjoint();
 	bool implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
@@ -7213,10 +6555,6 @@ void CNSSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, C
 	if (implicit) Jacobian.SetValZero();
   
   /*--- Error message ---*/
-#ifndef NO_MPI
-  unsigned long MyErrorCounter = ErrorCounter; ErrorCounter = 0;
-  MPI::COMM_WORLD.Allreduce(&MyErrorCounter, &ErrorCounter, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-#endif
   if ((ErrorCounter != 0) && (rank == MASTER_NODE) && (iMesh == MESH_0))
     cout <<"The solution contains "<< ErrorCounter << " non-physical points." << endl;
   
@@ -7390,14 +6728,6 @@ void CNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container, CC
 
 	/*--- For exact time solution use the minimum delta time of the whole mesh ---*/
 	if (config->GetUnsteady_Simulation() == TIME_STEPPING) {
-#ifndef NO_MPI
-		double rbuf_time, sbuf_time;
-		sbuf_time = Global_Delta_Time;
-		MPI::COMM_WORLD.Reduce(&sbuf_time, &rbuf_time, 1, MPI::DOUBLE, MPI::MIN, MASTER_NODE);
-		MPI::COMM_WORLD.Bcast(&rbuf_time, 1, MPI::DOUBLE, MASTER_NODE);
-		MPI::COMM_WORLD.Barrier();
-		Global_Delta_Time = rbuf_time;
-#endif
 		for(iPoint = 0; iPoint < nPointDomain; iPoint++)
 			node[iPoint]->SetDelta_Time(Global_Delta_Time);
 	}
@@ -7406,14 +6736,6 @@ void CNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container, CC
 	 if the unsteady CFL is diferent from 0 ---*/
 	if ((dual_time) && (Iteration == 0) && (config->GetUnst_CFL() != 0.0) && (iMesh == MESH_0)) {
 		Global_Delta_UnstTimeND = config->GetUnst_CFL()*Global_Delta_Time/config->GetCFL(iMesh);
-#ifndef NO_MPI
-		double rbuf_time, sbuf_time;
-		sbuf_time = Global_Delta_UnstTimeND;
-		MPI::COMM_WORLD.Reduce(&sbuf_time, &rbuf_time, 1, MPI::DOUBLE, MPI::MIN, MASTER_NODE);
-		MPI::COMM_WORLD.Bcast(&rbuf_time, 1, MPI::DOUBLE, MASTER_NODE);
-		MPI::COMM_WORLD.Barrier();
-		Global_Delta_UnstTimeND = rbuf_time;
-#endif
 		config->SetDelta_UnstTimeND(Global_Delta_UnstTimeND);
 	}
 
@@ -7703,44 +7025,6 @@ void CNSSolver::Viscous_Forces(CGeometry *geometry, CConfig *config) {
 		}
 	}
   
-  
-#ifndef NO_MPI
-  
-  /*--- Add AllBound information using all the nodes ---*/
-  
-  double MyAllBound_CDrag_Visc        = AllBound_CDrag_Visc;        AllBound_CDrag_Visc = 0.0;
-	double MyAllBound_CLift_Visc        = AllBound_CLift_Visc;        AllBound_CLift_Visc = 0.0;
-	double MyAllBound_CSideForce_Visc   = AllBound_CSideForce_Visc;   AllBound_CSideForce_Visc = 0.0;
-	double MyAllBound_CEff_Visc         = AllBound_CEff_Visc;         AllBound_CEff_Visc = 0.0;
-	double MyAllBound_CMx_Visc          = AllBound_CMx_Visc;          AllBound_CMx_Visc = 0.0;
-	double MyAllBound_CMy_Visc          = AllBound_CMy_Visc;          AllBound_CMy_Visc = 0.0;
-	double MyAllBound_CMz_Visc          = AllBound_CMz_Visc;          AllBound_CMz_Visc = 0.0;
-	double MyAllBound_CFx_Visc          = AllBound_CFx_Visc;          AllBound_CFx_Visc = 0.0;
-	double MyAllBound_CFy_Visc          = AllBound_CFy_Visc;          AllBound_CFy_Visc = 0.0;
-	double MyAllBound_CFz_Visc          = AllBound_CFz_Visc;          AllBound_CFz_Visc = 0.0;
-	double MyAllBound_CT_Visc           = AllBound_CT_Visc;           AllBound_CT_Visc = 0.0;
-	double MyAllBound_CQ_Visc           = AllBound_CQ_Visc;           AllBound_CQ_Visc = 0.0;
-	double MyAllBound_CMerit_Visc       = AllBound_CMerit_Visc;       AllBound_CMerit_Visc = 0.0;
-  double MyAllBound_Q_Visc            = AllBound_Q_Visc;            AllBound_Q_Visc = 0.0;
-  double MyAllBound_Maxq_Visc         = AllBound_Maxq_Visc;         AllBound_Maxq_Visc = 0.0;
-  
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CDrag_Visc, &AllBound_CDrag_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CLift_Visc, &AllBound_CLift_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CSideForce_Visc, &AllBound_CSideForce_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  AllBound_CEff_Visc = AllBound_CLift_Visc / (AllBound_CDrag_Visc + EPS);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CMx_Visc, &AllBound_CMx_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CMy_Visc, &AllBound_CMy_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CMz_Visc, &AllBound_CMz_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CFx_Visc, &AllBound_CFx_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CFy_Visc, &AllBound_CFy_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CFz_Visc, &AllBound_CFz_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CT_Visc, &AllBound_CT_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_CQ_Visc, &AllBound_CQ_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  AllBound_CMerit_Visc = AllBound_CT_Visc / (AllBound_CQ_Visc + EPS);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_Q_Visc, &AllBound_Q_Visc, 1, MPI::DOUBLE, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MyAllBound_Maxq_Visc, &AllBound_Maxq_Visc, 1, MPI::DOUBLE, MPI::MAX);
-  
-#endif
   
   /*--- Update the total coefficients (note that all the nodes have the same value)---*/
   

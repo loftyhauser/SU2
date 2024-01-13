@@ -144,11 +144,6 @@ double CVolumetricMovement::SetSpringMethodContributions_Edges(CGeometry *geomet
 	delete [] Unit_Vector;
 	delete [] Edge_Vector;
 	
-#ifndef NO_MPI
-  double MinLength_Local = MinLength;
-  MPI::COMM_WORLD.Allreduce(&MinLength_Local, &MinLength, 1, MPI::DOUBLE, MPI::MIN);
-#endif
-  
 	return MinLength;
 }
 
@@ -161,9 +156,6 @@ double CVolumetricMovement::SetFEAMethodContributions_Elem(CGeometry *geometry) 
   bool RightVol;
   
   int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
   if (nDim == 2) {
     StiffMatrix_Elem = new double* [6];
@@ -194,11 +186,6 @@ double CVolumetricMovement::SetFEAMethodContributions_Elem(CGeometry *geometry) 
 		MinLength = min(Length, MinLength);
     
 	}
-  
-#ifndef NO_MPI
-  double MinLength_Local = MinLength; MinLength = 0.0;
-  MPI::COMM_WORLD.Allreduce(&MinLength_Local, &MinLength, 1, MPI::DOUBLE, MPI::MIN);
-#endif
   
   /*--- Second, compute min volume in the entire mesh. ---*/
   Scale = Check_Grid(geometry);
@@ -235,11 +222,6 @@ double CVolumetricMovement::SetFEAMethodContributions_Elem(CGeometry *geometry) 
       
 	}
   
-#ifndef NO_MPI
-  unsigned long ElemCounter_Local = ElemCounter; ElemCounter = 0;
-  MPI::COMM_WORLD.Allreduce(&ElemCounter_Local, &ElemCounter, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-#endif
-  
   if ((ElemCounter != 0) && (rank == MASTER_NODE))
     cout <<"There are " << ElemCounter << " degenerated elements in the original grid." << endl;
   
@@ -266,10 +248,6 @@ double CVolumetricMovement::Check_Grid(CGeometry *geometry) {
   bool RightVol;
   
   int rank = MASTER_NODE;
-  
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
 	/*--- Load up each triangle and tetrahedron to check for negative volumes. ---*/
   
@@ -304,16 +282,6 @@ double CVolumetricMovement::Check_Grid(CGeometry *geometry) {
     
 	}
 
-#ifndef NO_MPI
-  unsigned long ElemCounter_Local = ElemCounter; ElemCounter = 0;
-  double MaxVolume_Local = MaxVolume; MaxVolume = 0.0;
-  double MinVolume_Local = MinVolume; MinVolume = 0.0;
-
-  MPI::COMM_WORLD.Allreduce(&ElemCounter_Local, &ElemCounter, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-  MPI::COMM_WORLD.Allreduce(&MaxVolume_Local, &MaxVolume, 1, MPI::DOUBLE, MPI::MAX);
-  MPI::COMM_WORLD.Allreduce(&MinVolume_Local, &MinVolume, 1, MPI::DOUBLE, MPI::MIN);
-#endif
-  
   if ((ElemCounter != 0) && (rank == MASTER_NODE))
     cout <<"There are " << ElemCounter << " elements with negative volume.\n" << endl;
 
@@ -909,9 +877,6 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
   double MinLength, NumError, MinVol;
   
   int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
   /*--- Initialize the number of spatial dimensions, length of the state
    vector (same as spatial dimensions for grid deformation), and grid nodes. ---*/
@@ -1015,9 +980,6 @@ void CVolumetricMovement::Rigid_Rotation(CGeometry *geometry, CConfig *config,
                                          unsigned short iZone, unsigned long iter) {
   
   int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
 	/*--- Local variables ---*/
 	unsigned short iDim, nDim; 
@@ -1150,9 +1112,6 @@ void CVolumetricMovement::Rigid_Rotation(CGeometry *geometry, CConfig *config,
 void CVolumetricMovement::Rigid_Pitching(CGeometry *geometry, CConfig *config, unsigned short iZone, unsigned long iter) {
   
   int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
   /*--- Local variables ---*/
   double r[3], rotCoord[3],*Coord, Center[3], Omega[3], Ampl[3], Phase[3];
@@ -1312,9 +1271,6 @@ void CVolumetricMovement::Rigid_Pitching(CGeometry *geometry, CConfig *config, u
 void CVolumetricMovement::Rigid_Plunging(CGeometry *geometry, CConfig *config, unsigned short iZone, unsigned long iter) {
   
   int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
   /*--- Local variables ---*/
   double deltaX[3], newCoord[3], Center[3], *Coord, Omega[3], Ampl[3], Lref;
@@ -1442,9 +1398,6 @@ void CVolumetricMovement::Rigid_Plunging(CGeometry *geometry, CConfig *config, u
 void CVolumetricMovement::Rigid_Translation(CGeometry *geometry, CConfig *config, unsigned short iZone, unsigned long iter) {
   
   int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
   /*--- Local variables ---*/
   double deltaX[3], newCoord[3], Center[3], *Coord, Lref;
@@ -1552,9 +1505,6 @@ void CVolumetricMovement::SolveTypicalSectionWingModel(CGeometry *geometry, doub
      This routine is limited to 2 dimensional problems ---*/
     
     int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
     
     unsigned short nDim=geometry->GetnDim();
     if (nDim != 2) {
@@ -1965,11 +1915,6 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
   /*--- Definition of the FFD deformation class ---*/
 	FFDBox = new CFreeFormDefBox*[MAX_NUMBER_FFD];
   
-#ifndef NO_MPI
-	/*--- MPI initialization, and buffer setting ---*/
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
-  
   /*--- Arbitrary definition of surface coordinates from file. ---*/
   if (config->GetDesign_Variable(0) == SURFACE_FILE) {
     
@@ -2169,11 +2114,7 @@ void CSurfaceMovement::SetParametricCoord(CGeometry *geometry, CConfig *config, 
 	double *car_coord, *car_coord_new, *par_coord, guess[3], max_diff, 
 	my_max_diff = 0.0, diff;
 	
-#ifndef NO_MPI
-	int rank = MPI::COMM_WORLD.Get_rank();
-#else
 	int rank = MASTER_NODE;
-#endif
 	
 	guess[0] = 0.5; guess[1] = 0.5; guess[2] = 0.5;
 		
@@ -2217,11 +2158,7 @@ void CSurfaceMovement::SetParametricCoord(CGeometry *geometry, CConfig *config, 
 				}
 			}
 		
-#ifndef NO_MPI
-	MPI::COMM_WORLD.Allreduce(&my_max_diff, &max_diff, 1, MPI::DOUBLE, MPI::MAX); 	
-#else
 	max_diff = my_max_diff;
-#endif
 	
 	if (rank == MASTER_NODE) 
 		cout << "Compute parametric coord      | FFD box: " << FFDBox->GetTag() << ". Max diff: " << max_diff <<"."<< endl;
@@ -2232,11 +2169,7 @@ void CSurfaceMovement::SetParametricCoordCP(CGeometry *geometry, CConfig *config
 	unsigned short iOrder, jOrder, kOrder;
 	double *car_coord, *par_coord, guess[3];
 
-#ifndef NO_MPI
-	int rank = MPI::COMM_WORLD.Get_rank();
-#else
 	int rank = MASTER_NODE;
-#endif
 	
 	for (iOrder = 0; iOrder < FFDBoxChild->GetlOrder(); iOrder++)
 		for (jOrder = 0; jOrder < FFDBoxChild->GetmOrder(); jOrder++)
@@ -2256,11 +2189,7 @@ void CSurfaceMovement::GetCartesianCoordCP(CGeometry *geometry, CConfig *config,
 	unsigned short iOrder, jOrder, kOrder, iDim;
 	double *car_coord, *par_coord;
 	
-#ifndef NO_MPI
-	int rank = MPI::COMM_WORLD.Get_rank();
-#else
 	int rank = MASTER_NODE;
-#endif
 		
 	for (iOrder = 0; iOrder < FFDBoxChild->GetlOrder(); iOrder++)
 		for (jOrder = 0; jOrder < FFDBoxChild->GetmOrder(); jOrder++)
@@ -2289,11 +2218,7 @@ void CSurfaceMovement::UpdateParametricCoord(CGeometry *geometry, CConfig *confi
 	double car_coord[3], *car_coord_new, *car_coord_old, *par_coord, *var_coord, guess[3], max_diff, 
 	my_max_diff = 0.0, diff;
 	
-#ifndef NO_MPI
-	int rank = MPI::COMM_WORLD.Get_rank();
-#else
 	int rank = MASTER_NODE;
-#endif
 			
 	/*--- Recompute the parametric coordinates ---*/
 	for (iSurfacePoints = 0; iSurfacePoints < FFDBox->GetnSurfacePoint(); iSurfacePoints++) {
@@ -2340,11 +2265,7 @@ void CSurfaceMovement::UpdateParametricCoord(CGeometry *geometry, CConfig *confi
 		}
 	}
 		
-#ifndef NO_MPI
-	MPI::COMM_WORLD.Allreduce(&my_max_diff, &max_diff, 1, MPI::DOUBLE, MPI::MAX); 	
-#else
 	max_diff = my_max_diff;
-#endif
 	
 	if (rank == MASTER_NODE) 
 		cout << "Update parametric coord       | FFD box: " << FFDBox->GetTag() << ". Max diff: " << max_diff <<"."<< endl;
@@ -2357,11 +2278,7 @@ void CSurfaceMovement::SetCartesianCoord(CGeometry *geometry, CConfig *config, C
 	unsigned short iMarker, iDim;
 	unsigned long iVertex, iPoint, iSurfacePoints;
 	
-#ifndef NO_MPI
-	int rank = MPI::COMM_WORLD.Get_rank();
-#else
 	int rank = MASTER_NODE;
-#endif
 	
 	/*--- Recompute the cartesians coordinates ---*/
 	for (iSurfacePoints = 0; iSurfacePoints < FFDBox->GetnSurfacePoint(); iSurfacePoints++) {
@@ -2408,11 +2325,7 @@ void CSurfaceMovement::SetCartesianCoord(CGeometry *geometry, CConfig *config, C
 		}
 	}
 		
-#ifndef NO_MPI
-	MPI::COMM_WORLD.Allreduce(&my_max_diff, &max_diff, 1, MPI::DOUBLE, MPI::MAX); 	
-#else
 	max_diff = my_max_diff;
-#endif
 	
 	if (rank == MASTER_NODE) 
 		cout << "Update cartesian coord        | FFD box: " << FFDBox->GetTag() << ". Max diff: " << max_diff <<"."<< endl;
@@ -3117,9 +3030,6 @@ void CSurfaceMovement::Moving_Walls(CGeometry *geometry, CConfig *config,
                                     unsigned short iZone, unsigned long iter) {
   
   int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
   /*--- Local variables ---*/
   unsigned short iMarker, jMarker, iDim, nDim = geometry->GetnDim();
@@ -3207,11 +3117,7 @@ void CSurfaceMovement::Surface_Pitching(CGeometry *geometry, CConfig *config,
   bool adjoint = config->GetAdjoint();
   string Marker_Tag;
   
-#ifndef NO_MPI
-	int rank = MPI::COMM_WORLD.Get_rank();
-#else
 	int rank = MASTER_NODE;
-#endif
 	
   /*--- Retrieve values from the config file ---*/
   
@@ -3358,11 +3264,7 @@ void CSurfaceMovement::SetBoundary_Flutter3D(CGeometry *geometry, CConfig *confi
 
   bool adjoint = config->GetAdjoint();
     
-#ifndef NO_MPI
-	int rank = MPI::COMM_WORLD.Get_rank();
-#else
 	int rank = MASTER_NODE;
-#endif
 	
   /*--- Retrieve values from the config file ---*/
   deltaT = config->GetDelta_UnstTimeND();
@@ -3437,9 +3339,6 @@ void CSurfaceMovement::SetBoundary_Flutter3D(CGeometry *geometry, CConfig *confi
 void CSurfaceMovement::SetExternal_Deformation(CGeometry *geometry, CConfig *config, unsigned short iZone, unsigned long iter) {
   
   int rank = MASTER_NODE;
-#ifndef NO_MPI
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
   
   /*--- Local variables ---*/
   
@@ -3775,10 +3674,6 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
 
   int rank = MASTER_NODE;
 
-#ifndef NO_MPI  
-	rank = MPI::COMM_WORLD.Get_rank();
-#endif
-	
 	char *cstr = new char [val_mesh_filename.size()+1];
 	strcpy (cstr, val_mesh_filename.c_str());
 	
@@ -3987,14 +3882,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
         
         nSurfacePoints[iFFDBox] = my_nSurfPoints;
         nSurfPoints = 0;
-#ifndef NO_MPI
-        if (config->GetKind_SU2() != SU2_DDC)
-          MPI::COMM_WORLD.Allreduce(&my_nSurfPoints, &nSurfPoints, 1, MPI::UNSIGNED_LONG, MPI::SUM);
-        else
-          nSurfPoints = my_nSurfPoints;
-#else
 				nSurfPoints = my_nSurfPoints;
-#endif
 				
 				if (rank == MASTER_NODE) cout << "Surface points: " << nSurfPoints <<"."<<endl;
         

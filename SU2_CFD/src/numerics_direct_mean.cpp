@@ -2628,13 +2628,7 @@ void CSourceWindGust::ComputeResidual(double *val_residual, double **val_Jacobia
         cout << "ERROR: You should only be in the gust source term in two dimensions" << endl;
         cout << "Press any key to exit..." << endl;
         cin.get();
-#ifdef NO_MPI
         exit(1);
-#else
-        MPI::COMM_WORLD.Abort(1);
-        MPI::Finalize();
-#endif
-
 	}
     
     /*--- For now the source term Jacobian is just set to zero ---*/

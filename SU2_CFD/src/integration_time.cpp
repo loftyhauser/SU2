@@ -713,19 +713,11 @@ void CSingleGridIntegration::SingleGrid_Iteration(CGeometry ***geometry, CSolver
 			}
             
 			if (config[iZone]->GetConvCriteria() == RESIDUAL)
-#ifdef NO_MPI
 				monitor = log10(solver_container[iZone][MESH_0][WAVE_SOL]->GetRes_RMS(0));
-#else
-			monitor = log10(sqrt(solver_container[iZone][MESH_0][WAVE_SOL]->GetRes_RMS(0)));
-#endif
 			break;
             
 		case RUNTIME_FEA_SYS:
-#ifdef NO_MPI
 			monitor = log10(solver_container[iZone][MESH_0][FEA_SOL]->GetRes_RMS(0));
-#else
-			monitor = log10(sqrt(solver_container[iZone][MESH_0][FEA_SOL]->GetRes_RMS(0)));
-#endif
 			break;
 	}
     

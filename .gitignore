@@ -20,3 +20,13 @@
 
 # Compiled Makefiles
 Makefile
+Makefile.in
+
+# Generated file
+autom4te.cache
+INSTALL
+configure
+depcomp
+install-sh
+missing
+

@@ -26,9 +26,6 @@
 
 #pragma once
 
-#ifndef NO_MPI
-#include <mpi.h>
-#endif
 #include <cmath>
 #include <string>
 #include <fstream>
