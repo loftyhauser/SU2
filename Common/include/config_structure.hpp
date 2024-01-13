@@ -3781,12 +3781,6 @@ public:
 	unsigned short GetConvCriteria(void);
 
 	/*! 
-	 * \brief This subroutine adds the domain index to the name of some input-output file names.
-	 * \param[in] val_domain - Index of the domain.
-	 */
-	void SetFileNameDomain(unsigned short val_domain);
-
-	/*! 
 	 * \brief Get the index in the config information of the marker <i>val_marker</i>.
 	 * \note When we read the config file, it stores the markers in a particular vector.
 	 * \return Index in the config information of the marker <i>val_marker</i>.

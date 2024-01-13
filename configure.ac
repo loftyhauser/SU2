@@ -33,8 +33,7 @@ AC_PROG_CXX
 AC_PROG_RANLIB
 AC_OUTPUT(Makefile \
 	Common/lib/Makefile \
-	SU2_CFD/obj/Makefile \
-	SU2_PY/Makefile)
+	SU2_CFD/obj/Makefile)
 
 abs_srcdir=`(cd $srcdir && pwd)`
 abs_prefix=`(cd $prefix && pwd)`

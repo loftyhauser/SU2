@@ -4584,10 +4584,6 @@ CConfig::~CConfig(void)
 	}
 }
 
-void CConfig::SetFileNameDomain(unsigned short val_domain) {
-
-}
-
 string CConfig::GetUnsteady_FileName(string val_filename, int val_iter) {
   
   string UnstExt, UnstFilename = val_filename;
