@@ -35,7 +35,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/numerics_adjoint_levelset.cpp \
 		../src/numerics_adjoint_mean.cpp \
 		../src/numerics_adjoint_plasma.cpp \
-		../src/numerics_adjoint_tne2.cpp \
 		../src/numerics_adjoint_turbulent.cpp \
 		../src/numerics_direct_electric.cpp \
 		../src/numerics_direct_fea.cpp \
@@ -43,7 +42,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/numerics_direct_levelset.cpp \
 		../src/numerics_direct_mean.cpp \
 		../src/numerics_direct_plasma.cpp \
-		../src/numerics_direct_tne2.cpp \
 		../src/numerics_direct_transition.cpp \
 		../src/numerics_direct_turbulent.cpp \
 		../src/numerics_direct_wave.cpp \
@@ -57,7 +55,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/solver_adjoint_levelset.cpp \
 		../src/solver_adjoint_mean.cpp \
 		../src/solver_adjoint_plasma.cpp \
-		../src/solver_adjoint_tne2.cpp \
 		../src/solver_adjoint_turbulent.cpp \
 		../src/solver_direct_electric.cpp \
 		../src/solver_direct_fea.cpp \
@@ -65,7 +62,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/solver_direct_levelset.cpp \
 		../src/solver_direct_mean.cpp \
 		../src/solver_direct_plasma.cpp \
-		../src/solver_direct_tne2.cpp \
 		../src/solver_direct_transition.cpp \
 		../src/solver_direct_turbulent.cpp \
 		../src/solver_direct_wave.cpp \
@@ -78,7 +74,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/variable_adjoint_levelset.cpp \
 		../src/variable_adjoint_mean.cpp \
 		../src/variable_adjoint_plasma.cpp \
-		../src/variable_adjoint_tne2.cpp \
 		../src/variable_adjoint_turbulent.cpp \
 		../src/variable_direct_electric.cpp \
 		../src/variable_direct_fea.cpp \
@@ -86,7 +81,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/variable_direct_levelset.cpp \
 		../src/variable_direct_mean.cpp \
 		../src/variable_direct_plasma.cpp \
-		../src/variable_direct_tne2.cpp \
 		../src/variable_direct_transition.cpp \
 		../src/variable_direct_turbulent.cpp \
 		../src/variable_direct_wave.cpp \
