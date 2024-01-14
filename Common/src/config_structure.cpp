@@ -224,18 +224,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	/*--- Options related to grid adaptation ---*/
 	/* CONFIG_CATEGORY: Grid adaptation */
   
-	/* DESCRIPTION: Kind of grid adaptation */
-	AddEnumOption("KIND_ADAPT", Kind_Adaptation, Adapt_Map, "NONE");
-	/* DESCRIPTION: Percentage of new elements (% of the original number of elements) */
-	AddScalarOption("NEW_ELEMS", New_Elem_Adapt, -1.0);
-	/* DESCRIPTION: Scale factor for the dual volume */
-	AddScalarOption("DUALVOL_POWER", DualVol_Power, 0.5);
-	/* DESCRIPTION: Use analytical definition for surfaces */
-	AddEnumOption("ANALYTICAL_SURFDEF", Analytical_Surface, Geo_Analytic_Map, "NONE");
-	/* DESCRIPTION: Before each computation, implicitly smooth the nodal coordinates */
-	AddSpecialOption("SMOOTH_GEOMETRY", SmoothNumGrid, SetBoolOption, false);
-	/* DESCRIPTION: Adapt the boundary elements */
-	AddSpecialOption("ADAPT_BOUNDARY", AdaptBoundary, SetBoolOption, true);
   /* DESCRIPTION: Divide rectangles into triangles */
 	AddSpecialOption("DIVIDE_ELEMENTS", Divide_Element, SetBoolOption, false);
   
@@ -2807,7 +2795,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 	case SU2_MDC: cout << "|  |_____/   \\____/  |____|   Suite (Mesh Deformation Code)             |" << endl; break;
 	case SU2_GPC: cout << "|  |_____/   \\____/  |____|   Suite (Gradient Projection Code)          |" << endl; break;
 	case SU2_DDC: cout << "|  |_____/   \\____/  |____|   Suite (Domain Decomposition Code)         |" << endl; break;
-	case SU2_MAC: cout << "|  |_____/   \\____/  |____|   Suite (Mesh Adaptation Code)              |" << endl; break;
 	case SU2_GDC: cout << "|  |_____/   \\____/  |____|   Suite (Geometry Design Code)              |" << endl; break;
 	case SU2_PBC: cout << "|  |_____/   \\____/  |____|   Suite (Periodic Boundary Code)            |" << endl; break;
 	case SU2_SMC: cout << "|  |_____/   \\____/  |____|   Suite (Sliding Mesh Code)                 |" << endl; break;
@@ -3013,23 +3000,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 		cout << "Input sensitivity file name: " << SurfAdjCoeff_FileName << "." << endl;
 	}
 
-	if (val_software == SU2_MAC) {
-		switch (Kind_Adaptation) {
-		case FULL: case WAKE: case TWOPHASE: case FULL_FLOW: case FULL_ADJOINT: case FULL_LINEAR: case SMOOTHING: case SUPERSONIC_SHOCK:
-			break;
-		case GRAD_FLOW:
-			cout << "Read flow solution from: " << Solution_FlowFileName << "." << endl;
-			break;
-		case GRAD_ADJOINT:
-			cout << "Read adjoint flow solution from: " << Solution_AdjFileName << "." << endl;
-			break;
-		case GRAD_FLOW_ADJ: case ROBUST: case COMPUTABLE_ROBUST: case COMPUTABLE: case REMAINING:
-			cout << "Read flow solution from: " << Solution_FlowFileName << "." << endl;
-			cout << "Read adjoint flow solution from: " << Solution_AdjFileName << "." << endl;
-			break;
-		}
-	}
-
 	if (val_software == SU2_MDC) {
 		cout << endl <<"---------------------- Grid deformation parameters ----------------------" << endl;
 		switch (Kind_GridDef_Method) {
@@ -3193,8 +3163,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 
 	if (val_software == SU2_CFD) {
 		cout << endl <<"---------------------- Space numerical integration ----------------------" << endl;
-
-		if (SmoothNumGrid) cout << "There are some smoothing iterations on the grid coordinates." <<endl;
 
 		if ((Kind_Solver == EULER) || (Kind_Solver == NAVIER_STOKES) || (Kind_Solver == RANS)) {
 			if ((Kind_ConvNumScheme_Flow == SPACE_CENTERED) && (Kind_Centered_Flow == JST)) {
@@ -3627,39 +3595,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 
 	}
 
-	if (val_software == SU2_MAC) {
-		cout << endl <<"----------------------- Grid adaptation strategy ------------------------" << endl;
-
-		switch (Kind_Adaptation) {
-		case NONE: break;
-		case FULL: cout << "Grid adaptation using a complete refinement." << endl; break;
-		case WAKE: cout << "Grid adaptation of the wake." << endl; break;
-		case TWOPHASE: cout << "Grid adaptation of the interphase of a free surface flow." << endl; break;
-		case FULL_FLOW: cout << "Flow grid adaptation using a complete refinement." << endl; break;
-		case FULL_ADJOINT: cout << "Adjoint grid adaptation using a complete refinement." << endl; break;
-		case FULL_LINEAR: cout << "Linear grid adaptation using a complete refinement." << endl; break;
-		case GRAD_FLOW: cout << "Grid adaptation using gradient based strategy (density)." << endl; break;
-		case GRAD_ADJOINT: cout << "Grid adaptation using gradient based strategy (adjoint density)." << endl; break;
-		case GRAD_FLOW_ADJ: cout << "Grid adaptation using gradient based strategy (density and adjoint density)." << endl; break;
-		case ROBUST: cout << "Grid adaptation using robust adaptation."<< endl; break;
-		case COMPUTABLE: cout << "Grid adaptation using computable correction."<< endl; break;
-		case COMPUTABLE_ROBUST: cout << "Grid adaptation using computable correction."<< endl; break;
-		case REMAINING: cout << "Grid adaptation using remaining error."<< endl; break;
-		case SMOOTHING: cout << "Grid smoothing using an implicit method."<< endl; break;
-		case SUPERSONIC_SHOCK: cout << "Grid adaptation for a supersonic shock at Mach: " << Mach <<"."<< endl; break;
-		}
-
-		switch (Kind_Adaptation) {
-		case GRAD_FLOW: case GRAD_ADJOINT: case GRAD_FLOW_ADJ: case ROBUST: case COMPUTABLE: case COMPUTABLE_ROBUST: case REMAINING:
-			cout << "Power of the dual volume in the adaptation sensor: " << DualVol_Power <<endl;
-			cout << "Percentage of new elements in the adaptation process: " << New_Elem_Adapt << "."<<endl;
-			break;
-		}
-
-		if (Analytical_Surface != NONE)
-			cout << "Use analytical definition for including points in the surfaces." <<endl;
-
-	}
 
 	cout << endl <<"-------------------------- Output information ---------------------------" << endl;
 
@@ -3728,19 +3663,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 
 	if (val_software == SU2_GPC) {
 		cout << "Output gradient file name: " << ObjFunc_Grad_FileName << ". " << endl;
-	}
-
-	if (val_software == SU2_MAC) {
-		cout << "Output mesh file name: " << Mesh_Out_FileName << ". " << endl;
-		cout << "Restart flow file name: " << Restart_FlowFileName << "." << endl;
-		if ((Kind_Adaptation == FULL_ADJOINT) || (Kind_Adaptation == GRAD_ADJOINT) || (Kind_Adaptation == GRAD_FLOW_ADJ) ||
-				(Kind_Adaptation == ROBUST) || (Kind_Adaptation == COMPUTABLE_ROBUST) || (Kind_Adaptation == COMPUTABLE) ||
-				(Kind_Adaptation == REMAINING)) {
-			if (Kind_ObjFunc == DRAG_COEFFICIENT) cout << "Restart adjoint file name: " << Restart_AdjFileName << "." << endl;
-			if (Kind_ObjFunc == EQUIVALENT_AREA) cout << "Restart adjoint file name: " << Restart_AdjFileName << "." << endl;
-			if (Kind_ObjFunc == NEARFIELD_PRESSURE) cout << "Restart adjoint file name: " << Restart_AdjFileName << "." << endl;
-			if (Kind_ObjFunc == LIFT_COEFFICIENT) cout << "Restart adjoint file name: " << Restart_AdjFileName << "." << endl;
-		}
 	}
 
 	if (val_software == SU2_DDC) {

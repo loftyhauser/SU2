@@ -74,8 +74,6 @@ private:
 	GravityForce,			/*!< \brief Flag to know if the gravity force is incuded in the formulation. */
 	MagneticForce,			/*!< \brief Flag to know if the magnetic force is incuded in the formulation. */
 	JouleHeating,			/*!< \brief Flag to know if the Joule heating  is incuded in the formulation. */
-	SmoothNumGrid,			/*!< \brief Smooth the numerical grid. */
-	AdaptBoundary,			/*!< \brief Adapt the elements on the boundary. */
 	FullMG,					/*!< \brief Full multigrid strategy. */
 	Divide_Element,			/*!< \brief Divide rectables and hexahedrom. */
 	Engine_Intake,			/*!< \brief Engine intake subsonic region. */
@@ -109,10 +107,8 @@ private:
 	FreeSurface_Damping_Coeff,  /*!< \brief Damping coefficient of the free surface for a free surface problem. */
 	FreeSurface_Damping_Length;  /*!< \brief Damping length of the free surface for a free surface problem. */
 	unsigned long FreeSurface_Reevaluation;  /*!< \brief Frecuency for level set reevaluation. */
-	unsigned short Kind_Adaptation;	/*!< \brief Kind of numerical grid adaptation. */
 	unsigned short nTimeInstances;  /*!< \brief Number of periodic time instances for Time Spectral integration. */
 	double TimeSpectral_Period;		/*!< \brief Period of oscillation to be used with time-spectral computations. */
-	double New_Elem_Adapt;			/*!< \brief Elements to adapt in the numerical grid adaptation process. */
 	double Delta_UnstTime,			/*!< \brief Time step for unsteady computations. */
 	Delta_UnstTimeND;						/*!< \brief Time step for unsteady computations (non dimensional). */
 	double Total_UnstTime,						/*!< \brief Total time for unsteady computations. */
@@ -414,8 +410,6 @@ private:
 	*Marker_Config_PerBound;			/*!< \brief Global index for periodic boundaries using the config information. */
 	string *PlaneTag;			/*!< \brief Global index for the plane adaptation (upper, lower). */
 	unsigned short nDomain;			/*!< \brief Number of domains in the MPI parallelization. */
-	double DualVol_Power;			/*!< \brief Power for the dual volume in the grid adaptation sensor. */
-	unsigned short Analytical_Surface;	/*!< \brief Information about the analytical definition of the surface for grid adaptation. */
 	unsigned short Mesh_FileFormat;	/*!< \brief Mesh input format. */
 	unsigned short Output_FileFormat;	/*!< \brief Format of the output files. */
 	double RefAreaCoeff,		/*!< \brief Reference area for coefficient computation. */
@@ -971,20 +965,6 @@ public:
 	 * \return Coordinates where of the box where the grid is going to be deformed.
 	 */
 	double *GetHold_GridFixed_Coord(void);
-
-	/*! 
-	 * \brief Get the power of the dual volume in the grid adaptation sensor.
-	 * \return Power of the dual volume in the grid adaptation sensor.
-	 */
-	double GetDualVol_Power(void);
-
-	/*! 
-	 * \brief Get Information about if there is an analytical definition of the surface for doing the 
-	 *        grid adaptation.
-	 * \return Definition of the surfaces. NONE implies that there isn't any analytical definition 
-	 *         and it will use and interpolation.
-	 */
-	unsigned short GetAnalytical_Surface(void);
 
 	/*! 
 	 * \brief Get the maximum dimension of the agglomerated element compared with the whole domain.
@@ -2136,18 +2116,6 @@ public:
 	 * \return Kind of the transion model.
 	 */
 	unsigned short GetKind_Trans_Model(void);
-
-	/*! 
-	 * \brief Get the kind of adaptation technique.
-	 * \return Kind of adaptation technique.
-	 */
-	unsigned short GetKind_Adaptation(void);
-
-	/*! 
-	 * \brief Get the number of new elements added in the adaptation process.
-	 * \return percentage of new elements that are going to be added in the adaptation.
-	 */		
-	double GetNew_Elem_Adapt(void);
 
 	/*! 
 	 * \brief Get the kind of time integration method.
@@ -3742,24 +3710,6 @@ public:
 	 * \return <code>TRUE</code> if there is a rotational frame; otherwise <code>FALSE</code>.
 	 */
 	bool GetAxisymmetric(void);
-
-	/*! 
-	 * \brief Get information about there is a smoothing of the grid coordinates.
-	 * \return <code>TRUE</code> if there is smoothing of the grid coordinates; otherwise <code>FALSE</code>.
-	 */	
-	bool GetAdaptBoundary(void);
-
-	/*! 
-	 * \brief Get information about there is a smoothing of the grid coordinates.
-	 * \return <code>TRUE</code> if there is smoothing of the grid coordinates; otherwise <code>FALSE</code>.
-	 */	
-	bool GetSmoothNumGrid(void);
-
-	/*! 
-	 * \brief Set information about there is a smoothing of the grid coordinates.
-	 * \param[in] val_smoothnumgrid - <code>TRUE</code> if there is smoothing of the grid coordinates; otherwise <code>FALSE</code>.
-	 */
-	void SetSmoothNumGrid(bool val_smoothnumgrid);
 
 	/*! 
 	 * \brief Subtract one to the index of the finest grid (full multigrid strategy).

@@ -66,12 +66,6 @@ CPoint::CPoint(unsigned short val_nDim, unsigned long val_globalindex, CConfig *
 	/*--- Set the color for mesh partitioning ---*/
 	color = 0;
 
-	/*--- For smoothing the numerical grid coordinates ---*/
-	if (config->GetSmoothNumGrid()) {
-		Coord_old = new double[nDim];
-		Coord_sum = new double[nDim];
-	}
-	
 	/*--- Storage of grid velocities for dynamic meshes ---*/
 	if (config->GetGrid_Movement()) {
 		GridVel  = new double[nDim];
@@ -133,12 +127,6 @@ CPoint::CPoint(double val_coord_0, double val_coord_1, unsigned long val_globali
 	
 	/*--- Set the global index in the parallel simulation ---*/
 	GlobalIndex = val_globalindex;
-	
-	/*--- For smoothing the numerical grid coordinates ---*/
-	if (config->GetSmoothNumGrid()) {
-		Coord_old = new double[nDim];
-		Coord_sum = new double[nDim];
-	}
 	
 	/*--- Storage of grid velocities for dynamic meshes ---*/
 	if (config->GetGrid_Movement()) {
@@ -205,12 +193,6 @@ CPoint::CPoint(double val_coord_0, double val_coord_1, double val_coord_2, unsig
 	
 	/*--- Set the global index in the parallel simulation ---*/
 	GlobalIndex = val_globalindex;
-	
-	/*--- For smoothing the numerical grid coordinates ---*/
-	if (config->GetSmoothNumGrid()) {
-		Coord_old = new double[nDim];
-		Coord_sum = new double[nDim];
-	}
 	
 	/*--- Storage of grid velocities for dynamic meshes ---*/
 	if (config->GetGrid_Movement()) {

@@ -81,10 +81,6 @@ inline double CConfig::GetFreeSurface_Outlet(void) { return FreeSurface_Outlet; 
 
 inline double CConfig::GetRatioViscosity(void) { return RatioViscosity; }
 
-inline unsigned short CConfig::GetAnalytical_Surface(void) { return Analytical_Surface; }
-
-inline double CConfig::GetDualVol_Power(void) { return DualVol_Power; }
-
 inline bool CConfig::GetVisualize_Partition(void) { return Visualize_Partition; }
 
 inline bool CConfig::GetExtraOutput(void) { return ExtraOutput; }
@@ -431,10 +427,6 @@ inline unsigned short CConfig::GetAdjTurb_Linear_Iter(void) { return AdjTurb_Lin
 inline double CConfig::GetAdjTurb_CFLRedCoeff(void) { return AdjTurb_CFLRedCoeff; }
 
 inline unsigned long CConfig::GetGridDef_Iter(void) { return GridDef_Iter; }
-
-inline unsigned short CConfig::GetKind_Adaptation(void) { return Kind_Adaptation; }
-
-inline double CConfig::GetNew_Elem_Adapt(void) { return New_Elem_Adapt; }
 
 inline unsigned short CConfig::GetKind_TimeIntScheme(void) { return Kind_TimeNumScheme; }
 
@@ -822,8 +814,6 @@ inline bool CConfig::GetRotating_Frame(void) { return Rotating_Frame; }
 
 inline bool CConfig::GetAxisymmetric(void) { return Axisymmetric; }
 
-inline bool CConfig::GetAdaptBoundary(void) { return AdaptBoundary; }
-
 inline bool CConfig::GetAdiabaticWall(void) { return AdiabaticWall; }
 
 inline bool CConfig::GetIsothermalWall(void) { return IsothermalWall; }
@@ -859,10 +849,6 @@ inline bool CConfig::GetGravityForce(void) { return GravityForce; }
 inline bool CConfig::GetMagnetic_Force(void) { return MagneticForce; }
 
 inline bool CConfig::GetJouleHeating(void) { return JouleHeating; }
-
-inline bool CConfig::GetSmoothNumGrid(void) { return SmoothNumGrid; }
-
-inline void CConfig::SetSmoothNumGrid(bool val_smoothnumgrid) { SmoothNumGrid = val_smoothnumgrid; }
 
 inline unsigned short CConfig::GetKind_Turb_Model(void) { return Kind_Turb_Model; }
 

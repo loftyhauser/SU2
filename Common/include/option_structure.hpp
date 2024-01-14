@@ -93,7 +93,6 @@ enum SU2_COMPONENT {
 	SU2_MDC = 2,	/*!< \brief Running the SU2_MDC software. */
 	SU2_GPC = 3,	/*!< \brief Running the SU2_GPC software. */
 	SU2_DDC = 4,	/*!< \brief Running the SU2_DDC software. */
-	SU2_MAC = 5,	/*!< \brief Running the SU2_MAC software. */
 	SU2_GDC = 6,	/*!< \brief Running the SU2_GDC software. */
 	SU2_PBC = 7,	/*!< \brief Running the SU2_PBC software. */
 	SU2_SMC = 8,	/*!< \brief Running the SU2_SMC software. */

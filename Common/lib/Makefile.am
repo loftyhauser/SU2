@@ -20,8 +20,6 @@ libSU2_a_SOURCES = ../src/config_structure.hpp \
 		../src/dual_grid_structure.inl \
 		../src/geometry_structure.hpp \
 		../src/geometry_structure.inl \
-		../src/grid_adaptation_structure.hpp \
-		../src/grid_adaptation_structure.inl \
 		../src/grid_movement_structure.hpp \
 		../src/grid_movement_structure.inl \
 		../src/linear_solvers_structure.hpp \
@@ -36,7 +34,6 @@ libSU2_a_SOURCES = ../src/config_structure.hpp \
 		../src/config_structure.cpp \
 		../src/dual_grid_structure.cpp \
 		../src/geometry_structure.cpp \
-		../src/grid_adaptation_structure.cpp \
 		../src/grid_movement_structure.cpp \
 		../src/linear_solvers_structure.cpp \
 		../src/primal_grid_structure.cpp \
