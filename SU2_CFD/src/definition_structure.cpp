@@ -327,9 +327,6 @@ void Solver_Preprocessing(CSolver ***solver_container, CGeometry **geometry, CCo
                 solver_container[iMGlevel][TRANS_SOL] = new CTransLMSolver(geometry[iMGlevel], config, iMGlevel);
             }
 		}
-		if (plasma_euler || plasma_ns) {
-			solver_container[iMGlevel][PLASMA_SOL] = new CPlasmaSolver(geometry[iMGlevel], config);
-		}
 		if (wave) {
 			solver_container[iMGlevel][WAVE_SOL] = new CWaveSolver(geometry[iMGlevel], config);
 		}
@@ -825,8 +822,6 @@ void Numerics_Preprocessing(CNumerics ****numerics_container, CSolver ***solver_
                         numerics_container[iMGlevel][FLOW_SOL][SOURCE_FIRST_TERM] = new CSourceAxisymmetric_Flow(nDim,nVar_Flow, config);
                     else if (config->GetGravityForce() == YES)
                         numerics_container[iMGlevel][FLOW_SOL][SOURCE_FIRST_TERM] = new CSourceGravity(nDim, nVar_Flow, config);
-                    else if (config->GetMagnetic_Force() == YES)
-                        numerics_container[iMGlevel][FLOW_SOL][SOURCE_FIRST_TERM] = new CSource_Magnet(nDim, nVar_Flow, config);
                     else if (config->GetJouleHeating() == YES)
                         numerics_container[iMGlevel][FLOW_SOL][SOURCE_FIRST_TERM] = new CSource_JouleHeating(nDim, nVar_Flow, config);
                     else if (config->GetWind_Gust() == YES)
@@ -973,169 +968,6 @@ void Numerics_Preprocessing(CNumerics ****numerics_container, CSolver ***solver_
 		/*--- Definition of the boundary condition method ---*/
 		for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++){
 			numerics_container[iMGlevel][TRANS_SOL][CONV_BOUND_TERM] = new CUpwLin_TransLM(nDim, nVar_Trans, config);
-		}
-	}
-    
-	/*--- Solver definition for the multi species plasma model problem ---*/
-	if (plasma_euler || plasma_ns) {
-        
-		/*--- Definition of the convective scheme for each equation and mesh level ---*/
-		switch (config->GetKind_ConvNumScheme_Plasma()) {
-            case NONE :
-                break;
-            case SPACE_UPWIND :
-                
-                switch (config->GetKind_Upwind_Plasma()) {
-                    case NO_UPWIND : cout << "No upwind scheme." << endl; break;
-                    case ROE_1ST : case ROE_2ND :
-                        for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++) {
-                            switch (config->GetKind_GasModel()) {
-                                case ARGON:
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_TERM]  = new CUpwRoe_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_BOUND_TERM] = new CUpwRoe_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    break;
-                                case O2: case N2:	case AIR5:	case AIR7: case ARGON_SID:
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_TERM]  = new CUpwRoe_PlasmaDiatomic(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_BOUND_TERM] = new CUpwRoe_PlasmaDiatomic(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    break;
-                            }
-                        }
-                        break;
-                    case HLLC_1ST :
-                        for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++) {
-                            switch (config->GetKind_GasModel()) {
-                                case O2 : case N2 : case AIR5 : case AIR7 : case ARGON_SID:
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_TERM]  = new CUpwHLLC_PlasmaDiatomic(nDim, nVar_Flow, config);
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_BOUND_TERM] = new CUpwHLLC_PlasmaDiatomic(nDim, nVar_Flow, config);
-                                    break;
-                                default:
-                                    cout << "HLLC Upwind scheme not implemented for the selected gas chemistry model..." << endl; cin.get(); break;
-                            }
-                        }
-                        break;
-                    case ROE_TURKEL_1ST : case ROE_TURKEL_2ND :
-                        for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++) {
-                            numerics_container[iMGlevel][PLASMA_SOL][CONV_TERM]  = new CUpwRoe_Turkel_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                            numerics_container[iMGlevel][PLASMA_SOL][CONV_BOUND_TERM] = new CUpwRoe_Turkel_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                        }
-                        break;
-                    case SW_1ST : case SW_2ND :
-                        for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++) {
-                            switch (config->GetKind_GasModel()) {
-                                case O2 : case N2 : case AIR5 : case AIR7 : case ARGON_SID:
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_TERM]  = new CUpwSW_PlasmaDiatomic(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_BOUND_TERM] = new CUpwSW_PlasmaDiatomic(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    break;
-                                default:
-                                    cout << "Steger-Warming Upwind scheme not implemented for the selected gas chemistry model..." << endl; cin.get(); break;
-                            }
-                        }
-                        break;
-                    case MSW_1ST : case MSW_2ND :
-                        for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++) {
-                            switch (config->GetKind_GasModel()) {
-                                case O2 : case N2 : case AIR5 : case AIR7 : case ARGON_SID:
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_TERM]  = new CUpwMSW_PlasmaDiatomic(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_BOUND_TERM] = new CUpwMSW_PlasmaDiatomic(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    break;
-                                default:
-                                    cout << "Modified Steger-Warming Upwind scheme not implemented for the selected gas chemistry model..." << endl; cin.get(); break;
-                            }
-                        }
-                        break;
-                    default : cout << "Upwind scheme not implemented." << endl; cin.get(); break;
-                }
-                break;
-                
-			case SPACE_CENTERED :
-				for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++) {
-					switch (config->GetKind_Centered_Plasma()) {
-                        case JST:
-                            switch (config->GetKind_GasModel()) {
-                                case ARGON:
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_TERM] = new CCentJST_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_BOUND_TERM] = new CUpwRoe_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    break;
-                                case O2: case N2: case AIR5: case AIR7: case ARGON_SID:
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_TERM] = new CCentJST_PlasmaDiatomic(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_BOUND_TERM] = new CUpwRoe_PlasmaDiatomic(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    break;
-                                default:
-                                    break;
-                            }
-                            break;
-                            
-						case LAX:
-							switch (config->GetKind_GasModel()) {
-                                case ARGON:
-                                    cout << "Not implemented..." << endl; cin.get();
-                                    break;
-                                case O2: case N2: case AIR5: case AIR7: case ARGON_SID:
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_TERM] = new CCentLax_PlasmaDiatomic(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    numerics_container[iMGlevel][PLASMA_SOL][CONV_BOUND_TERM] = new CUpwRoe_PlasmaDiatomic(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                                    break;
-                                default:
-                                    break;
-							}
-							break;
-					}
-				}
-				break;
-		}
-        
-		/*--- Definition of the viscous scheme for each equation and mesh level ---*/
-		if (plasma_ns) {
-			switch (config->GetKind_ViscNumScheme_Plasma()) {
-                case NONE :
-                    break;
-                case AVG_GRAD :
-                    for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++) {
-                        numerics_container[iMGlevel][PLASMA_SOL][VISC_TERM] = new CAvgGrad_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics,config);
-                        numerics_container[iMGlevel][PLASMA_SOL][VISC_BOUND_TERM] = new CAvgGrad_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics,config);
-                    }
-                    break;
-                case AVG_GRAD_CORRECTED :
-                    for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++) {
-                        numerics_container[iMGlevel][PLASMA_SOL][VISC_TERM] = new CAvgGradCorrected_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics,config);
-                        numerics_container[iMGlevel][PLASMA_SOL][VISC_BOUND_TERM] = new CAvgGrad_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics,config);
-                    }
-                    break;
-                default :
-                    cout << "Viscous scheme not implemented." << endl; cin.get();
-                    break;
-			}
-		}
-        
-		/*--- Definition of the source term integration scheme for each equation and mesh level ---*/
-		switch (config->GetKind_SourNumScheme_Plasma()) {
-            case NONE :
-                break;
-            case PIECEWISE_CONSTANT :
-                for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++) {
-                    if (config->GetKind_GasModel() == ARGON)
-                        numerics_container[iMGlevel][PLASMA_SOL][SOURCE_FIRST_TERM] = new CSourcePieceWise_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                    if (config->GetKind_GasModel() == AIR7) {
-                        numerics_container[iMGlevel][PLASMA_SOL][SOURCE_FIRST_TERM] = new CSourcePieceWise_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                    }
-                    if (config->GetKind_GasModel() == AIR21)
-                        cout << "ERROR: 21 Species air gas chemistry model not implemented!!!" << endl;
-                    if (config->GetKind_GasModel() == O2)
-                        numerics_container[iMGlevel][PLASMA_SOL][SOURCE_FIRST_TERM] = new CSourcePieceWise_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                    if (config->GetKind_GasModel() == N2)
-                        numerics_container[iMGlevel][PLASMA_SOL][SOURCE_FIRST_TERM] = new CSourcePieceWise_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                    if (config->GetKind_GasModel() == AIR5)
-                        numerics_container[iMGlevel][PLASMA_SOL][SOURCE_FIRST_TERM] = new CSourcePieceWise_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                    if (config->GetKind_GasModel() == ARGON_SID)
-                        numerics_container[iMGlevel][PLASMA_SOL][SOURCE_FIRST_TERM] = new CSourcePieceWise_Plasma(nDim, nVar_Plasma, nSpecies, nDiatomics, nMonatomics, config);
-                    
-                    
-                    
-                    numerics_container[iMGlevel][PLASMA_SOL][SOURCE_SECOND_TERM] = new CSourceNothing(nDim, nVar_Plasma, config);
-                }
-                break;
-            default :
-                cout << "Source term not implemented." << endl; cin.get();
-                break;
 		}
 	}
     
