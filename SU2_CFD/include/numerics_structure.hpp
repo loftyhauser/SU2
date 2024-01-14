@@ -4453,37 +4453,6 @@ public:
 };
 
 /*! 
- * \class CGalerkin_Flow
- * \brief Class for computing the stiffness matrix of the Galerkin method.
- * \ingroup ViscDiscr
- * \author F. Palacios.
- * \version 2.0.7
- */
-class CGalerkin_Flow : public CNumerics {
-public:
-
-	/*! 
-	 * \brief Constructor of the class.
-	 * \param[in] val_nDim - Number of dimensions of the problem.
-	 * \param[in] val_nVar - Number of variables of the problem.
-	 * \param[in] config - Definition of the particular problem.
-	 */
-	CGalerkin_Flow(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
-
-	/*! 
-	 * \brief Destructor of the class. 
-	 */
-	~CGalerkin_Flow(void);
-
-	/*! 
-	 * \brief Computing stiffness matrix of the Galerkin method.
-	 * \param[out] val_stiffmatrix_elem - Stiffness matrix for Galerkin computation.
-	 * \param[in] config - Definition of the particular problem.
-	 */
-	void ComputeResidual (double **val_stiffmatrix_elem, CConfig *config);
-};
-
-/*! 
  * \class CGalerkin_FEA
  * \brief Class for computing the stiffness matrix of the Galerkin method.
  * \ingroup ViscDiscr
@@ -4866,45 +4835,6 @@ public:
 	 * \param[in] config - Definition of the particular problem.
 	 */
 	void ComputeResidual(double *val_residual, CConfig *config);
-};
-
-/*!
- * \class CSourcePieceWise_Elec
- * \brief Class for the soruce term integration of the electrical potential equation.
- * \ingroup SourceDiscr
- * \author A. Bueno.
- * \version 2.0.7
- */
-class CSourcePieceWise_Elec : public CNumerics {
-	double **Ni_times_Nj;
-public:
-
-	/*! 
-	 * \param[in] val_nDim - Number of dimensions of the problem.
-	 * \param[in] val_nVar - Number of variables of the problem.
-	 * \param[in] config - Definition of the particular problem.
-	 */
-	CSourcePieceWise_Elec(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
-
-	/*! 
-	 * \brief Destructor of the class. 
-	 */
-	~CSourcePieceWise_Elec(void);
-
-	/*! 
-	 * \brief Source term integration for the electrical potential.
-	 * \param[out] val_residual - Pointer to the total residual.
-	 * \param[in] config - Definition of the particular problem.
-	 */
-	void ComputeResidual(double *val_residual, CConfig *config);
-
-	/*!
-	 * \brief Source term integration for the electrical potential.
-	 * \param[out] val_residual - Pointer to the total residual.
-	 * \param[in] config - Definition of the particular problem.
-	 */
-	void ComputeResidual_MacCormack(double *val_residual, CConfig *config);
-
 };
 
 /*! 

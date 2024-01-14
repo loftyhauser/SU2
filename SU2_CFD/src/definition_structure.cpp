@@ -294,7 +294,6 @@ void Solver_Preprocessing(CSolver ***solver_container, CGeometry **geometry, CCo
             case ARGON_SID: plasma_diatomic = true; break;
             default: cout << "Specified plasma model unavailable or none selected" << endl; cin.get(); break;
 		}
-		//if (config->GetElectricSolver()) electric  = true;
 	}
     
 	/*--- Definition of the Class for the solution: solver_container[DOMAIN][MESH_LEVEL][EQUATION]. Note that euler, ns
@@ -327,9 +326,6 @@ void Solver_Preprocessing(CSolver ***solver_container, CGeometry **geometry, CCo
 			if (transition) {
                 solver_container[iMGlevel][TRANS_SOL] = new CTransLMSolver(geometry[iMGlevel], config, iMGlevel);
             }
-		}
-		if (electric) {
-			solver_container[iMGlevel][ELEC_SOL] = new CElectricSolver(geometry[iMGlevel], config);
 		}
 		if (plasma_euler || plasma_ns) {
 			solver_container[iMGlevel][PLASMA_SOL] = new CPlasmaSolver(geometry[iMGlevel], config);
@@ -1143,31 +1139,6 @@ void Numerics_Preprocessing(CNumerics ****numerics_container, CSolver ***solver_
 		}
 	}
     
-	/*--- Solver definition for the electric potential problem ---*/
-	if (electric) {
-        
-		/*--- Definition of the viscous scheme for each equation and mesh level ---*/
-		switch (config->GetKind_ViscNumScheme_Elec()) {
-            case GALERKIN :
-                numerics_container[MESH_0][ELEC_SOL][VISC_TERM] = new CGalerkin_Flow(nDim, nVar_Elec, config);
-                break;
-            default : cout << "Viscous scheme not implemented." << endl; cin.get(); break;
-		}
-        
-		/*--- Definition of the source term integration scheme for each equation and mesh level ---*/
-		switch (config->GetKind_SourNumScheme_Elec()) {
-            case NONE :
-                break;
-            case PIECEWISE_CONSTANT :
-                numerics_container[MESH_0][ELEC_SOL][SOURCE_FIRST_TERM] = new CSourcePieceWise_Elec(nDim, nVar_Elec, config);
-                numerics_container[MESH_0][ELEC_SOL][SOURCE_SECOND_TERM] = new CSourceNothing(nDim, nVar_Elec, config);
-                break;
-            default :
-                cout << "Source term not implemented." << endl; cin.get();
-                break;
-		}
-	}
-    
 	/*--- Solver definition for the linearized flow problem ---*/
 	if (lin_euler) {
         
@@ -1206,9 +1177,6 @@ void Numerics_Preprocessing(CNumerics ****numerics_container, CSolver ***solver_
                 break;
             case AVG_GRAD_CORRECTED :
                 cout << "Viscous scheme not implemented." << endl; cin.get();
-                break;
-            case GALERKIN :
-                numerics_container[MESH_0][WAVE_SOL][VISC_TERM] = new CGalerkin_Flow(nDim, nVar_Wave, config);
                 break;
             default :
                 cout << "Viscous scheme not implemented." << endl; cin.get();
