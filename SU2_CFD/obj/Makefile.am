@@ -31,11 +31,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/integration_structure.cpp \
 		../src/integration_time.cpp \
 		../src/iteration_structure.cpp \
-		../src/numerics_adjoint_electric.cpp \
-		../src/numerics_adjoint_levelset.cpp \
-		../src/numerics_adjoint_mean.cpp \
-		../src/numerics_adjoint_plasma.cpp \
-		../src/numerics_adjoint_turbulent.cpp \
 		../src/numerics_direct_electric.cpp \
 		../src/numerics_direct_fea.cpp \
 		../src/numerics_direct_heat.cpp \
@@ -52,10 +47,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/output_structure.cpp \
 		../src/output_tecplot.cpp \
 		../src/output_paraview.cpp \
-		../src/solver_adjoint_levelset.cpp \
-		../src/solver_adjoint_mean.cpp \
-		../src/solver_adjoint_plasma.cpp \
-		../src/solver_adjoint_turbulent.cpp \
 		../src/solver_direct_electric.cpp \
 		../src/solver_direct_fea.cpp \
 		../src/solver_direct_heat.cpp \
@@ -70,11 +61,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/solver_structure.cpp \
 		../src/solver_template.cpp \
 		../src/SU2_CFD.cpp \
-		../src/variable_adjoint_electric.cpp \
-		../src/variable_adjoint_levelset.cpp \
-		../src/variable_adjoint_mean.cpp \
-		../src/variable_adjoint_plasma.cpp \
-		../src/variable_adjoint_turbulent.cpp \
 		../src/variable_direct_electric.cpp \
 		../src/variable_direct_fea.cpp \
 		../src/variable_direct_heat.cpp \
