@@ -33,7 +33,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/iteration_structure.cpp \
 		../src/numerics_direct_electric.cpp \
 		../src/numerics_direct_fea.cpp \
-		../src/numerics_direct_heat.cpp \
 		../src/numerics_direct_levelset.cpp \
 		../src/numerics_direct_mean.cpp \
 		../src/numerics_direct_plasma.cpp \
@@ -49,7 +48,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/output_paraview.cpp \
 		../src/solver_direct_electric.cpp \
 		../src/solver_direct_fea.cpp \
-		../src/solver_direct_heat.cpp \
 		../src/solver_direct_levelset.cpp \
 		../src/solver_direct_mean.cpp \
 		../src/solver_direct_plasma.cpp \
@@ -63,7 +61,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/SU2_CFD.cpp \
 		../src/variable_direct_electric.cpp \
 		../src/variable_direct_fea.cpp \
-		../src/variable_direct_heat.cpp \
 		../src/variable_direct_levelset.cpp \
 		../src/variable_direct_mean.cpp \
 		../src/variable_direct_plasma.cpp \
