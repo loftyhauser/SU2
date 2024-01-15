@@ -222,7 +222,6 @@ private:
 	double MaxDimension;			/*!< \brief Maximum dimension of the aglomerated element compared with the whole domain. */
 	bool AddIndNeighbor;			/*!< \brief Include indirect neighbor in the agglomeration process. */
   unsigned short nGridMovement;		/*!< \brief Number of grid movement types specified. */
-	unsigned short GeometryMode;			/*!< \brief Gemoetry mode (analysis or gradient computation). */
 	unsigned short MGCycle;			/*!< \brief Kind of multigrid cycle. */
 	unsigned short FinestMesh;		/*!< \brief Finest mesh for the full multigrid approach. */
 	unsigned short nMG_PreSmooth,                 /*!< \brief Number of MG pre-smooth parameters found in config file. */
@@ -329,7 +328,6 @@ private:
 	double Linear_Solver_Relax;		/*!< \brief Relaxation coefficient of the linear solver. */
 	double AdjTurb_Linear_Error;		/*!< \brief Min error of the turbulent adjoint linear solver for the implicit formulation. */
 	unsigned short AdjTurb_Linear_Iter;		/*!< \brief Min error of the turbulent adjoint linear solver for the implicit formulation. */
-	double *Section_Limit;                  /*!< \brief Airfoil section limit. */
 	double* Kappa_Flow,           /*!< \brief Numerical dissipation coefficients for the flow equations. */
 	*Kappa_AdjFlow,                  /*!< \brief Numerical dissipation coefficients for the adjoint equations. */
 	*Kappa_LinFlow;                  /*!< \brief Numerical dissipation coefficients for the linearized equations. */
@@ -1014,12 +1012,6 @@ public:
 	 */
 	int GetCharge_Number(unsigned short val_Species);
   
-  /*!
-	 * \brief Get the value of the limits for the sections.
-	 * \return Value of the limits for the sections.
-	 */
-	double GetSection_Limit(unsigned short val_var);
-
 	/*! 
 	 * \brief Get the array that maps chemical consituents to each chemical reaction.
 	 * \return Memory location of the triple pointer to the 3-D reaction map array.
@@ -1515,12 +1507,6 @@ public:
 	 * \return 0 or 1 depending of we are dealing with a V or W cycle.
 	 */		
 	unsigned short GetMGCycle(void);
-
-	/*! 
-	 * \brief Get the king of evaluation in the geometrical module.
-	 * \return 0 or 1 depending of we are dealing with a V or W cycle.
-	 */		
-	unsigned short GetGeometryMode(void);
 
 	/*! 
 	 * \brief Get the Courant Friedrich Levi number for each grid.

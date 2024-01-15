@@ -117,8 +117,6 @@ inline double CConfig::GetSpecies_Gamma(unsigned short val_Species) { return Spe
 
 inline int CConfig::GetCharge_Number(unsigned short val_Species) { return Charge_Number[val_Species]; }
 
-inline double CConfig::GetSection_Limit(unsigned short val_var) { return Section_Limit[val_var]; }
-
 inline int ***CConfig::GetReaction_Map(void) { return Reactions; } 
 
 inline double ***CConfig::GetCollisionIntegral00(void) { return Omega00; }
@@ -240,8 +238,6 @@ inline void CConfig::SubtractFinestMesh(void) { FinestMesh = FinestMesh-1; }
 inline unsigned short CConfig::GetConvCriteria(void) { return ConvCriteria; }
 
 inline unsigned short CConfig::GetMGCycle(void) { return MGCycle; }
-
-inline unsigned short CConfig::GetGeometryMode(void) { return GeometryMode; }
 
 inline double CConfig::GetCFL(unsigned short val_mesh) {	return CFL[val_mesh]; }
 
