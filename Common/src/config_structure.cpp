@@ -644,8 +644,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddScalarOption("VOLUME_WAVE_FILENAME", Wave_FileName, string("wave"));
 	/* DESCRIPTION: Output file adj. wave (w/o extension) variables */
 	AddScalarOption("VOLUME_ADJWAVE_FILENAME", AdjWave_FileName, string("adjoint_wave"));
-	/* DESCRIPTION: Output file adjoint (w/o extension) variables */
-	AddScalarOption("VOLUME_ADJ_FILENAME", Adj_FileName, string("adjoint"));
 	/* DESCRIPTION: Output file linear (w/o extension) variables */
 	AddScalarOption("VOLUME_LIN_FILENAME", Lin_FileName, string("linearized"));
 	/* DESCRIPTION: Output file surface flow coefficient (w/o extension) */
@@ -3621,7 +3619,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 		if (Adjoint || OneShot) {
 			cout << "Adjoint solution file name: " << Solution_AdjFileName << "." << endl;
 			cout << "Restart adjoint file name: " << Restart_AdjFileName << "." << endl;
-			cout << "Adjoint variables file name: " << Adj_FileName << "." << endl;
 		}
 	}
 

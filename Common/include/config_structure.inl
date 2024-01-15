@@ -742,8 +742,6 @@ inline string CConfig::GetRestart_LinFileName(void) { return Restart_LinFileName
 
 inline string CConfig::GetRestart_AdjFileName(void) { return Restart_AdjFileName; }
 
-inline string CConfig::GetAdj_FileName(void) { return Adj_FileName; }
-
 inline string CConfig::GetLin_FileName(void) { return Lin_FileName; }
 
 inline string CConfig::GetSurfFlowCoeff_FileName(void) { return SurfFlowCoeff_FileName; }

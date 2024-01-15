@@ -48,9 +48,6 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
       filename = config->GetSurfFlowCoeff_FileName();
   }
   else {
-    if (adjoint)
-      filename = config->GetAdj_FileName();
-    else
       filename = config->GetFlow_FileName();
   }
   
