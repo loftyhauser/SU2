@@ -323,9 +323,6 @@ void Solver_Preprocessing(CSolver ***solver_container, CGeometry **geometry, CCo
                 solver_container[iMGlevel][FLOW_SOL]->Preprocessing(geometry[iMGlevel], solver_container[iMGlevel], config, iMGlevel, NO_RK_ITER, RUNTIME_FLOW_SYS);
                 solver_container[iMGlevel][TURB_SOL]->Postprocessing(geometry[iMGlevel], solver_container[iMGlevel], config, iMGlevel);
             }
-			if (transition) {
-                solver_container[iMGlevel][TRANS_SOL] = new CTransLMSolver(geometry[iMGlevel], config, iMGlevel);
-            }
 		}
         
 	}
@@ -865,66 +862,6 @@ void Numerics_Preprocessing(CNumerics ****numerics_container, CSolver ***solver_
                 numerics_container[iMGlevel][TURB_SOL][CONV_BOUND_TERM] = new CUpwSca_TurbSST(nDim, nVar_Turb, config);
                 numerics_container[iMGlevel][TURB_SOL][VISC_BOUND_TERM] = new CAvgGrad_TurbSST(nDim, nVar_Turb, config);
             }
-		}
-	}
-    
-	/*--- Solver definition for the transition model problem ---*/
-	if (transition) {
-        
-		/*--- Definition of the convective scheme for each equation and mesh level ---*/
-		switch (config->GetKind_ConvNumScheme_Turb()) {
-            case NONE :
-                break;
-            case SPACE_UPWIND :
-                for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++){
-                    numerics_container[iMGlevel][TRANS_SOL][CONV_TERM] = new CUpwSca_TransLM(nDim, nVar_Trans, config);
-                }
-                break;
-            default :
-                cout << "Convective scheme not implemented (transition)." << endl; cin.get();
-                break;
-		}
-        
-		/*--- Definition of the viscous scheme for each equation and mesh level ---*/
-		switch (config->GetKind_ViscNumScheme_Turb()) {
-            case NONE :
-                break;
-            case AVG_GRAD :
-                for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++){
-                    numerics_container[iMGlevel][TRANS_SOL][VISC_TERM] = new CAvgGrad_TransLM(nDim, nVar_Trans, config);
-                }
-                break;
-            case AVG_GRAD_CORRECTED :
-                for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++){
-                    numerics_container[iMGlevel][TRANS_SOL][VISC_TERM] = new CAvgGradCorrected_TransLM(nDim, nVar_Trans, config);
-                }
-                break;
-            case GALERKIN :
-                cout << "Viscous scheme not implemented." << endl;
-                cin.get(); break;
-            default :
-                cout << "Viscous scheme not implemented." << endl; cin.get();
-                break;
-		}
-        
-		/*--- Definition of the source term integration scheme for each equation and mesh level ---*/
-		switch (config->GetKind_SourNumScheme_Turb()) {
-            case NONE :
-                break;
-            case PIECEWISE_CONSTANT :
-                for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++) {
-                    numerics_container[iMGlevel][TRANS_SOL][SOURCE_FIRST_TERM] = new CSourcePieceWise_TransLM(nDim, nVar_Trans, config);
-                    numerics_container[iMGlevel][TRANS_SOL][SOURCE_SECOND_TERM] = new CSourceNothing(nDim, nVar_Trans, config);
-                }
-                break;
-            default :
-                cout << "Source term not implemented." << endl; cin.get();
-                break;
-		}
-        
-		/*--- Definition of the boundary condition method ---*/
-		for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++){
-			numerics_container[iMGlevel][TRANS_SOL][CONV_BOUND_TERM] = new CUpwLin_TransLM(nDim, nVar_Trans, config);
 		}
 	}
     
