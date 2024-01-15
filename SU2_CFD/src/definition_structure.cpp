@@ -327,10 +327,6 @@ void Solver_Preprocessing(CSolver ***solver_container, CGeometry **geometry, CCo
                 solver_container[iMGlevel][TRANS_SOL] = new CTransLMSolver(geometry[iMGlevel], config, iMGlevel);
             }
 		}
-		if (fea) {
-			solver_container[iMGlevel][FEA_SOL] = new CFEASolver(geometry[iMGlevel], config);
-		}
-        
 		/*--- Allocate solution for linear problem (at the moment we use the same scheme as the adjoint problem) ---*/
 		if (lin_euler) {
 			solver_container[iMGlevel][LINFLOW_SOL] = new CLinEulerSolver(geometry[iMGlevel], config);
@@ -546,21 +542,6 @@ void Numerics_Preprocessing(CNumerics ****numerics_container, CSolver ***solver_
 	if (ns)	nVar_Flow = solver_container[MESH_0][FLOW_SOL]->GetnVar();
 	if (turbulent)		nVar_Turb = solver_container[MESH_0][TURB_SOL]->GetnVar();
 	if (transition)		nVar_Trans = solver_container[MESH_0][TRANS_SOL]->GetnVar();
-	if (electric)			nVar_Elec = solver_container[MESH_0][ELEC_SOL]->GetnVar();
-	if (plasma_euler || plasma_ns)	{
-		nVar_Plasma = solver_container[MESH_0][PLASMA_SOL]->GetnVar();
-		nSpecies    = solver_container[MESH_0][PLASMA_SOL]->GetnSpecies();
-		nDiatomics  = solver_container[MESH_0][PLASMA_SOL]->GetnDiatomics();
-		nMonatomics = solver_container[MESH_0][PLASMA_SOL]->GetnMonatomics();
-	}
-	if (wave)				nVar_Wave = solver_container[MESH_0][WAVE_SOL]->GetnVar();
-	if (fea)				nVar_FEA = solver_container[MESH_0][FEA_SOL]->GetnVar();
-    
-	/*--- Number of variables for adjoint problem ---*/
-	if (adj_euler)  	nVar_Adj_Flow = solver_container[MESH_0][ADJFLOW_SOL]->GetnVar();
-	if (adj_ns)			  nVar_Adj_Flow = solver_container[MESH_0][ADJFLOW_SOL]->GetnVar();
-	if (adj_turb)		  nVar_Adj_Turb = solver_container[MESH_0][ADJTURB_SOL]->GetnVar();
-	if (adj_plasma_euler || adj_plasma_ns)		nVar_Adj_Plasma = solver_container[MESH_0][ADJPLASMA_SOL]->GetnVar();
     
 	/*--- Number of variables for the linear problem ---*/
 	if (lin_euler)	nVar_Lin_Flow = solver_container[MESH_0][LINFLOW_SOL]->GetnVar();
@@ -992,63 +973,6 @@ void Numerics_Preprocessing(CNumerics ****numerics_container, CSolver ***solver_
 		/*--- Definition of the boundary condition method ---*/
 		for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++)
 			numerics_container[iMGlevel][LINFLOW_SOL][CONV_BOUND_TERM] = new CCentLax_LinFlow(nDim, nVar_Lin_Flow, config);
-	}
-    
-	/*--- Solver definition for the wave problem ---*/
-	if (wave) {
-        
-		/*--- Definition of the viscous scheme for each equation and mesh level ---*/
-		switch (config->GetKind_ViscNumScheme_Wave()) {
-            case NONE :
-                break;
-            case AVG_GRAD :
-                cout << "Viscous scheme not implemented." << endl; cin.get();
-                break;
-            case AVG_GRAD_CORRECTED :
-                cout << "Viscous scheme not implemented." << endl; cin.get();
-                break;
-            default :
-                cout << "Viscous scheme not implemented." << endl; cin.get();
-                break;
-		}
-        
-		/*--- Definition of the source term integration scheme for each equation and mesh level ---*/
-		switch (config->GetKind_SourNumScheme_Wave()) {
-            case NONE : break;
-            case PIECEWISE_CONSTANT :
-                break;
-            default : break;
-		}
-	}
-    
-	/*--- Solver definition for the FEA problem ---*/
-	if (fea) {
-        
-		/*--- Definition of the viscous scheme for each equation and mesh level ---*/
-		switch (config->GetKind_ViscNumScheme_FEA()) {
-            case NONE :
-                break;
-            case AVG_GRAD :
-                cout << "Viscous scheme not implemented." << endl; cin.get();
-                break;
-            case AVG_GRAD_CORRECTED :
-                cout << "Viscous scheme not implemented." << endl; cin.get();
-                break;
-            case GALERKIN :
-                numerics_container[MESH_0][FEA_SOL][VISC_TERM] = new CGalerkin_FEA(nDim, nVar_Wave, config);
-                break;
-            default :
-                cout << "Viscous scheme not implemented." << endl; cin.get();
-                break;
-		}
-        
-		/*--- Definition of the source term integration scheme for each equation and mesh level ---*/
-		switch (config->GetKind_SourNumScheme_Wave()) {
-            case NONE : break;
-            case PIECEWISE_CONSTANT :
-                break;
-            default : break;
-		}
 	}
     
 }
