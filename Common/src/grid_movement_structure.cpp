@@ -843,35 +843,6 @@ void CVolumetricMovement::SetBoundaryDisplacements(CGeometry *geometry, CConfig 
   
 }
 
-void CVolumetricMovement::SetDomainDisplacements(CGeometry *geometry, CConfig *config) {
-	unsigned short iDim, nDim = geometry->GetnDim();
-	unsigned long iPoint, total_index;
-	double *Coord, MinCoordValues[3], MaxCoordValues[3], *Hold_GridFixed_Coord;
-	
-	Hold_GridFixed_Coord = config->GetHold_GridFixed_Coord();
-	
-	MinCoordValues[0] = Hold_GridFixed_Coord[0];
-	MinCoordValues[1] = Hold_GridFixed_Coord[1];
-	MinCoordValues[2] = Hold_GridFixed_Coord[2];
-	MaxCoordValues[0] = Hold_GridFixed_Coord[3];
-	MaxCoordValues[1] = Hold_GridFixed_Coord[4];
-	MaxCoordValues[2] = Hold_GridFixed_Coord[5];
-
-	/*--- Set to zero displacements of all the points that are not going to be moved
-	 except the surfaces ---*/
-	for (iPoint = 0; iPoint < geometry->GetnPoint(); iPoint++) {
-		Coord = geometry->node[iPoint]->GetCoord();
-		for (iDim = 0; iDim < nDim; iDim++) {
-			if ((Coord[iDim] < MinCoordValues[iDim]) || (Coord[iDim] > MaxCoordValues[iDim])) {
-				total_index = iPoint*nDim + iDim;
-				LinSysRes[total_index] = 0.0;
-				LinSysSol[total_index] = 0.0;
-				StiffMatrix.DeleteValsRowi(total_index);
-			}
-		}
-	}
-}
-
 void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *config, bool UpdateGeo) {
 	unsigned long IterLinSol, iGridDef_Iter;
   double MinLength, NumError, MinVol;
@@ -921,9 +892,6 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
     SetBoundaryDisplacements(geometry, config);
     
     /*--- Fix the location of any points in the domain, if requested. ---*/
-    
-    if (config->GetHold_GridFixed())
-      SetDomainDisplacements(geometry, config);
     
     /*--- Communicate any prescribed boundary displacements via MPI,
      so that all nodes have the same solution and r.h.s. entries 

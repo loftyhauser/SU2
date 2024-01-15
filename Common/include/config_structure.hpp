@@ -53,7 +53,6 @@ private:
 	double MinLogResidual; /*!< \brief Minimum value of the log residual. */
 	double* EA_IntLimit; /*!< \brief Integration limits of the Equivalent Area computation */
   double AdjointLimit; /*!< \brief Adjoint variable limit */
-	double* Hold_GridFixed_Coord; /*!< \brief Coordinates of the box to hold fixed the nbumerical grid */
 	unsigned short ConvCriteria;	/*!< \brief Kind of convergence criteria. */
 	bool Adjoint,			/*!< \brief Flag to know if the code is solving an adjoint problem. */
     Viscous,                /*!< \brief Flag to know if the code is solving a viscous problem. */
@@ -79,7 +78,6 @@ private:
 	Engine_Intake,			/*!< \brief Engine intake subsonic region. */
 	Frozen_Visc,			/*!< \brief Flag for adjoint problem with/without frozen viscosity. */
 	Sens_Remove_Sharp,			/*!< \brief Flag for removing or not the sharp edges from the sensitivity computation. */
-	Hold_GridFixed,	/*!< \brief Flag hold fixed some part of the mesh during the deformation. */
 	Axisymmetric; /*!< \brief Flag for outputting sensitivities on exit */
 	bool Visualize_Partition;	/*!< \brief Flag to visualize each partition in the DDM. */
     double Damp_Nacelle_Inflow;	/*!< \brief Damping factor for the engine inlet. */
@@ -947,12 +945,6 @@ public:
 	 * \return Limit value for the adjoint variables.
 	 */
 	double GetAdjointLimit(void);
-
-	/*! 
-	 * \brief Get the the coordinates where of the box where the grid is going to be deformed.
-	 * \return Coordinates where of the box where the grid is going to be deformed.
-	 */
-	double *GetHold_GridFixed_Coord(void);
 
 	/*! 
 	 * \brief Get the maximum dimension of the agglomerated element compared with the whole domain.
@@ -2885,13 +2877,6 @@ public:
 	 * \return Kind of inlet boundary condition.
 	 */
 	unsigned short GetKind_Inlet(void);
-
-	/*! 
-	 * \brief Provides information about the the nodes that are going to be moved on a deformation 
-	 *        volumetric grid deformation.
-	 * \return <code>TRUE</code> means that only the points on the FFD box will be moved.
-	 */
-	bool GetHold_GridFixed(void);
 
 	/*!
 	 * \brief Get the kind of objective function. There are several options: Drag coefficient, 

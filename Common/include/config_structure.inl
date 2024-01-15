@@ -63,8 +63,6 @@ inline double CConfig::GetEA_IntLimit(unsigned short index) { return EA_IntLimit
 
 inline double CConfig::GetAdjointLimit(void) { return AdjointLimit; }
 
-inline double *CConfig::GetHold_GridFixed_Coord(void) { return Hold_GridFixed_Coord; }
-
 inline double CConfig::GetMaxDimension(void) { return MaxDimension; }
 
 inline double CConfig::GetRatioDensity(void) { return RatioDensity; }
@@ -835,8 +833,6 @@ inline unsigned short CConfig::GetKind_Trans_Model(void) { return Kind_Trans_Mod
 inline bool CConfig::GetFrozen_Visc(void) { return Frozen_Visc; }
 
 inline bool CConfig::GetSens_Remove_Sharp(void) { return Sens_Remove_Sharp; }
-
-inline bool CConfig::GetHold_GridFixed(void) { return Hold_GridFixed; }
 
 inline bool CConfig::GetWrite_Converted_Mesh(void) { return Write_Converted_Mesh; }
 

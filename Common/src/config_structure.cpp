@@ -854,12 +854,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
    - FFD_THICKNESS ( FFDBox ID, i_Ind, j_Ind )
    - FFD_VOLUME ( FFDBox ID, i_Ind, j_Ind ) */
 	AddDVParamOption("DV_PARAM", nDV, ParamDV, Design_Variable);
-	/* DESCRIPTION: Hold the grid fixed in a region */
-	AddSpecialOption("HOLD_GRID_FIXED", Hold_GridFixed, SetBoolOption, false);
-	default_vec_6d[0] = -1E15; default_vec_6d[1] = -1E15; default_vec_6d[2] = -1E15;
-	default_vec_6d[3] =  1E15; default_vec_6d[4] =  1E15; default_vec_6d[5] =  1E15;
-	/* DESCRIPTION: Coordinates of the box where the grid will be deformed (Xmin, Ymin, Zmin, Xmax, Ymax, Zmax) */
-	AddArrayOption("HOLD_GRID_FIXED_COORD", 6, Hold_GridFixed_Coord, default_vec_6d);
 	/* DESCRIPTION: Grid deformation technique */
 	AddEnumOption("GRID_DEFORM_METHOD", Kind_GridDef_Method, Deform_Map, "FEA");
 	/* DESCRIPTION: Number of iterations for FEA mesh deformation (surface deformation increments) */
@@ -2965,74 +2959,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 	cout << "Input mesh file name: " << Mesh_FileName << endl;
 
 	if (Divide_Element) cout << "Divide grid elements into triangles and tetrahedra." << endl;
-
-	if (val_software == SU2_MDC) {
-		cout << endl <<"---------------------- Grid deformation parameters ----------------------" << endl;
-		switch (Kind_GridDef_Method) {
-      case SPRING: cout << "Grid deformation using a classical spring method." << endl; break;
-      case FEA: cout << "Grid deformation using a linear elasticity method." << endl; break;
-		}
-
-		if (Design_Variable[0] != NO_DEFORMATION && Design_Variable[0] != SURFACE_FILE) {
-			if (Hold_GridFixed == YES) cout << "Hold some regions of the mesh fixed (hardcode implementation)." <<endl;
-			cout << "Geo. design var. definition (markers <-> value def. <-> param):" <<endl;
-			for (unsigned short iDV = 0; iDV < nDV; iDV++) {
-				switch (Design_Variable[iDV]) {
-				case NO_DEFORMATION: cout << "There isn't any deformation." ; break;
-				case HICKS_HENNE: cout << "Hicks Henne <-> " ; break;
-				case COSINE_BUMP: cout << "Cosine bump <-> " ; break;
-				case FOURIER: cout << "Fourier <-> " ; break;
-				case SPHERICAL: cout << "Spherical design <-> " ; break;
-				case MACH_NUMBER: cout << "Mach number <-> " ; break;
-				case DISPLACEMENT: cout << "Displacement design variable."; break;
-				case NACA_4DIGITS: cout << "NACA four digits <-> "; break;
-				case PARABOLIC: cout << "Parabolic <-> "; break;
-				case OBSTACLE: cout << "Obstacle <-> "; break;
-				case STRETCH: cout << "Stretch <-> "; break;
-				case ROTATION: cout << "Rotation <-> "; break;
-				case FFD_CONTROL_POINT: cout << "FFD (control point) <-> "; break;
-				case FFD_DIHEDRAL_ANGLE: cout << "FFD (dihedral angle) <-> "; break;
-				case FFD_TWIST_ANGLE: cout << "FFD (twist angle) <-> "; break;
-				case FFD_ROTATION: cout << "FFD (rotation) <-> "; break;
-				case FFD_CAMBER: cout << "FFD (camber) <-> "; break;
-				case FFD_THICKNESS: cout << "FFD (thickness) <-> "; break;
-				case FFD_VOLUME: cout << "FFD (volume) <-> "; break;
-				}
-				for (iMarker_DV = 0; iMarker_DV < nMarker_DV; iMarker_DV++) {
-					cout << Marker_DV[iMarker_DV];
-					if (iMarker_DV < nMarker_DV-1) cout << ", ";
-					else cout << " <-> ";
-				}
-				cout << DV_Value[iDV] << " <-> ";
-
-				if (Design_Variable[iDV] == NO_DEFORMATION) nParamDV = 0;
-				if (Design_Variable[iDV] == HICKS_HENNE) nParamDV = 2;
-				if (Design_Variable[iDV] == SPHERICAL) nParamDV = 3;
-				if (Design_Variable[iDV] == COSINE_BUMP) nParamDV = 3;
-				if (Design_Variable[iDV] == FOURIER) nParamDV = 3;
-				if (Design_Variable[iDV] == DISPLACEMENT) nParamDV = 3;
-				if (Design_Variable[iDV] == ROTATION) nParamDV = 6;
-				if (Design_Variable[iDV] == NACA_4DIGITS) nParamDV = 3;
-				if (Design_Variable[iDV] == PARABOLIC) nParamDV = 2;
-				if (Design_Variable[iDV] == OBSTACLE) nParamDV = 2;
-				if (Design_Variable[iDV] == STRETCH) nParamDV = 2;
-				if (Design_Variable[iDV] == FFD_CONTROL_POINT) nParamDV = 7;
-				if (Design_Variable[iDV] == FFD_DIHEDRAL_ANGLE) nParamDV = 7;
-				if (Design_Variable[iDV] == FFD_TWIST_ANGLE) nParamDV = 7;
-				if (Design_Variable[iDV] == FFD_ROTATION) nParamDV = 7;
-				if (Design_Variable[iDV] == FFD_CAMBER) nParamDV = 3;
-				if (Design_Variable[iDV] == FFD_THICKNESS) nParamDV = 3;
-				if (Design_Variable[iDV] == FFD_VOLUME) nParamDV = 3;
-
-				for (unsigned short iParamDV = 0; iParamDV < nParamDV; iParamDV++) {
-					if (iParamDV == 0) cout << "( ";
-					cout << ParamDV[iDV][iParamDV];
-					if (iParamDV < nParamDV-1) cout << ", ";
-					else cout <<" )"<<endl;
-				}
-			}
-		}
-	}
 
 	if (((val_software == SU2_CFD) && ( Linearized )) || (val_software == SU2_GPC)) {
 		cout << endl <<"-------------------- Surface deformation parameters ---------------------" << endl;
