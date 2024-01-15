@@ -630,8 +630,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddScalarOption("SOLUTION_ADJ_FILENAME", Solution_AdjFileName, string("solution_adj.dat"));
 	/* DESCRIPTION: Output file restart flow */
 	AddScalarOption("RESTART_FLOW_FILENAME", Restart_FlowFileName, string("restart_flow.dat"));
-	/* DESCRIPTION: Output file linear flow */
-	AddScalarOption("RESTART_LIN_FILENAME",Restart_LinFileName, string("restart_lin.dat"));
 	/* DESCRIPTION: Output file restart adjoint */
 	AddScalarOption("RESTART_ADJ_FILENAME", Restart_AdjFileName, string("restart_adj.dat"));
 	/* DESCRIPTION: Output file restart wave */
