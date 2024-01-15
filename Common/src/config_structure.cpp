@@ -644,8 +644,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddScalarOption("VOLUME_WAVE_FILENAME", Wave_FileName, string("wave"));
 	/* DESCRIPTION: Output file adj. wave (w/o extension) variables */
 	AddScalarOption("VOLUME_ADJWAVE_FILENAME", AdjWave_FileName, string("adjoint_wave"));
-	/* DESCRIPTION: Output file linear (w/o extension) variables */
-	AddScalarOption("VOLUME_LIN_FILENAME", Lin_FileName, string("linearized"));
 	/* DESCRIPTION: Output file surface flow coefficient (w/o extension) */
 	AddScalarOption("SURFACE_FLOW_FILENAME", SurfFlowCoeff_FileName, string("surface_flow"));
 	/* DESCRIPTION: Writing solution file frequency */

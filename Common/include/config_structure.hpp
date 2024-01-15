@@ -436,7 +436,6 @@ private:
 	Restart_HeatFileName,			/*!< \brief Restart file for heat variables. */
 	Restart_LinFileName,			/*!< \brief Restart file for linearized flow variables. */
 	Restart_AdjFileName,			/*!< \brief Restart file for adjoint variables, drag functional. */
-	Lin_FileName,					/*!< \brief Output file with the linearized variables. */
 	SurfFlowCoeff_FileName;			/*!< \brief Output file with the flow variables on the surface. */
 	unsigned short nSpecies, 		/*!< \brief No of species present in plasma */
 	nReactions;									/*!< \brief Number of reactions in chemical model. */
@@ -3234,12 +3233,6 @@ public:
 	 * \return Name of the restart file for the adjoint variables (drag objective function).
 	 */
 	string GetRestart_AdjFileName(void);
-
-	/*! 
-	 * \brief Get the name of the file with the linearized flow variables.
-	 * \return Name of the file with the linearized flow variables.
-	 */
-	string GetLin_FileName(void);	
 
 	/*! 
 	 * \brief Get the name of the file with the surface information for the flow problem.
