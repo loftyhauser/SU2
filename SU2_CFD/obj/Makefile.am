@@ -35,7 +35,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/numerics_direct_mean.cpp \
 		../src/numerics_direct_transition.cpp \
 		../src/numerics_direct_turbulent.cpp \
-		../src/numerics_direct_wave.cpp \
 		../src/numerics_linearized_mean.cpp \
 		../src/numerics_linearized_turbulent.cpp \
 		../src/numerics_structure.cpp \
@@ -47,7 +46,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/solver_direct_mean.cpp \
 		../src/solver_direct_transition.cpp \
 		../src/solver_direct_turbulent.cpp \
-		../src/solver_direct_wave.cpp \
 		../src/solver_linearized_mean.cpp \
 		../src/solver_linearized_turbulent.cpp \
 		../src/solver_structure.cpp \
@@ -57,7 +55,6 @@ ___bin_SU2_CFD_SOURCES = ../include/definition_structure.hpp \
 		../src/variable_direct_mean.cpp \
 		../src/variable_direct_transition.cpp \
 		../src/variable_direct_turbulent.cpp \
-		../src/variable_direct_wave.cpp \
 		../src/variable_linearized_mean.cpp \
 		../src/variable_linearized_turbulent.cpp \
 		../src/variable_structure.cpp \

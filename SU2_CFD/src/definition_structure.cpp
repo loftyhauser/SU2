@@ -327,9 +327,6 @@ void Solver_Preprocessing(CSolver ***solver_container, CGeometry **geometry, CCo
                 solver_container[iMGlevel][TRANS_SOL] = new CTransLMSolver(geometry[iMGlevel], config, iMGlevel);
             }
 		}
-		if (wave) {
-			solver_container[iMGlevel][WAVE_SOL] = new CWaveSolver(geometry[iMGlevel], config);
-		}
 		if (fea) {
 			solver_container[iMGlevel][FEA_SOL] = new CFEASolver(geometry[iMGlevel], config);
 		}
