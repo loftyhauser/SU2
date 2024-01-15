@@ -738,8 +738,6 @@ inline string CConfig::GetRestart_WaveFileName(void) { return Restart_WaveFileNa
 
 inline string CConfig::GetRestart_HeatFileName(void) { return Restart_HeatFileName; }
 
-inline string CConfig::GetRestart_AdjFileName(void) { return Restart_AdjFileName; }
-
 inline string CConfig::GetSurfFlowCoeff_FileName(void) { return SurfFlowCoeff_FileName; }
 
 inline unsigned short CConfig::GetCauchy_Func_Flow(void) { return Cauchy_Func_Flow; }

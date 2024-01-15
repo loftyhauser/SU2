@@ -997,12 +997,7 @@ void COutput::SetRestart(CConfig *config, CGeometry *geometry, unsigned short va
 	string filename;
   
 	/*--- Retrieve filename from config ---*/
-	if (config->GetAdjoint()) {
-		filename = config->GetRestart_AdjFileName();
-    filename = config->GetObjFunc_Extension(filename);
-  } else {
 		filename = config->GetRestart_FlowFileName();
-  }
   
 	/*--- Unsteady problems require an iteration number to be appended. ---*/
 	if (config->GetUnsteady_Simulation() == TIME_SPECTRAL) {

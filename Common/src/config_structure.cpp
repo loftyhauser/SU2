@@ -630,8 +630,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddScalarOption("SOLUTION_ADJ_FILENAME", Solution_AdjFileName, string("solution_adj.dat"));
 	/* DESCRIPTION: Output file restart flow */
 	AddScalarOption("RESTART_FLOW_FILENAME", Restart_FlowFileName, string("restart_flow.dat"));
-	/* DESCRIPTION: Output file restart adjoint */
-	AddScalarOption("RESTART_ADJ_FILENAME", Restart_AdjFileName, string("restart_adj.dat"));
 	/* DESCRIPTION: Output file restart wave */
 	AddScalarOption("RESTART_WAVE_FILENAME", Restart_WaveFileName, string("restart_wave.dat"));
 	/* DESCRIPTION: Output file flow (w/o extension) variables */
@@ -3605,7 +3603,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 
 		if (Adjoint || OneShot) {
 			cout << "Adjoint solution file name: " << Solution_AdjFileName << "." << endl;
-			cout << "Restart adjoint file name: " << Restart_AdjFileName << "." << endl;
 		}
 	}
 
