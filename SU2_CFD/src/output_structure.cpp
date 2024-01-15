@@ -505,7 +505,6 @@ void COutput::MergeSolution(CConfig *config, CGeometry *geometry, CSolver **solv
   
   double *Aux_Press, *Aux_Frict, *Aux_Heat, *Aux_yPlus, *Aux_Sens;
   
-	bool grid_movement = config->GetGrid_Movement();
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
 	bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
 	bool freesurface = (config->GetKind_Regime() == FREESURFACE);
@@ -570,13 +569,6 @@ void COutput::MergeSolution(CConfig *config, CGeometry *geometry, CSolver **solv
   
   if (config->GetWrt_Residuals()) nVar_Total = 2*nVar_Consv;
   else nVar_Total = nVar_Consv;
-  
-	/*--- Add the grid velocity to the restart file for the unsteady adjoint ---*/
-	if (grid_movement) {
-		iVar_GridVel = nVar_Total;
-		if (geometry->GetnDim() == 2) nVar_Total += 2;
-		else if (geometry->GetnDim() == 3) nVar_Total += 3;
-	}
   
   if ((config->GetKind_Regime() == FREESURFACE)) {
 		/*--- Density ---*/
@@ -750,15 +742,6 @@ void COutput::MergeSolution(CConfig *config, CGeometry *geometry, CSolver **solv
         
         for (iVar = 0; iVar < nVar_Third; iVar++) {
           Data[jVar][jPoint] = solver[ThirdIndex]->LinSysRes.GetBlock(iPoint, iVar);
-          jVar++;
-        }
-      }
-      
-      /*--- For unsteady problems with grid movement, write the mesh velocities ---*/
-      if (grid_movement) {
-        Grid_Vel = geometry->node[iPoint]->GetGridVel();
-        for (unsigned short iDim = 0; iDim < geometry->GetnDim(); iDim++) {
-          Data[jVar][jPoint] = Grid_Vel[iDim];
           jVar++;
         }
       }
@@ -992,7 +975,6 @@ void COutput::SetRestart(CConfig *config, CGeometry *geometry, unsigned short va
   unsigned short Kind_Solver  = config->GetKind_Solver();
 	unsigned short iVar, iDim, nDim = geometry->GetnDim();
 	unsigned long iPoint, iExtIter = config->GetExtIter();
-  bool grid_movement = config->GetGrid_Movement();
 	ofstream restart_file;
 	string filename;
   
@@ -1028,15 +1010,6 @@ void COutput::SetRestart(CConfig *config, CGeometry *geometry, unsigned short va
       restart_file << ", \"Residual_" << iVar+1<<"\"";
     }
   }
-  
-  /*--- Mesh velocities for dynamic mesh cases ---*/
-	if (grid_movement) {
-    if (nDim == 2) {
-      restart_file << ", \"Grid_Velx\", \"Grid_Vely\"";
-    } else {
-      restart_file << ", \"Grid_Velx\", \"Grid_Vely\", \"Grid_Velz\"";
-    }
-	}
   
   /*--- Solver specific output variables ---*/
   if (config->GetKind_Regime() == FREESURFACE) {
@@ -2237,9 +2210,6 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
 		/*--- Get the file output format ---*/
 
 		unsigned short FileFormat = config[iZone]->GetOutput_FileFormat();
-
-		bool dynamic_mesh = (config[iZone]->GetUnsteady_Simulation() &&
-				config[iZone]->GetGrid_Movement());
 
 		/*--- Merge the node coordinates and connectivity, if necessary. This
          is only performed if a volume solution file is requested, and it

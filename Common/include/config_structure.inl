@@ -237,8 +237,6 @@ inline void CConfig::SetFinestMesh(unsigned short val_finestmesh) { FinestMesh =
 
 inline void CConfig::SubtractFinestMesh(void) { FinestMesh = FinestMesh-1; }
 
-inline unsigned short CConfig::GetDesign_Variable(unsigned short val_dv) { return Design_Variable[val_dv]; }
-
 inline unsigned short CConfig::GetConvCriteria(void) { return ConvCriteria; }
 
 inline unsigned short CConfig::GetMGCycle(void) { return MGCycle; }
@@ -250,10 +248,6 @@ inline double CConfig::GetCFL(unsigned short val_mesh) {	return CFL[val_mesh]; }
 inline double CConfig::GetCFL(unsigned short val_mesh, unsigned short val_Species) { return CFL_MS[val_Species][val_mesh]; }
 
 inline double CConfig::GetUnst_CFL(void) {	return Unst_CFL; }
-
-inline double CConfig::GetParamDV(unsigned short val_dv, unsigned short val_param) {	return ParamDV[val_dv][val_param]; }
-
-inline unsigned short CConfig::GetnDV(void) {	return nDV; }
 
 inline unsigned short CConfig::GetnRKStep(void) { return nRKStep; }
 
@@ -419,8 +413,6 @@ inline double CConfig::GetAdjTurb_Linear_Error(void) { return AdjTurb_Linear_Err
 inline unsigned short CConfig::GetAdjTurb_Linear_Iter(void) { return AdjTurb_Linear_Iter; }
 
 inline double CConfig::GetAdjTurb_CFLRedCoeff(void) { return AdjTurb_CFLRedCoeff; }
-
-inline unsigned long CConfig::GetGridDef_Iter(void) { return GridDef_Iter; }
 
 inline unsigned short CConfig::GetKind_TimeIntScheme(void) { return Kind_TimeNumScheme; }
 

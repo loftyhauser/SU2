@@ -824,37 +824,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	/* DESCRIPTION: Writing convergence history frequency for the dual time */
 	AddScalarOption("FREESURFACE_REEVALUATION",  FreeSurface_Reevaluation, 1);
   
-	/*--- Options related to the grid deformation ---*/
-	// these options share nDV as their size in the option references; not a good idea
-	/* CONFIG_CATEGORY: Grid deformation */
-  
-	/* DESCRIPTION: Kind of deformation */
-	AddEnumListOption("DV_KIND", nDV, Design_Variable, Param_Map);
-	/* DESCRIPTION: Marker of the surface to which we are going apply the shape deformation */
-	AddMarkerOption("DV_MARKER", nMarker_DV, Marker_DV);
-	/* DESCRIPTION: New value of the shape deformation */
-	AddListOption("DV_VALUE", nDV, DV_Value);
-	/* DESCRIPTION: Parameters of the shape deformation
-   - HICKS_HENNE ( Lower Surface (0)/Upper Surface (1)/Only one Surface (2), x_Loc )
-   - COSINE_BUMP ( Lower Surface (0)/Upper Surface (1)/Only one Surface (2), x_Loc, Thickness )
-   - FOURIER ( Lower Surface (0)/Upper Surface (1)/Only one Surface (2), index, cos(0)/sin(1) )
-   - NACA_4DIGITS ( 1st digit, 2nd digit, 3rd and 4th digit )
-   - PARABOLIC ( Center, Thickness )
-   - DISPLACEMENT ( x_Disp, y_Disp, z_Disp )
-   - ROTATION ( x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
-   - OBSTACLE ( Center, Bump size )
-   - SPHERICAL ( ControlPoint_Index, Theta_Disp, R_Disp )
-   - FFD_CONTROL_POINT ( FFDBox ID, i_Ind, j_Ind, k_Ind, x_Disp, y_Disp, z_Disp )
-   - FFD_DIHEDRAL_ANGLE ( FFDBox ID, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
-   - FFD_TWIST_ANGLE ( FFDBox ID, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
-   - FFD_ROTATION ( FFDBox ID, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
-   - FFD_CAMBER ( FFDBox ID, i_Ind, j_Ind )
-   - FFD_THICKNESS ( FFDBox ID, i_Ind, j_Ind )
-   - FFD_VOLUME ( FFDBox ID, i_Ind, j_Ind ) */
-	AddDVParamOption("DV_PARAM", nDV, ParamDV, Design_Variable);
-	/* DESCRIPTION: Number of iterations for FEA mesh deformation (surface deformation increments) */
-	AddScalarOption("GRID_DEFORM_ITER", GridDef_Iter, 10);
-  
 	/*--- option related to rotorcraft problems ---*/
 	/* CONFIG_CATEGORY: Rotorcraft problem */
   
@@ -2729,13 +2698,6 @@ void CConfig::SetMarkers(unsigned short val_software, unsigned short val_izone) 
 				Marker_Config_Plotting[iMarker_Config] = YES;
 	}
 
-	for (iMarker_Config = 0; iMarker_Config < nMarker_Config; iMarker_Config++) {
-		Marker_Config_DV[iMarker_Config] = NO;
-		for (iMarker_DV = 0; iMarker_DV < nMarker_DV; iMarker_DV++)
-			if (Marker_Config_Tag[iMarker_Config] == Marker_DV[iMarker_DV])
-				Marker_Config_DV[iMarker_Config] = YES;
-	}
-
   for (iMarker_Config = 0; iMarker_Config < nMarker_Config; iMarker_Config++) {
 		Marker_Config_Moving[iMarker_Config] = NO;
 		for (iMarker_Moving = 0; iMarker_Moving < nMarker_Moving; iMarker_Moving++)
@@ -2932,14 +2894,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 		}
     cout<<endl;
     
-    cout << "Surface(s) affected by the design variables: ";
-		for (iMarker_DV = 0; iMarker_DV < nMarker_DV; iMarker_DV++) {
-			cout << Marker_DV[iMarker_DV];
-			if (iMarker_DV < nMarker_DV-1) cout << ", ";
-			else cout <<".";
-		}
-    cout<<endl;
-    
     if ((Kind_GridMovement[ZONE_0] == DEFORMING) || (Kind_GridMovement[ZONE_0] == MOVING_WALL)) {
       cout << "Surface(s) in motion: ";
       for (iMarker_Moving = 0; iMarker_Moving < nMarker_Moving; iMarker_Moving++) {
@@ -2955,99 +2909,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 	cout << "Input mesh file name: " << Mesh_FileName << endl;
 
 	if (Divide_Element) cout << "Divide grid elements into triangles and tetrahedra." << endl;
-
-	if (((val_software == SU2_CFD) && ( Linearized )) || (val_software == SU2_GPC)) {
-		cout << endl <<"-------------------- Surface deformation parameters ---------------------" << endl;
-		cout << "Geo. design var. definition (markers <-> old def., new def. <-> param):" <<endl;
-		for (unsigned short iDV = 0; iDV < nDV; iDV++) {
-			switch (Design_Variable[iDV]) {
-			case NO_DEFORMATION: cout << "There isn't any deformation." ; break;
-			case HICKS_HENNE: cout << "Hicks Henne <-> " ; break;
-			case COSINE_BUMP: cout << "Cosine bump <-> " ; break;
-			case FOURIER: cout << "Fourier <-> " ; break;
-			case SPHERICAL: cout << "Spherical design <-> " ; break;
-			case MACH_NUMBER: cout << "Mach number <-> " ; break;
-			case DISPLACEMENT: cout << "Displacement design variable."; break;
-			case NACA_4DIGITS: cout << "NACA four digits <-> "; break;
-			case PARABOLIC: cout << "Parabolic <-> "; break;
-			case OBSTACLE: cout << "Obstacle <-> "; break;
-			case STRETCH: cout << "Stretch <-> "; break;
-			case ROTATION: cout << "Rotation <-> "; break;
-			case FFD_CONTROL_POINT: cout << "FFD (control point) <-> "; break;
-			case FFD_DIHEDRAL_ANGLE: cout << "FFD (dihedral angle) <-> "; break;
-			case FFD_TWIST_ANGLE: cout << "FFD (twist angle) <-> "; break;
-			case FFD_ROTATION: cout << "FFD (rotation) <-> "; break;
-			case FFD_CAMBER: cout << "FFD (camber) <-> "; break;
-			case FFD_THICKNESS: cout << "FFD (thickness) <-> "; break;
-			case FFD_VOLUME: cout << "FFD (volume) <-> "; break;
-			}
-			for (iMarker_DV = 0; iMarker_DV < nMarker_DV; iMarker_DV++) {
-				cout << Marker_DV[iMarker_DV];
-				if (iMarker_DV < nMarker_DV-1) cout << ", ";
-				else cout << " <-> ";
-			}
-			cout << DV_Value[iDV] << " <-> ";
-
-			if (Design_Variable[iDV] == NO_DEFORMATION) nParamDV = 0;
-			if (Design_Variable[iDV] == HICKS_HENNE) nParamDV = 2;
-			if (Design_Variable[iDV] == COSINE_BUMP) nParamDV = 3;
-			if (Design_Variable[iDV] == FOURIER) nParamDV = 3;
-			if (Design_Variable[iDV] == SPHERICAL) nParamDV = 3;
-			if (Design_Variable[iDV] == DISPLACEMENT) nParamDV = 3;
-			if (Design_Variable[iDV] == ROTATION) nParamDV = 6;
-			if (Design_Variable[iDV] == NACA_4DIGITS) nParamDV = 3;
-			if (Design_Variable[iDV] == PARABOLIC) nParamDV = 2;
-			if (Design_Variable[iDV] == OBSTACLE) nParamDV = 2;
-			if (Design_Variable[iDV] == STRETCH) nParamDV = 2;
-			if (Design_Variable[iDV] == FFD_CONTROL_POINT) nParamDV = 7;
-			if (Design_Variable[iDV] == FFD_DIHEDRAL_ANGLE) nParamDV = 7;
-			if (Design_Variable[iDV] == FFD_TWIST_ANGLE) nParamDV = 7;
-			if (Design_Variable[iDV] == FFD_ROTATION) nParamDV = 7;
-			if (Design_Variable[iDV] == FFD_CAMBER) nParamDV = 3;
-			if (Design_Variable[iDV] == FFD_THICKNESS) nParamDV = 3;
-			if (Design_Variable[iDV] == FFD_VOLUME) nParamDV = 3;
-
-			for (unsigned short iParamDV = 0; iParamDV < nParamDV; iParamDV++) {
-				if (iParamDV == 0) cout << "( ";
-				cout << ParamDV[iDV][iParamDV];
-				if (iParamDV < nParamDV-1) cout << ", ";
-				else cout <<" )"<<endl;
-			}
-		}
-	}
-
-	if (((val_software == SU2_CFD) && ( Adjoint || OneShot )) || (val_software == SU2_GPC)) {
-
-		cout << endl <<"----------------------- Design problem definition -----------------------" << endl;
-		switch (Kind_ObjFunc) {
-		case DRAG_COEFFICIENT: cout << "Drag objective function." << endl; break;
-		case LIFT_COEFFICIENT: cout << "Lift objective function." << endl; break;
-		case SIDEFORCE_COEFFICIENT: cout << "Side force objective function." << endl; break;
-		case MOMENT_X_COEFFICIENT: cout << "Mx objective function." << endl; break;
-		case MOMENT_Y_COEFFICIENT: cout << "My objective function." << endl; break;
-		case MOMENT_Z_COEFFICIENT: cout << "Mz objective function." << endl; break;
-		case EFFICIENCY: cout << "Efficiency objective function." << endl; break;
-		case PRESSURE_COEFFICIENT: cout << "Pressure objective function." << endl; break;
-		case EQUIVALENT_AREA:
-			cout << "Equivalent area objective function." << endl;
-			cout << "Drag coefficient weight in the objective function: " << WeightCd <<"."<< endl;  break;
-		case NEARFIELD_PRESSURE:
-			cout << "Nearfield pressure objective function." << endl;
-			cout << "Drag coefficient weight in the objective function: " << WeightCd <<"."<< endl;  break;
-
-			break;
-		case FORCE_X_COEFFICIENT: cout << "X-force objective function." << endl; break;
-		case FORCE_Y_COEFFICIENT: cout << "Y-force moment objective function." << endl; break;
-		case FORCE_Z_COEFFICIENT: cout << "Z-force moment objective function." << endl; break;
-		case THRUST_COEFFICIENT: cout << "Thrust objective function." << endl; break;
-		case TORQUE_COEFFICIENT: cout << "Torque efficiency objective function." << endl; break;
-    case HEAT_LOAD: cout << "Integrated heat flux objective function." << endl; break;
-		case FIGURE_OF_MERIT: cout << "Rotor Figure of Merit objective function." << endl; break;
-		case FREE_SURFACE: cout << "Free-Surface objective function." << endl; break;
-		case NOISE: cout << "Noise objective function." << endl; break;
-		}
-
-	}
 
 	if (val_software == SU2_CFD) {
 		cout << endl <<"---------------------- Space numerical integration ----------------------" << endl;
@@ -3514,27 +3375,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 
 	}
 
-	if (val_software == SU2_SOL) {
-		switch (Output_FileFormat) {
-      case PARAVIEW: cout << "The output file format is Paraview ASCII (.dat)." << endl; break;
-      case TECPLOT: cout << "The output file format is Tecplot ASCII (.dat)." << endl; break;
-		}
-		cout << "Flow variables file name: " << Flow_FileName << "." << endl;
-	}
-
-	if (val_software == SU2_PBC) {
-		cout << "Output mesh file name: " << Mesh_Out_FileName << ". " << endl;
-	}
-
-	if (val_software == SU2_SMC) {
-		cout << "Output mesh file name: " << Mesh_Out_FileName << ". " << endl;
-	}
-
-	if (val_software == SU2_DDC) {
-		if (Visualize_Partition) cout << "Visualize the partitions. " << endl;
-		else cout << "Don't visualize the partitions. " << endl;
-	}
-
 	cout << endl <<"------------------- Config file boundary information --------------------" << endl;
 
 	if (nMarker_Euler != 0) {
@@ -3894,13 +3734,6 @@ void CConfig::AddMathProblem(const string & name, bool & Adjoint, const bool & A
 	Restart_Flow = Restart_Flow_default;
 	CAnyOptionRef* option_ref = new CMathProblemRef(Adjoint, OneShot, Linearized,
 			Restart_Flow);
-	param.insert( pair<string, CAnyOptionRef*>(name, option_ref) );
-}
-
-void CConfig::AddDVParamOption(const string & name, unsigned short & nDV, double** & ParamDV,
-		unsigned short* & Design_Variable) {
-	//cout << "Adding DV Param option " << name << endl;
-	CAnyOptionRef* option_ref = new CDVParamOptionRef(nDV, ParamDV, Design_Variable);
 	param.insert( pair<string, CAnyOptionRef*>(name, option_ref) );
 }
 

@@ -72,9 +72,6 @@ int main(int argc, char *argv[]) {
 	CSolver ****solver_container          = NULL;
 	CNumerics *****numerics_container     = NULL;
 	CConfig **config_container            = NULL;
-	CSurfaceMovement **surface_movement   = NULL;
-	CVolumetricMovement **grid_movement   = NULL;
-	CFreeFormDefBox*** FFDBox             = NULL;
 	
 	/*--- Definition and of the containers for all possible zones. ---*/
     
@@ -84,18 +81,12 @@ int main(int argc, char *argv[]) {
 	numerics_container    = new CNumerics****[MAX_ZONES];
 	config_container      = new CConfig*[MAX_ZONES];
 	geometry_container    = new CGeometry **[MAX_ZONES];
-	surface_movement      = new CSurfaceMovement *[MAX_ZONES];
-	grid_movement         = new CVolumetricMovement *[MAX_ZONES];
-	FFDBox                = new CFreeFormDefBox**[MAX_ZONES];
     for (iZone = 0; iZone < MAX_ZONES; iZone++) {
         solver_container[iZone]       = NULL;
         integration_container[iZone]  = NULL;
         numerics_container[iZone]     = NULL;
         config_container[iZone]       = NULL;
         geometry_container[iZone]     = NULL;
-        surface_movement[iZone]       = NULL;
-        grid_movement[iZone]          = NULL;
-        FFDBox[iZone]                 = NULL;
     }
 	
 	/*--- Load in the number of zones and spatial dimensions in the mesh file ---*/
@@ -218,18 +209,6 @@ int main(int argc, char *argv[]) {
          flows on dynamic meshes, including rigid mesh transformations, dynamically
          deforming meshes, and time-spectral preprocessing. ---*/
         
-		if (config_container[iZone]->GetGrid_Movement()) {
-			if (rank == MASTER_NODE)
-				cout << "Setting dynamic mesh structure." << endl;
-			grid_movement[iZone] = new CVolumetricMovement(geometry_container[iZone][MESH_0]);
-			FFDBox[iZone] = new CFreeFormDefBox*[MAX_NUMBER_FFD];
-			surface_movement[iZone] = new CSurfaceMovement();
-			surface_movement[iZone]->CopyBoundary(geometry_container[iZone][MESH_0], config_container[iZone]);
-			if (config_container[iZone]->GetUnsteady_Simulation() == TIME_SPECTRAL)
-				SetGrid_Movement(geometry_container[iZone], surface_movement[iZone], grid_movement[iZone],
-                                 FFDBox[iZone], solver_container[iZone], config_container[iZone], iZone, 0);
-		}
-        
     }
     
     /*--- For the time-spectral solver, set the grid node velocities. ---*/
@@ -287,50 +266,7 @@ int main(int argc, char *argv[]) {
                 
 			case EULER: case NAVIER_STOKES: case RANS:
 				MeanFlowIteration(output, integration_container, geometry_container,
-                                  solver_container, numerics_container, config_container,
-                                  surface_movement, grid_movement, FFDBox);
-				break;
-				
-			case PLASMA_EULER: case PLASMA_NAVIER_STOKES:
-				PlasmaIteration(output, integration_container, geometry_container,
-                                solver_container, numerics_container, config_container,
-                                surface_movement, grid_movement, FFDBox);
-				break;
-				
-			case FLUID_STRUCTURE_EULER: case FLUID_STRUCTURE_NAVIER_STOKES:
-				FluidStructureIteration(output, integration_container, geometry_container,
-                                        solver_container, numerics_container, config_container,
-                                        surface_movement, grid_movement, FFDBox);
-				break;
-				
-			case AEROACOUSTIC_EULER: case AEROACOUSTIC_NAVIER_STOKES:
-				AeroacousticIteration(output, integration_container, geometry_container,
-                                      solver_container, numerics_container, config_container,
-                                      surface_movement, grid_movement, FFDBox);
-				break;
-				
-			case WAVE_EQUATION:
-				WaveIteration(output, integration_container, geometry_container,
-                              solver_container, numerics_container, config_container,
-                              surface_movement, grid_movement, FFDBox);
-				break;
-				
-			case ADJ_EULER: case ADJ_NAVIER_STOKES: case ADJ_RANS:
-				AdjMeanFlowIteration(output, integration_container, geometry_container,
-                                     solver_container, numerics_container, config_container,
-                                     surface_movement, grid_movement, FFDBox);
-				break;
-				
-			case ADJ_PLASMA_EULER: case ADJ_PLASMA_NAVIER_STOKES:
-				AdjPlasmaIteration(output, integration_container, geometry_container,
-                                   solver_container, numerics_container, config_container,
-                                   surface_movement, grid_movement, FFDBox);
-				break;
-                
-			case ADJ_AEROACOUSTIC_EULER:
-				AdjAeroacousticIteration(output, integration_container, geometry_container,
-                                         solver_container, numerics_container, config_container,
-                                         surface_movement, grid_movement, FFDBox);
+                                  solver_container, numerics_container, config_container);
 				break;
 		}
 		

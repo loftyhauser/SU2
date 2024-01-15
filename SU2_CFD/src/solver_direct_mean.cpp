@@ -1697,7 +1697,6 @@ void CEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
-	bool grid_movement = config->GetGrid_Movement();
 	bool dual_time = ((config->GetUnsteady_Simulation() == DT_STEPPING_1ST) ||
 			(config->GetUnsteady_Simulation() == DT_STEPPING_2ND));
 
@@ -1729,18 +1728,6 @@ void CEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
 			Mean_SoundSpeed = sqrt(Mean_ProjVel*Mean_ProjVel + (Mean_BetaInc2/Mean_DensityInc)*Area*Area);
 		}
 
-		/*--- Adjustment for grid movement ---*/
-		if (grid_movement) {
-			double *GridVel_i = geometry->node[iPoint]->GetGridVel();
-			double *GridVel_j = geometry->node[jPoint]->GetGridVel();
-			ProjVel_i = 0.0; ProjVel_j =0.0;
-			for (iDim = 0; iDim < nDim; iDim++) {
-				ProjVel_i += GridVel_i[iDim]*Normal[iDim];
-				ProjVel_j += GridVel_j[iDim]*Normal[iDim];
-			}
-			Mean_ProjVel -= 0.5 * (ProjVel_i + ProjVel_j);
-		}
-
 		/*--- Inviscid contribution ---*/
 		Lambda = fabs(Mean_ProjVel) + Mean_SoundSpeed;
 		if (geometry->node[iPoint]->GetDomain()) node[iPoint]->AddMax_Lambda_Inv(Lambda);
@@ -1767,15 +1754,6 @@ void CEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
 				Mean_BetaInc2 = node[iPoint]->GetBetaInc2();
 				Mean_DensityInc = node[iPoint]->GetDensityInc();
 				Mean_SoundSpeed = sqrt(Mean_ProjVel*Mean_ProjVel + (Mean_BetaInc2/Mean_DensityInc)*Area*Area); 
-			}
-
-			/*--- Adjustment for grid movement ---*/
-			if (grid_movement) {
-				double *GridVel = geometry->node[iPoint]->GetGridVel();
-				ProjVel = 0.0;
-				for (iDim = 0; iDim < nDim; iDim++)
-					ProjVel += GridVel[iDim]*Normal[iDim];
-				Mean_ProjVel -= ProjVel;
 			}
 
 			/*--- Inviscid contribution ---*/
@@ -1842,7 +1820,6 @@ void CEulerSolver::Centered_Residual(CGeometry *geometry, CSolver **solver_conta
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
-	bool grid_movement = config->GetGrid_Movement();
 
 	for (iEdge = 0; iEdge < geometry->GetnEdge(); iEdge++) {
 
@@ -1873,11 +1850,6 @@ void CEulerSolver::Centered_Residual(CGeometry *geometry, CSolver **solver_conta
 		if ((high_order_diss || low_fidelity)) {
 			numerics->SetUndivided_Laplacian(node[iPoint]->GetUndivided_Laplacian(), node[jPoint]->GetUndivided_Laplacian());
 			numerics->SetSensor(node[iPoint]->GetSensor(), node[jPoint]->GetSensor()); 
-		}
-
-		/*--- Grid Movement ---*/
-		if (grid_movement) {
-			numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(), geometry->node[jPoint]->GetGridVel());
 		}
 
 		/*--- Compute residuals, and jacobians ---*/
@@ -1913,7 +1885,6 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
 			&& ((iMesh == MESH_0) || low_fidelity));
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
-	bool grid_movement = config->GetGrid_Movement();
 	bool limiter = ((config->GetKind_SlopeLimit_Flow() != NONE) && !low_fidelity);
 
 	for(iEdge = 0; iEdge < geometry->GetnEdge(); iEdge++) {
@@ -1934,10 +1905,6 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
 				sqvel += config->GetVelocity_FreeStream()[iDim]*config->GetVelocity_FreeStream()[iDim];
 			numerics->SetVelocity2_Inf(sqvel);
 		}
-
-		/*--- Grid Movement ---*/
-		if (grid_movement)
-			numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(), geometry->node[jPoint]->GetGridVel());
 
 		/*--- High order reconstruction using MUSCL strategy ---*/
 		if (high_order_diss) {
@@ -2346,7 +2313,6 @@ void CEulerSolver::SetMax_Eigenvalue(CGeometry *geometry, CConfig *config) {
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
-	bool grid_movement = config->GetGrid_Movement();
 
 	/*--- Set maximum inviscid eigenvalue to zero, and compute sound speed ---*/
 	for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
@@ -2375,18 +2341,6 @@ void CEulerSolver::SetMax_Eigenvalue(CGeometry *geometry, CConfig *config) {
 			Mean_SoundSpeed = sqrt(Mean_ProjVel*Mean_ProjVel + (Mean_BetaInc2/Mean_DensityInc)*Area*Area);
 		}
 
-		/*--- Adjustment for grid movement ---*/
-		if (grid_movement) {
-			double *GridVel_i = geometry->node[iPoint]->GetGridVel();
-			double *GridVel_j = geometry->node[jPoint]->GetGridVel();
-			ProjVel_i = 0.0; ProjVel_j =0.0;
-			for (iDim = 0; iDim < nDim; iDim++) {
-				ProjVel_i += GridVel_i[iDim]*Normal[iDim];
-				ProjVel_j += GridVel_j[iDim]*Normal[iDim];
-			}
-			Mean_ProjVel -= 0.5 * (ProjVel_i + ProjVel_j);
-		}
-
 		/*--- Inviscid contribution ---*/
 		Lambda = fabs(Mean_ProjVel) + Mean_SoundSpeed;
 		if (geometry->node[iPoint]->GetDomain()) node[iPoint]->AddLambda(Lambda);
@@ -2413,15 +2367,6 @@ void CEulerSolver::SetMax_Eigenvalue(CGeometry *geometry, CConfig *config) {
 				Mean_BetaInc2 = node[iPoint]->GetBetaInc2();
 				Mean_DensityInc = node[iPoint]->GetDensityInc();
 				Mean_SoundSpeed = sqrt(Mean_ProjVel*Mean_ProjVel + (Mean_BetaInc2/Mean_DensityInc)*Area*Area);
-			}
-
-			/*--- Adjustment for grid movement ---*/
-			if (grid_movement) {
-				double *GridVel = geometry->node[iPoint]->GetGridVel();
-				ProjVel = 0.0;
-				for (iDim = 0; iDim < nDim; iDim++)
-					ProjVel += GridVel[iDim]*Normal[iDim];
-				Mean_ProjVel -= ProjVel;
 			}
 
 			/*--- Inviscid contribution ---*/
@@ -3169,7 +3114,6 @@ void CEulerSolver::Inviscid_Forces(CGeometry *geometry, CConfig *config) {
 	double Pressure, *Normal = NULL, dist[3], *Coord, Face_Area, PressInviscid,
   factor, NFPressOF, RefVel2, RefDensity, RefPressure, Gas_Constant, Mach2Vel, Mach_Motion;
 
-	bool grid_movement      = config->GetGrid_Movement();
 	double Alpha            = config->GetAoA()*PI_NUMBER/180.0;
 	double Beta             = config->GetAoS()*PI_NUMBER/180.0;
 	double RefAreaCoeff     = config->GetRefAreaCoeff();
@@ -3182,17 +3126,9 @@ void CEulerSolver::Inviscid_Forces(CGeometry *geometry, CConfig *config) {
 	/*--- For dynamic meshes, use the motion Mach number as a reference value
    for computing the force coefficients. Otherwise, use the freestream values,
    which is the standard convention. ---*/
-  if (grid_movement) {
-		Gas_Constant = config->GetGas_ConstantND();
-		Mach2Vel = sqrt(Gamma*Gas_Constant*config->GetTemperature_FreeStreamND());
-		Mach_Motion = config->GetMach_Motion();
-		RefVel2 = (Mach_Motion*Mach2Vel)*(Mach_Motion*Mach2Vel);
-	}
-  else {
 		RefVel2 = 0.0;
 		for (iDim = 0; iDim < nDim; iDim++)
 			RefVel2  += Velocity_Inf[iDim]*Velocity_Inf[iDim];
-	}
 
 	RefDensity  = Density_Inf;
 	RefPressure = Pressure_Inf;
@@ -4048,7 +3984,6 @@ void CEulerSolver::BC_Euler_Wall(CGeometry *geometry, CSolver **solver_container
 			ProjGridVel = 0.0, a2, phi, a0;
 
 	bool implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-	bool grid_movement  = config->GetGrid_Movement();
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
@@ -4098,15 +4033,6 @@ void CEulerSolver::BC_Euler_Wall(CGeometry *geometry, CSolver **solver_container
         
       }
 
-			/*--- Adjustment to energy equation due to grid motion ---*/
-			if (grid_movement) {
-				ProjGridVel = 0.0;
-				GridVel = geometry->node[iPoint]->GetGridVel();
-				for (iDim = 0; iDim < nDim; iDim++)
-					ProjGridVel += GridVel[iDim]*UnitNormal[iDim]*Area;
-				Residual[nVar-1] = Pressure*ProjGridVel;
-			}
-
 			/*--- Add value to the residual ---*/
 			LinSysRes.AddBlock(iPoint, Residual);
 
@@ -4131,16 +4057,6 @@ void CEulerSolver::BC_Euler_Wall(CGeometry *geometry, CSolver **solver_container
 						for (jDim = 0; jDim < nDim; jDim++)
 							Jacobian_i[iDim+1][jDim+1] = a2*node[iPoint]->GetVelocity(jDim, COMPRESSIBLE)*Normal[iDim];
 						Jacobian_i[iDim+1][nDim+1] = -a2*Normal[iDim];
-					}
-					if (grid_movement) {
-						ProjGridVel = 0.0;
-						GridVel = geometry->node[iPoint]->GetGridVel();
-						for (iDim = 0; iDim < nDim; iDim++)
-							ProjGridVel += GridVel[iDim]*UnitNormal[iDim]*Area;
-            Jacobian_i[nDim+1][0] = phi*ProjGridVel;
-						for (jDim = 0; jDim < nDim; jDim++)
-							Jacobian_i[nDim+1][jDim+1] = -a2*node[iPoint]->GetVelocity(jDim, incompressible)*ProjGridVel;
-						Jacobian_i[nDim+1][nDim+1] = a2*ProjGridVel;
 					}
 					Jacobian.AddBlock(iPoint,iPoint,Jacobian_i);
 				}
@@ -4184,7 +4100,6 @@ void CEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_container,
   double Gas_Constant     = config->GetGas_ConstantND();
     
 	bool implicit       = config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT;
-	bool grid_movement  = config->GetGrid_Movement();
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
@@ -4270,11 +4185,6 @@ void CEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_container,
         /*--- Adjust the normal freestream velocity for grid movement ---*/
         
         Qn_Infty = Vn_Infty;
-        if (grid_movement) {
-          GridVel = geometry->node[iPoint]->GetGridVel();
-          for (iDim = 0; iDim < nDim; iDim++)
-            Qn_Infty -= GridVel[iDim]*UnitNormal[iDim];
-        }
         
         /*--- Compute acoustic Riemann invariants: R = u.n +/- 2c/(gamma-1).
          These correspond with the eigenvalues (u+c) and (u-c), respectively,
@@ -4386,11 +4296,6 @@ void CEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_container,
 				conv_numerics->SetCoord(Coord, Coord);
 			}
 
-			if (grid_movement) {
-				conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-                                  geometry->node[iPoint]->GetGridVel());
-			}
-      
 			/*--- Compute the convective residual using an upwind scheme ---*/
 			conv_numerics->ComputeResidual(Residual, Jacobian_i, Jacobian_j, config);
 			LinSysRes.AddBlock(iPoint, Residual);
@@ -4463,7 +4368,6 @@ void CEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container,
 	alpha, aa, bb, cc, dd, Area, UnitNormal[3], Density_Inlet;
   
 	bool implicit             = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-	bool grid_movement        = config->GetGrid_Movement();
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
@@ -4710,9 +4614,6 @@ void CEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container,
 				conv_numerics->SetCoord(geometry->node[iPoint]->GetCoord(), geometry->node[iPoint]->GetCoord());
 			}
 
-			if (grid_movement)
-				conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(), geometry->node[iPoint]->GetGridVel());
-      
 			/*--- Compute the residual using an upwind scheme ---*/
 			conv_numerics->ComputeResidual(Residual, Jacobian_i, Jacobian_j, config);
 			LinSysRes.AddBlock(iPoint, Residual);
@@ -4781,7 +4682,6 @@ void CEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container,
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
-	bool grid_movement      = config->GetGrid_Movement();
 	double FreeSurface_Zero = config->GetFreeSurface_Zero();
 	double PressFreeSurface = GetPressure_Inf();
 	double Froude           = config->GetFroude();
@@ -4948,9 +4848,6 @@ void CEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container,
 				conv_numerics->SetCoord(geometry->node[iPoint]->GetCoord(), geometry->node[iPoint]->GetCoord());
 			}
 
-			if (grid_movement)
-				conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(), geometry->node[iPoint]->GetGridVel());
-            
 			/*--- Compute the residual using an upwind scheme ---*/
 			conv_numerics->ComputeResidual(Residual, Jacobian_i, Jacobian_j, config);
       
@@ -5018,7 +4915,6 @@ void CEulerSolver::BC_Supersonic_Inlet(CGeometry *geometry, CSolver **solver_con
 	double Gas_Constant = config->GetGas_ConstantND();
   
 	bool implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-	bool grid_movement  = config->GetGrid_Movement();
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
 	bool viscous              = config->GetViscous();
@@ -5101,10 +4997,6 @@ void CEulerSolver::BC_Supersonic_Inlet(CGeometry *geometry, CSolver **solver_con
 				conv_numerics->SetCoord(geometry->node[iPoint]->GetCoord(),
                                 geometry->node[iPoint]->GetCoord());
 			}
-      
-			if (grid_movement)
-				conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-                                  geometry->node[iPoint]->GetGridVel());
       
 			/*--- Compute the residual using an upwind scheme ---*/
 			conv_numerics->ComputeResidual(Residual, Jacobian_i, Jacobian_j, config);
@@ -5719,7 +5611,6 @@ void CEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver_co
 	bool AdjEq = (RunTime_EqSystem == RUNTIME_ADJFLOW_SYS);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
-	bool Grid_Movement = config->GetGrid_Movement();
 
 	/*--- loop over points ---*/
 	for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
@@ -5730,16 +5621,9 @@ void CEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver_co
 		U_time_nP1 = node[iPoint]->GetSolution();
 
 		/*--- Volume at time n-1 and n ---*/
-		if (Grid_Movement) {
-			Volume_nM1 = geometry->node[iPoint]->GetVolume_nM1();
-			Volume_n = geometry->node[iPoint]->GetVolume_n();
-			Volume_nP1 = geometry->node[iPoint]->GetVolume();
-		}
-		else {
 			Volume_nM1 = geometry->node[iPoint]->GetVolume();
 			Volume_n = geometry->node[iPoint]->GetVolume();
 			Volume_nP1 = geometry->node[iPoint]->GetVolume();
-		}
 
 		/*--- Time Step ---*/
 		TimeStep = config->GetDelta_UnstTimeND();
@@ -5775,35 +5659,6 @@ void CEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver_co
 
 }
 
-void CEulerSolver::SetFlow_Displacement(CGeometry **flow_geometry, CVolumetricMovement *flow_grid_movement,
-		CConfig *flow_config, CConfig *fea_config, CGeometry **fea_geometry, CSolver ***fea_solution) {
-	unsigned short iMarker, iDim;
-	unsigned long iVertex, iPoint;
-	double *Coord, VarCoord[3];
-
-	unsigned long iPoint_Donor;
-	double *CoordDonor, *DisplacementDonor;
-
-	for (iMarker = 0; iMarker < flow_config->GetnMarker_All(); iMarker++) {
-		if (flow_config->GetMarker_All_Moving(iMarker) == YES) {
-			for(iVertex = 0; iVertex < flow_geometry[MESH_0]->nVertex[iMarker]; iVertex++) {
-				iPoint = flow_geometry[MESH_0]->vertex[iMarker][iVertex]->GetNode();
-				iPoint_Donor = flow_geometry[MESH_0]->vertex[iMarker][iVertex]->GetDonorPoint();
-				Coord = flow_geometry[MESH_0]->node[iPoint]->GetCoord();
-				CoordDonor = fea_geometry[MESH_0]->node[iPoint_Donor]->GetCoord();
-				DisplacementDonor = fea_solution[MESH_0][FEA_SOL]->node[iPoint_Donor]->GetSolution();
-
-				for (iDim = 0; iDim < nDim; iDim++)
-					VarCoord[iDim] = (CoordDonor[iDim]+DisplacementDonor[iDim])-Coord[iDim];
-
-				flow_geometry[MESH_0]->vertex[iMarker][iVertex]->SetVarCoord(VarCoord);
-			}
-		}
-	}
-	flow_grid_movement->SetVolume_Deformation(flow_geometry[MESH_0], flow_config, true);
-
-}
-
 void CEulerSolver::GetRestart(CGeometry *geometry, CConfig *config, int val_iter) {
 
 	/*--- Restart the solution from file information ---*/
@@ -5813,7 +5668,6 @@ void CEulerSolver::GetRestart(CGeometry *geometry, CConfig *config, int val_iter
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
-	bool grid_movement = config->GetGrid_Movement();
   double dull_val;
 	bool dual_time = ((config->GetUnsteady_Simulation() == DT_STEPPING_1ST) ||
                     (config->GetUnsteady_Simulation() == DT_STEPPING_2ND));
@@ -5879,16 +5733,6 @@ void CEulerSolver::GetRestart(CGeometry *geometry, CConfig *config, int val_iter
       
 			node[iPoint_Local]->SetSolution(Solution);
 
-			/*--- If necessary, read in the grid velocities for the unsteady adjoint ---*/
-			if (config->GetWrt_Unsteady() && grid_movement) {
-				double GridVel[3];
-				if (nDim == 2) point_line >> GridVel[0] >> GridVel[1];
-				if (nDim == 3) point_line >> GridVel[0] >> GridVel[1] >> GridVel[2];
-				if (iPoint_Local >= 0)
-					for (unsigned short iDim = 0; iDim < nDim; iDim++)
-						geometry->node[iPoint_Local]->SetGridVel(iDim, GridVel[iDim]);
-			}
-
 		}
 		iPoint_Global++;
 	}
@@ -5902,10 +5746,6 @@ void CEulerSolver::GetRestart(CGeometry *geometry, CConfig *config, int val_iter
   /*--- MPI solution ---*/
 	Set_MPI_Solution(geometry, config);
   
-  /*--- MPI for the grid velocities ---*/
-  if (config->GetWrt_Unsteady() && grid_movement)
-    geometry->Set_MPI_GridVel(config);
-
 }
 
 void CEulerSolver::SetFreeSurface_Distance(CGeometry *geometry, CConfig *config, bool Initialization, bool WriteLevelSet) {
@@ -6571,7 +6411,6 @@ void CNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container, CC
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
-	bool grid_movement = config->GetGrid_Movement();
 	double turb_model = config->GetKind_Turb_Model();
 	bool dual_time = ((config->GetUnsteady_Simulation() == DT_STEPPING_1ST) ||
 			(config->GetUnsteady_Simulation() == DT_STEPPING_2ND));
@@ -6610,18 +6449,6 @@ void CNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container, CC
 			Mean_BetaInc2 = 0.5 * (node[iPoint]->GetBetaInc2() + node[jPoint]->GetBetaInc2());
 			Mean_DensityInc = 0.5 * (node[iPoint]->GetDensityInc() + node[jPoint]->GetDensityInc());
 			Mean_SoundSpeed = sqrt(Mean_ProjVel*Mean_ProjVel + (Mean_BetaInc2/Mean_DensityInc)*Area*Area);
-		}
-
-		/*--- Adjustment for grid movement ---*/
-		if (grid_movement) {
-			double *GridVel_i = geometry->node[iPoint]->GetGridVel();
-			double *GridVel_j = geometry->node[jPoint]->GetGridVel();
-			ProjVel_i = 0.0; ProjVel_j =0.0;
-			for (iDim = 0; iDim < nDim; iDim++) {
-				ProjVel_i += GridVel_i[iDim]*Normal[iDim];
-				ProjVel_j += GridVel_j[iDim]*Normal[iDim];
-			}
-			Mean_ProjVel -= 0.5 * (ProjVel_i + ProjVel_j) ;
 		}
 
 		/*--- Inviscid contribution ---*/
@@ -6669,15 +6496,6 @@ void CNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container, CC
 				Mean_BetaInc2 = node[iPoint]->GetBetaInc2();
 				Mean_DensityInc = node[iPoint]->GetDensityInc();
 				Mean_SoundSpeed = sqrt(Mean_ProjVel*Mean_ProjVel + (Mean_BetaInc2/Mean_DensityInc)*Area*Area);
-			}
-
-			/*--- Adjustment for grid movement ---*/
-			if (grid_movement) {
-				double *GridVel = geometry->node[iPoint]->GetGridVel();
-				ProjVel = 0.0;
-				for (iDim = 0; iDim < nDim; iDim++)
-					ProjVel += GridVel[iDim]*Normal[iDim];
-				Mean_ProjVel -= ProjVel;
 			}
 
 			/*--- Inviscid contribution ---*/
@@ -6823,7 +6641,6 @@ void CNSSolver::Viscous_Forces(CGeometry *geometry, CConfig *config) {
 	double *Origin      = config->GetRefOriginMoment();
 	double Gas_Constant = config->GetGas_ConstantND();
 	double Cp = (Gamma / Gamma_Minus_One) * Gas_Constant;
-	bool grid_movement  = config->GetGrid_Movement();
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
@@ -6832,16 +6649,10 @@ void CNSSolver::Viscous_Forces(CGeometry *geometry, CConfig *config) {
    for computing the force coefficients. Otherwise, use the freestream values,
    which is the standard convention. ---*/
   
-  if (grid_movement) {
-		Mach2Vel = sqrt(Gamma*Gas_Constant*config->GetTemperature_FreeStreamND());
-		Mach_Motion = config->GetMach_Motion();
-		RefVel2 = (Mach_Motion*Mach2Vel)*(Mach_Motion*Mach2Vel);
-	} else {
     Velocity_Inf = config->GetVelocity_FreeStreamND();
 		RefVel2 = 0.0;
 		for (iDim = 0; iDim < nDim; iDim++)
 			RefVel2  += Velocity_Inf[iDim]*Velocity_Inf[iDim];
-	}
   
 	RefDensity  = config->GetDensity_FreeStreamND();
 	factor = 1.0 / (0.5*RefDensity*RefAreaCoeff*RefVel2);
@@ -7063,7 +6874,6 @@ void CNSSolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_container
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
-	bool grid_movement  = config->GetGrid_Movement();
   
 	/*--- Identify the boundary by string name ---*/
 	string Marker_Tag = config->GetMarker_All_Tag(val_marker);
@@ -7097,12 +6907,7 @@ void CNSSolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_container
       
 			/*--- Store the corrected velocity at the wall which will
        be zero (v = 0), unless there are moving walls (v = u_wall)---*/
-			if (grid_movement) {
-				GridVel = geometry->node[iPoint]->GetGridVel();
-				for (iDim = 0; iDim < nDim; iDim++) Vector[iDim] = GridVel[iDim];
-			} else {
 				for (iDim = 0; iDim < nDim; iDim++) Vector[iDim] = 0.0;
-			}
       
 			/*--- Impose the value of the velocity as a strong boundary
        condition (Dirichlet). Fix the velocity and zero out any
@@ -7118,135 +6923,6 @@ void CNSSolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_container
 			/*--- Apply a weak boundary condition for the energy equation.
        Compute the residual due to the prescribed heat flux. ---*/
 			Res_Visc[nDim+1] = Wall_HeatFlux * Area;
-      
-			/*--- If the wall is moving, there are additional residual contributions
-       due to pressure (p v_wall.n) and shear stress (tau.v_wall.n). ---*/
-			if (grid_movement) {
-        
-        /*--- Get the grid velocity at the current boundary node ---*/
-        GridVel = geometry->node[iPoint]->GetGridVel();
-        ProjGridVel = 0.0;
-				for (iDim = 0; iDim < nDim; iDim++)
-					ProjGridVel += GridVel[iDim]*UnitNormal[iDim]*Area;
-        
-        /*--- Retrieve other primitive quantities and viscosities ---*/
-				Density  = node[iPoint]->GetSolution(0);
-        if (compressible) Pressure = node[iPoint]->GetPressure(COMPRESSIBLE)*ProjGridVel;
-        if (incompressible) Pressure = node[iPoint]->GetPressure(INCOMPRESSIBLE)*ProjGridVel;
-        if (freesurface) Pressure = node[iPoint]->GetPressure(FREESURFACE)*ProjGridVel;
-				laminar_viscosity = node[iPoint]->GetLaminarViscosity();
-				eddy_viscosity    = node[iPoint]->GetEddyViscosity();
-        total_viscosity   = laminar_viscosity + eddy_viscosity;
-				grad_primvar      = node[iPoint]->GetGradient_Primitive();
-        
-				/*--- Turbulent kinetic energy ---*/
-				if (config->GetKind_Turb_Model() == SST)
-					turb_ke = solver_container[TURB_SOL]->node[iPoint]->GetSolution(0);
-				else
-					turb_ke = 0.0;
-        
-        /*--- Divergence of the velocity ---*/
-				div_vel = 0.0;
-				for (iDim = 0 ; iDim < nDim; iDim++)
-					div_vel += grad_primvar[iDim+1][iDim];
-        
-        /*--- Compute the viscous stress tensor ---*/
-				for (iDim = 0; iDim < nDim; iDim++)
-					for (jDim = 0; jDim < nDim; jDim++) {
-						tau[iDim][jDim] = total_viscosity*( grad_primvar[jDim+1][iDim]
-                                               +grad_primvar[iDim+1][jDim] )
-						- TWO3*total_viscosity*div_vel*delta[iDim][jDim]
-            - TWO3*Density*turb_ke*delta[iDim][jDim];
-          }
-        
-        /*--- Dot product of the stress tensor with the grid velocity ---*/
-        for (iDim = 0 ; iDim < nDim; iDim++) {
-          tau_vel[iDim] = 0.0;
-					for (jDim = 0 ; jDim < nDim; jDim++)
-            tau_vel[iDim] += tau[iDim][jDim]*GridVel[jDim];
-        }
-        
-        /*--- Compute the convective and viscous residuals (energy eqn.) ---*/
-        Res_Conv[nDim+1] = Pressure*ProjGridVel;
-        for (iDim = 0 ; iDim < nDim; iDim++)
-          Res_Visc[nDim+1] += tau_vel[iDim]*UnitNormal[iDim]*Area;
-        
-        /*--- Implicit Jacobian contributions due to moving walls ---*/
-        if (implicit) {
-          
-          /*--- Jacobian contribution related to the pressure term ---*/
-          GridVel2 = 0.0;
-          for (iDim = 0; iDim < nDim; iDim++)
-            GridVel2 += GridVel[iDim]*GridVel[iDim];
-          for (iVar = 0; iVar < nVar; iVar++)
-            for (jVar = 0; jVar < nVar; jVar++)
-              Jacobian_i[iVar][jVar] = 0.0;
-          Jacobian_i[nDim+1][0] = 0.5*(Gamma-1.0)*GridVel2*ProjGridVel;
-          for (jDim = 0; jDim < nDim; jDim++)
-            Jacobian_i[nDim+1][jDim+1] = -(Gamma-1.0)*GridVel[jDim]*ProjGridVel;
-          Jacobian_i[nDim+1][nDim+1] = (Gamma-1.0)*ProjGridVel;
-          
-          /*--- Add the block to the Global Jacobian structure ---*/
-          Jacobian.AddBlock(iPoint, iPoint, Jacobian_i);
-          
-          /*--- Now the Jacobian contribution related to the shear stress ---*/
-          for (iVar = 0; iVar < nVar; iVar++)
-            for (jVar = 0; jVar < nVar; jVar++)
-              Jacobian_i[iVar][jVar] = 0.0;
-          
-          /*--- Compute closest normal neighbor ---*/
-          Point_Normal = geometry->vertex[val_marker][iVertex]->GetNormal_Neighbor();
-          
-          /*--- Get coordinates of i & nearest normal and compute distance ---*/
-          Coord_i = geometry->node[iPoint]->GetCoord();
-          Coord_j = geometry->node[Point_Normal]->GetCoord();
-          dist_ij = 0;
-          for (iDim = 0; iDim < nDim; iDim++)
-            dist_ij += (Coord_j[iDim]-Coord_i[iDim])*(Coord_j[iDim]-Coord_i[iDim]);
-          dist_ij = sqrt(dist_ij);
-          
-          theta2 = 0.0;
-          for (iDim = 0; iDim < nDim; iDim++)
-            theta2 += UnitNormal[iDim]*UnitNormal[iDim];
-          
-          factor = total_viscosity*Area/(Density*dist_ij);
-          
-          if (nDim == 2) {
-            thetax = theta2 + UnitNormal[0]*UnitNormal[0]/3.0;
-            thetay = theta2 + UnitNormal[1]*UnitNormal[1]/3.0;
-            
-            etaz   = UnitNormal[0]*UnitNormal[1]/3.0;
-            
-            pix = GridVel[0]*thetax + GridVel[1]*etaz;
-            piy = GridVel[0]*etaz   + GridVel[1]*thetay;
-            
-            Jacobian_i[nDim+1][0] -= factor*(-pix*GridVel[0]+piy*GridVel[1]);
-            Jacobian_i[nDim+1][1] -= factor*pix;
-            Jacobian_i[nDim+1][2] -= factor*piy;
-          } else {
-            thetax = theta2 + UnitNormal[0]*UnitNormal[0]/3.0;
-            thetay = theta2 + UnitNormal[1]*UnitNormal[1]/3.0;
-            thetaz = theta2 + UnitNormal[2]*UnitNormal[2]/3.0;
-            
-            etaz = UnitNormal[0]*UnitNormal[1]/3.0;
-            etax = UnitNormal[1]*UnitNormal[2]/3.0;
-            etay = UnitNormal[0]*UnitNormal[2]/3.0;
-            
-            pix = GridVel[0]*thetax + GridVel[1]*etaz   + GridVel[2]*etay;
-            piy = GridVel[0]*etaz   + GridVel[1]*thetay + GridVel[2]*etax;
-            piz = GridVel[0]*etay   + GridVel[1]*etax   + GridVel[2]*thetaz;
-            
-            Jacobian_i[nDim+1][0] -= factor*(-pix*GridVel[0]+piy*GridVel[1]+piz*GridVel[2]);
-            Jacobian_i[nDim+1][1] -= factor*pix;
-            Jacobian_i[nDim+1][2] -= factor*piy;
-            Jacobian_i[nDim+1][3] -= factor*piz;
-          }
-          
-          /*--- Subtract the block from the Global Jacobian structure ---*/
-          Jacobian.SubtractBlock(iPoint, iPoint, Jacobian_i);
-        }
-        
-			}
       
 			/*--- Convective contribution to the residual at the wall ---*/
 			LinSysRes.AddBlock(iPoint, Res_Conv);
@@ -7288,7 +6964,6 @@ void CNSSolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_contain
   bool compressible   = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface    = (config->GetKind_Regime() == FREESURFACE);
-	bool grid_movement  = config->GetGrid_Movement();
   
 	Point_Normal = 0;
   
@@ -7335,12 +7010,7 @@ void CNSSolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_contain
       
 			/*--- Store the corrected velocity at the wall which will
        be zero (v = 0), unless there is grid motion (v = u_wall)---*/
-			if (grid_movement) {
-				GridVel = geometry->node[iPoint]->GetGridVel();
-				for (iDim = 0; iDim < nDim; iDim++) Vector[iDim] = GridVel[iDim];
-			} else {
 				for (iDim = 0; iDim < nDim; iDim++) Vector[iDim] = 0.0;
-			}
       
 			/*--- Initialize the convective & viscous residuals to zero ---*/
 			for (iVar = 0; iVar < nVar; iVar++) {
@@ -7400,119 +7070,6 @@ void CNSSolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_contain
         
         /*--- Subtract the block from the Global Jacobian structure ---*/
         Jacobian.SubtractBlock(iPoint, iPoint, Jacobian_i);
-			}
-      
-      /*--- If the wall is moving, there are additional residual contributions
-       due to pressure (p v_wall.n) and shear stress (tau.v_wall.n). ---*/
-			if (grid_movement) {
-        
-        /*--- Get the grid velocity at the current boundary node ---*/
-        GridVel = geometry->node[iPoint]->GetGridVel();
-        ProjGridVel = 0.0;
-				for (iDim = 0; iDim < nDim; iDim++)
-					ProjGridVel += GridVel[iDim]*UnitNormal[iDim]*Area;
-        
-        /*--- Retrieve other primitive quantities and viscosities ---*/
-				Density  = node[iPoint]->GetSolution(0);
-        Pressure = node[iPoint]->GetPressure(incompressible);
-				laminar_viscosity = node[iPoint]->GetLaminarViscosity();
-				eddy_viscosity    = node[iPoint]->GetEddyViscosity();
-        total_viscosity   = laminar_viscosity + eddy_viscosity;
-				grad_primvar      = node[iPoint]->GetGradient_Primitive();
-        
-				/*--- Turbulent kinetic energy ---*/
-				if (config->GetKind_Turb_Model() == SST)
-					turb_ke = solver_container[TURB_SOL]->node[iPoint]->GetSolution(0);
-				else
-					turb_ke = 0.0;
-        
-        /*--- Divergence of the velocity ---*/
-				div_vel = 0.0;
-				for (iDim = 0 ; iDim < nDim; iDim++)
-					div_vel += grad_primvar[iDim+1][iDim];
-        
-        /*--- Compute the viscous stress tensor ---*/
-				for (iDim = 0; iDim < nDim; iDim++)
-					for (jDim = 0; jDim < nDim; jDim++) {
-						tau[iDim][jDim] = total_viscosity*( grad_primvar[jDim+1][iDim]
-                                               +grad_primvar[iDim+1][jDim] )
-						- TWO3*total_viscosity*div_vel*delta[iDim][jDim]
-            - TWO3*Density*turb_ke*delta[iDim][jDim];
-          }
-        
-        /*--- Dot product of the stress tensor with the grid velocity ---*/
-        for (iDim = 0 ; iDim < nDim; iDim++) {
-          tau_vel[iDim] = 0.0;
-					for (jDim = 0 ; jDim < nDim; jDim++)
-            tau_vel[iDim] += tau[iDim][jDim]*GridVel[jDim];
-        }
-        
-        /*--- Compute the convective and viscous residuals (energy eqn.) ---*/
-        Res_Conv[nDim+1] = Pressure*ProjGridVel;
-        for (iDim = 0 ; iDim < nDim; iDim++)
-          Res_Visc[nDim+1] += tau_vel[iDim]*UnitNormal[iDim]*Area;
-        
-        /*--- Implicit Jacobian contributions due to moving walls ---*/
-        if (implicit) {
-          
-          /*--- Jacobian contribution related to the pressure term ---*/
-          GridVel2 = 0.0;
-          for (iDim = 0; iDim < nDim; iDim++)
-            GridVel2 += GridVel[iDim]*GridVel[iDim];
-          for (iVar = 0; iVar < nVar; iVar++)
-            for (jVar = 0; jVar < nVar; jVar++)
-              Jacobian_i[iVar][jVar] = 0.0;
-          
-          Jacobian_i[nDim+1][0] = 0.5*(Gamma-1.0)*GridVel2*ProjGridVel;
-          for (jDim = 0; jDim < nDim; jDim++)
-            Jacobian_i[nDim+1][jDim+1] = -(Gamma-1.0)*GridVel[jDim]*ProjGridVel;
-          Jacobian_i[nDim+1][nDim+1] = (Gamma-1.0)*ProjGridVel;
-          
-          /*--- Add the block to the Global Jacobian structure ---*/
-          Jacobian.AddBlock(iPoint, iPoint, Jacobian_i);
-          
-          /*--- Now the Jacobian contribution related to the shear stress ---*/
-          for (iVar = 0; iVar < nVar; iVar++)
-            for (jVar = 0; jVar < nVar; jVar++)
-              Jacobian_i[iVar][jVar] = 0.0;
-          
-          factor = total_viscosity*Area/(Density*dist_ij);
-          
-          if (nDim == 2) {
-            thetax = theta2 + UnitNormal[0]*UnitNormal[0]/3.0;
-            thetay = theta2 + UnitNormal[1]*UnitNormal[1]/3.0;
-            
-            etaz   = UnitNormal[0]*UnitNormal[1]/3.0;
-            
-            pix = GridVel[0]*thetax + GridVel[1]*etaz;
-            piy = GridVel[0]*etaz   + GridVel[1]*thetay;
-            
-            Jacobian_i[nDim+1][0] -= factor*(-pix*GridVel[0]+piy*GridVel[1]);
-            Jacobian_i[nDim+1][1] -= factor*pix;
-            Jacobian_i[nDim+1][2] -= factor*piy;
-          } else {
-            thetax = theta2 + UnitNormal[0]*UnitNormal[0]/3.0;
-            thetay = theta2 + UnitNormal[1]*UnitNormal[1]/3.0;
-            thetaz = theta2 + UnitNormal[2]*UnitNormal[2]/3.0;
-            
-            etaz = UnitNormal[0]*UnitNormal[1]/3.0;
-            etax = UnitNormal[1]*UnitNormal[2]/3.0;
-            etay = UnitNormal[0]*UnitNormal[2]/3.0;
-            
-            pix = GridVel[0]*thetax + GridVel[1]*etaz   + GridVel[2]*etay;
-            piy = GridVel[0]*etaz   + GridVel[1]*thetay + GridVel[2]*etax;
-            piz = GridVel[0]*etay   + GridVel[1]*etax   + GridVel[2]*thetaz;
-            
-            Jacobian_i[nDim+1][0] -= factor*(-pix*GridVel[0]+piy*GridVel[1]+piz*GridVel[2]);
-            Jacobian_i[nDim+1][1] -= factor*pix;
-            Jacobian_i[nDim+1][2] -= factor*piy;
-            Jacobian_i[nDim+1][3] -= factor*piz;
-          }
-          
-          /*--- Subtract the block from the Global Jacobian structure ---*/
-          Jacobian.SubtractBlock(iPoint, iPoint, Jacobian_i);
-        }
-        
 			}
       
       /*--- Convective contribution to the residual at the wall ---*/

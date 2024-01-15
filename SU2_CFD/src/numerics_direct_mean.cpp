@@ -30,8 +30,6 @@ CUpwRoe_Flow::CUpwRoe_Flow(unsigned short val_nDim, unsigned short val_nVar, CCo
   
 	implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
 
-	grid_movement = config->GetGrid_Movement();
-  
 	Gamma = config->GetGamma();
 	Gamma_Minus_One = Gamma - 1.0;
   
@@ -176,17 +174,6 @@ void CUpwRoe_Flow::ComputeResidual(double *val_residual, double **val_Jacobian_i
 		ProjVelocity_j += Velocity_j[iDim]*UnitNormal[iDim];
 	}
   
-	/*--- Projected velocity adjustment due to mesh motion ---*/
-	if (grid_movement) {
-		double ProjGridVel = 0.0;
-		for (iDim = 0; iDim < nDim; iDim++) {
-			ProjGridVel   += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*UnitNormal[iDim];
-		}
-		ProjVelocity   -= ProjGridVel;
-		ProjVelocity_i -= ProjGridVel;
-		ProjVelocity_j -= ProjGridVel;
-	}
-  
 	/*--- Flow eigenvalues and entropy correctors ---*/
 	for (iDim = 0; iDim < nDim; iDim++)
 		Lambda[iDim] = ProjVelocity;
@@ -242,15 +229,6 @@ void CUpwRoe_Flow::ComputeResidual(double *val_residual, double **val_Jacobian_i
 				val_residual[iVar] -= 0.5*Lambda[jVar]*delta_wave[jVar]*P_Tensor[iVar][jVar]*Area;
 		}
 
-		/*--- Flux contribution due to grid motion ---*/
-		if (grid_movement) {
-			ProjVelocity = 0.0;
-			for (iDim = 0; iDim < nDim; iDim++)
-				ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-			for (iVar = 0; iVar < nVar; iVar++) {
-				val_residual[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
-			}
-		}
 	}
 	else {
     
@@ -280,18 +258,6 @@ void CUpwRoe_Flow::ComputeResidual(double *val_residual, double **val_Jacobian_i
 			}
 		}
     
-		/*--- Jacobian contributions due to grid motion ---*/
-		if (grid_movement) {
-			ProjVelocity = 0.0;
-			for (iDim = 0; iDim < nDim; iDim++)
-				ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-			for (iVar = 0; iVar < nVar; iVar++) {
-				val_residual[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
-				/*--- Implicit terms ---*/
-				val_Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
-				val_Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
-			}
-		}
     
 	}
   
@@ -301,7 +267,6 @@ CUpwRoePrim_Flow::CUpwRoePrim_Flow(unsigned short val_nDim, unsigned short val_n
 	unsigned short iVar;
   
 	implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-	grid_movement = config->GetGrid_Movement();
   
 	Gamma = config->GetGamma();
 	Gamma_Minus_One = Gamma - 1.0;
@@ -401,17 +366,6 @@ void CUpwRoePrim_Flow::ComputeResidual(double *val_residual, double **val_Jacobi
 		ProjVelocity_j += Velocity_j[iDim]*UnitNormal[iDim];
 	}
 
-	/*--- Adjustment due to mesh motion ---*/
-	if (grid_movement) {
-		double ProjGridVel = 0.0;
-		for (iDim = 0; iDim < nDim; iDim++) {
-			ProjGridVel   += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*UnitNormal[iDim];
-		}
-		ProjVelocity   -= ProjGridVel;
-		ProjVelocity_i -= ProjGridVel;
-		ProjVelocity_j -= ProjGridVel;
-	}
-  
 	/*--- Flow eigenvalues and entropy correctors ---*/
 	for (iDim = 0; iDim < nDim; iDim++)
 		Lambda[iDim] = ProjVelocity;
@@ -461,15 +415,6 @@ void CUpwRoePrim_Flow::ComputeResidual(double *val_residual, double **val_Jacobi
 			val_residual[iVar] -= 0.5*Lambda[jVar]*delta_wave[jVar]*P_Tensor[iVar][jVar]*Area;
 	}
 
-	/*--- Flux contribution due to grid motion ---*/
-	if (grid_movement) {
-		ProjVelocity = 0.0;
-		for (iDim = 0; iDim < nDim; iDim++)
-			ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-		for (iVar = 0; iVar < nVar; iVar++) {
-			val_residual[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
-		}
-	}
   
 	if (implicit) {
     
@@ -492,16 +437,6 @@ void CUpwRoePrim_Flow::ComputeResidual(double *val_residual, double **val_Jacobi
 			}
 		}
     
-		/*--- Jacobian contributions due to grid motion ---*/
-		if (grid_movement) {
-			ProjVelocity = 0.0;
-			for (iDim = 0; iDim < nDim; iDim++)
-				ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-			for (iVar = 0; iVar < nVar; iVar++) {
-				val_Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
-				val_Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
-			}
-		}
     
 	}
   
@@ -511,7 +446,6 @@ CUpwRoe_Turkel_Flow::CUpwRoe_Turkel_Flow(unsigned short val_nDim, unsigned short
 	unsigned short iVar;
   
 	implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-	grid_movement = config->GetGrid_Movement();
   
 	Gamma = config->GetGamma();
 	Gamma_Minus_One = Gamma - 1.0;
@@ -634,14 +568,6 @@ void CUpwRoe_Turkel_Flow::ComputeResidual(double *val_residual, double **val_Jac
 	for (iDim = 0; iDim < nDim; iDim++)
 		ProjVelocity   += RoeVelocity[iDim]*Normal[iDim];
   
-	/*--- Adjustment due to mesh motion ---*/
-	if (grid_movement) {
-		double ProjGridVel = 0.0;
-		for (iDim = 0; iDim < nDim; iDim++) {
-			ProjGridVel   += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*UnitNormal[iDim];
-		}
-		ProjVelocity -= ProjGridVel;
-	}
   
 	/*--- First few flow eigenvalues of A.Normal with the normal---*/
 	for (iDim = 0; iDim < nDim; iDim++)
@@ -715,20 +641,6 @@ void CUpwRoe_Turkel_Flow::ComputeResidual(double *val_residual, double **val_Jac
 		}
 	}
   
-  /*--- Contributions due to mesh motion---*/
-  if (grid_movement) {
-    ProjVelocity = 0.0;
-		for (iDim = 0; iDim < nDim; iDim++)
-			ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*UnitNormal[iDim];
-    for (iVar = 0; iVar < nVar; iVar++) {
-      val_residual[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
-      /*--- Implicit terms ---*/
-      if (implicit) {
-        val_Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
-        val_Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
-      }
-    }
-  }
   
 }
 
@@ -1453,7 +1365,6 @@ CCentJST_Flow::CCentJST_Flow(unsigned short val_nDim, unsigned short val_nVar, C
 	Gamma = config->GetGamma();
 	Gamma_Minus_One = Gamma - 1.0;
   
-	grid_movement = config->GetGrid_Movement();
   
 	/*--- Artifical dissipation part ---*/
 	Param_p = 0.3;
@@ -1519,19 +1430,6 @@ void CCentJST_Flow::ComputeResidual(double *val_resconv, double *val_resvisc, do
 				val_Jacobian_j[iVar][jVar] = val_Jacobian_i[iVar][jVar];
 	}
   
-	/*--- Adjustment due to grid motion ---*/
-	if (grid_movement) {
-		ProjVelocity = 0.0;
-		for (iDim = 0; iDim < nDim; iDim++)
-			ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-		for (iVar = 0; iVar < nVar; iVar++) {
-			val_resconv[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
-			if (implicit) {
-				val_Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
-				val_Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
-			}
-		}
-	}
   
 	/*--- Computes differences btw. Laplacians and conservative variables,
    with a correction for the enthalpy ---*/
@@ -1550,14 +1448,6 @@ void CCentJST_Flow::ComputeResidual(double *val_resconv, double *val_resvisc, do
 	}
 	Area = sqrt(Area);
   
-	/*--- Adjustment due to mesh motion ---*/
-	if (grid_movement) {
-		ProjGridVel = 0.0;
-		for (iDim = 0; iDim < nDim; iDim++)
-			ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-		ProjVelocity_i -= ProjGridVel;
-		ProjVelocity_j -= ProjGridVel;
-	}
   
 	Local_Lambda_i = (fabs(ProjVelocity_i)+SoundSpeed_i*Area);
 	Local_Lambda_j = (fabs(ProjVelocity_j)+SoundSpeed_j*Area);
@@ -1603,7 +1493,6 @@ void CCentJST_Flow::ComputeResidual(double *val_resconv, double *val_resvisc, do
 
 CCentJSTArtComp_Flow::CCentJSTArtComp_Flow(unsigned short val_nDim, unsigned short val_nVar, CConfig *config) : CNumerics(val_nDim, val_nVar, config) {
   
-	grid_movement = config->GetGrid_Movement();
 	implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
 	gravity = config->GetGravityForce();
 	Froude = config->GetFroude();
@@ -1720,7 +1609,6 @@ CCentLax_Flow::CCentLax_Flow(unsigned short val_nDim, unsigned short val_nVar, C
 	Gamma_Minus_One = Gamma - 1.0;
   
 	implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-	grid_movement = config->GetGrid_Movement();
   
 	/*--- Artifical dissipation part ---*/
 	Param_p = 0.3;
@@ -1784,19 +1672,6 @@ void CCentLax_Flow::ComputeResidual(double *val_resconv, double *val_resvisc, do
 				val_Jacobian_j[iVar][jVar] = val_Jacobian_i[iVar][jVar];
 	}
   
-	/*--- Adjustment due to grid motion ---*/
-	if (grid_movement) {
-		ProjVelocity = 0.0;
-		for (iDim = 0; iDim < nDim; iDim++)
-			ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-		for (iVar = 0; iVar < nVar; iVar++) {
-			val_resconv[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
-			if (implicit) {
-				val_Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
-				val_Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
-			}
-		}
-	}
   
 	/*--- Computes differences btw. conservative variables ---*/
 	for (iVar = 0; iVar < nDim+1; iVar++)
@@ -1811,14 +1686,6 @@ void CCentLax_Flow::ComputeResidual(double *val_resconv, double *val_resvisc, do
 		Area += Normal[iDim]*Normal[iDim];
 	}
   
-	/*--- Adjustment due to grid motion ---*/
-	if (grid_movement) {
-		double ProjGridVel = 0.0;
-		for (iDim = 0; iDim < nDim; iDim++)
-			ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
-		ProjVelocity_i -= ProjGridVel;
-		ProjVelocity_j -= ProjGridVel;
-	}
   
 	Area = sqrt(Area);
 	Local_Lambda_i = (fabs(ProjVelocity_i)+SoundSpeed_i*Area);
@@ -1864,7 +1731,6 @@ CCentLaxArtComp_Flow::CCentLaxArtComp_Flow(unsigned short val_nDim, unsigned sho
 	Gamma_Minus_One = Gamma - 1.0;
   
 	implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-	grid_movement = config->GetGrid_Movement();
 	gravity = config->GetGravityForce();
 	Froude = config->GetFroude();
   

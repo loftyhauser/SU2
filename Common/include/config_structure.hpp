@@ -96,7 +96,6 @@ private:
 	unsigned short Kind_SensSmooth;	/*!< \brief Kind of sensitivity smoothing technique. */
 	unsigned short Continuous_Eqns;	/*!< \brief Which equations to treat continuously (Hybrid adjoint) */
 	unsigned short Discrete_Eqns;	/*!< \brief Which equations to treat discretely (Hybrid adjoint). */
-	unsigned short *Design_Variable; /*!< \brief Kind of design variable. */
 	double RatioDensity,				/*!< \brief Ratio of density for a free surface problem. */
 	RatioViscosity,				/*!< \brief Ratio of viscosity for a free surface problem. */
 	FreeSurface_Thickness,  /*!< \brief Thickness of the interfase for a free surface problem. */
@@ -222,10 +221,7 @@ private:
 	unsigned short MaxChildren;		/*!< \brief Maximum number of children. */
 	double MaxDimension;			/*!< \brief Maximum dimension of the aglomerated element compared with the whole domain. */
 	bool AddIndNeighbor;			/*!< \brief Include indirect neighbor in the agglomeration process. */
-	unsigned short nDV;		/*!< \brief Number of design variables. */
   unsigned short nGridMovement;		/*!< \brief Number of grid movement types specified. */
-	unsigned short nParamDV;		/*!< \brief Number of parameters of the design variable. */
-	double **ParamDV;				/*!< \brief Parameters of the design variable. */
 	unsigned short GeometryMode;			/*!< \brief Gemoetry mode (analysis or gradient computation). */
 	unsigned short MGCycle;			/*!< \brief Kind of multigrid cycle. */
 	unsigned short FinestMesh;		/*!< \brief Finest mesh for the full multigrid approach. */
@@ -355,7 +351,6 @@ private:
 	Kappa_1st_Plasma,			/*!< \brief JST 1st order dissipation coefficient for plasma equations (coarse multigrid levels). */
 	Kappa_2nd_Plasma,			/*!< \brief JST 2nd order dissipation coefficient for plasma equations. */
 	Kappa_4th_Plasma;			/*!< \brief JST 4th order dissipation coefficient for plasma equations. */	
-  unsigned long GridDef_Iter; /*!< \brief Number of incrememts for grid deformation. */
 	double Mach;		/*!< \brief Mach number. */
 	double Reynolds;	/*!< \brief Reynolds number. */
 	double Froude;	/*!< \brief Froude number. */	
@@ -384,8 +379,7 @@ private:
 	unsigned short nMarker_Monitoring,	/*!< \brief Number of markers to monitor. */
 	nMarker_Designing,					/*!< \brief Number of markers for the objective function. */
 	nMarker_Plotting,					/*!< \brief Number of markers to plot. */
-  nMarker_Moving,               /*!< \brief Number of markers in motion (DEFORMING, MOVING_WALL, or FLUID_STRUCTURE). */
-	nMarker_DV;               /*!< \brief Number of markers affected by the design variables. */
+  nMarker_Moving;               /*!< \brief Number of markers in motion (DEFORMING, MOVING_WALL, or FLUID_STRUCTURE). */
 	string *Marker_Monitoring,			/*!< \brief Markers to monitor. */
 	*Marker_Designing,					/*!< \brief Markers to plot. */
 	*Marker_Plotting,					/*!< \brief Markers to plot. */
@@ -777,16 +771,6 @@ public:
 			bool & OneShot, const bool & OneShot_default,
 			bool & Linearized, const bool & Linearized_default,
 			bool & Restart_Flow, const bool & Restart_Flow_default);
-
-	/*!
-	 * \brief adds the design variable parameters option to the param map
-	 * \param[in] name - name of the design-variable parameters option in the config file
-	 * \param[in] nDV - the number of design variables
-	 * \param[in] ParamDV - the parameter values of each design variable
-	 * \param[in] Design_Variable - the type of each design variable
-	 */
-	void AddDVParamOption(const string & name, unsigned short & nDV, double** & ParamDV,
-			unsigned short* & Design_Variable);
 
 	/*!
 	 * \brief adds a periodic marker option to the param map
@@ -1560,20 +1544,6 @@ public:
 	double GetUnst_CFL(void);
 
 	/*! 
-	 * \brief Get a parameter of the particular design variable.
-	 * \param[in] val_dv - Number of the design variable that we want to read.
-	 * \param[in] val_param - Index of the parameter that we want to read.
-	 * \return Design variable parameter.
-	 */		
-	double GetParamDV(unsigned short val_dv, unsigned short val_param);
-
-	/*! 
-	 * \brief Get the number of design variables.
-	 * \return Number of the design variables.
-	 */		
-	unsigned short GetnDV(void);
-
-	/*! 
 	 * \brief Get the number of Runge-Kutta steps.
 	 * \return Number of Runge-Kutta steps.
 	 */		
@@ -2053,12 +2023,6 @@ public:
 	 */
 	double GetAdjTurb_CFLRedCoeff(void);
   
-  /*!
-	 * \brief Get the number of increments for mesh deformation.
-	 * \return Number of increments for mesh deformation.
-	 */
-	unsigned long GetGridDef_Iter(void);
-
 	/*!
 	 * \brief Get the kind of SU2 software component.
 	 * \return Kind of the SU2 software component.
@@ -3607,13 +3571,6 @@ public:
 	 * \return Change the index of the finest grid.
 	 */
 	void SubtractFinestMesh(void);
-
-	/*! 
-	 * \brief Obtain the kind of design variable.
-	 * \param[in] val_dv - Number of the design variable that we want to read.
-	 * \return Design variable identification.
-	 */
-	unsigned short GetDesign_Variable(unsigned short val_dv);
 
 	/*! 
 	 * \brief Obtain the kind of convergence criteria to establish the convergence of the CFD code.

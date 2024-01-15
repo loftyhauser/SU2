@@ -37,7 +37,6 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
   unsigned long nSurf_Elem_Storage;
   unsigned long nGlobal_Elem_Storage;
   
-	bool grid_movement  = config->GetGrid_Movement();
 	bool adjoint = config->GetAdjoint();
     
 	char cstr[200], buffer[50];
@@ -168,7 +167,6 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
       
       if (LocalIndex[iPoint+1] != 0) {
         
-        if (!grid_movement) {
           
           /*--- Write the node coordinates ---*/
           if (config->GetKind_SU2() != SU2_SOL) {
@@ -182,13 +180,11 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
             if (nDim == 2) Paraview_File << scientific << "0.0" << "\t";
           }
             
-        }
         
       }
       
     } else {
       
-      if (!grid_movement) {
         
         if (config->GetKind_SU2() != SU2_SOL) {
           for(iDim = 0; iDim < nDim; iDim++)
@@ -201,7 +197,6 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
           if (nDim == 2) Paraview_File << scientific << "0.0" << "\t";
         }
         
-      }
     }
   }
   
@@ -395,61 +390,6 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
       }
     }
     
-    /*--- Add names for any extra variables (this will need to be adjusted). ---*/
-    if (grid_movement) {
-      
-      Paraview_File << "\nSCALARS Grid_Velx float 1\n";
-      Paraview_File << "LOOKUP_TABLE default\n";
-      
-      for (iPoint = 0; iPoint < nGlobal_Poin; iPoint++) {
-        if (surf_sol) {
-          if (LocalIndex[iPoint+1] != 0) {
-            /*--- Loop over the vars/residuals and write the values to file ---*/
-            Paraview_File << scientific << Data[VarCounter][iPoint] << "\t";
-          }
-        } else {
-          /*--- Loop over the vars/residuals and write the values to file ---*/
-          Paraview_File << scientific << Data[VarCounter][iPoint] << "\t";
-        }
-      }
-      VarCounter++;
-      
-      Paraview_File << "\nSCALARS Grid_Vely float 1\n";
-      Paraview_File << "LOOKUP_TABLE default\n";
-      
-      for (iPoint = 0; iPoint < nGlobal_Poin; iPoint++) {
-        if (surf_sol) {
-          if (LocalIndex[iPoint+1] != 0) {
-            /*--- Loop over the vars/residuals and write the values to file ---*/
-            Paraview_File << scientific << Data[VarCounter][iPoint] << "\t";
-          }
-        } else {
-          /*--- Loop over the vars/residuals and write the values to file ---*/
-          Paraview_File << scientific << Data[VarCounter][iPoint] << "\t";
-        }
-      }
-      VarCounter++;
-      
-      if (nDim == 3) {
-        
-        Paraview_File << "\nSCALARS Grid_Velz float 1\n";
-        Paraview_File << "LOOKUP_TABLE default\n";
-        
-        for (iPoint = 0; iPoint < nGlobal_Poin; iPoint++) {
-          if (surf_sol) {
-            if (LocalIndex[iPoint+1] != 0) {
-              /*--- Loop over the vars/residuals and write the values to file ---*/
-              Paraview_File << scientific << Data[VarCounter][iPoint] << "\t";
-            }
-          } else {
-            /*--- Loop over the vars/residuals and write the values to file ---*/
-            Paraview_File << scientific << Data[VarCounter][iPoint] << "\t";
-          }
-        }
-        VarCounter++;
-        
-      }
-    }
     
     if (config->GetKind_Regime() == FREESURFACE) {
       

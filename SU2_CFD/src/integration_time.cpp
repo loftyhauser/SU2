@@ -496,7 +496,6 @@ void CMultiGridIntegration::SetRestricted_Solution(unsigned short RunTime_EqSyst
   const unsigned short SolContainer_Position = config->GetContainerPosition(RunTime_EqSystem);
 	const unsigned short nVar = sol_coarse->GetnVar();
   const unsigned short nDim = geo_fine->GetnDim();
-  const bool grid_movement  = config->GetGrid_Movement();
   
   double *Solution = new double[nVar];
   
@@ -529,15 +528,8 @@ void CMultiGridIntegration::SetRestricted_Solution(unsigned short RunTime_EqSyst
         
 				if (SolContainer_Position == FLOW_SOL) {
           /*--- At moving walls, set the solution based on the new density and wall velocity ---*/
-          if (grid_movement) {
-            Grid_Vel = geo_coarse->node[Point_Coarse]->GetGridVel();
-            for (iDim = 0; iDim < nDim; iDim++)
-              Vector[iDim] = sol_coarse->node[Point_Coarse]->GetSolution(0)*Grid_Vel[iDim];
-            sol_coarse->node[Point_Coarse]->SetVelSolutionVector(Vector);
-          } else {
             /*--- For stationary no-slip walls, set the velocity to zero. ---*/
             sol_coarse->node[Point_Coarse]->SetVelSolutionZero();
-          }
         }
 				if (SolContainer_Position == ADJFLOW_SOL) {
           sol_coarse->node[Point_Coarse]->SetVelSolutionDVector();

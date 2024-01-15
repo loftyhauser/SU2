@@ -36,7 +36,6 @@ void COutput::SetTecplot_ASCII(CConfig *config, CGeometry *geometry, unsigned sh
   unsigned long *LocalIndex = NULL;
   bool *SurfacePoint = NULL;
   
-	bool grid_movement  = config->GetGrid_Movement();
 	bool adjoint = config->GetAdjoint();
     
 	char cstr[200], buffer[50];
@@ -153,15 +152,6 @@ void COutput::SetTecplot_ASCII(CConfig *config, CGeometry *geometry, unsigned sh
     if (config->GetWrt_Residuals()) {
       for (iVar = 0; iVar < nVar_Consv; iVar++) {
         Tecplot_File << ",\"Residual_" << iVar+1 << "\"";
-      }
-    }
-    
-    /*--- Add names for any extra variables (this will need to be adjusted). ---*/
-    if (grid_movement) {
-      if (nDim == 2) {
-        Tecplot_File << ",\"Grid_Velx\",\"Grid_Vely\"";
-      } else {
-        Tecplot_File << ",\"Grid_Velx\",\"Grid_Vely\",\"Grid_Velz\"";
       }
     }
     
@@ -426,7 +416,6 @@ string AssembleVariableNames(CGeometry *geometry, CConfig *config, unsigned shor
 	*NVar = 0;
   unsigned short iDim, nDim = geometry->GetnDim();
   unsigned short Kind_Solver  = config->GetKind_Solver();
-  bool grid_movement = config->GetGrid_Movement();
   bool Wrt_Unsteady = config->GetWrt_Unsteady();
   
   
@@ -443,17 +432,6 @@ string AssembleVariableNames(CGeometry *geometry, CConfig *config, unsigned shor
      the PointID as well as each coordinate (x,y,z). ---*/
     string varname;
     
-    if (Wrt_Unsteady && grid_movement) {
-      
-      *NVar = config->fields.size()-1;
-      for (unsigned short iField = 1; iField < config->fields.size(); iField++) {
-        varname = config->fields[iField];
-        varname.erase (varname.begin(), varname.begin()+1);
-        varname.erase (varname.end()-2, varname.end());
-        variables << varname << " ";
-      }
-    } else {
-      
       *NVar = config->fields.size()-1-nDim;
       for (unsigned short iField = 1+nDim; iField < config->fields.size(); iField++) {
         varname = config->fields[iField];
@@ -461,17 +439,8 @@ string AssembleVariableNames(CGeometry *geometry, CConfig *config, unsigned shor
         varname.erase (varname.end()-2, varname.end());
         variables << varname << " ";
       }
-    }
 
   } else {
-    
-    if (Wrt_Unsteady && grid_movement) {
-      if (nDim == 2) {
-        variables << "x y "; *NVar += 2;
-      } else {
-        variables << "x y z "; *NVar += 3;
-      }
-    }
     
     for (iVar = 0; iVar < nVar_Consv; iVar++) {
       variables << "Conservative_" << iVar+1<<" "; *NVar += 1;
@@ -479,15 +448,6 @@ string AssembleVariableNames(CGeometry *geometry, CConfig *config, unsigned shor
     if (config->GetWrt_Residuals()) {
       for (iVar = 0; iVar < nVar_Consv; iVar++) {
         variables << "Residual_" << iVar+1<<" "; *NVar += 1;
-      }
-    }
-    
-    /*--- Add names for any extra variables (this will need to be adjusted). ---*/
-    if (grid_movement) {
-      if (nDim == 2) {
-        variables << "Grid_Velx Grid_Vely "; *NVar += 2;
-      } else {
-        variables << "Grid_Velx Grid_Vely Grid_Velz "; *NVar += 3;
       }
     }
     

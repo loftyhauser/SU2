@@ -31,7 +31,6 @@
 #include "output_structure.hpp"
 #include "numerics_structure.hpp"
 #include "../../Common/include/geometry_structure.hpp"
-#include "../../Common/include/grid_movement_structure.hpp"
 #include "../../Common/include/config_structure.hpp"
 
 using namespace std;
@@ -45,149 +44,11 @@ using namespace std;
  * \param[in] numerics_container - Description of the numerical method (the way in which the equations are solved).
  * \param[in] config_container - Definition of the particular problem.
  * \param[in] surface_movement - Surface movement classes of the problem.
- * \param[in] grid_movement - Volume grid movement classes of the problem.
  * \param[in] FFDBox - FFD FFDBoxs of the problem.
  * \param[in] ExtIter - Current physical time iteration number.
  */
 void MeanFlowIteration(COutput *output, CIntegration ***integration_container, CGeometry ***geometry_container, 
-											 CSolver ****solver_container, CNumerics *****numerics_container, CConfig **config_container, 
-											 CSurfaceMovement **surface_movement, CVolumetricMovement **grid_movement, CFreeFormDefBox*** FFDBox);
-
-/*! 
- * \brief ________________________.
- * \param[in] output - Pointer to the COutput class.
- * \param[in] integration_container - Container vector with all the integration methods.
- * \param[in] geometry_container - Geometrical definition of the problem.
- * \param[in] solver_container - Container vector with all the solutions.
- * \param[in] numerics_container - Description of the numerical method (the way in which the equations are solved).
- * \param[in] config_container - Definition of the particular problem.
- * \param[in] surface_movement - Surface movement classes of the problem.
- * \param[in] grid_movement - Volume grid movement classes of the problem.
- * \param[in] FFDBox - FFD FFDBoxs of the problem.
- * \param[in] ExtIter - Current physical time iteration number.
- */
-void PlasmaIteration(COutput *output, CIntegration ***integration_container, CGeometry ***geometry_container, 
-										 CSolver ****solver_container, CNumerics *****numerics_container, CConfig **config_container, 
-										 CSurfaceMovement **surface_movement, CVolumetricMovement **grid_movement, CFreeFormDefBox*** FFDBox);
-
-/*! 
- * \brief ________________________.
- * \param[in] output - Pointer to the COutput class.
- * \param[in] integration_container - Container vector with all the integration methods.
- * \param[in] geometry_container - Geometrical definition of the problem.
- * \param[in] solver_container - Container vector with all the solutions.
- * \param[in] numerics_container - Description of the numerical method (the way in which the equations are solved).
- * \param[in] config_container - Definition of the particular problem.
- * \param[in] surface_movement - Surface movement classes of the problem.
- * \param[in] grid_movement - Volume grid movement classes of the problem.
- * \param[in] FFDBox - FFD FFDBoxs of the problem.
- * \param[in] ExtIter - Current physical time iteration number.
- */
-void FluidStructureIteration(COutput *output, CIntegration ***integration_container, CGeometry ***geometry_container, 
-														 CSolver ****solver_container, CNumerics *****numerics_container, CConfig **config_container, 
-														 CSurfaceMovement **surface_movement, CVolumetricMovement **grid_movement, CFreeFormDefBox*** FFDBox);
-
-/*! 
- * \brief ________________________.
- * \param[in] output - Pointer to the COutput class.
- * \param[in] integration_container - Container vector with all the integration methods.
- * \param[in] geometry_container - Geometrical definition of the problem.
- * \param[in] solver_container - Container vector with all the solutions.
- * \param[in] numerics_container - Description of the numerical method (the way in which the equations are solved).
- * \param[in] config_container - Definition of the particular problem.
- * \param[in] surface_movement - Surface movement classes of the problem.
- * \param[in] grid_movement - Volume grid movement classes of the problem.
- * \param[in] FFDBox - FFD FFDBoxs of the problem.
- * \param[in] ExtIter - Current physical time iteration number.
- */
-void AeroacousticIteration(COutput *output, CIntegration ***integration_container, CGeometry ***geometry_container, 
-													 CSolver ****solver_container, CNumerics *****numerics_container, CConfig **config_container, 
-													 CSurfaceMovement **surface_movement, CVolumetricMovement **grid_movement, CFreeFormDefBox*** FFDBox);
-
-/*! 
- * \brief ________________________.
- * \param[in] output - Pointer to the COutput class.
- * \param[in] integration_container - Container vector with all the integration methods.
- * \param[in] geometry_container - Geometrical definition of the problem.
- * \param[in] solver_container - Container vector with all the solutions.
- * \param[in] numerics_container - Description of the numerical method (the way in which the equations are solved).
- * \param[in] config_container - Definition of the particular problem.
- * \param[in] surface_movement - Surface movement classes of the problem.
- * \param[in] grid_movement - Volume grid movement classes of the problem.
- * \param[in] FFDBox - FFD FFDBoxs of the problem.
- * \param[in] ExtIter - Current physical time iteration number.
- */
-void WaveIteration(COutput *output, CIntegration ***integration_container, CGeometry ***geometry_container, 
-									 CSolver ****solver_container, CNumerics *****numerics_container, CConfig **config_container, 
-									 CSurfaceMovement **surface_movement, CVolumetricMovement **grid_movement, CFreeFormDefBox*** FFDBox);
-
-/*! 
- * \brief ________________________.
- * \param[in] output - Pointer to the COutput class.
- * \param[in] integration_container - Container vector with all the integration methods.
- * \param[in] geometry_container - Geometrical definition of the problem.
- * \param[in] solver_container - Container vector with all the solutions.
- * \param[in] numerics_container - Description of the numerical method (the way in which the equations are solved).
- * \param[in] config_container - Definition of the particular problem.
- * \param[in] surface_movement - Surface movement classes of the problem.
- * \param[in] grid_movement - Volume grid movement classes of the problem.
- * \param[in] FFDBox - FFD FFDBoxs of the problem.
- * \param[in] ExtIter - Current physical time iteration number.
- */
-void FEAIteration(COutput *output, CIntegration ***integration_container, CGeometry ***geometry_container, 
-									CSolver ****solver_container, CNumerics *****numerics_container, CConfig **config_container, 
-									CSurfaceMovement **surface_movement, CVolumetricMovement **grid_movement, CFreeFormDefBox*** FFDBox);
-
-/*! 
- * \brief ________________________.
- * \param[in] output - Pointer to the COutput class.
- * \param[in] integration_container - Container vector with all the integration methods.
- * \param[in] geometry_container - Geometrical definition of the problem.
- * \param[in] solver_container - Container vector with all the solutions.
- * \param[in] numerics_container - Description of the numerical method (the way in which the equations are solved).
- * \param[in] config_container - Definition of the particular problem.
- * \param[in] surface_movement - Surface movement classes of the problem.
- * \param[in] grid_movement - Volume grid movement classes of the problem.
- * \param[in] FFDBox - FFD FFDBoxs of the problem.
- * \param[in] ExtIter - Current physical time iteration number.
- */
-void AdjMeanFlowIteration(COutput *output, CIntegration ***integration_container, CGeometry ***geometry_container, 
-													CSolver ****solver_container, CNumerics *****numerics_container, CConfig **config_container, 
-													CSurfaceMovement **surface_movement, CVolumetricMovement **grid_movement, CFreeFormDefBox*** FFDBox);
-
-/*! 
- * \brief ________________________.
- * \param[in] output - Pointer to the COutput class.
- * \param[in] integration_container - Container vector with all the integration methods.
- * \param[in] geometry_container - Geometrical definition of the problem.
- * \param[in] solver_container - Container vector with all the solutions.
- * \param[in] numerics_container - Description of the numerical method (the way in which the equations are solved).
- * \param[in] config_container - Definition of the particular problem.
- * \param[in] surface_movement - Surface movement classes of the problem.
- * \param[in] grid_movement - Volume grid movement classes of the problem.
- * \param[in] FFDBox - FFD FFDBoxs of the problem.
- * \param[in] ExtIter - Current physical time iteration number.
- */
-void AdjPlasmaIteration(COutput *output, CIntegration ***integration_container, CGeometry ***geometry_container, 
-												CSolver ****solver_container, CNumerics *****numerics_container, CConfig **config_container, 
-												CSurfaceMovement **surface_movement, CVolumetricMovement **grid_movement, CFreeFormDefBox*** FFDBox);
-
-/*! 
- * \brief ________________________.
- * \param[in] output - Pointer to the COutput class.
- * \param[in] integration_container - Container vector with all the integration methods.
- * \param[in] geometry_container - Geometrical definition of the problem.
- * \param[in] solver_container - Container vector with all the solutions.
- * \param[in] numerics_container - Description of the numerical method (the way in which the equations are solved).
- * \param[in] config_container - Definition of the particular problem.
- * \param[in] surface_movement - Surface movement classes of the problem.
- * \param[in] grid_movement - Volume grid movement classes of the problem.
- * \param[in] FFDBox - FFD FFDBoxs of the problem.
- * \param[in] ExtIter - Current physical time iteration number.
- */
-void AdjAeroacousticIteration(COutput *output, CIntegration ***integration_container, CGeometry ***geometry_container, 
-															CSolver ****solver_container, CNumerics *****numerics_container, CConfig **config_container, 
-															CSurfaceMovement **surface_movement, CVolumetricMovement **grid_movement, CFreeFormDefBox*** FFDBox);
+											 CSolver ****solver_container, CNumerics *****numerics_container, CConfig **config_container);
 
 /*!
  * \brief Imposes a gust via the grid velocities.
@@ -197,22 +58,6 @@ void AdjAeroacousticIteration(COutput *output, CIntegration ***integration_conta
  * \param[in] solver_container - Container vector with all the solutions.
  */
 void SetWind_GustField(CConfig *config_container, CGeometry **geometry_container, CSolver ***solver_container);
-
-/*!
- * \brief Updates the positions and grid velocities for dynamic meshes between physical time steps.
- * \author T. Economon
- * \param[in] geometry - Geometrical definition of the problem.
- * \param[in] surface_movement - Surface movement classes of the problem.
- * \param[in] grid_movement - Volume grid movement classes of the problem.
- * \param[in] FFDBox - FFD FFDBoxs of the problem.
- * \param[in] solver_container - Container vector with all the solutions.
- * \param[in] config - Definition of the particular problem.
- * \param[in] iZone - Index of the zone.
- * \param[in] ExtIter - Current physical time iteration number.
- */
-void SetGrid_Movement(CGeometry **geometry_container, CSurfaceMovement *surface_movement, 
-                      CVolumetricMovement *grid_movement, CFreeFormDefBox **FFDBox,
-                      CSolver ***solver_container, CConfig *config_container, unsigned short iZone, unsigned long ExtIter);
 
 /*!
  * \brief Computation and storage of the time spectral source terms.
