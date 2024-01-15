@@ -422,7 +422,6 @@ private:
 	string Mesh_FileName,			/*!< \brief Mesh input file. */
 	Mesh_Out_FileName,				/*!< \brief Mesh output file. */
 	Solution_FlowFileName,			/*!< \brief Flow solution input file. */
-	Solution_LinFileName,			/*!< \brief Linearized flow solution input file. */
 	Flow_FileName,					/*!< \brief Flow variables output file. */
 	Farfield_FileName, 				/*!< \brief Data at farfield boundaries. */
 	Structure_FileName,					/*!< \brief Structure variables output file. */
@@ -3138,12 +3137,6 @@ public:
 	 * \return Name of the file with the farfield boundary conditions.
 	 */
 	string GetFarfield_FileName(void);
-
-	/*!
-	 * \brief Get the name of the file with the solution of the linearized flow problem.
-	 * \return Name of the file with the solution of the linearized flow problem.
-	 */
-	string GetSolution_LinFileName(void);
 
 	/*! 
 	 * \brief Get the name of the file with the residual of the problem.

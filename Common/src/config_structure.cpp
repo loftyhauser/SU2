@@ -624,8 +624,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddScalarOption("SOLUTION_FLOW_FILENAME", Solution_FlowFileName, string("solution_flow.dat"));
 	/* DESCRIPTION: Restart flow input file */
 	AddScalarOption("FARFIELD_FILENAME", Farfield_FileName, string("farfield.dat"));
-	/* DESCRIPTION: Restart linear flow input file */
-	AddScalarOption("SOLUTION_LIN_FILENAME", Solution_LinFileName, string("solution_lin.dat"));
 	/* DESCRIPTION: Output file restart flow */
 	AddScalarOption("RESTART_FLOW_FILENAME", Restart_FlowFileName, string("restart_flow.dat"));
 	/* DESCRIPTION: Output file restart wave */
@@ -2913,14 +2911,10 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 
 		if (Restart) {
 			if (!Adjoint && !Linearized) cout << "Read flow solution from: " << Solution_FlowFileName << "." << endl;
-			if (Linearized) cout << "Read linearized solution from: " << Solution_LinFileName << "." << endl;
 		}
 		else {
 			cout << "No restart solution, use the values at infinity (freestream)." << endl;
 		}
-
-		if (Adjoint || Linearized)
-			cout << "Read flow solution from: " << Solution_FlowFileName << "." << endl;
 
 		if (RefAreaCoeff == 0) cout << "The reference length/area will be computed using y(2D) or z(3D) projection." <<endl;
 		else cout << "The reference length/area (force coefficient) is " << RefAreaCoeff << "." <<endl;

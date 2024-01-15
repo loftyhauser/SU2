@@ -720,8 +720,6 @@ inline string CConfig::GetFarfield_FileName(void) { return Farfield_FileName; }
 
 inline string CConfig::GetSolution_FlowFileName(void) { return Solution_FlowFileName; }
 
-inline string CConfig::GetSolution_LinFileName(void) { return Solution_LinFileName; }
-
 inline string CConfig::GetFlow_FileName(void) { return Flow_FileName; }
 
 inline string CConfig::GetStructure_FileName(void) { return Structure_FileName; }
