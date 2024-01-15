@@ -450,7 +450,6 @@ private:
 	Wrt_Restart,                /*!< \brief Write a restart solution file */
 	Wrt_Csv_Sol,                /*!< \brief Write a surface comma-separated values solution file */
 	Wrt_Residuals,              /*!< \brief Write residuals to solution file */
-  Wrt_Halo,                   /*!< \brief Write rind layers in solution files */
   Wrt_Sectional_Forces;       /*!< \brief Write sectional forces for specified markers. */
 	double *ArrheniusCoefficient,					/*!< \brief Arrhenius reaction coefficient */
 	*ArrheniusEta,								/*!< \brief Arrhenius reaction temperature exponent */
@@ -1770,12 +1769,6 @@ public:
 	 * \return <code>TRUE</code> means that residuals will be written to the solution file.
 	 */
 	bool GetWrt_Residuals(void);
-
-  /*!
-	 * \brief Get information about writing rind layers to the solution files.
-	 * \return <code>TRUE</code> means that rind layers will be written to the solution file.
-	 */
-	bool GetWrt_Halo(void);
 
   /*!
 	 * \brief Get information about writing sectional force files.

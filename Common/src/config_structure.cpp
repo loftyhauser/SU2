@@ -676,8 +676,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddSpecialOption("WRT_RESTART", Wrt_Restart, SetBoolOption, true);
 	/* DESCRIPTION: Output residual info to solution/restart file */
 	AddSpecialOption("WRT_RESIDUALS", Wrt_Residuals, SetBoolOption, false);
-  /* DESCRIPTION: Output the rind layers in the solution files */
-	AddSpecialOption("WRT_HALO", Wrt_Halo, SetBoolOption, false);
   /* DESCRIPTION: Output sectional forces for specified markers. */
 	AddSpecialOption("WRT_SECTIONAL_FORCES", Wrt_Sectional_Forces, SetBoolOption, false);
   

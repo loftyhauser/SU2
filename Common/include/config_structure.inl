@@ -892,8 +892,6 @@ inline bool CConfig::GetWrt_Restart(void) { return Wrt_Restart; }
 
 inline bool CConfig::GetWrt_Residuals(void) { return Wrt_Residuals; }
 
-inline bool CConfig::GetWrt_Halo(void) { return Wrt_Halo; }
-
 inline bool CConfig::GetWrt_Sectional_Forces(void) { return Wrt_Sectional_Forces; }
 
 inline bool CConfig::GetRelative_Motion(void) { return Relative_Motion; }
