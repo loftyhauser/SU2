@@ -648,8 +648,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddScalarOption("VOLUME_LIN_FILENAME", Lin_FileName, string("linearized"));
 	/* DESCRIPTION: Output file surface flow coefficient (w/o extension) */
 	AddScalarOption("SURFACE_FLOW_FILENAME", SurfFlowCoeff_FileName, string("surface_flow"));
-	/* DESCRIPTION: Output file surface linear coefficient (w/o extension) */
-	AddScalarOption("SURFACE_LIN_FILENAME", SurfLinCoeff_FileName, string("surface_linear"));
 	/* DESCRIPTION: Writing solution file frequency */
 	AddScalarOption("WRT_SOL_FREQ", Wrt_Sol_Freq, 1000);
 	/* DESCRIPTION: Writing solution file frequency */
@@ -3607,13 +3605,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 			cout << "Surface flow coefficients file name: " << SurfFlowCoeff_FileName << "." << endl;
 			cout << "Flow variables file name: " << Flow_FileName << "." << endl;
 			cout << "Restart flow file name: " << Restart_FlowFileName << "." << endl;
-		}
-
-		if (Linearized) {
-			cout << "Linearized flow solution file name: " << Solution_LinFileName << "." << endl;
-			cout << "Restart linearized flow file name: " << Restart_LinFileName << "." << endl;
-			cout << "Linearized variables file name: " << Lin_FileName << "." << endl;
-			cout << "Surface linearized coefficients file name: " << SurfLinCoeff_FileName << "." << endl;
 		}
 
 		if (Adjoint || OneShot) {

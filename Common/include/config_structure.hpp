@@ -437,8 +437,7 @@ private:
 	Restart_LinFileName,			/*!< \brief Restart file for linearized flow variables. */
 	Restart_AdjFileName,			/*!< \brief Restart file for adjoint variables, drag functional. */
 	Lin_FileName,					/*!< \brief Output file with the linearized variables. */
-	SurfFlowCoeff_FileName,			/*!< \brief Output file with the flow variables on the surface. */
-	SurfLinCoeff_FileName;			/*!< \brief Output file with the linearized variables on the surface. */
+	SurfFlowCoeff_FileName;			/*!< \brief Output file with the flow variables on the surface. */
 	unsigned short nSpecies, 		/*!< \brief No of species present in plasma */
 	nReactions;									/*!< \brief Number of reactions in chemical model. */
 	bool Wrt_Vol_Sol,                /*!< \brief Write a volume solution file */
@@ -3248,12 +3247,6 @@ public:
 	 */
 	string GetSurfFlowCoeff_FileName(void);
 
-	/*! 
-	 * \brief Get the name of the file with the surface information for the linearized flow problem.
-	 * \return Name of the file with the surface information for the linearized flow problem.
-	 */
-	string GetSurfLinCoeff_FileName(void);
-  
   /*!
 	 * \brief Augment the input filename with the iteration number for an unsteady file.
    * \param[in] val_filename - String value of the base filename.

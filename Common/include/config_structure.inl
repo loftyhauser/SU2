@@ -746,8 +746,6 @@ inline string CConfig::GetLin_FileName(void) { return Lin_FileName; }
 
 inline string CConfig::GetSurfFlowCoeff_FileName(void) { return SurfFlowCoeff_FileName; }
 
-inline string CConfig::GetSurfLinCoeff_FileName(void) { return SurfLinCoeff_FileName; }
-
 inline unsigned short CConfig::GetCauchy_Func_Flow(void) { return Cauchy_Func_Flow; }
 
 inline unsigned short CConfig::GetCauchy_Func_AdjFlow(void) { return Cauchy_Func_AdjFlow; }
