@@ -854,8 +854,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
    - FFD_THICKNESS ( FFDBox ID, i_Ind, j_Ind )
    - FFD_VOLUME ( FFDBox ID, i_Ind, j_Ind ) */
 	AddDVParamOption("DV_PARAM", nDV, ParamDV, Design_Variable);
-	/* DESCRIPTION: Grid deformation technique */
-	AddEnumOption("GRID_DEFORM_METHOD", Kind_GridDef_Method, Deform_Map, "FEA");
 	/* DESCRIPTION: Number of iterations for FEA mesh deformation (surface deformation increments) */
 	AddScalarOption("GRID_DEFORM_ITER", GridDef_Iter, 10);
   

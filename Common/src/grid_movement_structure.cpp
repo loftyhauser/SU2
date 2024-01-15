@@ -879,9 +879,6 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
      mesh. FEA uses a finite element method discretization of the linear
      elasticity equations (transfers element stiffnesses to point-to-point). ---*/
     
-    if (config->GetKind_GridDef_Method() == SPRING) MinLength = SetSpringMethodContributions_Edges(geometry);
-    if (config->GetKind_GridDef_Method() == FEA)    MinLength = SetFEAMethodContributions_Elem(geometry);
-
     /*--- Compute the tolerance of the linear solver using MinLength ---*/
     
     NumError = MinLength * 1E-2;
@@ -906,11 +903,6 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
     CPreconditioner* precond      = new CLU_SGSPreconditioner(StiffMatrix, geometry, config);
     CSysSolve *system             = new CSysSolve();
     
-    /*--- Solve the linear system ---*/
-    
-    if (config->GetKind_GridDef_Method() == FEA) IterLinSol = system->FGMRES(LinSysRes, LinSysSol, *mat_vec, *precond, NumError, 100, false);
-    if (config->GetKind_GridDef_Method() == SPRING) IterLinSol = system->ConjugateGradient(LinSysRes, LinSysSol, *mat_vec, *precond, NumError, 100, false);
-
     /*--- Deallocate memory needed by the Krylov linear solver ---*/
 
     delete system;
