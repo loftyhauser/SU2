@@ -648,8 +648,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddScalarOption("VOLUME_ADJ_FILENAME", Adj_FileName, string("adjoint"));
 	/* DESCRIPTION: Output file linear (w/o extension) variables */
 	AddScalarOption("VOLUME_LIN_FILENAME", Lin_FileName, string("linearized"));
-	/* DESCRIPTION: Output objective function gradient */
-	AddScalarOption("GRAD_OBJFUNC_FILENAME", ObjFunc_Grad_FileName, string("of_grad.dat"));
 	/* DESCRIPTION: Output objective function */
 	AddScalarOption("VALUE_OBJFUNC_FILENAME", ObjFunc_Value_FileName, string("of_func.dat"));
 	/* DESCRIPTION: Output file surface flow coefficient (w/o extension) */
@@ -3649,10 +3647,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 
 	if (val_software == SU2_SMC) {
 		cout << "Output mesh file name: " << Mesh_Out_FileName << ". " << endl;
-	}
-
-	if (val_software == SU2_GPC) {
-		cout << "Output gradient file name: " << ObjFunc_Grad_FileName << ". " << endl;
 	}
 
 	if (val_software == SU2_DDC) {
