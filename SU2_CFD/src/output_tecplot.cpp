@@ -56,9 +56,6 @@ void COutput::SetTecplot_ASCII(CConfig *config, CGeometry *geometry, unsigned sh
       filename = config->GetFlow_FileName();
   }
   
-	if (Kind_Solver == LINEAR_ELASTICITY)
-		filename = config->GetStructure_FileName().c_str();
-  
 	if (Kind_Solver == WAVE_EQUATION)
 		filename = config->GetWave_FileName().c_str();
   

@@ -614,9 +614,6 @@ void COutput::MergeSolution(CConfig *config, CGeometry *geometry, CSolver **solv
     case WAVE_EQUATION:
       FirstIndex = WAVE_SOL; SecondIndex = NONE; ThirdIndex = NONE;
       break;
-    case LINEAR_ELASTICITY:
-      FirstIndex = FEA_SOL; SecondIndex = NONE; ThirdIndex = NONE;
-      break;
     case ADJ_EULER : case ADJ_NAVIER_STOKES :
       FirstIndex = ADJFLOW_SOL; SecondIndex = NONE; ThirdIndex = NONE;
       break;
@@ -1382,11 +1379,6 @@ void COutput::SetHistory_Header(ofstream *ConvHist_file, CConfig *config) {
       ConvHist_file[0] << wave_resid << end;
       break;
       
-    case LINEAR_ELASTICITY:
-      ConvHist_file[0] << begin << fea_coeff;
-      ConvHist_file[0] << fea_resid << end;
-      break;
-      
     case AEROACOUSTIC_EULER:
       ConvHist_file[0] << begin << flow_coeff;
       ConvHist_file[0] << wave_coeff;
@@ -1453,7 +1445,6 @@ void COutput::SetConvergence_History(ofstream *ConvHist_file, CGeometry ***geome
     bool aeroacoustic = ((config[val_iZone]->GetKind_Solver() == AEROACOUSTIC_EULER) || (config[val_iZone]->GetKind_Solver() == AEROACOUSTIC_NAVIER_STOKES) ||
                          (config[val_iZone]->GetKind_Solver() == AEROACOUSTIC_RANS));
     bool wave = (config[val_iZone]->GetKind_Solver() == WAVE_EQUATION);
-    bool fea = (config[val_iZone]->GetKind_Solver() == LINEAR_ELASTICITY);
     bool plasma = ((config[val_iZone]->GetKind_Solver() == PLASMA_EULER) || (config[val_iZone]->GetKind_Solver() == PLASMA_NAVIER_STOKES) ||
                    (config[val_iZone]->GetKind_Solver() == ADJ_PLASMA_EULER) || (config[val_iZone]->GetKind_Solver() == ADJ_PLASMA_NAVIER_STOKES));
     
@@ -1485,7 +1476,6 @@ void COutput::SetConvergence_History(ofstream *ConvHist_file, CGeometry ***geome
     }
     if (transition) nVar_Trans = 2;
     if (wave) nVar_Wave = 2;
-    if (fea) nVar_FEA = nDim;
     if (plasma) nVar_Plasma = config[val_iZone]->GetnMonatomics()*(nDim+2) + config[val_iZone]->GetnDiatomics()*(nDim+3);
     if (freesurface) nVar_LevelSet = 1;
     
@@ -1688,20 +1678,6 @@ void COutput::SetConvergence_History(ofstream *ConvHist_file, CGeometry ***geome
         
         break;
         
-      case LINEAR_ELASTICITY:
-        
-        /*--- FEA coefficients ---*/
-        
-        Total_CFEA = solver_container[val_iZone][FinestMesh][FEA_SOL]->GetTotal_CFEA();
-        
-        /*--- Plasma Residuals ---*/
-        
-        for (iVar = 0; iVar < nVar_FEA; iVar++) {
-          residual_fea[iVar] = solver_container[val_iZone][FinestMesh][FEA_SOL]->GetRes_RMS(iVar);
-        }
-        
-        break;
-        
     }
     
     /*--- Header frecuency ---*/
@@ -1866,13 +1842,6 @@ void COutput::SetConvergence_History(ofstream *ConvHist_file, CGeometry ***geome
             
             break;
             
-          case LINEAR_ELASTICITY:
-            
-            sprintf (direct_coeff, ", %12.10f", Total_CFEA);
-            sprintf (fea_resid, ", %12.10f, %12.10f, %12.10f, %12.10f, %12.10f", log10 (residual_fea[0]), dummy, dummy, dummy, dummy );
-            
-            break;
-            
         }
       }
       
@@ -1967,14 +1936,6 @@ void COutput::SetConvergence_History(ofstream *ConvHist_file, CGeometry ***geome
             
           case WAVE_EQUATION :
             cout << "      Res[Wave]" << "   CWave(Total)"<<  endl;
-            break;
-            
-          case LINEAR_ELASTICITY :
-            if (!Unsteady) cout << endl << " Iter" << "    Time(s)";
-            else cout << endl << " IntIter" << "  ExtIter";
-            
-            if (nDim == 2) cout << "    Res[Displx]" << "    Res[Disply]" << "   CFEA(Total)"<<  endl;
-            if (nDim == 3) cout << "    Res[Displx]" << "    Res[Disply]" << "    Res[Displz]" << "   CFEA(Total)"<<  endl;
             break;
             
           case ADJ_PLASMA_EULER : case ADJ_PLASMA_NAVIER_STOKES :
@@ -2182,22 +2143,6 @@ void COutput::SetConvergence_History(ofstream *ConvHist_file, CGeometry ***geome
           cout.setf(ios::fixed,ios::floatfield);
           cout.width(14); cout << log10(residual_wave[0]);
           cout.width(14); cout << Total_CWave;
-          cout << endl;
-          break;
-          
-        case LINEAR_ELASTICITY:
-          
-          if (!DualTime_Iteration) {
-            ConvHist_file[0] << begin << fea_coeff << fea_resid << end;
-            ConvHist_file[0].flush();
-          }
-          
-          cout.precision(6);
-          cout.setf(ios::fixed,ios::floatfield);
-          cout.width(15); cout << log10(residual_fea[0]);
-          cout.width(15); cout << log10(residual_fea[1]);
-          if (nDim == 3) { cout.width(15); cout << log10(residual_fea[2]); }
-          cout.width(14); cout << Total_CFEA;
           cout << endl;
           break;
           

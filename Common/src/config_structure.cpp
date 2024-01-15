@@ -2884,7 +2884,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 				break;
 			case ELECTRIC_POTENTIAL: cout << "Electric potential equation." << endl; break;
 			case WAVE_EQUATION: cout << "Wave equation." << endl; break;
-			case LINEAR_ELASTICITY: cout << "Finite Element Analysis." << endl; break;
 			case FLUID_STRUCTURE_EULER: case FLUID_STRUCTURE_NAVIER_STOKES: cout << "Fluid-structure interaction." << endl; break;
 			case ADJ_EULER: cout << "Continuous Euler adjoint equations." << endl; break;
 			case ADJ_NAVIER_STOKES:
@@ -4863,14 +4862,6 @@ void CConfig::SetGlobalParam(unsigned short val_solver, unsigned short val_syste
 			SetKind_SourNumScheme(GetKind_SourNumScheme_Wave());
 			SetKind_ViscNumScheme(GetKind_ViscNumScheme_Wave());
 			SetKind_TimeIntScheme(GetKind_TimeIntScheme_Wave());
-		}
-		break;
-	case LINEAR_ELASTICITY:
-		if (val_system == RUNTIME_FEA_SYS) {
-			SetKind_ConvNumScheme(NONE, NONE, NONE, NONE);
-			SetKind_SourNumScheme(GetKind_SourNumScheme_FEA());
-			SetKind_ViscNumScheme(GetKind_ViscNumScheme_FEA());
-			SetKind_TimeIntScheme(GetKind_TimeIntScheme_FEA());
 		}
 		break;
 	case FLUID_STRUCTURE_EULER:

@@ -250,7 +250,6 @@ void Solver_Preprocessing(CSolver ***solver_container, CGeometry **geometry, CCo
         case AEROACOUSTIC_RANS: ns = true; turbulent = true; wave = true; break;
         case ELECTRIC_POTENTIAL: electric = true; break;
         case WAVE_EQUATION: wave = true; break;
-        case LINEAR_ELASTICITY: fea = true; break;
         case LIN_EULER: euler = true; lin_euler = true; break;
             
             /*--- Specify by zone for the aeroacoustic problem ---*/
@@ -343,7 +342,6 @@ void Integration_Preprocessing(CIntegration **integration_container, CGeometry *
         case AEROACOUSTIC_RANS: ns = true; turbulent = true; wave = true; break;
         case ELECTRIC_POTENTIAL: electric = true; break;
         case WAVE_EQUATION: wave = true; break;
-        case LINEAR_ELASTICITY: fea = true; break;
         case LIN_EULER: euler = true; lin_euler = true; break;
             
             /*--- Specify by zone for the aeroacoustic problem ---*/
@@ -451,7 +449,6 @@ void Numerics_Preprocessing(CNumerics ****numerics_container, CSolver ***solver_
         case AEROACOUSTIC_RANS: ns = true; turbulent = true; wave = true; break;
         case ELECTRIC_POTENTIAL: electric = true; break;
         case WAVE_EQUATION: wave = true; break;
-        case LINEAR_ELASTICITY: fea = true; break;
         case ADJ_EULER : euler = true; adj_euler = true; break;
         case ADJ_NAVIER_STOKES : ns = true; turbulent = (config->GetKind_Turb_Model() != NONE); adj_ns = true; break;
         case ADJ_RANS : ns = true; turbulent = true; adj_ns = true; adj_turb = (!config->GetFrozen_Visc()); break;

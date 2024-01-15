@@ -187,7 +187,6 @@ enum ENUM_SOLVER {
 	PLASMA_EULER = 8,	/*!< \brief Definition of the plasma solver. */
 	PLASMA_NAVIER_STOKES = 9,	/*!< \brief Definition of the plasma solver. */
 	WAVE_EQUATION = 10,	/*!< \brief Definition of the wave solver. */
-	LINEAR_ELASTICITY = 11,	/*!< \brief Definition of the FEA solver. */
 	FLUID_STRUCTURE_EULER = 12,	/*!< \brief Definition of the FEA solver. */
 	FLUID_STRUCTURE_NAVIER_STOKES = 13,	/*!< \brief Definition of the FEA solver. */
 	FLUID_STRUCTURE_RANS = 14,	/*!< \brief Definition of the FEA solver. */
@@ -221,7 +220,6 @@ static const map<string, ENUM_SOLVER> Solver_Map = CCreateMap<string, ENUM_SOLVE
 ("PLASMA_NAVIER_STOKES", PLASMA_NAVIER_STOKES)
 ("PLASMA_EULER", PLASMA_EULER)
 ("WAVE_EQUATION", WAVE_EQUATION)
-("LINEAR_ELASTICITY", LINEAR_ELASTICITY)
 ("FLUID_STRUCTURE_EULER", FLUID_STRUCTURE_EULER)
 ("FLUID_STRUCTURE_NAVIER_STOKES", FLUID_STRUCTURE_NAVIER_STOKES)
 ("FLUID_STRUCTURE_RANS", FLUID_STRUCTURE_RANS)
