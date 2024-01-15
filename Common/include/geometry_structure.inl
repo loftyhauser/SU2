@@ -190,8 +190,6 @@ inline double CGeometry::Compute_Area(double *Plane_P0, double *Plane_Normal, un
 
 inline void CGeometry::FindNormal_Neighbor(CConfig *config) { }
 
-inline void CGeometry::SetBoundSensitivity(CConfig *config) { }
-
 inline void CPhysicalGeometry::SetPsuP(CGeometry *geometry) { CGeometry::SetPsuP(geometry); } 
 
 inline void CMultiGridGeometry::SetPsuP(void) { CGeometry::SetPsuP(); }

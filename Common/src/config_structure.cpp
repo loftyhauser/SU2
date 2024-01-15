@@ -654,8 +654,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddScalarOption("VALUE_OBJFUNC_FILENAME", ObjFunc_Value_FileName, string("of_func.dat"));
 	/* DESCRIPTION: Output file surface flow coefficient (w/o extension) */
 	AddScalarOption("SURFACE_FLOW_FILENAME", SurfFlowCoeff_FileName, string("surface_flow"));
-	/* DESCRIPTION: Output file surface adjoint coefficient (w/o extension) */
-	AddScalarOption("SURFACE_ADJ_FILENAME", SurfAdjCoeff_FileName, string("surface_adjoint"));
 	/* DESCRIPTION: Output file surface linear coefficient (w/o extension) */
 	AddScalarOption("SURFACE_LIN_FILENAME", SurfLinCoeff_FileName, string("surface_linear"));
 	/* DESCRIPTION: Writing solution file frequency */
@@ -2993,10 +2991,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 
 	if (Divide_Element) cout << "Divide grid elements into triangles and tetrahedra." << endl;
 
-	if (val_software == SU2_GPC) {
-		cout << "Input sensitivity file name: " << SurfAdjCoeff_FileName << "." << endl;
-	}
-
 	if (val_software == SU2_MDC) {
 		cout << endl <<"---------------------- Grid deformation parameters ----------------------" << endl;
 		switch (Kind_GridDef_Method) {
@@ -3632,7 +3626,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 			cout << "Adjoint solution file name: " << Solution_AdjFileName << "." << endl;
 			cout << "Restart adjoint file name: " << Restart_AdjFileName << "." << endl;
 			cout << "Adjoint variables file name: " << Adj_FileName << "." << endl;
-			cout << "Surface adjoint coefficients file name: " << SurfAdjCoeff_FileName << "." << endl;
 		}
 	}
 

@@ -441,7 +441,6 @@ private:
 	ObjFunc_Grad_FileName,			/*!< \brief Gradient of the objective function. */
 	ObjFunc_Value_FileName,			/*!< \brief Objective function. */
 	SurfFlowCoeff_FileName,			/*!< \brief Output file with the flow variables on the surface. */
-	SurfAdjCoeff_FileName,			/*!< \brief Output file with the adjoint variables on the surface. */
 	SurfLinCoeff_FileName;			/*!< \brief Output file with the linearized variables on the surface. */
 	unsigned short nSpecies, 		/*!< \brief No of species present in plasma */
 	nReactions;									/*!< \brief Number of reactions in chemical model. */
@@ -3269,12 +3268,6 @@ public:
 	 * \return Name of the file with the surface information for the flow problem.
 	 */
 	string GetSurfFlowCoeff_FileName(void);
-
-	/*! 
-	 * \brief Get the name of the file with the surface information for the adjoint problem.
-	 * \return Name of the file with the surface information for the adjoint problem.
-	 */
-	string GetSurfAdjCoeff_FileName(void);
 
 	/*! 
 	 * \brief Get the name of the file with the surface information for the linearized flow problem.

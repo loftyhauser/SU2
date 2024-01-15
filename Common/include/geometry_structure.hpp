@@ -503,12 +503,6 @@ public:
 
 	/*! 
 	 * \brief A virtual member.
-	 * \param[in] config - Definition of the particular problem.
-	 */
-	virtual void SetBoundSensitivity(CConfig *config);
-
-	/*! 
-	 * \brief A virtual member.
 	 * \param[in] geometry - Geometrical definition of the problem.
 	 * \param[in] config - Definition of the particular problem.
 	 */
@@ -1371,12 +1365,6 @@ public:
 	 */
 	void SetBoundControlVolume(CConfig *config, unsigned short action);
 
-	/*! 
-	 * \brief Read the sensitivity from an input file.
-	 * \param[in] config - Definition of the particular problem.
-	 */
-	void SetBoundSensitivity(CConfig *config);
-  
 	/*!
 	 * \brief Compute the sections of a wing.
 	 * \param[in] config - Definition of the particular problem.

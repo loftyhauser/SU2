@@ -44,9 +44,6 @@ void COutput::SetTecplot_ASCII(CConfig *config, CGeometry *geometry, unsigned sh
   
 	/*--- Write file name with extension ---*/
   if (surf_sol) {
-    if (adjoint)
-      filename = config->GetSurfAdjCoeff_FileName();
-    else
       filename = config->GetSurfFlowCoeff_FileName();
   }
   else {

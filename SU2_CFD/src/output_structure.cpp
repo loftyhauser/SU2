@@ -141,75 +141,6 @@ void COutput::SetSurfaceCSV_Flow(CConfig *config, CGeometry *geometry, CSolver *
 
 }
 
-void COutput::SetSurfaceCSV_Adjoint(CConfig *config, CGeometry *geometry, CSolver *AdjSolver, CSolver *FlowSolution, unsigned long iExtIter, unsigned short val_iZone) {
-
-	unsigned long iPoint, iVertex;
-	double *Solution, xCoord, yCoord, zCoord, *IntBoundary_Jump;
-	unsigned short iMarker;
-	char cstr[200], buffer[50];
-	ofstream SurfAdj_file;
-
-	/*--- Write file name with extension if unsteady ---*/
-	strcpy (cstr, config->GetSurfAdjCoeff_FileName().c_str());
-
-	if (config->GetUnsteady_Simulation() == TIME_SPECTRAL) {
-		if (int(val_iZone) < 10) sprintf (buffer, "_0000%d.csv", int(val_iZone));
-		if ((int(val_iZone) >= 10) && (int(val_iZone) < 100)) sprintf (buffer, "_000%d.csv", int(val_iZone));
-		if ((int(val_iZone) >= 100) && (int(val_iZone) < 1000)) sprintf (buffer, "_00%d.csv", int(val_iZone));
-		if ((int(val_iZone) >= 1000) && (int(val_iZone) < 10000)) sprintf (buffer, "_0%d.csv", int(val_iZone));
-		if (int(val_iZone) >= 10000) sprintf (buffer, "_%d.csv", int(val_iZone));
-
-	} else if (config->GetUnsteady_Simulation() && config->GetWrt_Unsteady()) {
-		if ((int(iExtIter) >= 0)    && (int(iExtIter) < 10))    sprintf (buffer, "_0000%d.csv", int(iExtIter));
-		if ((int(iExtIter) >= 10)   && (int(iExtIter) < 100))   sprintf (buffer, "_000%d.csv",  int(iExtIter));
-		if ((int(iExtIter) >= 100)  && (int(iExtIter) < 1000))  sprintf (buffer, "_00%d.csv",   int(iExtIter));
-		if ((int(iExtIter) >= 1000) && (int(iExtIter) < 10000)) sprintf (buffer, "_0%d.csv",    int(iExtIter));
-		if  (int(iExtIter) >= 10000) sprintf (buffer, "_%d.csv", int(iExtIter));
-	}
-	else
-		sprintf (buffer, ".csv");
-
-	strcat(cstr, buffer);
-	SurfAdj_file.precision(15);
-	SurfAdj_file.open(cstr, ios::out);
-
-	if (geometry->GetnDim() == 2) {
-		SurfAdj_file <<  "\"Point\",\"Sensitivity\",\"PsiRho\",\"Phi_x\",\"Phi_y\",\"PsiE\",\"x_coord\",\"y_coord\"" << endl;
-		for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-			if (config->GetMarker_All_Plotting(iMarker) == YES)
-				for (iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++) {
-					iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-					Solution = AdjSolver->node[iPoint]->GetSolution();
-					IntBoundary_Jump = AdjSolver->node[iPoint]->GetIntBoundary_Jump();
-					xCoord = geometry->node[iPoint]->GetCoord(0);
-					yCoord = geometry->node[iPoint]->GetCoord(1);
-					SurfAdj_file << scientific << iPoint << ", " << AdjSolver->GetCSensitivity(iMarker,iVertex) << ", " << Solution[0] << ", "
-							<< Solution[1] << ", " << Solution[2] << ", " << Solution[3] <<", " << xCoord <<", "<< yCoord << endl;
-				}
-		}
-	}
-
-	if (geometry->GetnDim() == 3) {
-		SurfAdj_file <<  "\"Point\",\"Sensitivity\",\"PsiRho\",\"Phi_x\",\"Phi_y\",\"Phi_z\",\"PsiE\",\"x_coord\",\"y_coord\",\"z_coord\"" << endl;
-		for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-			if (config->GetMarker_All_Plotting(iMarker) == YES)
-				for (iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++) {
-					iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-					Solution = AdjSolver->node[iPoint]->GetSolution();
-					xCoord = geometry->node[iPoint]->GetCoord(0);
-					yCoord = geometry->node[iPoint]->GetCoord(1);
-					zCoord = geometry->node[iPoint]->GetCoord(2);
-
-					SurfAdj_file << scientific << iPoint << ", " << AdjSolver->GetCSensitivity(iMarker,iVertex) << ", " << Solution[0] << ", "
-							<< Solution[1] << ", " << Solution[2] << ", " << Solution[3] << ", " << Solution[4] << ", "<< xCoord <<", "<< yCoord <<", "<< zCoord << endl;
-				}
-		}
-	}
-
-	SurfAdj_file.close();
-
-}
-
 void COutput::SetSurfaceCSV_Linearized(CConfig *config, CGeometry *geometry, CSolver *LinSolution, string val_filename, unsigned long iExtIter) { }
 
 void COutput::MergeConnectivity(CConfig *config, CGeometry *geometry, unsigned short val_iZone) {
@@ -2303,23 +2234,12 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
 			if (Wrt_Csv) SetSurfaceCSV_Flow(config[iZone], geometry[iZone][MESH_0], solver_container[iZone][MESH_0][FLOW_SOL], iExtIter, iZone);
 			break;
 
-		case ADJ_EULER : case ADJ_NAVIER_STOKES : case ADJ_RANS :
-			if (Wrt_Csv) SetSurfaceCSV_Adjoint(config[iZone], geometry[iZone][MESH_0], solver_container[iZone][MESH_0][ADJFLOW_SOL], solver_container[iZone][MESH_0][FLOW_SOL], iExtIter, iZone);
-			break;
-
 		case LIN_EULER : case LIN_NAVIER_STOKES :
 			if (Wrt_Csv) SetSurfaceCSV_Linearized(config[iZone], geometry[iZone][MESH_0], solver_container[iZone][MESH_0][LINFLOW_SOL], config[iZone]->GetSurfLinCoeff_FileName(), iExtIter);
 			break;
 
 		case AEROACOUSTIC_EULER : case AEROACOUSTIC_NAVIER_STOKES : case AEROACOUSTIC_RANS:
 			if (Wrt_Csv) SetSurfaceCSV_Flow(config[iZone], geometry[iZone][MESH_0], solver_container[iZone][MESH_0][FLOW_SOL], iExtIter,iZone);
-			break;
-		case ADJ_AEROACOUSTIC_EULER:
-			if (iZone == ZONE_0) {
-				if (Wrt_Csv) SetSurfaceCSV_Adjoint(config[iZone], geometry[iZone][MESH_0], solver_container[iZone][MESH_0][ADJFLOW_SOL], solver_container[iZone][MESH_0][FLOW_SOL], iExtIter, iZone);
-			} else if (iZone == ZONE_1) {
-				if (Wrt_Csv) SetSurfaceCSV_Flow(config[iZone], geometry[iZone][MESH_0], solver_container[iZone][MESH_0][FLOW_SOL], iExtIter,iZone);
-			}
 			break;
 		}
 

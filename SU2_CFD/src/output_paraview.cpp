@@ -45,9 +45,6 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
     
 	/*--- Write file name with extension ---*/
   if (surf_sol) {
-    if (adjoint)
-      filename = config->GetSurfAdjCoeff_FileName();
-    else
       filename = config->GetSurfFlowCoeff_FileName();
   }
   else {
