@@ -423,7 +423,6 @@ private:
 	Mesh_Out_FileName,				/*!< \brief Mesh output file. */
 	Solution_FlowFileName,			/*!< \brief Flow solution input file. */
 	Solution_LinFileName,			/*!< \brief Linearized flow solution input file. */
-	Solution_AdjFileName,			/*!< \brief Adjoint solution input file for drag functional. */
 	Flow_FileName,					/*!< \brief Flow variables output file. */
 	Farfield_FileName, 				/*!< \brief Data at farfield boundaries. */
 	Structure_FileName,					/*!< \brief Structure variables output file. */
@@ -3145,14 +3144,6 @@ public:
 	 * \return Name of the file with the solution of the linearized flow problem.
 	 */
 	string GetSolution_LinFileName(void);
-
-	/*! 
-	 * \brief Get the name of the file with the solution of the adjoint flow problem 
-	 *		  with drag objective function.
-	 * \return Name of the file with the solution of the adjoint flow problem with 
-	 *         drag objective function.
-	 */
-	string GetSolution_AdjFileName(void);
 
 	/*! 
 	 * \brief Get the name of the file with the residual of the problem.

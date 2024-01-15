@@ -722,8 +722,6 @@ inline string CConfig::GetSolution_FlowFileName(void) { return Solution_FlowFile
 
 inline string CConfig::GetSolution_LinFileName(void) { return Solution_LinFileName; }
 
-inline string CConfig::GetSolution_AdjFileName(void) { return Solution_AdjFileName; }
-
 inline string CConfig::GetFlow_FileName(void) { return Flow_FileName; }
 
 inline string CConfig::GetStructure_FileName(void) { return Structure_FileName; }

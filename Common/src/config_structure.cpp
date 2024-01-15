@@ -626,8 +626,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddScalarOption("FARFIELD_FILENAME", Farfield_FileName, string("farfield.dat"));
 	/* DESCRIPTION: Restart linear flow input file */
 	AddScalarOption("SOLUTION_LIN_FILENAME", Solution_LinFileName, string("solution_lin.dat"));
-	/* DESCRIPTION: Restart adjoint input file */
-	AddScalarOption("SOLUTION_ADJ_FILENAME", Solution_AdjFileName, string("solution_adj.dat"));
 	/* DESCRIPTION: Output file restart flow */
 	AddScalarOption("RESTART_FLOW_FILENAME", Restart_FlowFileName, string("restart_flow.dat"));
 	/* DESCRIPTION: Output file restart wave */
@@ -2915,7 +2913,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 
 		if (Restart) {
 			if (!Adjoint && !Linearized) cout << "Read flow solution from: " << Solution_FlowFileName << "." << endl;
-			if (Adjoint) cout << "Read adjoint solution from: " << Solution_AdjFileName << "." << endl;
 			if (Linearized) cout << "Read linearized solution from: " << Solution_LinFileName << "." << endl;
 		}
 		else {
@@ -3601,9 +3598,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 			cout << "Restart flow file name: " << Restart_FlowFileName << "." << endl;
 		}
 
-		if (Adjoint || OneShot) {
-			cout << "Adjoint solution file name: " << Solution_AdjFileName << "." << endl;
-		}
 	}
 
 	if (val_software == SU2_SOL) {

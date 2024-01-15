@@ -1243,12 +1243,7 @@ CBaselineSolver::CBaselineSolver(CGeometry *geometry, CConfig *config, unsigned 
   string filename;
   
   /*--- Retrieve filename from config ---*/
-	if (config->GetAdjoint()) {
-		filename = config->GetSolution_AdjFileName();
-    filename = config->GetObjFunc_Extension(filename);
-  } else {
 		filename = config->GetSolution_FlowFileName();
-  }
   
 	/*--- Unsteady problems require an iteration number to be appended. ---*/
   if (config->GetWrt_Unsteady() || config->GetUnsteady_Simulation() == TIME_SPECTRAL) {
@@ -1436,12 +1431,7 @@ void CBaselineSolver::GetRestart(CGeometry *geometry, CConfig *config, int val_i
   unsigned long iExtIter = config->GetExtIter();
   
   /*--- Retrieve filename from config ---*/
-	if (config->GetAdjoint()) {
-		filename = config->GetSolution_AdjFileName();
-    filename = config->GetObjFunc_Extension(filename);
-  } else {
 		filename = config->GetSolution_FlowFileName();
-  }
   
 	/*--- Unsteady problems require an iteration number to be appended. ---*/
   if (config->GetWrt_Unsteady() || config->GetUnsteady_Simulation() == TIME_SPECTRAL) {
