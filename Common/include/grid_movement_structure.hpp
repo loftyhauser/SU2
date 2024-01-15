@@ -61,13 +61,6 @@ public:
 	~CGridMovement(void);
   
   
-  /*!
-	 * \brief A pure virtual member.
-	 * \param[in] geometry - Geometrical definition of the problem.
-	 * \param[in] config - Definition of the particular problem.
-	 */
-	virtual void SetSurface_Deformation(CGeometry *geometry, CConfig *config);
-  
 };
 
 /*! 
@@ -1034,15 +1027,6 @@ public:
 	 */
   void SetCollective_Pitch(CGeometry *geometry, CConfig *config);
   
-  /*! 
-	 * \brief Set any surface deformationsbased on an input file.
-	 * \param[in] boundary - Geometry of the boundary.
-	 * \param[in] config - Definition of the particular problem.
-   * \param[in] iZone - Zone number in the mesh.
-   * \param[in] iter - Current physical time iteration.
-	 */
-  void SetExternal_Deformation(CGeometry *geometry, CConfig *config, unsigned short iZone, unsigned long iter);
-  
 	/*! 
 	 * \brief Set a displacement for surface movement.
 	 * \param[in] boundary - Geometry of the boundary.
@@ -1059,13 +1043,6 @@ public:
 	 */
 	void CopyBoundary(CGeometry *geometry, CConfig *config);
   
-  /*!
-	 * \brief Set the surface/boundary deformation.
-	 * \param[in] geometry - Geometrical definition of the problem.
-	 * \param[in] config - Definition of the particular problem.
-	 */
-	void SetSurface_Deformation(CGeometry *geometry, CConfig *config);
-	
 	/*! 
 	 * \brief Compute the parametric coordinates of a grid point using a point inversion strategy
 	 *        in the free form FFDBox.

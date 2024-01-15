@@ -374,8 +374,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddListOption("PLUNGING_AMPL_Y", nPlunging_Ampl_Y, Plunging_Ampl_Y);
 	/* DESCRIPTION: Plunging amplitude (m) in x, y, & z directions (RIGID_MOTION only) */
 	AddListOption("PLUNGING_AMPL_Z", nPlunging_Ampl_Z, Plunging_Ampl_Z);
-	/* DESCRIPTION:  */
-	AddScalarOption("MOTION_FILENAME", Motion_Filename, string("mesh_motion.dat"));
 	/* DESCRIPTION: Uncoupled Aeroelastic Frequency Plunge. */
 	AddScalarOption("FREQ_PLUNGE_AEROELASTIC", FreqPlungeAeroelastic, 100);
 	/* DESCRIPTION: Uncoupled Aeroelastic Frequency Pitch. */

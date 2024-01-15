@@ -23,8 +23,6 @@
  
 #pragma once
 
-inline void CGridMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *config)  { }
-
 inline unsigned short CSurfaceMovement::GetnLevel(void) { return nLevel; }
 
 inline unsigned short CSurfaceMovement::GetnFFDBox(void) { return nFFDBox; }

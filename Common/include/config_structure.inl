@@ -852,8 +852,6 @@ inline double CConfig::GetCyclic_Pitch(void) { return Cyclic_Pitch; }
 
 inline double CConfig::GetCollective_Pitch(void) { return Collective_Pitch; }
 
-inline string CConfig::GetMotion_FileName(void) { return Motion_Filename; }
-
 inline bool CConfig::GetWrt_Vol_Sol(void) { return Wrt_Vol_Sol; }
 
 inline bool CConfig::GetWrt_Srf_Sol(void) { return Wrt_Srf_Sol; }
