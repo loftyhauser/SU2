@@ -327,13 +327,6 @@ void Solver_Preprocessing(CSolver ***solver_container, CGeometry **geometry, CCo
                 solver_container[iMGlevel][TRANS_SOL] = new CTransLMSolver(geometry[iMGlevel], config, iMGlevel);
             }
 		}
-		/*--- Allocate solution for linear problem (at the moment we use the same scheme as the adjoint problem) ---*/
-		if (lin_euler) {
-			solver_container[iMGlevel][LINFLOW_SOL] = new CLinEulerSolver(geometry[iMGlevel], config);
-		}
-		if (lin_ns) {
-			cout <<"Equation not implemented." << endl; cin.get(); break;
-		}
         
 	}
     
@@ -519,20 +512,6 @@ void Numerics_Preprocessing(CNumerics ****numerics_container, CSolver ***solver_
             case SST: menter_sst = true; constants = solver_container[MESH_0][TURB_SOL]->GetConstants(); break;
             default: cout << "Specified turbulence model unavailable or none selected" << endl; cin.get(); break;
 		}
-    
-	if (plasma_euler || plasma_ns) {
-		switch (config->GetKind_GasModel()){
-            case AIR7: plasma_diatomic = true; break;
-            case O2: plasma_diatomic = true; break;
-            case N2: plasma_diatomic = true; break;
-            case AIR5: plasma_diatomic = true; break;
-            case ARGON: plasma_monatomic = true; break;
-            case AIR21: plasma_diatomic = true; break;
-            case ARGON_SID: plasma_diatomic = true; break;
-            default: cout << "Specified plasma model unavailable or none selected" << endl; cin.get(); break;
-		}
-		//if (config->GetElectricSolver()) electric  = true;
-	}
     
 	/*--- Number of variables for the template ---*/
 	if (template_solver) nVar_Flow = solver_container[MESH_0][FLOW_SOL]->GetnVar();
@@ -947,32 +926,6 @@ void Numerics_Preprocessing(CNumerics ****numerics_container, CSolver ***solver_
 		for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++){
 			numerics_container[iMGlevel][TRANS_SOL][CONV_BOUND_TERM] = new CUpwLin_TransLM(nDim, nVar_Trans, config);
 		}
-	}
-    
-	/*--- Solver definition for the linearized flow problem ---*/
-	if (lin_euler) {
-        
-		/*--- Definition of the convective scheme for each equation and mesh level ---*/
-		switch (config->GetKind_ConvNumScheme_LinFlow()) {
-            case NONE :
-                break;
-            case SPACE_CENTERED :
-                switch (config->GetKind_Centered_LinFlow()) {
-                    case LAX : numerics_container[MESH_0][LINFLOW_SOL][CONV_TERM] = new CCentLax_LinFlow(nDim, nVar_Lin_Flow, config); break;
-                    case JST : numerics_container[MESH_0][LINFLOW_SOL][CONV_TERM] = new CCentJST_LinFlow(nDim, nVar_Lin_Flow, config); break;
-                    default : cout << "Centered scheme not implemented." << endl; cin.get(); break;
-                }
-                for (iMGlevel = 1; iMGlevel <= config->GetMGLevels(); iMGlevel++)
-                    numerics_container[iMGlevel][LINFLOW_SOL][CONV_TERM] = new CCentLax_LinFlow(nDim, nVar_Lin_Flow, config);
-                break;
-			default :
-				cout << "Convective scheme not implemented (lin_euler)." << endl; cin.get();
-				break;
-		}
-        
-		/*--- Definition of the boundary condition method ---*/
-		for (iMGlevel = 0; iMGlevel <= config->GetMGLevels(); iMGlevel++)
-			numerics_container[iMGlevel][LINFLOW_SOL][CONV_BOUND_TERM] = new CCentLax_LinFlow(nDim, nVar_Lin_Flow, config);
 	}
     
 }
