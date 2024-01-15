@@ -648,8 +648,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddScalarOption("VOLUME_ADJ_FILENAME", Adj_FileName, string("adjoint"));
 	/* DESCRIPTION: Output file linear (w/o extension) variables */
 	AddScalarOption("VOLUME_LIN_FILENAME", Lin_FileName, string("linearized"));
-	/* DESCRIPTION: Output objective function */
-	AddScalarOption("VALUE_OBJFUNC_FILENAME", ObjFunc_Value_FileName, string("of_func.dat"));
 	/* DESCRIPTION: Output file surface flow coefficient (w/o extension) */
 	AddScalarOption("SURFACE_FLOW_FILENAME", SurfFlowCoeff_FileName, string("surface_flow"));
 	/* DESCRIPTION: Output file surface linear coefficient (w/o extension) */

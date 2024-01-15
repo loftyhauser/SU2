@@ -746,8 +746,6 @@ inline string CConfig::GetAdj_FileName(void) { return Adj_FileName; }
 
 inline string CConfig::GetLin_FileName(void) { return Lin_FileName; }
 
-inline string CConfig::GetObjFunc_Value_FileName(void) { return ObjFunc_Value_FileName; }
-
 inline string CConfig::GetSurfFlowCoeff_FileName(void) { return SurfFlowCoeff_FileName; }
 
 inline string CConfig::GetSurfLinCoeff_FileName(void) { return SurfLinCoeff_FileName; }
