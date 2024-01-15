@@ -82,7 +82,6 @@ private:
 	Hold_GridFixed,	/*!< \brief Flag hold fixed some part of the mesh during the deformation. */
 	Axisymmetric; /*!< \brief Flag for outputting sensitivities on exit */
 	bool Visualize_Partition;	/*!< \brief Flag to visualize each partition in the DDM. */
-	bool Visualize_Deformation;	/*!< \brief Flag to visualize the deformation in the MDC. */
     double Damp_Nacelle_Inflow;	/*!< \brief Damping factor for the engine inlet. */
 	double Damp_Res_Restric,	/*!< \brief Damping factor for the residual restriction. */
 	Damp_Correc_Prolong; /*!< \brief Damping factor for the correction prolongation. */
@@ -1015,12 +1014,6 @@ public:
 	 */
   bool GetExtraOutput(void);
   
-	/*! 
-	 * \brief Creates a teot file to visualize the deformation made by the MDC software.
-	 * \return <code>TRUE</code> if the deformation is going to be plotted; otherwise <code>FALSE</code>.
-	 */
-	bool GetVisualize_Deformation(void);
-
 	/*! 
 	 * \brief Get the value of the Mach number (velocity divided by speed of sound).
 	 * \return Value of the Mach number.

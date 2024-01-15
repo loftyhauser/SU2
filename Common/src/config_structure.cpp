@@ -862,8 +862,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 	AddArrayOption("HOLD_GRID_FIXED_COORD", 6, Hold_GridFixed_Coord, default_vec_6d);
 	/* DESCRIPTION: Grid deformation technique */
 	AddEnumOption("GRID_DEFORM_METHOD", Kind_GridDef_Method, Deform_Map, "FEA");
-	/* DESCRIPTION: Visualize the deformation */
-	AddSpecialOption("VISUALIZE_DEFORMATION", Visualize_Deformation, SetBoolOption, false);
 	/* DESCRIPTION: Number of iterations for FEA mesh deformation (surface deformation increments) */
 	AddScalarOption("GRID_DEFORM_ITER", GridDef_Iter, 10);
   
@@ -3600,12 +3598,6 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
       case TECPLOT: cout << "The output file format is Tecplot ASCII (.dat)." << endl; break;
 		}
 		cout << "Flow variables file name: " << Flow_FileName << "." << endl;
-	}
-
-	if (val_software == SU2_MDC) {
-		cout << "Output mesh file name: " << Mesh_Out_FileName << ". " << endl;
-		if (Visualize_Deformation) cout << "A file will be created to visualize the deformation." << endl;
-		else cout << "No file for visualizing the deformation." << endl;
 	}
 
 	if (val_software == SU2_PBC) {
