@@ -49,26 +49,7 @@ void COutput::SetTecplot_ASCII(CConfig *config, CGeometry *geometry, unsigned sh
       filename = config->GetFlow_FileName();
   }
   
-	if (Kind_Solver == WAVE_EQUATION)
-		filename = config->GetWave_FileName().c_str();
-  
-	if ((Kind_Solver == WAVE_EQUATION) && (Kind_Solver == ADJ_AEROACOUSTIC_EULER))
-		filename = config->GetAdjWave_FileName().c_str();
-  
-	if (Kind_Solver == ELECTRIC_POTENTIAL)
-		filename = config->GetStructure_FileName().c_str();
-  
-	if (Kind_Solver == PLASMA_EULER) {
-		if (val_iZone == 0) Kind_Solver = PLASMA_EULER;
-		if (val_iZone == 1) Kind_Solver = ELECTRIC_POTENTIAL;
-	}
-	if (Kind_Solver == PLASMA_NAVIER_STOKES) {
-		if (val_iZone == 0) Kind_Solver = PLASMA_NAVIER_STOKES;
-		if (val_iZone == 1) Kind_Solver = ELECTRIC_POTENTIAL;
-	}
-    
 	strcpy (cstr, filename.c_str());
-	if (Kind_Solver == ELECTRIC_POTENTIAL) strcpy (cstr, config->GetStructure_FileName().c_str());
     
 	/*--- Special cases where a number needs to be appended to the file name. ---*/
 	if ((Kind_Solver == EULER || Kind_Solver == NAVIER_STOKES || Kind_Solver == RANS) &&
@@ -77,26 +58,8 @@ void COutput::SetTecplot_ASCII(CConfig *config, CGeometry *geometry, unsigned sh
 		strcat(cstr,buffer);
 	}
     
-	/*--- Special cases where a number needs to be appended to the file name. ---*/
-	if (((Kind_Solver == ADJ_EULER) || (Kind_Solver == ADJ_NAVIER_STOKES) || (Kind_Solver == ADJ_RANS)) &&
-        (val_nZone > 1) && (config->GetUnsteady_Simulation() != TIME_SPECTRAL)) {
-		sprintf (buffer, "_%d", int(val_iZone));
-		strcat(cstr,buffer);
-	}
-    
-    /*--- Special cases where a number needs to be appended to the file name. ---*/
-	if (((Kind_Solver == ELECTRIC_POTENTIAL) &&( (Kind_Solver == PLASMA_EULER) || (Kind_Solver == PLASMA_NAVIER_STOKES)) )
-        && config->GetUnsteady_Simulation()) {
-		sprintf (buffer, "_%d", int(iExtIter));
-		strcat(cstr,buffer);
-	}
-    
 	if (config->GetUnsteady_Simulation() == TIME_SPECTRAL) {
 
-		/*--- SU2_SOL requires different names. It is only called for parallel cases. ---*/
-		if (config->GetKind_SU2() == SU2_SOL) {
-			val_iZone = iExtIter;
-		}
 		if (int(val_iZone) < 10) sprintf (buffer, "_0000%d.dat", int(val_iZone));
 		if ((int(val_iZone) >= 10) && (int(val_iZone) < 100)) sprintf (buffer, "_000%d.dat", int(val_iZone));
 		if ((int(val_iZone) >= 100) && (int(val_iZone) < 1000)) sprintf (buffer, "_00%d.dat", int(val_iZone));
@@ -126,18 +89,6 @@ void COutput::SetTecplot_ASCII(CConfig *config, CGeometry *geometry, unsigned sh
   
   /*--- Write the list of the fields in the restart file.
    Without including the PointID---*/
-  if (config->GetKind_SU2() == SU2_SOL) {
-    
-    /*--- If SU2_SOL called this routine, we already have a set of output
-     variables with the appropriate string tags stored in the config class. ---*/
-    Tecplot_File << "VARIABLES = ";
-    nVar_Total = config->fields.size() - 1;
-    for (unsigned short iField = 1; iField < config->fields.size(); iField++) {
-      Tecplot_File << config->fields[iField];
-    }
-    Tecplot_File << endl;
-    
-  } else {
     
     if (nDim == 2) {
       Tecplot_File << "VARIABLES = \"x\",\"y\"";
@@ -175,39 +126,6 @@ void COutput::SetTecplot_ASCII(CConfig *config, CGeometry *geometry, unsigned sh
       Tecplot_File << ", \"Sharp_Edge_Dist\"";
     }
     
-    if ((Kind_Solver == PLASMA_EULER) || (Kind_Solver == PLASMA_NAVIER_STOKES)) {
-      unsigned short iSpecies;
-      for (iSpecies = 0; iSpecies < config->GetnSpecies(); iSpecies++)
-        Tecplot_File << ",\"Pressure_" << iSpecies << "\"";
-      for (iSpecies = 0; iSpecies < config->GetnSpecies(); iSpecies++)
-        Tecplot_File << ",\"Temperature_" << iSpecies << "\"";
-      for (iSpecies = 0; iSpecies < config->GetnDiatomics(); iSpecies++)
-        Tecplot_File << ",\"TemperatureVib_" << iSpecies << "\"";
-      for (iSpecies = 0; iSpecies < config->GetnSpecies(); iSpecies++)
-        Tecplot_File << ",\"Mach_" << iSpecies << "\"";
-    }
-    
-    if (Kind_Solver == PLASMA_NAVIER_STOKES) {
-      unsigned short iSpecies;
-      for (iSpecies = 0; iSpecies < config->GetnSpecies(); iSpecies++)
-        Tecplot_File << ",\"LaminaryViscosity_" << iSpecies << "\"";
-      
-      if ( Kind_Solver == PLASMA_NAVIER_STOKES  && (config->GetMagnetic_Force() == YES) && (geometry->GetnDim() == 3)) {
-        for (iDim = 0; iDim < nDim; iDim++)
-          Tecplot_File << ",\"Magnet_Field" << iDim << "\"";
-      }
-    }
-    
-    if (Kind_Solver == ELECTRIC_POTENTIAL) {
-      unsigned short iDim;
-      for (iDim = 0; iDim < geometry->GetnDim(); iDim++)
-        Tecplot_File << ",\"ElectricField_" << iDim+1 << "\"";
-    }
-    
-    if ((Kind_Solver == ADJ_EULER) || (Kind_Solver == ADJ_NAVIER_STOKES) || (Kind_Solver == ADJ_RANS) || (Kind_Solver == ADJ_PLASMA_EULER) || (Kind_Solver == ADJ_PLASMA_NAVIER_STOKES)) {
-      Tecplot_File << ", \"Surface_Sensitivity\", \"Solution_Sensor\"";
-    }
-    
     if (config->GetExtraOutput()) {
       for (iVar = 0; iVar < nVar_Extra; iVar++) {
         Tecplot_File << ", \"ExtraOutput_" << iVar+1<<"\"";
@@ -216,7 +134,6 @@ void COutput::SetTecplot_ASCII(CConfig *config, CGeometry *geometry, unsigned sh
     
     Tecplot_File << endl;
     
-  }
   
   /*--- If it's a surface output, print only the points 
    that are in the element list, change the numbering ---*/
@@ -423,24 +340,6 @@ string AssembleVariableNames(CGeometry *geometry, CConfig *config, unsigned shor
   
   /*--- Write the list of the fields in the restart file.
    Without including the PointID---*/
-  if (config->GetKind_SU2() == SU2_SOL) {
-    
-    /*--- If SU2_SOL called this routine, we already have a set of output
-     variables with the appropriate string tags stored in the config class. ---*/
-    
-    /*--- Set the number of variables to be written. Subtract off an index for
-     the PointID as well as each coordinate (x,y,z). ---*/
-    string varname;
-    
-      *NVar = config->fields.size()-1-nDim;
-      for (unsigned short iField = 1+nDim; iField < config->fields.size(); iField++) {
-        varname = config->fields[iField];
-        varname.erase (varname.begin(), varname.begin()+1);
-        varname.erase (varname.end()-2, varname.end());
-        variables << varname << " ";
-      }
-
-  } else {
     
     for (iVar = 0; iVar < nVar_Consv; iVar++) {
       variables << "Conservative_" << iVar+1<<" "; *NVar += 1;
@@ -449,11 +348,6 @@ string AssembleVariableNames(CGeometry *geometry, CConfig *config, unsigned shor
       for (iVar = 0; iVar < nVar_Consv; iVar++) {
         variables << "Residual_" << iVar+1<<" "; *NVar += 1;
       }
-    }
-    
-    if (config->GetKind_Regime() == FREESURFACE) {
-      variables << "Density ";
-      *NVar += 1;
     }
     
     if ((Kind_Solver == EULER) || (Kind_Solver == NAVIER_STOKES) || (Kind_Solver == RANS)) {
@@ -476,54 +370,6 @@ string AssembleVariableNames(CGeometry *geometry, CConfig *config, unsigned shor
       *NVar += 1;
     }
     
-    if ((Kind_Solver == PLASMA_EULER) || (Kind_Solver == PLASMA_NAVIER_STOKES)) {
-      unsigned short iSpecies;
-      for (iSpecies = 0; iSpecies < config->GetnSpecies(); iSpecies++) {
-        variables << "Pressure_" << iSpecies << " ";
-        *NVar += 1;
-      }
-      for (iSpecies = 0; iSpecies < config->GetnSpecies(); iSpecies++) {
-        variables << "Temperature_" << iSpecies << " ";
-        *NVar += 1;
-      }
-      for (iSpecies = 0; iSpecies < config->GetnDiatomics(); iSpecies++) {
-        variables << "TemperatureVib_" << iSpecies << " ";
-        *NVar += 1;
-      }
-      for (iSpecies = 0; iSpecies < config->GetnSpecies(); iSpecies++) {
-        variables << "Mach_" << iSpecies << " ";
-        *NVar += 1;
-      }
-    }
-    
-    if (Kind_Solver == PLASMA_NAVIER_STOKES) {
-      unsigned short iSpecies;
-      for (iSpecies = 0; iSpecies < config->GetnSpecies(); iSpecies++) {
-        variables << "LaminaryViscosity_" << iSpecies << " ";
-        *NVar += 1;
-      }
-      
-      if ( Kind_Solver == PLASMA_NAVIER_STOKES  && (config->GetMagnetic_Force() == YES) && (geometry->GetnDim() == 3)) {
-        for (iDim = 0; iDim < nDim; iDim++) {
-          variables << "Magnet_Field" << iDim << " ";
-          *NVar += 1;
-        }
-      }
-    }
-    
-    if (Kind_Solver == ELECTRIC_POTENTIAL) {
-      for (iDim = 0; iDim < geometry->GetnDim(); iDim++) {
-        variables << "ElectricField_" << iDim+1 << " ";
-        *NVar += 1;
-      }
-    }
-    
-    if ((Kind_Solver == ADJ_EULER) || (Kind_Solver == ADJ_NAVIER_STOKES) || (Kind_Solver == ADJ_RANS) || (Kind_Solver == ADJ_PLASMA_EULER) || (Kind_Solver == ADJ_PLASMA_NAVIER_STOKES)) {
-      variables << "Surface_Sensitivity Solution_Sensor ";
-      *NVar += 2;
-    }
-  }
-
 	return variables.str();
   
 }
