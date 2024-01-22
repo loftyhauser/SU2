@@ -37,8 +37,6 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
   unsigned long nSurf_Elem_Storage;
   unsigned long nGlobal_Elem_Storage;
   
-	bool adjoint = config->GetAdjoint();
-    
 	char cstr[200], buffer[50];
 	string filename;
     
@@ -50,44 +48,12 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
       filename = config->GetFlow_FileName();
   }
   
-	if (Kind_Solver == WAVE_EQUATION)
-		filename = config->GetWave_FileName().c_str();
-	if ((Kind_Solver == WAVE_EQUATION) && (Kind_Solver == ADJ_AEROACOUSTIC_EULER))
-		filename = config->GetAdjWave_FileName().c_str();
-  
-	if (Kind_Solver == ELECTRIC_POTENTIAL)
-		filename = config->GetStructure_FileName().c_str();
-  
-	if (Kind_Solver == PLASMA_EULER) {
-		if (val_iZone == 0) Kind_Solver = PLASMA_EULER;
-		if (val_iZone == 1) Kind_Solver = ELECTRIC_POTENTIAL;
-	}
-	if (Kind_Solver == PLASMA_NAVIER_STOKES) {
-		if (val_iZone == 0) Kind_Solver = PLASMA_NAVIER_STOKES;
-		if (val_iZone == 1) Kind_Solver = ELECTRIC_POTENTIAL;
-	}
-    
 	strcpy (cstr, filename.c_str());
-	if (Kind_Solver == ELECTRIC_POTENTIAL) strcpy (cstr, config->GetStructure_FileName().c_str());
     
 	/*--- Special cases where a number needs to be appended to the file name. ---*/
 	if ((Kind_Solver == EULER || Kind_Solver == NAVIER_STOKES || Kind_Solver == RANS) &&
         (val_nZone > 1) && (config->GetUnsteady_Simulation() != TIME_SPECTRAL)) {
 		sprintf (buffer, "_%d", int(val_iZone));
-		strcat(cstr,buffer);
-	}
-    
-	/*--- Special cases where a number needs to be appended to the file name. ---*/
-	if (((Kind_Solver == ADJ_EULER) || (Kind_Solver == ADJ_NAVIER_STOKES) || (Kind_Solver == ADJ_RANS)) &&
-        (val_nZone > 1) && (config->GetUnsteady_Simulation() != TIME_SPECTRAL)) {
-		sprintf (buffer, "_%d", int(val_iZone));
-		strcat(cstr,buffer);
-	}
-    
-    /*--- Special cases where a number needs to be appended to the file name. ---*/
-	if (((Kind_Solver == ELECTRIC_POTENTIAL) &&( (Kind_Solver == PLASMA_EULER) || (Kind_Solver == PLASMA_NAVIER_STOKES)) )
-        && config->GetUnsteady_Simulation()) {
-		sprintf (buffer, "_%d", int(iExtIter));
 		strcat(cstr,buffer);
 	}
     
@@ -169,16 +135,9 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
         
           
           /*--- Write the node coordinates ---*/
-          if (config->GetKind_SU2() != SU2_SOL) {
-            for(iDim = 0; iDim < nDim; iDim++)
-              Paraview_File << scientific << Coords[iDim][iPoint] << "\t";
-            if (nDim == 2) Paraview_File << scientific << "0.0" << "\t";
-          }
-          else {
             for(iDim = 0; iDim < nDim; iDim++)
               Paraview_File << scientific << Data[iDim][iPoint] << "\t";
             if (nDim == 2) Paraview_File << scientific << "0.0" << "\t";
-          }
             
         
       }
@@ -186,16 +145,9 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
     } else {
       
         
-        if (config->GetKind_SU2() != SU2_SOL) {
-          for(iDim = 0; iDim < nDim; iDim++)
-            Paraview_File << scientific << Coords[iDim][iPoint] << "\t";
-          if (nDim == 2) Paraview_File << scientific << "0.0" << "\t";
-        }
-        else {
           for(iDim = 0; iDim < nDim; iDim++)
             Paraview_File << scientific << Data[iDim][iPoint] << "\t";
           if (nDim == 2) Paraview_File << scientific << "0.0" << "\t";
-        }
         
     }
   }
@@ -322,34 +274,6 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
   
   unsigned short VarCounter = 0;
   
-  if (config->GetKind_SU2() == SU2_SOL) {
-    
-    /*--- If SU2_SOL called this routine, we already have a set of output
-     variables with the appropriate string tags stored in the config class. ---*/
-    for (unsigned short iField = 1; iField < config->fields.size(); iField++) {
-      
-      Paraview_File << "\nSCALARS " << config->fields[iField] << " float 1\n";
-      Paraview_File << "LOOKUP_TABLE default\n";
-      
-      for (iPoint = 0; iPoint < nGlobal_Poin; iPoint++) {
-        if (surf_sol) {
-          if (LocalIndex[iPoint+1] != 0) {
-            /*--- Loop over the vars/residuals and write the values to file ---*/
-            Paraview_File << scientific << Data[VarCounter][iPoint] << "\t";
-          }
-        } else {
-          /*--- Loop over the vars/residuals and write the values to file ---*/
-          Paraview_File << scientific << Data[VarCounter][iPoint] << "\t";
-        }
-      }
-      VarCounter++;
-      
-    }
-    
-  }  
-  
-  else {
-    
     for (iVar = 0; iVar < nVar_Consv; iVar++) {
       
       Paraview_File << "\nSCALARS Conservative_" << iVar+1 << " float 1\n";
@@ -588,7 +512,6 @@ void COutput::SetParaview_ASCII(CConfig *config, CGeometry *geometry, unsigned s
       
     }
     
-  }
   
 	Paraview_File.close();
   
